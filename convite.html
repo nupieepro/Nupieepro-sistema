@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#0D0B2B">
+  <title>NUPIEEPRO — Criar Conta</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <div class="login-screen">
+    <div class="bg-radial"></div>
+    <div class="login-container" style="justify-content:center;">
+      <div class="form-panel">
+        <div class="form-card">
+          <div>
+            <div class="logo-wordmark" style="font-size:20px;margin-bottom:8px;">
+              NUPIE<span class="pi">EPRO</span>
+            </div>
+            <div class="form-title">Criar Conta</div>
+            <div class="form-subtitle">Registro via convite</div>
+          </div>
+
+          <div class="form-divider"></div>
+
+          <div id="conviteContent">
+            <div id="conviteInfo">
+              <p class="text-center text-muted"><span class="spinner"></span> Verificando convite...</p>
+            </div>
+
+            <form id="conviteForm" class="field-group" onsubmit="return false;" style="margin-top:1rem;">
+              <div class="field">
+                <label for="conviteNome">Nome completo</label>
+                <input type="text" id="conviteNome" placeholder="Seu nome" required>
+              </div>
+              <div class="field">
+                <label for="convitePassword">Senha</label>
+                <input type="password" id="convitePassword" placeholder="Mínimo 6 caracteres" required minlength="6" autocomplete="new-password">
+              </div>
+              <div class="field">
+                <label for="conviteConfirm">Confirmar senha</label>
+                <input type="password" id="conviteConfirm" placeholder="Repita a senha" required minlength="6" autocomplete="new-password">
+              </div>
+              <button class="btn-login" id="btnConvite" onclick="doConviteRegister()">Criar Conta</button>
+            </form>
+          </div>
+
+          <div class="alert-box" id="conviteAlert"></div>
+
+          <div class="form-divider"></div>
+
+          <p class="footer-note">
+            Já tem conta? <a href="index.html">Fazer login</a><br>
+            <span>NUPIEEPRO</span> · Selo ABJ 2026
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/auth.js"></script>
+  <script>initConvitePage();</script>
+</body>
+</html>
