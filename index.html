@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#0D0B2B">
+  <title>NUPIEEPRO — Login</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <!-- ═══ LOGIN SCREEN ═══ -->
+  <div class="login-screen" id="loginScreen">
+    <div class="bg-radial"></div>
+    <div class="login-container">
+
+      <!-- Brand (left) -->
+      <div class="brand-panel">
+        <div class="logo-wrap">
+          <div class="logo-wordmark">
+            NUPIE<span class="pi">EPRO</span>
+            <div class="logo-sub-text">Pesquisa · Inovação · Ensino · Extensão · Profissionalização</div>
+          </div>
+        </div>
+        <h1 class="brand-headline">
+          Gestão <em>inteligente</em><br>para o núcleo.
+        </h1>
+        <p class="brand-desc">Plataforma de gestão do NUPIEEPRO — cada coordenadoria vê exatamente o que precisa.</p>
+        <div class="stats-row">
+          <div><div class="stat-num">16</div><div class="stat-label">Membros</div></div>
+          <div><div class="stat-num">6</div><div class="stat-label">Coordenadorias</div></div>
+          <div><div class="stat-num">882</div><div class="stat-label">Meta de pontos</div></div>
+        </div>
+      </div>
+
+      <!-- Form (right) -->
+      <div class="form-panel">
+        <div class="form-card">
+          <div>
+            <div class="form-title">Entrar</div>
+            <div class="form-subtitle">Acesse sua coordenadoria</div>
+          </div>
+
+          <div class="form-divider"></div>
+
+          <!-- Coordenadoria selection -->
+          <div>
+            <span class="coord-label">Sua coordenadoria</span>
+            <div class="coord-grid" id="coordGrid">
+              <button class="coord-btn" data-coord="Geral" onclick="selectCoord(this)">
+                <span class="coord-icon">⬡</span> Geral
+              </button>
+              <button class="coord-btn" data-coord="Operações" onclick="selectCoord(this)">
+                <span class="coord-icon">◈</span> Operações
+              </button>
+              <button class="coord-btn" data-coord="G. Pessoas" onclick="selectCoord(this)">
+                <span class="coord-icon">◉</span> G. Pessoas
+              </button>
+              <button class="coord-btn" data-coord="Marketing" onclick="selectCoord(this)">
+                <span class="coord-icon">◬</span> Marketing
+              </button>
+              <button class="coord-btn" data-coord="Projetos" onclick="selectCoord(this)">
+                <span class="coord-icon">◫</span> Projetos
+              </button>
+              <button class="coord-btn" data-coord="Finanças" onclick="selectCoord(this)">
+                <span class="coord-icon">◎</span> Finanças
+              </button>
+            </div>
+          </div>
+
+          <!-- Login fields -->
+          <form id="loginForm" class="field-group" autocomplete="on" onsubmit="return false;">
+            <div class="field">
+              <label for="loginEmail">Email</label>
+              <input type="email" id="loginEmail" placeholder="seu@email.com" required autocomplete="email">
+            </div>
+            <div class="field">
+              <label for="loginPassword">Senha</label>
+              <input type="password" id="loginPassword" placeholder="••••••••" required autocomplete="current-password">
+            </div>
+          </form>
+
+          <div class="alert-box" id="loginAlert"></div>
+
+          <button class="btn-login" id="btnLogin" onclick="doLogin()">Entrar</button>
+
+          <div class="form-divider"></div>
+
+          <p class="footer-note">
+            Recebeu um convite? <a href="convite.html">Criar conta</a><br>
+            <span>NUPIEEPRO</span> · Selo ABJ 2026
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ SUPABASE CDN ═══ -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/auth.js"></script>
+  <script>
+    initLoginPage();
+
+    // PWA
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('sw.js');
+    }
+  </script>
+</body>
+</html>
