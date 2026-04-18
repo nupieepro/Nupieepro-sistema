@@ -1,7 +1,7 @@
 {
   "name": "NUPIEEPRO Sistema",
   "short_name": "NUPIEEPRO",
-  "description": "Sistema de gestão NUPIEEPRO — Núcleo de Pesquisa, Inovação, Ensino, Extensão e Profissionalização",
+  "description": "Sistema de gestão NUPIEEPRO — Núcleo Piauiense de Estudantes de Engenharia de Produção",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#0D0B2B",
@@ -9,14 +9,10 @@
   "orientation": "any",
   "icons": [
     {
-      "src": "icons/icon-192.png",
-      "sizes": "192x192",
-      "type": "image/png"
-    },
-    {
-      "src": "icons/icon-512.png",
-      "sizes": "512x512",
-      "type": "image/png"
+      "src": "assets/1000279363.png",
+      "sizes": "192x192 384x384 512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
     }
   ]
 }

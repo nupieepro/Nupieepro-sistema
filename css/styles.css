@@ -4,44 +4,40 @@
    Fonts: Syne (headings) + DM Sans (body)
    ============================================================ */
 
-@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap');
 
 :root {
-  /* Core */
-  --navy: #0D0B2B;
-  --navy-mid: #120F36;
-  --navy-card: #17133D;
-  --navy-hover: #1C1848;
-  --orange: #F07820;
-  --orange-light: #FF9040;
-  --orange-dim: rgba(240,120,32,0.12);
-  --orange-border: rgba(240,120,32,0.35);
+  /* Core - Paleta Oficial NUPIEEPRO 2026 */
+  --black: #000000;
+  --navy: #29324f;
+  --navy-mid: #1d2338;
+  --navy-card: #323d61;
+  --orange: #f75412;
+  --orange-light: #ff6b30;
+  --orange-dim: rgba(247, 84, 18, 0.15);
+  --orange-border: rgba(247, 84, 18, 0.4);
 
-  /* Text */
-  --white: #FFF;
+  /* Textos */
+  --white: #ffffff;
   --w70: rgba(255,255,255,0.7);
   --w40: rgba(255,255,255,0.4);
   --w20: rgba(255,255,255,0.2);
   --w10: rgba(255,255,255,0.08);
   --w5: rgba(255,255,255,0.04);
-  --border: rgba(255,255,255,0.09);
+  --border: rgba(255,255,255,0.12);
 
-  /* Status */
+  /* Status Colors */
   --green: #2DD4A0;
-  --green-dim: rgba(45,212,160,0.12);
-  --green-border: rgba(45,212,160,0.25);
+  --green-dim: rgba(45,212,160,0.15);
+  --green-border: rgba(45,212,160,0.3);
   --yellow: #F5C518;
-  --yellow-dim: rgba(245,197,24,0.1);
-  --yellow-border: rgba(245,197,24,0.25);
+  --yellow-dim: rgba(245,197,24,0.15);
+  --yellow-border: rgba(245,197,24,0.3);
   --red: #F07070;
-  --red-dim: rgba(240,112,112,0.1);
-  --red-border: rgba(240,112,112,0.25);
+  --red-dim: rgba(240,112,112,0.15);
+  --red-border: rgba(240,112,112,0.3);
   --blue: #5B9CF6;
-  --blue-dim: rgba(91,156,246,0.1);
-  --blue-border: rgba(91,156,246,0.25);
   --purple: #A78BFA;
-  --purple-dim: rgba(167,139,250,0.1);
-  --purple-border: rgba(167,139,250,0.25);
 
   /* Layout */
   --sidebar-w: 244px;
@@ -54,8 +50,8 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 body {
-  font-family: 'DM Sans', system-ui, -apple-system, sans-serif;
-  background: var(--navy);
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  background: var(--black);
   color: var(--white);
   min-height: 100vh;
   line-height: 1.6;
@@ -72,7 +68,7 @@ a:hover { color: var(--orange-light); }
   position: fixed;
   inset: 0;
   z-index: 200;
-  background: var(--navy);
+  background: var(--black);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -123,7 +119,7 @@ a:hover { color: var(--orange-light); }
 }
 
 .logo-wordmark {
-  font-family: 'Syne', sans-serif;
+  font-family: 'Plus Jakarta Sans', sans-serif;
   font-size: 28px;
   font-weight: 800;
   letter-spacing: 0.06em;
@@ -142,7 +138,7 @@ a:hover { color: var(--orange-light); }
 }
 
 .brand-headline {
-  font-family: 'Syne', sans-serif;
+  font-family: 'Plus Jakarta Sans', sans-serif;
   font-size: clamp(26px, 3.2vw, 40px);
   font-weight: 700;
   line-height: 1.2;
@@ -166,7 +162,7 @@ a:hover { color: var(--orange-light); }
 }
 
 .stat-num {
-  font-family: 'Syne', sans-serif;
+  font-family: 'Plus Jakarta Sans', sans-serif;
   font-size: 30px;
   font-weight: 800;
   color: var(--orange);
@@ -196,7 +192,7 @@ a:hover { color: var(--orange-light); }
 }
 
 .form-title {
-  font-family: 'Syne', sans-serif;
+  font-family: 'Plus Jakarta Sans', sans-serif;
   font-size: 22px;
   font-weight: 700;
 }
@@ -356,7 +352,7 @@ a:hover { color: var(--orange-light); }
   padding: 14px;
   background: var(--orange);
   color: var(--white);
-  font-family: 'Syne', sans-serif;
+  font-family: 'Plus Jakarta Sans', sans-serif;
   font-size: 15px;
   font-weight: 700;
   letter-spacing: 0.04em;
@@ -429,7 +425,7 @@ a:hover { color: var(--orange-light); }
 }
 
 .sidebar-logo-text {
-  font-family: 'Syne', sans-serif;
+  font-family: 'Plus Jakarta Sans', sans-serif;
   font-size: 14px;
   font-weight: 800;
   letter-spacing: 0.04em;
@@ -590,7 +586,7 @@ a:hover { color: var(--orange-light); }
 }
 
 .topbar-title {
-  font-family: 'Syne', sans-serif;
+  font-family: 'Plus Jakarta Sans', sans-serif;
   font-size: 17px;
   font-weight: 700;
 }
@@ -658,7 +654,7 @@ a:hover { color: var(--orange-light); }
 }
 
 .sum-value {
-  font-family: 'Syne', sans-serif;
+  font-family: 'Plus Jakarta Sans', sans-serif;
   font-size: 26px;
   font-weight: 800;
   line-height: 1;
@@ -689,7 +685,7 @@ a:hover { color: var(--orange-light); }
 }
 
 .section-title {
-  font-family: 'Syne', sans-serif;
+  font-family: 'Plus Jakarta Sans', sans-serif;
   font-size: 14px;
   font-weight: 700;
   margin-bottom: 0.9rem;

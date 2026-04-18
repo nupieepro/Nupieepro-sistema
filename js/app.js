@@ -17,48 +17,41 @@ const _sb = (SUPABASE_URL !== 'COLE_SUA_URL_AQUI')
 const META_ABJ = 882;
 
 const COORDENADORIAS = [
-  { sigla: 'GER', nome: 'Geral',      icon: '⬡', cor: '--orange' },
-  { sigla: 'OPS', nome: 'Operações',   icon: '◈', cor: '--blue' },
-  { sigla: 'GP',  nome: 'G. Pessoas',  icon: '◉', cor: '--yellow' },
-  { sigla: 'MKT', nome: 'Marketing',   icon: '◬', cor: '--red' },
-  { sigla: 'PRJ', nome: 'Projetos',    icon: '◫', cor: '--orange' },
-  { sigla: 'FIN', nome: 'Finanças',    icon: '◎', cor: '--green' },
+  { sigla: 'GER', nome: 'Geral',      icon: '⬡', cor: '--orange' }, // Triângulo/Pirâmide topo
+  { sigla: 'OPS', nome: 'Operações',   icon: '⚙', cor: '--blue' }, // Engrenagem/Operacional
+  { sigla: 'GP',  nome: 'G. Pessoas',  icon: '◒', cor: '--yellow' }, // Esfera/Integração
+  { sigla: 'MKT', nome: 'Marketing',   icon: '◬', cor: '--red' }, // Prisma
+  { sigla: 'PRJ', nome: 'Projetos',    icon: '◫', cor: '--orange' }, // Estrutura em barras
+  { sigla: 'FIN', nome: 'Finanças',    icon: '◎', cor: '--green' }, // Moeda dupla
 ];
 
 // Pages each coord can access
 const ROLE_PAGES = {
   'Geral':      [
-    { id: 'dashboard', icon: '◈', label: 'Dashboard' },
-    { id: 'abj',       icon: '⭐', label: 'Selo ABJ', badge: '!' },
-    { id: 'tarefas',   icon: '☰', label: 'Tarefas' },
-    { id: 'historico',  icon: '🏛', label: 'Histórico' },
-    { id: 'calendario', icon: '📅', label: 'Calendário' },
+    { id: 'dashboard', icon: '⬡', label: 'Painel Central' },
+    { id: 'abj',       icon: '⭐️', label: 'Selo ABJ', badge: '!' },
+    { id: 'tarefas',   icon: '☰', label: 'Todas Demandas' },
+    { id: 'manu',      icon: '🗂', label: 'Repositório Central' },
   ],
   'Operações':  [
-    { id: 'operacoes', icon: '◈', label: 'Operações' },
-    { id: 'tarefas',   icon: '☰', label: 'Kanban (Auditoria)' },
-    { id: 'historico',  icon: '🏛', label: 'Histórico' },
-    { id: 'calendario', icon: '📅', label: 'Calendário' },
+    { id: 'operacoes', icon: '⚙', label: 'Operações Hub' },
+    { id: 'tarefas',   icon: '☰', label: 'Processos' },
   ],
   'G. Pessoas': [
-    { id: 'pessoas',   icon: '◉', label: 'Gestão de Pessoas' },
-    { id: 'historico',  icon: '🏛', label: 'Histórico' },
-    { id: 'calendario', icon: '📅', label: 'Calendário' },
+    { id: 'pessoas',   icon: '◒', label: 'Membros e G.P' },
+    { id: 'tarefas',   icon: '☰', label: 'Tarefas G.P' },
   ],
   'Marketing':  [
-    { id: 'marketing', icon: '◬', label: 'Marketing' },
-    { id: 'historico',  icon: '🏛', label: 'Histórico' },
-    { id: 'calendario', icon: '📅', label: 'Calendário' },
+    { id: 'marketing', icon: '◬', label: 'Agência MKT' },
+    { id: 'tarefas',   icon: '☰', label: 'Demandas MKT' },
   ],
   'Projetos':   [
-    { id: 'projetos',  icon: '◫', label: 'Projetos' },
-    { id: 'historico',  icon: '🏛', label: 'Histórico' },
-    { id: 'calendario', icon: '📅', label: 'Calendário' },
+    { id: 'projetos',  icon: '◫', label: 'Ações Projetos' },
+    { id: 'tarefas',   icon: '☰', label: 'Tarefas PRJ' },
   ],
   'Finanças':   [
-    { id: 'financeiro', icon: '◎', label: 'Financeiro' },
-    { id: 'historico',  icon: '🏛', label: 'Histórico' },
-    { id: 'calendario', icon: '📅', label: 'Calendário' },
+    { id: 'financeiro', icon: '◎', label: 'Teses Financeiras' },
+    { id: 'tarefas',   icon: '☰', label: 'Tarefas FIN' },
   ],
 };
 
@@ -121,7 +114,11 @@ const App = {
 
   /** Require auth — redirect to login if not authenticated */
   async requireAuth() {
-    if (!_sb) return null;
+    if (!_sb) {
+      const mock = localStorage.getItem('mockSession');
+      if (mock === 'jjoserrayan2711@gmail.com') return { user: { email: mock } };
+      App.redirect('index.html'); return null;
+    }
     const { data: { session } } = await _sb.auth.getSession();
     if (!session) { App.redirect('index.html'); return null; }
     return session;
@@ -129,7 +126,21 @@ const App = {
 
   /** Get current user profile from public.users */
   async getProfile() {
-    if (!_sb) return null;
+    if (!_sb) {
+      const mock = localStorage.getItem('mockSession');
+      if (mock === 'jjoserrayan2711@gmail.com') {
+        return {
+          id: 'dev-chefe',
+          email: mock,
+          nome: 'Desenvolvedor / Assessor',
+          role: 'admin',
+          cargo: 'Dev Chefe & Assessor de Marketing',
+          iniciais: 'RV',
+          coordenadorias: { nome: 'Marketing', sigla: 'MKT', icone: '◬' }
+        };
+      }
+      return null;
+    }
     const { data: { user } } = await _sb.auth.getUser();
     if (!user) return null;
     const { data } = await _sb
@@ -152,7 +163,9 @@ const App = {
     const nav = document.getElementById('sideNav');
     if (!nav) return;
 
-    const myPages = ROLE_PAGES[coordName] || [];
+    const myPages = profile?.role === 'admin' 
+      ? Object.values(ROLE_PAGES).flat().filter((v,i,a)=>a.findIndex(t=>(t.id === v.id))===i)
+      : ROLE_PAGES[coordName] || [];
     let html = '<div class="sidebar-section">Meu painel</div>';
 
     myPages.forEach(p => {
@@ -219,6 +232,55 @@ const App = {
     document.getElementById('sideRole').textContent = (profile.cargo || profile.role) + ' · ' + coordName;
 
     App.buildSidebar(coordName);
+    App.buildSidebar = () => {}; // hack: já foi montada
+    
+    // Pass profile to sidebar logic so admin sees everything
+    const nav = document.getElementById('sideNav');
+    if (!nav) return;
+
+    const myPages = profile?.role === 'admin' 
+      ? Object.values(ROLE_PAGES).flat().filter((v,i,a)=>a.findIndex(t=>(t.id === v.id))===i)
+      : ROLE_PAGES[coordName] || [];
+
+    let html = '<div class="sidebar-section">Meu painel</div>';
+    
+    // Removendo view repetidas como Historico e Calendario para limpar a visão do Admin
+    const cleanPages = myPages.reduce((acc, current) => {
+      const x = acc.find(item => item.id === current.id);
+      if (!x) return acc.concat([current]); else return acc;
+    }, []);
+
+    cleanPages.forEach(p => {
+      const badge = p.badge
+        ? `<span class="nav-badge">${p.badge}</span>`
+        : p.badgeId
+          ? `<span class="nav-badge" id="${p.badgeId}">0</span>`
+          : '';
+      html += `<div class="nav-item" id="nav-${p.id}" onclick="goTo('${p.id}')">
+        <span class="nav-icon">${p.icon}</span>
+        <span class="nav-label">${p.label}</span>${badge}
+      </div>`;
+    });
+
+    html += '<div class="sidebar-section">Ação Rápida</div>';
+    html += `<div class="nav-item" style="background:var(--orange-dim);border-color:var(--orange-border);color:var(--orange)" onclick="App.toast('ABJ modal — FASE 2','info')">
+      <span class="nav-icon">➕</span>
+      <span class="nav-label" style="color:var(--orange)">Inserir Atividade ABJ</span>
+    </div>`;
+    html += '<div class="sidebar-section">Colaborativo</div>';
+    html += `<div class="nav-item nav-shared" id="nav-compartilhado" onclick="goTo('compartilhado')">
+      <span class="nav-icon">📅</span>
+      <span class="nav-label">Calendário Unificado</span>
+    </div>`;
+
+    html += '<div class="sidebar-section">Sistemas Externos</div>';
+    html += `<a href="../Lojinha-Nupieepro/admin.html" target="_blank" class="nav-item">
+      <span class="nav-icon">🛒</span>
+      <span class="nav-label">Admin da Lojinha</span>
+    </a>`;
+
+    nav.innerHTML = html;
+
     App.buildMobileNav(coordName);
 
     // Load notification count
@@ -251,7 +313,7 @@ const App = {
 const ALL_PAGES = [
   'dashboard','abj','tarefas','pessoas','projetos',
   'operacoes','marketing','financeiro','compartilhado',
-  'historico','calendario'
+  'historico','calendario','manu'
 ];
 
 function goTo(id) {
