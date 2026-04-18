@@ -7,24 +7,30 @@
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600;700&family=Syne:wght@400;600;700;800&display=swap');
 
 :root {
-  /* Core - Paleta Oficial NUPIEEPRO 2026 */
-  --black: #000000;
-  --navy: #29324f;
-  --navy-mid: #1d2338;
-  --navy-card: #323d61;
-  --orange: #f75412;
-  --orange-light: #ff6b30;
-  --orange-dim: rgba(247, 84, 18, 0.15);
-  --orange-border: rgba(247, 84, 18, 0.4);
+  /* ══ Paleta Oficial NUPIEEPRO 2026 ══
+     #000000 preto  · #29324F navy  · #919ABB slate
+     #f75412 laranja · #ffffff branco                */
+  --black:  #000000;
+  --navy:   #29324F;
+  --navy-mid: #1E2540;
+  --navy-card: #2C3557;
+  --slate:  #919ABB;
+  --slate-dim: rgba(145,154,187,0.12);
+  --slate-border: rgba(145,154,187,0.22);
 
-  /* Textos */
+  --orange: #f75412;
+  --orange-light: #ff7a3d;
+  --orange-dim: rgba(247,84,18,0.13);
+  --orange-border: rgba(247,84,18,0.38);
+
+  /* Texto */
   --white: #ffffff;
-  --w70: rgba(255,255,255,0.7);
-  --w40: rgba(255,255,255,0.4);
-  --w20: rgba(255,255,255,0.2);
-  --w10: rgba(255,255,255,0.08);
-  --w5: rgba(255,255,255,0.04);
-  --border: rgba(255,255,255,0.12);
+  --w70: #919ABB;          /* slate como cor de texto secundário */
+  --w40: rgba(145,154,187,0.6);
+  --w20: rgba(145,154,187,0.25);
+  --w10: rgba(145,154,187,0.1);
+  --w5:  rgba(145,154,187,0.05);
+  --border: rgba(145,154,187,0.18);
 
   /* Status Colors */
   --green: #2DD4A0;
@@ -37,7 +43,11 @@
   --red-dim: rgba(240,112,112,0.15);
   --red-border: rgba(240,112,112,0.3);
   --blue: #5B9CF6;
+  --blue-dim: rgba(91,156,246,0.12);
+  --blue-border: rgba(91,156,246,0.25);
   --purple: #A78BFA;
+  --purple-dim: rgba(167,139,250,0.12);
+  --purple-border: rgba(167,139,250,0.25);
 
   /* Layout */
   --sidebar-w: 244px;
@@ -182,7 +192,7 @@ a:hover { color: var(--orange-light); }
 }
 
 .form-card {
-  background: var(--navy-mid);
+  background: var(--navy);
   border: 1px solid var(--border);
   border-radius: 20px;
   padding: 2.5rem;
@@ -403,7 +413,7 @@ a:hover { color: var(--orange-light); }
 .sidebar {
   width: var(--sidebar-w);
   flex-shrink: 0;
-  background: var(--navy-mid);
+  background: var(--navy);
   border-right: 1px solid var(--border);
   display: flex;
   flex-direction: column;
@@ -578,7 +588,7 @@ a:hover { color: var(--orange-light); }
   align-items: center;
   justify-content: space-between;
   border-bottom: 1px solid var(--border);
-  background: var(--navy-mid);
+  background: var(--navy-card);
   position: sticky;
   top: 0;
   z-index: 20;
@@ -979,35 +989,50 @@ a:hover { color: var(--orange-light); }
    THEME SYSTEM — aplica via data-theme no <html>
    ═══════════════════════════════════════════════════════ */
 
-/* Tema padrão: Preto + Navy NUPIEEPRO (#000 / #29324f / #f75412) */
-/* Tema "classic": navy escuro original */
+/* Tema padrão: NUPIEEPRO Oficial — #000 / #29324F / #919ABB / #f75412 */
+
+/* Tema "classic": navy escuro estilo ABJ */
 [data-theme="classic"] {
   --black: #0D0B2B;
   --navy: #120F36;
   --navy-mid: #17133D;
   --navy-card: #1C1848;
+  --slate: #7B84A8;
+  --w70: #7B84A8;
+  --w40: rgba(123,132,168,0.6);
+  --w10: rgba(123,132,168,0.1);
+  --w5:  rgba(123,132,168,0.05);
+  --border: rgba(123,132,168,0.18);
   --orange: #F07820;
   --orange-light: #FF9040;
   --orange-dim: rgba(240,120,32,0.12);
   --orange-border: rgba(240,120,32,0.35);
 }
 
-/* Tema "contrast": preto total, borda laranja */
+/* Tema "contrast": preto absoluto + bordas slate/laranja */
 [data-theme="contrast"] {
   --black: #000000;
-  --navy: #0a0a0a;
-  --navy-mid: #0f0f0f;
-  --navy-card: #171717;
-  --border: rgba(247,84,18,0.25);
+  --navy: #0d0d0d;
+  --navy-mid: #111111;
+  --navy-card: #191919;
+  --slate: #a0aacc;
+  --w70: #a0aacc;
+  --w40: rgba(160,170,204,0.6);
+  --border: rgba(247,84,18,0.22);
 }
 
-/* Tema "roxo": roxo + laranja */
+/* Tema "purple": roxo profundo + laranja */
 [data-theme="purple"] {
-  --black: #1a0f2e;
-  --navy: #2d1b69;
-  --navy-mid: #1f1245;
-  --navy-card: #3b2380;
-  --border: rgba(167,139,250,0.2);
+  --black: #0f0a1e;
+  --navy: #1e1545;
+  --navy-mid: #160f36;
+  --navy-card: #2a1d5e;
+  --slate: #9b8ec4;
+  --w70: #9b8ec4;
+  --w40: rgba(155,142,196,0.6);
+  --w10: rgba(155,142,196,0.1);
+  --w5:  rgba(155,142,196,0.05);
+  --border: rgba(155,142,196,0.2);
 }
 
 /* ═══ FONT SYSTEM — aplica via data-font no <html> ═══ */
@@ -1247,7 +1272,7 @@ body { font-family: var(--font-body); }
   bottom: 0;
   left: 0;
   right: 0;
-  background: var(--navy-mid);
+  background: var(--navy);
   border-top: 1px solid var(--border);
   padding: 6px 0;
   z-index: 100;
