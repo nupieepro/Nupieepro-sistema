@@ -3,9 +3,11 @@
    Alinhado com a plataforma real (dark theme, 6 coords, ABJ)
    ============================================================ */
 
-// ⚠️ Substitua pelos valores do seu projeto Supabase
-const SUPABASE_URL  = 'COLE_SUA_URL_AQUI';
-const SUPABASE_ANON = 'COLE_SUA_ANON_KEY_AQUI';
+// Chave pública (anon/publishable) — segura para frontend.
+// Segurança real = RLS policies no banco (schema.sql).
+// NUNCA coloque a service_role key aqui.
+const SUPABASE_URL  = 'https://quwpyrdxyibcbyzwfilb.supabase.co';
+const SUPABASE_ANON = 'sb_publishable_VmEMT07DiE1f5DtxzgZomA_-F0gZIpM';
 
 const _sb = (SUPABASE_URL !== 'COLE_SUA_URL_AQUI')
   ? supabase.createClient(SUPABASE_URL, SUPABASE_ANON)
