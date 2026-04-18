@@ -216,7 +216,9 @@ const App = {
   /** Toggle sidebar on mobile */
   toggleSidebar() {
     const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('sidebarOverlay');
     if (sidebar) sidebar.classList.toggle('open');
+    if (overlay) overlay.classList.toggle('visible');
   },
 
   /** Init full dashboard (auth + sidebar + profile) */
@@ -320,9 +322,11 @@ function goTo(id) {
   const navEl = document.getElementById('nav-' + id);
   if (navEl) navEl.classList.add('active');
 
-  // Close mobile sidebar
+  // Close mobile sidebar + overlay
   const sidebar = document.getElementById('sidebar');
+  const overlay = document.getElementById('sidebarOverlay');
   if (sidebar) sidebar.classList.remove('open');
+  if (overlay) overlay.classList.remove('visible');
 }
 
 function toggleSidebar() {
