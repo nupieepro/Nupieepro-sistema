@@ -4,7 +4,7 @@
    Fonts: Syne (headings) + DM Sans (body)
    ============================================================ */
 
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600;700&family=Syne:wght@400;600;700;800&display=swap');
 
 :root {
   /* Core - Paleta Oficial NUPIEEPRO 2026 */
@@ -974,6 +974,271 @@ a:hover { color: var(--orange-light); }
 .justify-between { justify-content: space-between; }
 .gap-1 { gap: 0.5rem; }
 .gap-2 { gap: 1rem; }
+
+/* ═══════════════════════════════════════════════════════
+   THEME SYSTEM — aplica via data-theme no <html>
+   ═══════════════════════════════════════════════════════ */
+
+/* Tema padrão: Preto + Navy NUPIEEPRO (#000 / #29324f / #f75412) */
+/* Tema "classic": navy escuro original */
+[data-theme="classic"] {
+  --black: #0D0B2B;
+  --navy: #120F36;
+  --navy-mid: #17133D;
+  --navy-card: #1C1848;
+  --orange: #F07820;
+  --orange-light: #FF9040;
+  --orange-dim: rgba(240,120,32,0.12);
+  --orange-border: rgba(240,120,32,0.35);
+}
+
+/* Tema "contrast": preto total, borda laranja */
+[data-theme="contrast"] {
+  --black: #000000;
+  --navy: #0a0a0a;
+  --navy-mid: #0f0f0f;
+  --navy-card: #171717;
+  --border: rgba(247,84,18,0.25);
+}
+
+/* Tema "roxo": roxo + laranja */
+[data-theme="purple"] {
+  --black: #1a0f2e;
+  --navy: #2d1b69;
+  --navy-mid: #1f1245;
+  --navy-card: #3b2380;
+  --border: rgba(167,139,250,0.2);
+}
+
+/* ═══ FONT SYSTEM — aplica via data-font no <html> ═══ */
+:root {
+  --font-body: 'Inter', system-ui, sans-serif;
+  --font-head: 'Plus Jakarta Sans', sans-serif;
+}
+
+[data-font="jakarta"] {
+  --font-body: 'Plus Jakarta Sans', sans-serif;
+  --font-head: 'Plus Jakarta Sans', sans-serif;
+}
+[data-font="syne"] {
+  --font-body: 'Syne', sans-serif;
+  --font-head: 'Syne', sans-serif;
+}
+[data-font="system"] {
+  --font-body: system-ui, -apple-system, sans-serif;
+  --font-head: system-ui, -apple-system, sans-serif;
+}
+
+body { font-family: var(--font-body); }
+
+/* ═══════════════════════════════════════════════════════
+   ROLE SWITCHER (sidebar)
+   ═══════════════════════════════════════════════════════ */
+.role-switcher {
+  display: flex;
+  gap: 3px;
+  margin: 8px 8px 4px;
+  padding: 3px;
+  background: var(--w5);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+.role-tab {
+  flex: 1;
+  text-align: center;
+  padding: 5px 6px;
+  border-radius: 7px;
+  font-size: 10px;
+  font-weight: 700;
+  cursor: pointer;
+  color: var(--w40);
+  transition: all 0.15s;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  border: 1px solid transparent;
+  user-select: none;
+}
+.role-tab:hover { color: var(--w70); }
+.role-tab.active {
+  background: var(--orange-dim);
+  border-color: var(--orange-border);
+  color: var(--white);
+}
+
+/* ═══════════════════════════════════════════════════════
+   NOTIFICATIONS PAGE
+   ═══════════════════════════════════════════════════════ */
+.notif-list { display: flex; flex-direction: column; gap: 8px; }
+.notif-item {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 14px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--w5);
+  transition: background 0.15s, border-color 0.15s;
+  cursor: pointer;
+}
+.notif-item:hover { background: var(--w10); }
+.notif-item.unread {
+  background: var(--orange-dim);
+  border-color: var(--orange-border);
+}
+.notif-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--orange);
+  flex-shrink: 0;
+  margin-top: 5px;
+  box-shadow: 0 0 6px var(--orange);
+}
+.notif-dot.read { background: var(--w20); box-shadow: none; }
+.notif-body-text { flex: 1; }
+.notif-title { font-size: 13px; font-weight: 600; margin-bottom: 3px; }
+.notif-desc { font-size: 12px; color: var(--w70); line-height: 1.4; }
+.notif-time { font-size: 11px; color: var(--w40); margin-top: 5px; }
+.notif-tag { font-size: 10px; color: var(--w40); background: var(--w5); padding: 2px 8px; border-radius: 100px; border: 1px solid var(--border); white-space: nowrap; }
+
+/* ═══════════════════════════════════════════════════════
+   CALENDAR (funcional com JS)
+   ═══════════════════════════════════════════════════════ */
+.cal-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.2rem;
+  gap: 8px;
+}
+.cal-nav-btn {
+  background: var(--w5);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--white);
+  padding: 6px 14px;
+  cursor: pointer;
+  font-size: 18px;
+  line-height: 1;
+  transition: background 0.15s;
+}
+.cal-nav-btn:hover { background: var(--w10); }
+.cal-month-label {
+  font-family: var(--font-head);
+  font-size: 18px;
+  font-weight: 800;
+  text-align: center;
+  flex: 1;
+}
+.cal-year-select {
+  background: var(--w5);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--white);
+  padding: 6px 10px;
+  font-size: 13px;
+  cursor: pointer;
+  outline: none;
+}
+.cal-year-select option { background: var(--navy-mid); }
+.cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 5px;
+}
+.cal-day-name {
+  text-align: center;
+  font-size: 11px;
+  color: var(--w40);
+  padding: 6px 0;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-weight: 600;
+}
+.cal-day {
+  background: var(--w5);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 6px;
+  min-height: 72px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.12s, border-color 0.12s;
+  overflow: hidden;
+  position: relative;
+}
+.cal-day:hover { background: var(--w10); }
+.cal-day.today {
+  border-color: var(--orange);
+  background: var(--orange-dim);
+  box-shadow: 0 0 0 1px var(--orange-border);
+}
+.cal-day.other-month { opacity: 0.25; pointer-events: none; }
+.cal-day.empty { background: transparent; border-color: transparent; cursor: default; pointer-events: none; }
+.cal-event-tag {
+  display: block;
+  margin-top: 3px;
+  padding: 2px 5px;
+  border-radius: 4px;
+  font-size: 9px;
+  font-weight: 600;
+  line-height: 1.3;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ═══════════════════════════════════════════════════════
+   SETTINGS PAGE
+   ═══════════════════════════════════════════════════════ */
+.settings-section { display: flex; flex-direction: column; gap: 1.5rem; }
+.setting-card {
+  background: var(--navy-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 1.4rem;
+}
+.setting-card-title {
+  font-family: var(--font-head);
+  font-size: 13px;
+  font-weight: 700;
+  margin-bottom: 1rem;
+  color: var(--w70);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+.option-row { display: flex; flex-direction: column; gap: 8px; }
+.option-btn {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--w5);
+  color: var(--w70);
+  cursor: pointer;
+  font-size: 13px;
+  transition: all 0.15s;
+  text-align: left;
+  width: 100%;
+  font-family: var(--font-body);
+}
+.option-btn:hover { border-color: var(--w20); color: var(--white); background: var(--w10); }
+.option-btn.active {
+  border-color: var(--orange-border);
+  background: var(--orange-dim);
+  color: var(--white);
+}
+.option-btn .check { margin-left: auto; color: var(--orange); font-size: 16px; opacity: 0; }
+.option-btn.active .check { opacity: 1; }
+.color-dot {
+  width: 18px; height: 18px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  border: 2px solid rgba(255,255,255,0.2);
+}
 
 /* ═══ MOBILE NAV ═══ */
 .mobile-nav {

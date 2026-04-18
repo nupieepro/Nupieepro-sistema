@@ -219,71 +219,60 @@ const App = {
 
   /** Init full dashboard (auth + sidebar + profile) */
   async initDashboard() {
+    // Apply saved theme & font immediately
+    Theme.init();
+
     const session = await App.requireAuth();
     if (!session) return null;
 
     const profile = await App.getProfile();
     if (!profile) return null;
 
-    // Set sidebar user info
     const coordName = profile.coordenadorias?.nome || 'Geral';
-    document.getElementById('sideAvatar').textContent = profile.iniciais || profile.nome?.charAt(0) || '?';
-    document.getElementById('sideName').textContent = profile.nome;
-    document.getElementById('sideRole').textContent = (profile.cargo || profile.role) + ' · ' + coordName;
 
-    App.buildSidebar(coordName);
-    App.buildSidebar = () => {}; // hack: já foi montada
-    
-    // Pass profile to sidebar logic so admin sees everything
-    const nav = document.getElementById('sideNav');
-    if (!nav) return;
+    // Set user chip
+    document.getElementById('sideAvatar').textContent = profile.iniciais || profile.nome?.[0] || '?';
+    document.getElementById('sideName').textContent   = profile.nome || 'Usuário';
+    document.getElementById('sideRole').textContent   = (profile.cargo || profile.role) + ' · ' + coordName;
 
-    const myPages = profile?.role === 'admin' 
-      ? Object.values(ROLE_PAGES).flat().filter((v,i,a)=>a.findIndex(t=>(t.id === v.id))===i)
-      : ROLE_PAGES[coordName] || [];
-
-    let html = '<div class="sidebar-section">Meu painel</div>';
-    
-    // Removendo view repetidas como Historico e Calendario para limpar a visão do Admin
-    const cleanPages = myPages.reduce((acc, current) => {
-      const x = acc.find(item => item.id === current.id);
-      if (!x) return acc.concat([current]); else return acc;
-    }, []);
-
-    cleanPages.forEach(p => {
-      const badge = p.badge
-        ? `<span class="nav-badge">${p.badge}</span>`
-        : p.badgeId
-          ? `<span class="nav-badge" id="${p.badgeId}">0</span>`
-          : '';
-      html += `<div class="nav-item" id="nav-${p.id}" onclick="goTo('${p.id}')">
-        <span class="nav-icon">${p.icon}</span>
-        <span class="nav-label">${p.label}</span>${badge}
-      </div>`;
-    });
-
-    html += '<div class="sidebar-section">Ação Rápida</div>';
-    html += `<div class="nav-item" style="background:var(--orange-dim);border-color:var(--orange-border);color:var(--orange)" onclick="App.toast('ABJ modal — FASE 2','info')">
-      <span class="nav-icon">➕</span>
-      <span class="nav-label" style="color:var(--orange)">Inserir Atividade ABJ</span>
-    </div>`;
-    html += '<div class="sidebar-section">Colaborativo</div>';
-    html += `<div class="nav-item nav-shared" id="nav-compartilhado" onclick="goTo('compartilhado')">
-      <span class="nav-icon">📅</span>
-      <span class="nav-label">Calendário Unificado</span>
-    </div>`;
-
-    html += '<div class="sidebar-section">Sistemas Externos</div>';
-    html += `<a href="../Lojinha-Nupieepro/admin.html" target="_blank" class="nav-item">
-      <span class="nav-icon">🛒</span>
-      <span class="nav-label">Admin da Lojinha</span>
-    </a>`;
-
-    nav.innerHTML = html;
+    if (profile.role === 'admin') {
+      // Show role switcher for admin/dev
+      const switcher = document.getElementById('roleSwitcher');
+      if (switcher) switcher.classList.remove('d-none');
+      // Build sidebar with dev pages (default: GER view)
+      _buildNav('ger');
+    } else {
+      // Regular user: build sidebar based on their coord
+      const pages = ROLE_PAGES[coordName] || [];
+      const nav = document.getElementById('sideNav');
+      if (nav) {
+        let html = `<div class="sidebar-section">${coordName}</div>`;
+        pages.forEach(p => {
+          const badge = p.badge ? `<span class="nav-badge">${p.badge}</span>` : '';
+          html += `<div class="nav-item" id="nav-${p.id}" onclick="goTo('${p.id}')">
+            <span class="nav-icon">${p.icon}</span>
+            <span class="nav-label">${p.label}</span>${badge}
+          </div>`;
+        });
+        html += '<div class="sidebar-section">Colaborativo</div>';
+        html += `<div class="nav-item nav-shared" id="nav-compartilhado" onclick="goTo('compartilhado')">
+          <span class="nav-icon">📅</span><span class="nav-label">Calendário Universal</span>
+        </div>`;
+        html += '<div class="sidebar-section">Sistema</div>';
+        html += `<div class="nav-item" onclick="goTo('configuracoes')">
+          <span class="nav-icon">⚙</span><span class="nav-label">Configurações</span>
+        </div>`;
+        nav.innerHTML = html;
+      }
+    }
 
     App.buildMobileNav(coordName);
 
-    // Load notification count
+    // Init calendar
+    Cal.init();
+
+    // Init notification count
+    updateNotifCount();
     await App.loadNotifCount();
 
     return profile;
@@ -313,7 +302,7 @@ const App = {
 const ALL_PAGES = [
   'dashboard','abj','tarefas','pessoas','projetos',
   'operacoes','marketing','financeiro','compartilhado',
-  'historico','calendario','manu'
+  'manu','notificacoes','configuracoes'
 ];
 
 function goTo(id) {
@@ -406,6 +395,7 @@ const Dashboard = {
     const pct = Math.round((pts / META_ABJ) * 100);
 
     const el = (id) => document.getElementById(id);
+    if (!el('dashPts')) return; // guard for missing page
     el('dashPts').textContent = pts;
     el('dashPtsBar').style.width = Math.min(pct, 100) + '%';
     el('dashAbjBar').style.width = Math.min(pct, 100) + '%';
@@ -416,12 +406,263 @@ const Dashboard = {
     el('dashSaldo').textContent = App.currency(saldo);
     el('dashSaldoSub').textContent = `↑ ${App.currency(vendas)} · ↓ ${App.currency(despesas)}`;
 
-    // Quick action buttons
     el('quickBtns').innerHTML = `
-      <button class="btn btn-primary" onclick="App.toast('Inserir atividade ABJ — FASE 2','info')">➕ Atividade ABJ</button>
-      <button class="btn btn-ghost" onclick="App.toast('Nova tarefa — FASE 2','info')">☰ Nova Tarefa</button>
-      <button class="btn btn-ghost" onclick="App.toast('Lançamento financeiro — FASE 2','info')">◎ Lançamento</button>
-      <button class="btn btn-ghost" onclick="App.toast('Gerar relatório — FASE 2','info')">📄 Relatório</button>
+      <button class="btn btn-primary" onclick="goTo('abj')">⭐ Selo ABJ</button>
+      <button class="btn btn-ghost" onclick="goTo('tarefas')">☰ Demandas</button>
+      <button class="btn btn-ghost" onclick="goTo('compartilhado')">📅 Calendário</button>
+      <button class="btn btn-ghost" onclick="goTo('financeiro')">◎ Financeiro</button>
     `;
   }
 };
+
+/* ============================================================
+   Theme & Font System
+   ============================================================ */
+const Theme = {
+  apply(name) {
+    document.documentElement.setAttribute('data-theme', name === 'default' ? '' : name);
+    localStorage.setItem('nupie_theme', name);
+    // Update active button
+    document.querySelectorAll('[id^="themeBtn-"]').forEach(b => b.classList.remove('active'));
+    const btn = document.getElementById('themeBtn-' + name);
+    if (btn) btn.classList.add('active');
+  },
+
+  applyFont(name) {
+    document.documentElement.setAttribute('data-font', name === 'default' ? '' : name);
+    localStorage.setItem('nupie_font', name);
+    document.querySelectorAll('[id^="fontBtn-"]').forEach(b => b.classList.remove('active'));
+    const btn = document.getElementById('fontBtn-' + name);
+    if (btn) btn.classList.add('active');
+  },
+
+  init() {
+    const theme = localStorage.getItem('nupie_theme') || 'default';
+    const font  = localStorage.getItem('nupie_font')  || 'default';
+    Theme.apply(theme);
+    Theme.applyFont(font);
+  }
+};
+
+/* ============================================================
+   Calendar
+   ============================================================ */
+const MONTHS_PT = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho',
+                   'Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+
+// Mock events — keyed as "YYYY-M-D"
+const CAL_EVENTS = {
+  '2026-4-6':  [{ label:'Reunião Geral', tag:'⬡', color:'var(--orange)' }],
+  '2026-4-18': [{ label:'Data Hoje', tag:'⬡', color:'var(--green)' }],
+  '2026-4-25': [{ label:'Prazo Relatório OPS', tag:'⚙', color:'var(--blue)' }],
+  '2026-5-1':  [{ label:'Feriado Nacional', tag:'', color:'var(--red)' }],
+  '2026-6-15': [{ label:'Evento Estadual', tag:'◫', color:'var(--purple)' }],
+  '2026-7-31': [{ label:'Prazo ABJ #10', tag:'⭐', color:'var(--yellow)' }],
+};
+
+const Cal = {
+  year: new Date().getFullYear(),
+  month: new Date().getMonth(), // 0-indexed
+
+  init() {
+    // Populate year select (2024 – 2030)
+    const sel = document.getElementById('calYearSelect');
+    if (!sel) return;
+    for (let y = 2024; y <= 2030; y++) {
+      const opt = document.createElement('option');
+      opt.value = y; opt.textContent = y;
+      if (y === Cal.year) opt.selected = true;
+      sel.appendChild(opt);
+    }
+    Cal.render();
+  },
+
+  prev() {
+    Cal.month--;
+    if (Cal.month < 0) { Cal.month = 11; Cal.year--; }
+    Cal.render();
+  },
+
+  next() {
+    Cal.month++;
+    if (Cal.month > 11) { Cal.month = 0; Cal.year++; }
+    Cal.render();
+  },
+
+  goYear(y) {
+    Cal.year = parseInt(y);
+    Cal.render();
+  },
+
+  render() {
+    const grid = document.getElementById('calGrid');
+    if (!grid) return;
+
+    // Update label
+    document.getElementById('calMonthLabel').textContent = MONTHS_PT[Cal.month] + ' ' + Cal.year;
+    const sel = document.getElementById('calYearSelect');
+    if (sel) sel.value = Cal.year;
+
+    // Clear days (keep the 7 day-name headers)
+    const headers = Array.from(grid.querySelectorAll('.cal-day-name'));
+    grid.innerHTML = '';
+    headers.forEach(h => grid.appendChild(h));
+
+    const today = new Date();
+    const firstDay = new Date(Cal.year, Cal.month, 1).getDay(); // 0=Sun
+    const daysInMonth = new Date(Cal.year, Cal.month + 1, 0).getDate();
+
+    // Empty cells before first day
+    for (let i = 0; i < firstDay; i++) {
+      const empty = document.createElement('div');
+      empty.className = 'cal-day empty';
+      grid.appendChild(empty);
+    }
+
+    // Day cells
+    for (let d = 1; d <= daysInMonth; d++) {
+      const cell = document.createElement('div');
+      cell.className = 'cal-day';
+      const isToday = (d === today.getDate() && Cal.month === today.getMonth() && Cal.year === today.getFullYear());
+      if (isToday) cell.classList.add('today');
+
+      cell.innerHTML = `<span>${d}</span>`;
+
+      const key = `${Cal.year}-${Cal.month + 1}-${d}`;
+      if (CAL_EVENTS[key]) {
+        CAL_EVENTS[key].forEach(ev => {
+          const tag = document.createElement('span');
+          tag.className = 'cal-event-tag';
+          tag.style.background = ev.color + '22';
+          tag.style.color = ev.color;
+          tag.textContent = (ev.tag ? ev.tag + ' ' : '') + ev.label;
+          cell.appendChild(tag);
+        });
+      }
+      grid.appendChild(cell);
+    }
+
+    // Upcoming events list
+    Cal.renderUpcoming();
+  },
+
+  renderUpcoming() {
+    const list = document.getElementById('calEventsList');
+    if (!list) return;
+    const now = new Date();
+    const upcoming = Object.entries(CAL_EVENTS)
+      .map(([key, evts]) => {
+        const [y, m, d] = key.split('-').map(Number);
+        return { date: new Date(y, m - 1, d), evts, key };
+      })
+      .filter(e => e.date >= now)
+      .sort((a, b) => a.date - b.date)
+      .slice(0, 5);
+
+    if (upcoming.length === 0) {
+      list.innerHTML = '<p class="text-muted text-sm">Nenhum evento próximo.</p>';
+      return;
+    }
+
+    list.innerHTML = upcoming.map(({ date, evts }) => {
+      const label = evts[0].label;
+      const color = evts[0].color;
+      const tag   = evts[0].tag;
+      const dateStr = date.toLocaleDateString('pt-BR', { day:'2-digit', month:'short', year:'numeric' });
+      return `
+        <div style="display:flex;align-items:center;gap:12px;padding:10px;background:var(--w5);border-radius:10px;border:1px solid var(--border);">
+          <div style="width:40px;height:40px;border-radius:8px;background:${color}22;color:${color};display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;">${tag || '📅'}</div>
+          <div style="flex:1;">
+            <div style="font-size:13px;font-weight:600;">${label}</div>
+            <div style="font-size:11px;color:var(--w40);margin-top:2px;">${dateStr}</div>
+          </div>
+        </div>`;
+    }).join('');
+  }
+};
+
+/* ============================================================
+   Notification helpers
+   ============================================================ */
+function updateNotifCount() {
+  const unread = document.querySelectorAll('.notif-item.unread').length;
+  const badge = document.getElementById('notifBadge');
+  const count = document.getElementById('notifCount');
+  if (badge) {
+    badge.textContent = unread;
+    badge.classList.toggle('visible', unread > 0);
+  }
+  if (count) count.textContent = unread + ' não lida' + (unread !== 1 ? 's' : '');
+}
+
+function markAllNotifRead() {
+  document.querySelectorAll('.notif-item.unread').forEach(el => el.classList.remove('unread'));
+  document.querySelectorAll('.notif-dot').forEach(d => d.classList.add('read'));
+  updateNotifCount();
+  App.toast('Todas notificações marcadas como lidas', 'success');
+}
+
+/* ============================================================
+   Role Switcher (Dev: GER ↔ MKT)
+   ============================================================ */
+const DEV_PAGES = {
+  ger: [
+    { id: 'dashboard',     icon: '⬡', label: 'Painel Central' },
+    { id: 'abj',           icon: '⭐', label: 'Selo ABJ', badge: '!' },
+    { id: 'tarefas',       icon: '☰', label: 'Todas Demandas' },
+    { id: 'manu',          icon: '🗂', label: 'Repositório' },
+    { id: 'pessoas',       icon: '◒', label: 'Membros' },
+    { id: 'financeiro',    icon: '◎', label: 'Financeiro' },
+    { id: 'operacoes',     icon: '⚙', label: 'Operações' },
+    { id: 'projetos',      icon: '◫', label: 'Projetos' },
+  ],
+  mkt: [
+    { id: 'marketing',     icon: '◬', label: 'Agência MKT' },
+    { id: 'tarefas',       icon: '☰', label: 'Demandas MKT' },
+    { id: 'manu',          icon: '🗂', label: 'Repositório' },
+  ]
+};
+
+let _currentRole = 'ger';
+
+function switchRole(role) {
+  _currentRole = role;
+  // Update tab UI
+  ['ger','mkt'].forEach(r => {
+    const tab = document.getElementById('roleTab' + r.charAt(0).toUpperCase() + r.slice(1));
+    if (tab) tab.classList.toggle('active', r === role);
+  });
+  // Rebuild nav
+  _buildNav(role);
+}
+
+function _buildNav(role) {
+  const nav = document.getElementById('sideNav');
+  if (!nav) return;
+
+  const pages = DEV_PAGES[role] || [];
+  let html = `<div class="sidebar-section">${role === 'ger' ? '⬡ Coord. Geral' : '◬ Marketing'}</div>`;
+
+  pages.forEach(p => {
+    const badge = p.badge ? `<span class="nav-badge">${p.badge}</span>` : '';
+    html += `<div class="nav-item" id="nav-${p.id}" onclick="goTo('${p.id}')">
+      <span class="nav-icon">${p.icon}</span>
+      <span class="nav-label">${p.label}</span>${badge}
+    </div>`;
+  });
+
+  html += '<div class="sidebar-section">Colaborativo</div>';
+  html += `<div class="nav-item nav-shared" id="nav-compartilhado" onclick="goTo('compartilhado')">
+    <span class="nav-icon">📅</span><span class="nav-label">Calendário Universal</span>
+  </div>`;
+
+  html += '<div class="sidebar-section">Sistema</div>';
+  html += `<div class="nav-item" onclick="goTo('configuracoes')">
+    <span class="nav-icon">⚙</span><span class="nav-label">Configurações</span>
+  </div>`;
+  html += `<a href="../Lojinha-Nupieepro/admin.html" target="_blank" class="nav-item">
+    <span class="nav-icon">🛒</span><span class="nav-label">Admin Lojinha</span>
+  </a>`;
+
+  nav.innerHTML = html;
+}

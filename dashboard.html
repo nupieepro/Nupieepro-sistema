@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="theme-color" content="#0D0B2B">
+  <meta name="theme-color" content="#000000">
   <title>NUPIEEPRO — Dashboard</title>
   <link rel="manifest" href="manifest.json">
   <link rel="stylesheet" href="css/styles.css">
@@ -14,13 +14,19 @@
     <!-- ═══ SIDEBAR ═══ -->
     <aside class="sidebar" id="sidebar">
       <div class="sidebar-logo">
-        <div style="background: #000000; border-radius: 12px; padding: 4px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(0,0,0,0.4);">
-          <img src="assets/1000279363.png" style="width: 42px; height: 42px; object-fit: contain;">
+        <div style="background:#000;border-radius:12px;padding:4px;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,0.5);">
+          <img src="assets/1000279363.png" id="sideLogoImg" style="width:42px;height:42px;object-fit:contain;" alt="NUPIEEPRO">
         </div>
         <div>
           <div class="sidebar-logo-text">NUPIE<span>EPRO</span></div>
           <div class="sidebar-logo-sub">Sistema de Gestão</div>
         </div>
+      </div>
+
+      <!-- Role switcher — só aparece para admin/dev -->
+      <div class="role-switcher d-none" id="roleSwitcher">
+        <div class="role-tab active" id="roleTabGer" onclick="switchRole('ger')">⬡ Geral</div>
+        <div class="role-tab" id="roleTabMkt" onclick="switchRole('mkt')">◬ MKT</div>
       </div>
 
       <nav id="sideNav">
@@ -42,23 +48,27 @@
     <!-- ═══ MAIN AREA ═══ -->
     <div class="main-area">
 
-      <!-- ═══ PAGE: DASHBOARD ═══ -->
+      <!-- ══════════════════════════════════════════════
+           PAGE: DASHBOARD
+      ══════════════════════════════════════════════ -->
       <div class="page active" id="page-dashboard">
         <div class="topbar">
-          <div>
-            <button class="topbar-toggle" id="sidebarToggle" onclick="toggleSidebar()">☰</button>
-            <div class="topbar-title" id="dashTitle">Dashboard</div>
-            <div class="topbar-sub">Visão geral</div>
+          <div style="display:flex;align-items:center;gap:12px;">
+            <button class="topbar-toggle" onclick="toggleSidebar()">☰</button>
+            <div>
+              <div class="topbar-title">Dashboard</div>
+              <div class="topbar-sub">Visão geral do núcleo</div>
+            </div>
           </div>
           <div class="topbar-right">
-            <button class="notif-btn" onclick="goTo('notificacoes')">
+            <button class="notif-btn" id="notifBtn" onclick="goTo('notificacoes')" title="Notificações">
               🔔 <span class="notif-badge" id="notifBadge">0</span>
             </button>
+            <button class="notif-btn" onclick="goTo('configuracoes')" title="Configurações" style="font-size:16px;">⚙</button>
           </div>
         </div>
 
         <div class="content">
-          <!-- KPI Summary -->
           <div class="summary-grid">
             <div class="sum-card hl clickable" onclick="goTo('abj')">
               <div class="sum-label">Pontos ABJ</div>
@@ -83,283 +93,588 @@
             </div>
           </div>
 
-          <!-- ABJ Progress -->
           <div class="section-card">
             <div class="section-title">Progresso Selo ABJ 2026</div>
             <div class="progress-track" style="height:14px;">
               <div class="progress-fill" id="dashAbjBar" style="width:0%"></div>
             </div>
-            <div style="display:flex;justify-content:space-between;margin-top:6px;">
+            <div style="display:flex;justify-content:space-between;margin-top:8px;">
               <span class="text-sm text-muted" id="dashAbjPct">0%</span>
-              <span class="text-sm text-muted">882 pts</span>
+              <span class="text-sm text-muted">Meta: 882 pts</span>
             </div>
           </div>
 
-          <!-- Quick actions per coord -->
-          <div class="section-card" id="dashQuickActions">
-            <div class="section-title">Ações rápidas</div>
+          <div class="section-card">
+            <div class="section-title">Ações Rápidas</div>
             <div style="display:flex;gap:8px;flex-wrap:wrap;" id="quickBtns">
               <!-- Populated by JS -->
             </div>
           </div>
 
-          <!-- Recent activity -->
           <div class="section-card">
-            <div class="section-title">Atividade recente</div>
-            <div id="dashRecent">
-              <p class="text-muted text-sm">Carregando...</p>
+            <div class="section-title">Atividade Recente</div>
+            <div id="dashRecent"><p class="text-muted text-sm">Carregando...</p></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══════════════════════════════════════════════
+           PAGE: NOTIFICAÇÕES
+      ══════════════════════════════════════════════ -->
+      <div class="page" id="page-notificacoes">
+        <div class="topbar">
+          <div style="display:flex;align-items:center;gap:12px;">
+            <button class="topbar-toggle" onclick="toggleSidebar()">☰</button>
+            <div>
+              <div class="topbar-title">Notificações</div>
+              <div class="topbar-sub">Central de alertas do núcleo</div>
+            </div>
+          </div>
+          <div class="topbar-right">
+            <button class="btn btn-ghost" onclick="markAllNotifRead()">Marcar todas lidas</button>
+          </div>
+        </div>
+        <div class="content">
+          <div class="section-card">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
+              <div class="section-title" style="margin-bottom:0;">Todas as Notificações</div>
+              <span style="font-size:11px;color:var(--w40);" id="notifCount">0 não lidas</span>
+            </div>
+            <div class="notif-list" id="notifList">
+              <!-- Mock notifications — will be replaced by Supabase data -->
+              <div class="notif-item unread" onclick="this.classList.remove('unread');updateNotifCount()">
+                <div class="notif-dot"></div>
+                <div class="notif-body-text">
+                  <div class="notif-title">Reunião Geral agendada</div>
+                  <div class="notif-desc">A reunião mensal foi marcada para 25/04 às 19h via Google Meet. Confirme presença.</div>
+                  <div class="notif-time">Hoje, 14:32</div>
+                </div>
+                <span class="notif-tag">⬡ GER</span>
+              </div>
+              <div class="notif-item unread" onclick="this.classList.remove('unread');updateNotifCount()">
+                <div class="notif-dot"></div>
+                <div class="notif-body-text">
+                  <div class="notif-title">Atividade ABJ #8 em revisão</div>
+                  <div class="notif-desc">Evidências da Reunião Geral de Núcleos enviadas. Aguardando auditoria da Coord. Geral.</div>
+                  <div class="notif-time">Hoje, 10:15</div>
+                </div>
+                <span class="notif-tag">⭐ ABJ</span>
+              </div>
+              <div class="notif-item unread" onclick="this.classList.remove('unread');updateNotifCount()">
+                <div class="notif-dot"></div>
+                <div class="notif-body-text">
+                  <div class="notif-title">Nova demanda designada a você</div>
+                  <div class="notif-desc">Criação de post para a Lojinha NUPIEEPRO — prazo: sexta-feira.</div>
+                  <div class="notif-time">Ontem, 18:00</div>
+                </div>
+                <span class="notif-tag">◬ MKT</span>
+              </div>
+              <div class="notif-item" onclick="this.classList.remove('unread')">
+                <div class="notif-dot read"></div>
+                <div class="notif-body-text">
+                  <div class="notif-title">Relatório mensal enviado</div>
+                  <div class="notif-desc">OPS enviou o relatório de março. Disponível em Repositório.</div>
+                  <div class="notif-time">3 dias atrás</div>
+                </div>
+                <span class="notif-tag">⚙ OPS</span>
+              </div>
+              <div class="notif-item" onclick="this.classList.remove('unread')">
+                <div class="notif-dot read"></div>
+                <div class="notif-body-text">
+                  <div class="notif-title">Filiação ABJ registrada</div>
+                  <div class="notif-desc">Pagamento da filiação ABEPRO 2026 confirmado. Atividade #10 desbloqueada.</div>
+                  <div class="notif-time">5 dias atrás</div>
+                </div>
+                <span class="notif-tag">◎ FIN</span>
+              </div>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- ═══ PAGE: ABJ ═══ -->
+      <!-- ══════════════════════════════════════════════
+           PAGE: ABJ
+      ══════════════════════════════════════════════ -->
       <div class="page" id="page-abj">
         <div class="topbar">
-          <div>
+          <div style="display:flex;align-items:center;gap:12px;">
             <button class="topbar-toggle" onclick="toggleSidebar()">☰</button>
-            <div class="topbar-title">Selo ABJ 2026</div>
-            <div class="topbar-sub">Checklist de 18 Atividades Oficiais</div>
+            <div>
+              <div class="topbar-title">Selo ABJ 2026</div>
+              <div class="topbar-sub">Checklist de 18 atividades oficiais</div>
+            </div>
           </div>
           <div class="topbar-right">
-             <div style="font-size: 13px; font-weight: 700; color: var(--w40); background: var(--w10); padding: 6px 12px; border-radius: 100px;"><span id="abjHeaderPts" style="color:var(--orange)">0</span> / 882 PTS</div>
+            <div style="font-size:13px;font-weight:700;color:var(--w40);background:var(--w10);padding:6px 14px;border-radius:100px;">
+              <span id="abjHeaderPts" style="color:var(--orange)">0</span> / 882 PTS
+            </div>
           </div>
         </div>
         <div class="content">
           <div class="section-card">
             <div class="section-title">Quadro de Atividades</div>
-            <div style="display:flex; gap:10px; margin-bottom: 20px; overflow-x: auto;" class="tab-bar">
-               <div class="tab active" onclick="ABJ.filter('todas', this)">Mural Completo (18)</div>
-               <div class="tab" onclick="ABJ.filter('pendente', this)">Pendentes</div>
-               <div class="tab" onclick="ABJ.filter('verificacao', this)">Em Revisão</div>
-               <div class="tab" onclick="ABJ.filter('concluidas', this)">Aprovadas</div>
+            <div style="display:flex;gap:10px;margin-bottom:20px;overflow-x:auto;">
+              <div class="tab active" onclick="ABJ.filter('todas',this)">Mural Completo (18)</div>
+              <div class="tab" onclick="ABJ.filter('pendente',this)">Pendentes</div>
+              <div class="tab" onclick="ABJ.filter('verificacao',this)">Em Revisão</div>
+              <div class="tab" onclick="ABJ.filter('concluidas',this)">Aprovadas</div>
             </div>
-            <div id="abjGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px;">
-               <!-- Populated via JS -->
-               <div class="text-muted" style="padding: 2rem;">Carregando painel ABJ...</div>
+            <div id="abjGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;">
+              <div class="text-muted" style="padding:2rem;">Carregando painel ABJ...</div>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- ═══ PAGE: TAREFAS (Demandas Kanban) ═══ -->
+      <!-- ══════════════════════════════════════════════
+           PAGE: TAREFAS
+      ══════════════════════════════════════════════ -->
       <div class="page" id="page-tarefas">
         <div class="topbar">
-           <div><button class="topbar-toggle" onclick="toggleSidebar()">☰</button><div class="topbar-title">Workflow de Demandas</div><div class="topbar-sub">Restrição ativa: Edição exclusiva p/ Coordenação e Dev Chefe</div></div>
-           <button class="btn btn-primary" onclick="App.toast('Abrir modal de Nova Demanda', 'info')">+ Adicionar Demanda</button>
+          <div style="display:flex;align-items:center;gap:12px;">
+            <button class="topbar-toggle" onclick="toggleSidebar()">☰</button>
+            <div>
+              <div class="topbar-title">Workflow de Demandas</div>
+              <div class="topbar-sub">Edição restrita: Coord. Geral e Dev Chefe</div>
+            </div>
+          </div>
+          <button class="btn btn-primary" onclick="App.toast('Nova demanda — FASE 2','info')">+ Demanda</button>
         </div>
         <div class="content">
-          <div class="kanban-board" style="display: flex; gap: 20px; overflow-x: auto; padding-bottom: 20px;">
-            
-            <div class="kanban-col" style="flex: 1; min-width: 320px; background: var(--navy-card); border-radius: 12px; padding: 1rem; border: 1px solid var(--border);">
-              <h4 style="margin-bottom: 1rem; border-bottom: 1px solid var(--border); padding-bottom: 8px;">A Fazer (Designadas)</h4>
-              
-              <div class="k-card" style="background: var(--navy-mid); padding: 1rem; border-radius: 8px; margin-bottom: 10px; border-left: 4px solid var(--red);">
-                <div style="font-size: 11px; font-weight: bold; color: var(--red); margin-bottom: 4px;">◬ MKT · #7442</div>
-                <div style="font-weight: 600; font-size: 14px;">Criar post para Lojinha Admin</div>
-                <div style="font-size: 12px; color: var(--w40); margin-top: 6px;">Por <span style="color:var(--orange)">⬡ Coord Geral</span></div>
-                <div style="margin-top: 10px; display: flex; justify-content: space-between;">
-                  <button class="btn btn-ghost" style="padding: 4px 8px; font-size: 10px; opacity: 0.5; cursor: not-allowed;">Bloqueado p/ Assessor</button>
-                </div>
+          <div style="display:flex;gap:20px;overflow-x:auto;padding-bottom:20px;">
+            <div style="flex:1;min-width:300px;background:var(--navy-card);border-radius:12px;padding:1rem;border:1px solid var(--border);">
+              <h4 style="margin-bottom:1rem;padding-bottom:8px;border-bottom:1px solid var(--border);font-size:13px;text-transform:uppercase;letter-spacing:0.08em;color:var(--w70);">🔴 A Fazer</h4>
+              <div style="background:var(--navy-mid);padding:1rem;border-radius:8px;border-left:4px solid var(--red);">
+                <div style="font-size:11px;font-weight:700;color:var(--red);margin-bottom:4px;">◬ MKT · #7442</div>
+                <div style="font-weight:600;font-size:14px;">Post Lojinha NUPIEEPRO</div>
+                <div style="font-size:12px;color:var(--w40);margin-top:4px;">Designada por ⬡ Coord. Geral</div>
               </div>
-
             </div>
-
-            <div class="kanban-col" style="flex: 1; min-width: 320px; background: var(--navy-card); border-radius: 12px; padding: 1rem; border: 1px solid var(--border);">
-              <h4 style="margin-bottom: 1rem; border-bottom: 1px solid var(--border); padding-bottom: 8px;">Em Produção</h4>
+            <div style="flex:1;min-width:300px;background:var(--navy-card);border-radius:12px;padding:1rem;border:1px solid var(--border);">
+              <h4 style="margin-bottom:1rem;padding-bottom:8px;border-bottom:1px solid var(--border);font-size:13px;text-transform:uppercase;letter-spacing:0.08em;color:var(--w70);">🟡 Em Produção</h4>
+              <p class="text-muted text-sm">Sem demandas em andamento.</p>
+            </div>
+            <div style="flex:1;min-width:300px;background:var(--navy-card);border-radius:12px;padding:1rem;border:1px solid var(--border);">
+              <h4 style="margin-bottom:1rem;padding-bottom:8px;border-bottom:1px solid var(--border);font-size:13px;text-transform:uppercase;letter-spacing:0.08em;color:var(--w70);">🟢 Concluídas</h4>
               <p class="text-muted text-sm">Vazio.</p>
             </div>
-
-            <div class="kanban-col" style="flex: 1; min-width: 320px; background: var(--navy-card); border-radius: 12px; padding: 1rem; border: 1px solid var(--border);">
-              <h4 style="margin-bottom: 1rem; border-bottom: 1px solid var(--border); padding-bottom: 8px;">Concluídas</h4>
-              <p class="text-muted text-sm">Vazio.</p>
-            </div>
-            
           </div>
         </div>
       </div>
 
-      <!-- ═══ PAGE: CALENDARIO GLOBAL ═══ -->
+      <!-- ══════════════════════════════════════════════
+           PAGE: CALENDÁRIO UNIVERSAL
+      ══════════════════════════════════════════════ -->
       <div class="page" id="page-compartilhado">
         <div class="topbar">
-           <div><button class="topbar-toggle" onclick="toggleSidebar()">☰</button><div class="topbar-title">Calendário Universal</div></div>
-           <button class="btn btn-primary" onclick="App.toast('Modal Publicar no Calendário', 'info')">Publicar Data</button>
+          <div style="display:flex;align-items:center;gap:12px;">
+            <button class="topbar-toggle" onclick="toggleSidebar()">☰</button>
+            <div>
+              <div class="topbar-title">Calendário Universal</div>
+              <div class="topbar-sub">Agenda oficial NUPIEEPRO — todos os anos</div>
+            </div>
+          </div>
+          <div class="topbar-right">
+            <button class="btn btn-primary" onclick="App.toast('Publicar data — FASE 2','info')">📅 Publicar Data</button>
+          </div>
         </div>
         <div class="content">
           <div class="section-card">
-            <h3 style="margin-bottom: 20px;">Agenda NUPIEEPRO 2026</h3>
-            <div style="display:grid; grid-template-columns: repeat(7, 1fr); gap: 10px; text-align: center; font-weight: bold; color: var(--w40); margin-bottom: 10px;">
-              <div>D</div><div>S</div><div>T</div><div>Q</div><div>Q</div><div>S</div><div>S</div>
+            <!-- Nav do calendário -->
+            <div class="cal-nav">
+              <button class="cal-nav-btn" onclick="Cal.prev()">‹</button>
+              <div style="display:flex;align-items:center;gap:12px;flex:1;justify-content:center;">
+                <div class="cal-month-label" id="calMonthLabel">Abril 2026</div>
+                <select class="cal-year-select" id="calYearSelect" onchange="Cal.goYear(this.value)">
+                  <!-- Populated by JS -->
+                </select>
+              </div>
+              <button class="cal-nav-btn" onclick="Cal.next()">›</button>
             </div>
-            <div style="display:grid; grid-template-columns: repeat(7, 1fr); gap: 10px; height: 300px;">
-               <!-- Dias mockados pra exemplificar o calendario -->
-               <div style="background: var(--navy-mid); border-radius: 8px; padding: 4px; border: 1px solid var(--border);">1</div>
-               <div style="background: var(--navy-mid); border-radius: 8px; padding: 4px; border: 1px solid var(--border);">2</div>
-               <div style="background: var(--navy-mid); border-radius: 8px; padding: 4px; border: 1px solid var(--border);">3
-                  <div style="background: var(--red); color: #000; font-size: 9px; border-radius: 2px; margin-top: 4px; padding: 2px;">◬ MKT Evento</div>
-               </div>
-               <div style="background: var(--navy-mid); border-radius: 8px; padding: 4px; border: 1px solid var(--border);">4</div>
-               <div style="background: var(--navy-mid); border-radius: 8px; padding: 4px; border: 1px solid var(--border);">5</div>
-               <div style="background: var(--orange-dim); border-radius: 8px; padding: 4px; border: 1px solid var(--orange-border);">6
-                  <div style="background: var(--orange); color: #000; font-size: 9px; border-radius: 2px; margin-top: 4px; padding: 2px;">⬡ Reunião Geral</div>
-               </div>
-               <div style="background: var(--navy-mid); border-radius: 8px; padding: 4px; border: 1px solid var(--border);">7</div>
+
+            <!-- Grid do calendário -->
+            <div class="cal-grid" id="calGrid">
+              <div class="cal-day-name">Dom</div>
+              <div class="cal-day-name">Seg</div>
+              <div class="cal-day-name">Ter</div>
+              <div class="cal-day-name">Qua</div>
+              <div class="cal-day-name">Qui</div>
+              <div class="cal-day-name">Sex</div>
+              <div class="cal-day-name">Sáb</div>
+              <!-- Days populated by JS -->
             </div>
-            <p style="margin-top:20px; font-size: 11px; color: var(--w40);">*Apenas coordenadores podem adicionar avisos neste calendário. Você vê a assinatura tribal na tag.</p>
+
+            <p style="margin-top:16px;font-size:11px;color:var(--w40);">
+              * Apenas coordenadores podem adicionar datas. Tags identificam a coordenadoria responsável.
+            </p>
+          </div>
+
+          <!-- Legenda de eventos -->
+          <div class="section-card">
+            <div class="section-title">Próximos Eventos</div>
+            <div id="calEventsList" style="display:flex;flex-direction:column;gap:8px;">
+              <!-- Populated by JS -->
+            </div>
           </div>
         </div>
       </div>
 
-      <!-- ═══ PAGE: REPOSITORIO MANUAIS ═══ -->
+      <!-- ══════════════════════════════════════════════
+           PAGE: REPOSITÓRIO MANUAIS
+      ══════════════════════════════════════════════ -->
       <div class="page" id="page-manu">
         <div class="topbar">
-           <div><button class="topbar-toggle" onclick="toggleSidebar()">☰</button><div class="topbar-title">Centro de Manuais e Regimentos</div><div class="topbar-sub">Base de Consulta e Upload de PDFs</div></div>
+          <div style="display:flex;align-items:center;gap:12px;">
+            <button class="topbar-toggle" onclick="toggleSidebar()">☰</button>
+            <div>
+              <div class="topbar-title">Repositório Central</div>
+              <div class="topbar-sub">Manuais, regimentos e normas vigentes</div>
+            </div>
+          </div>
+          <button class="btn btn-ghost" onclick="App.toast('Upload de PDF — FASE 2','info')">📤 Enviar PDF</button>
         </div>
         <div class="content">
           <div class="section-card">
-            <div style="display:flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
-               <h3 style="font-family: 'Plus Jakarta Sans', sans-serif;">Arquivos em Vigor</h3>
-               <button class="btn btn-ghost" onclick="App.toast('Abrir modal de UPLOAD de novo PDF', 'info')">Atualizar PDF (Upload)</button>
-            </div>
-            
-            <div style="display: flex; gap: 15px;">
-              <div style="flex:1; background: var(--navy-mid); border: 1px solid var(--border); border-radius: 12px; padding: 20px; text-align: center;">
-                <div style="font-size: 40px; margin-bottom: 10px;">📄</div>
-                <div style="font-weight: 700; color: var(--orange);">Manual de Núcleos Estaduais 2026.pdf</div>
-                <div style="font-size: 11px; color: var(--w40); margin-top: 8px;">Adicionado por: ⬡ Coord. Geral</div>
-                <button class="btn" style="margin-top: 15px; width: 100%; border: 1px solid var(--w20);">Baixar PDF</button>
+            <div class="section-title">Documentos Vigentes</div>
+            <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px;">
+              <div style="background:var(--navy-mid);border:1px solid var(--border);border-radius:12px;padding:20px;text-align:center;">
+                <div style="font-size:36px;margin-bottom:12px;">📄</div>
+                <div style="font-weight:700;color:var(--orange);font-size:13px;margin-bottom:6px;">Manual de Núcleos Estaduais 2026</div>
+                <div style="font-size:11px;color:var(--w40);margin-bottom:16px;">Adicionado por ⬡ Coord. Geral · ABJ 2026</div>
+                <button class="btn btn-ghost" style="width:100%;">⬇ Baixar PDF</button>
               </div>
-
-              <div style="flex:1; background: var(--navy-mid); border: 1px solid var(--border); border-radius: 12px; padding: 20px; text-align: center;">
-                <div style="font-size: 40px; margin-bottom: 10px;">⚖️</div>
-                <div style="font-weight: 700; color: var(--orange);">Regimento Interno NUPIEEPRO.pdf</div>
-                <div style="font-size: 11px; color: var(--w40); margin-top: 8px;">Adicionado por: ⬡ Coord. Geral</div>
-                <button class="btn" style="margin-top: 15px; width: 100%; border: 1px solid var(--w20);">Baixar PDF</button>
+              <div style="background:var(--navy-mid);border:1px solid var(--border);border-radius:12px;padding:20px;text-align:center;">
+                <div style="font-size:36px;margin-bottom:12px;">⚖️</div>
+                <div style="font-weight:700;color:var(--orange);font-size:13px;margin-bottom:6px;">Regimento Interno NUPIEEPRO 2026</div>
+                <div style="font-size:11px;color:var(--w40);margin-bottom:16px;">Adicionado por ⬡ Coord. Geral · Jan/2026</div>
+                <button class="btn btn-ghost" style="width:100%;">⬇ Baixar PDF</button>
+              </div>
+              <div style="background:var(--navy-mid);border:2px dashed var(--border);border-radius:12px;padding:20px;text-align:center;cursor:pointer;opacity:0.6;" onclick="App.toast('Upload disponível na FASE 2','info')">
+                <div style="font-size:36px;margin-bottom:12px;">➕</div>
+                <div style="font-size:13px;color:var(--w40);">Adicionar documento</div>
               </div>
             </div>
-
           </div>
         </div>
       </div>
 
-      <!-- ═══ PAGE: MARKETING ═══ -->
+      <!-- ══════════════════════════════════════════════
+           PAGE: MARKETING
+      ══════════════════════════════════════════════ -->
       <div class="page" id="page-marketing">
         <div class="topbar">
-          <div><button class="topbar-toggle" onclick="toggleSidebar()">☰</button><div class="topbar-title">Agência Marketing</div><div class="topbar-sub">Coordenação MKT - Gestão de Ativos</div></div>
-          <button class="btn btn-primary" onclick="App.toast('Solicitar Criação MKT FASE 4', 'info')">+ Nova Campanha</button>
-        </div>
-        <div class="content">
-          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; margin-bottom: 20px;">
-             <div class="sum-card"><div class="sum-label">Postagens Planejadas</div><div class="sum-value" style="color:var(--orange)">12</div></div>
-             <div class="sum-card"><div class="sum-label">Alcance Total Est.</div><div class="sum-value">4.5K</div></div>
-             <div class="sum-card"><div class="sum-label">Aprovações ABJ Pendentes</div><div class="sum-value" style="color:var(--red)">3</div></div>
+          <div style="display:flex;align-items:center;gap:12px;">
+            <button class="topbar-toggle" onclick="toggleSidebar()">☰</button>
+            <div>
+              <div class="topbar-title">Agência Marketing</div>
+              <div class="topbar-sub">Coordenação MKT — Gestão de Ativos</div>
+            </div>
           </div>
-          <div class="section-card" style="box-shadow: 0 4px 20px rgba(0,0,0,0.5);">
-             <h4 style="margin-bottom:15px; border-bottom: 1px solid var(--border); padding-bottom:10px; font-family: 'Syne';">Cronograma de Postagens</h4>
-             <div style="display:flex; flex-direction:column; gap:10px;">
-               <div style="background:var(--navy-mid); padding:1rem; border-radius:12px; border-left: 4px solid var(--orange);">
-                 <strong>Instagram - Lojinha Nupiee</strong><br><span style="font-size:12px; color:var(--w40);">Publicação programada para Sexta-feira</span>
-                 <div style="margin-top: 8px;"><span style="font-size: 10px; background: var(--w10); padding: 4px 8px; border-radius: 4px;">Assessor MKT responsável</span></div>
-               </div>
-               <div style="background:var(--navy-mid); padding:1rem; border-radius:12px; border-left: 4px solid var(--green);">
-                 <strong>LinkedIn - Certificados ABEPRO</strong><br><span style="font-size:12px; color:var(--w40);">Publicado há 2 dias</span>
-               </div>
-             </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- ═══ PAGE: OPERAÇÕES E PROJETOS ═══ -->
-      <div class="page" id="page-operacoes">
-        <div class="topbar">
-          <div><button class="topbar-toggle" onclick="toggleSidebar()">☰</button><div class="topbar-title">Operações Hub</div></div>
+          <button class="btn btn-primary" onclick="App.toast('Nova campanha — FASE 4','info')">+ Campanha</button>
         </div>
         <div class="content">
-          <div class="section-card text-center text-muted" style="padding: 4rem;">Estruturador de Documentos e Processos Operacionais.<br>Fluxos de rotina diária e métricas do núcleo. (FASE 4)</div>
-        </div>
-      </div>
-      <div class="page" id="page-projetos">
-        <div class="topbar">
-          <div><button class="topbar-toggle" onclick="toggleSidebar()">☰</button><div class="topbar-title">Ações e Projetos Estendidos</div></div>
-        </div>
-        <div class="content"><div class="section-card text-center text-muted" style="padding: 4rem;">Acompanhamento de Editais PEEX e Integração Social. (FASE 4)</div></div>
-      </div>
-
-      <!-- ═══ PAGE: FINANCEIRO ═══ -->
-      <div class="page" id="page-financeiro">
-        <div class="topbar">
-           <div><button class="topbar-toggle" onclick="toggleSidebar()">☰</button><div class="topbar-title">Teses Financeiras</div><div class="topbar-sub">Tesouraria Geral e Orçamentos</div></div>
-           <button class="btn btn-primary" onclick="App.toast('Novo Lançamento FASE 4', 'info')">+ Lançamento</button>
-        </div>
-        <div class="content">
-          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; margin-bottom: 20px;">
-             <div class="sum-card"><div class="sum-label">Caixa Atual</div><div class="sum-value" style="color:var(--green)">R$ 3.250,40</div></div>
-             <div class="sum-card"><div class="sum-label">Receitas Lojinha (Mês)</div><div class="sum-value">R$ 450,00</div></div>
-             <div class="sum-card"><div class="sum-label">Despesas Previstas ABJ</div><div class="sum-value" style="color:var(--red)">R$ 120,50</div></div>
+          <div class="summary-grid">
+            <div class="sum-card"><div class="sum-label">Postagens Planejadas</div><div class="sum-value text-orange">12</div></div>
+            <div class="sum-card"><div class="sum-label">Alcance Estimado</div><div class="sum-value">4,5K</div></div>
+            <div class="sum-card"><div class="sum-label">Aprovações ABJ Pendentes</div><div class="sum-value" style="color:var(--red)">3</div></div>
+            <div class="sum-card"><div class="sum-label">Campanhas Ativas</div><div class="sum-value" style="color:var(--green)">2</div></div>
           </div>
           <div class="section-card">
-             <h4 style="margin-bottom:15px; border-bottom: 1px solid var(--border); padding-bottom:5px;">Últimas Movimentações Auditadas</h4>
-             <table style="width:100%; text-align:left; font-size:13px; border-collapse: collapse;">
-               <tr style="color:var(--w40); border-bottom:1px solid var(--border);"><th style="padding:12px 8px;">Data</th><th style="padding:12px 8px;">Descrição</th><th style="padding:12px 8px;">Autor</th><th style="padding:12px 8px; text-align:right;">Valor</th></tr>
-               <tr style="border-bottom: 1px solid var(--w5);"><td style="padding:12px 8px;">Hoje</td><td style="padding:12px 8px; font-weight:600;">Receita Lojinha Admin</td><td style="padding:12px 8px; font-size:11px;">⬡ Coord Geral</td><td style="padding:12px 8px; text-align:right; color:var(--green); font-weight:bold;">+ R$ 150,00</td></tr>
-               <tr style="border-bottom: 1px solid var(--w5);"><td style="padding:12px 8px;">Ontem</td><td style="padding:12px 8px; font-weight:600;">Filiação ABJ Anual</td><td style="padding:12px 8px; font-size:11px;">◎ Finanças</td><td style="padding:12px 8px; text-align:right; color:var(--red); font-weight:bold;">- R$ 120,50</td></tr>
-             </table>
+            <div class="section-title">Cronograma de Postagens</div>
+            <div style="display:flex;flex-direction:column;gap:10px;">
+              <div style="background:var(--navy-mid);padding:1rem;border-radius:12px;border-left:4px solid var(--orange);">
+                <strong>Instagram — Lojinha NUPIEEPRO</strong>
+                <div style="font-size:12px;color:var(--w40);margin-top:4px;">Publicação programada para sexta-feira</div>
+                <div style="margin-top:8px;display:flex;gap:6px;">
+                  <span class="status-pill sp-pending"><span class="pill-dot"></span>Aguardando aprovação</span>
+                  <span style="font-size:10px;background:var(--w10);padding:3px 8px;border-radius:4px;color:var(--w70);">Assessor MKT</span>
+                </div>
+              </div>
+              <div style="background:var(--navy-mid);padding:1rem;border-radius:12px;border-left:4px solid var(--green);">
+                <strong>LinkedIn — Certificados ABEPRO</strong>
+                <div style="font-size:12px;color:var(--w40);margin-top:4px;">Publicado há 2 dias · 247 visualizações</div>
+                <div style="margin-top:8px;">
+                  <span class="status-pill sp-done"><span class="pill-dot"></span>Publicado</span>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
 
-      <!-- ═══ PAGE: PESSOAS ═══ -->
-      <div class="page" id="page-pessoas">
+      <!-- ══════════════════════════════════════════════
+           PAGE: OPERAÇÕES
+      ══════════════════════════════════════════════ -->
+      <div class="page" id="page-operacoes">
         <div class="topbar">
-           <div><button class="topbar-toggle" onclick="toggleSidebar()">☰</button><div class="topbar-title">Membros e Gestão Pessoas</div><div class="topbar-sub">Base Oficial do Núcleo</div></div>
+          <div style="display:flex;align-items:center;gap:12px;">
+            <button class="topbar-toggle" onclick="toggleSidebar()">☰</button>
+            <div><div class="topbar-title">Operações Hub</div><div class="topbar-sub">Processos e rotinas do núcleo</div></div>
+          </div>
         </div>
         <div class="content">
-           <div class="section-card">
-             <div style="display:flex; justify-content:space-between; margin-bottom:20px; align-items:center;">
-               <h4 style="font-family:'Plus Jakarta Sans';">Diretório Interno (12 Ativos)</h4>
-               <button class="btn btn-ghost" onclick="App.toast('Gerar Certificados FASE 4', 'info')">Emitir Certificados ABEPRO</button>
-             </div>
-             <div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 15px;">
-               
-               <div style="background:var(--navy-mid); padding:1rem; border-radius:12px; border:1px solid var(--border); display:flex; align-items:center; gap:15px; box-shadow:0 4px 10px rgba(0,0,0,0.3);">
-                  <div style="width:44px; height:44px; border-radius:50%; background:var(--orange-dim); color:var(--orange); display:flex; align-items:center; justify-content:center; font-weight:bold; font-size:15px;">RM</div>
-                  <div><div style="font-weight:bold; font-size:14px;">José Rrayan</div><div style="font-size:11px; color:var(--orange);">⬡ Desenvolvedor Chefe • ◬ Assessor MKT</div></div>
-               </div>
-               
-               <div style="background:var(--navy-mid); padding:1rem; border-radius:12px; border:1px solid var(--border); display:flex; align-items:center; gap:15px;">
-                  <div style="width:44px; height:44px; border-radius:50%; background:var(--blue-dim); color:var(--blue); display:flex; align-items:center; justify-content:center; font-weight:bold; font-size:15px;">AC</div>
-                  <div><div style="font-weight:bold; font-size:14px;">Amanda Costa</div><div style="font-size:11px; color:var(--w70);">⚙ Coordenadora de Operações</div></div>
-               </div>
-
-               <div style="background:var(--navy-mid); padding:1rem; border-radius:12px; border:1px solid var(--border); display:flex; align-items:center; gap:15px;">
-                  <div style="width:44px; height:44px; border-radius:50%; background:rgba(255,255,255,0.05); color:var(--white); display:flex; align-items:center; justify-content:center; font-weight:bold; font-size:15px;">LC</div>
-                  <div><div style="font-weight:bold; font-size:14px;">Lucas Carvalho</div><div style="font-size:11px; color:var(--w70);">◫ Assessor Projetos</div></div>
-               </div>
-               
-             </div>
-           </div>
+          <div class="section-card text-center text-muted" style="padding:4rem;">
+            <div style="font-size:40px;margin-bottom:1rem;">⚙</div>
+            <strong>Estruturador de Processos Operacionais</strong><br>
+            <span style="font-size:13px;">Fluxos de rotina diária e métricas do núcleo. — FASE 4</span>
+          </div>
         </div>
       </div>
 
-    </div>
+      <!-- ══════════════════════════════════════════════
+           PAGE: PROJETOS
+      ══════════════════════════════════════════════ -->
+      <div class="page" id="page-projetos">
+        <div class="topbar">
+          <div style="display:flex;align-items:center;gap:12px;">
+            <button class="topbar-toggle" onclick="toggleSidebar()">☰</button>
+            <div><div class="topbar-title">Ações e Projetos</div><div class="topbar-sub">Editais PEEX e integração social</div></div>
+          </div>
+        </div>
+        <div class="content">
+          <div class="section-card text-center text-muted" style="padding:4rem;">
+            <div style="font-size:40px;margin-bottom:1rem;">◫</div>
+            <strong>Gestão de Projetos Estendidos</strong><br>
+            <span style="font-size:13px;">Acompanhamento de editais e ações sociais. — FASE 4</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══════════════════════════════════════════════
+           PAGE: FINANCEIRO
+      ══════════════════════════════════════════════ -->
+      <div class="page" id="page-financeiro">
+        <div class="topbar">
+          <div style="display:flex;align-items:center;gap:12px;">
+            <button class="topbar-toggle" onclick="toggleSidebar()">☰</button>
+            <div>
+              <div class="topbar-title">Teses Financeiras</div>
+              <div class="topbar-sub">Tesouraria geral e orçamentos</div>
+            </div>
+          </div>
+          <button class="btn btn-primary" onclick="App.toast('Novo lançamento — FASE 4','info')">+ Lançamento</button>
+        </div>
+        <div class="content">
+          <div class="summary-grid">
+            <div class="sum-card"><div class="sum-label">Caixa Atual</div><div class="sum-value" style="color:var(--green)">R$ 3.250,40</div></div>
+            <div class="sum-card"><div class="sum-label">Receitas Lojinha (Mês)</div><div class="sum-value">R$ 450,00</div></div>
+            <div class="sum-card"><div class="sum-label">Despesas Previstas</div><div class="sum-value" style="color:var(--red)">R$ 120,50</div></div>
+            <div class="sum-card"><div class="sum-label">Filiação ABJ</div><div class="sum-value" style="color:var(--yellow)">Paga</div></div>
+          </div>
+          <div class="section-card">
+            <div class="section-title">Últimas Movimentações</div>
+            <table style="width:100%;border-collapse:collapse;font-size:13px;">
+              <tr style="color:var(--w40);border-bottom:1px solid var(--border);">
+                <th style="padding:10px 8px;font-weight:500;font-size:10px;text-transform:uppercase;letter-spacing:0.08em;">Data</th>
+                <th style="padding:10px 8px;font-weight:500;font-size:10px;text-transform:uppercase;letter-spacing:0.08em;">Descrição</th>
+                <th style="padding:10px 8px;font-weight:500;font-size:10px;text-transform:uppercase;letter-spacing:0.08em;">Autor</th>
+                <th style="padding:10px 8px;text-align:right;font-weight:500;font-size:10px;text-transform:uppercase;letter-spacing:0.08em;">Valor</th>
+              </tr>
+              <tr style="border-bottom:1px solid var(--w5);">
+                <td style="padding:10px 8px;">Hoje</td>
+                <td style="padding:10px 8px;font-weight:600;">Receita Lojinha Admin</td>
+                <td style="padding:10px 8px;font-size:11px;">⬡ Coord. Geral</td>
+                <td style="padding:10px 8px;text-align:right;color:var(--green);font-weight:700;">+ R$ 150,00</td>
+              </tr>
+              <tr style="border-bottom:1px solid var(--w5);">
+                <td style="padding:10px 8px;">Ontem</td>
+                <td style="padding:10px 8px;font-weight:600;">Filiação ABJ Anual</td>
+                <td style="padding:10px 8px;font-size:11px;">◎ Finanças</td>
+                <td style="padding:10px 8px;text-align:right;color:var(--red);font-weight:700;">- R$ 120,50</td>
+              </tr>
+              <tr>
+                <td style="padding:10px 8px;">3 dias</td>
+                <td style="padding:10px 8px;font-weight:600;">Arrecadação Evento</td>
+                <td style="padding:10px 8px;font-size:11px;">◫ Projetos</td>
+                <td style="padding:10px 8px;text-align:right;color:var(--green);font-weight:700;">+ R$ 300,00</td>
+              </tr>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══════════════════════════════════════════════
+           PAGE: PESSOAS
+      ══════════════════════════════════════════════ -->
+      <div class="page" id="page-pessoas">
+        <div class="topbar">
+          <div style="display:flex;align-items:center;gap:12px;">
+            <button class="topbar-toggle" onclick="toggleSidebar()">☰</button>
+            <div>
+              <div class="topbar-title">Membros e Gestão de Pessoas</div>
+              <div class="topbar-sub">Base oficial do núcleo</div>
+            </div>
+          </div>
+          <button class="btn btn-ghost" onclick="App.toast('Certificados ABEPRO — FASE 4','info')">🎓 Certificados</button>
+        </div>
+        <div class="content">
+          <div class="section-card">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.2rem;">
+              <div class="section-title" style="margin-bottom:0;">Diretório Interno (16 Membros)</div>
+              <button class="btn btn-ghost" onclick="App.toast('Convidar membro — Página convite.html','info')">+ Convidar</button>
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px;">
+              <div style="background:var(--navy-mid);padding:1rem;border-radius:12px;border:1px solid var(--orange-border);display:flex;align-items:center;gap:14px;">
+                <div style="width:46px;height:46px;border-radius:50%;background:var(--orange-dim);border:2px solid var(--orange);color:var(--orange);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:15px;flex-shrink:0;">JR</div>
+                <div>
+                  <div style="font-weight:700;font-size:14px;">José Rrayan</div>
+                  <div style="font-size:11px;color:var(--orange);margin-top:2px;">⬡ Dev Chefe · ◬ Assessor MKT</div>
+                  <div style="font-size:10px;color:var(--w40);margin-top:2px;">jjoserrayan2711@gmail.com</div>
+                </div>
+              </div>
+              <div style="background:var(--navy-mid);padding:1rem;border-radius:12px;border:1px solid var(--border);display:flex;align-items:center;gap:14px;">
+                <div style="width:46px;height:46px;border-radius:50%;background:var(--blue-dim);color:var(--blue);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:15px;flex-shrink:0;">AC</div>
+                <div>
+                  <div style="font-weight:700;font-size:14px;">Amanda Costa</div>
+                  <div style="font-size:11px;color:var(--w70);margin-top:2px;">⚙ Coordenadora de Operações</div>
+                </div>
+              </div>
+              <div style="background:var(--navy-mid);padding:1rem;border-radius:12px;border:1px solid var(--border);display:flex;align-items:center;gap:14px;">
+                <div style="width:46px;height:46px;border-radius:50%;background:var(--w10);color:var(--white);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:15px;flex-shrink:0;">LC</div>
+                <div>
+                  <div style="font-weight:700;font-size:14px;">Lucas Carvalho</div>
+                  <div style="font-size:11px;color:var(--w70);margin-top:2px;">◫ Assessor de Projetos</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══════════════════════════════════════════════
+           PAGE: CONFIGURAÇÕES
+      ══════════════════════════════════════════════ -->
+      <div class="page" id="page-configuracoes">
+        <div class="topbar">
+          <div style="display:flex;align-items:center;gap:12px;">
+            <button class="topbar-toggle" onclick="toggleSidebar()">☰</button>
+            <div>
+              <div class="topbar-title">Configurações</div>
+              <div class="topbar-sub">Tema, aparência e preferências</div>
+            </div>
+          </div>
+        </div>
+        <div class="content">
+          <div class="settings-section">
+
+            <!-- Temas -->
+            <div class="setting-card">
+              <div class="setting-card-title">🎨 Tema de Cores</div>
+              <div class="option-row">
+                <button class="option-btn active" id="themeBtn-default" onclick="Theme.apply('default')">
+                  <div class="color-dot" style="background:#000;border:2px solid #f75412;"></div>
+                  <div>
+                    <div style="font-weight:700;">NUPIEEPRO Padrão</div>
+                    <div style="font-size:11px;color:var(--w40);margin-top:1px;">#000000 · #29324f · #f75412</div>
+                  </div>
+                  <span class="check">✓</span>
+                </button>
+                <button class="option-btn" id="themeBtn-classic" onclick="Theme.apply('classic')">
+                  <div class="color-dot" style="background:#0D0B2B;border:2px solid #F07820;"></div>
+                  <div>
+                    <div style="font-weight:700;">Navy Clássico</div>
+                    <div style="font-size:11px;color:var(--w40);margin-top:1px;">#0D0B2B · #120F36 · #F07820</div>
+                  </div>
+                  <span class="check">✓</span>
+                </button>
+                <button class="option-btn" id="themeBtn-purple" onclick="Theme.apply('purple')">
+                  <div class="color-dot" style="background:#2d1b69;border:2px solid #f75412;"></div>
+                  <div>
+                    <div style="font-weight:700;">Roxo Profundo</div>
+                    <div style="font-size:11px;color:var(--w40);margin-top:1px;">#1a0f2e · #2d1b69 · #f75412</div>
+                  </div>
+                  <span class="check">✓</span>
+                </button>
+                <button class="option-btn" id="themeBtn-contrast" onclick="Theme.apply('contrast')">
+                  <div class="color-dot" style="background:#000;border:2px solid rgba(247,84,18,0.5);"></div>
+                  <div>
+                    <div style="font-weight:700;">Contraste Máximo</div>
+                    <div style="font-size:11px;color:var(--w40);margin-top:1px;">#000000 · bordas laranja</div>
+                  </div>
+                  <span class="check">✓</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Fontes -->
+            <div class="setting-card">
+              <div class="setting-card-title">🔤 Fonte do Sistema</div>
+              <div class="option-row">
+                <button class="option-btn active" id="fontBtn-default" onclick="Theme.applyFont('default')">
+                  <div style="width:18px;font-size:14px;font-weight:800;">Aa</div>
+                  <div>
+                    <div style="font-weight:700;">Inter (Padrão)</div>
+                    <div style="font-size:11px;color:var(--w40);margin-top:1px;">Leitura limpa e técnica</div>
+                  </div>
+                  <span class="check">✓</span>
+                </button>
+                <button class="option-btn" id="fontBtn-jakarta" onclick="Theme.applyFont('jakarta')">
+                  <div style="width:18px;font-size:14px;font-weight:800;font-family:'Plus Jakarta Sans';">Aa</div>
+                  <div>
+                    <div style="font-weight:700;font-family:'Plus Jakarta Sans';">Plus Jakarta Sans</div>
+                    <div style="font-size:11px;color:var(--w40);margin-top:1px;">Moderna e geométrica</div>
+                  </div>
+                  <span class="check">✓</span>
+                </button>
+                <button class="option-btn" id="fontBtn-syne" onclick="Theme.applyFont('syne')">
+                  <div style="width:18px;font-size:14px;font-weight:800;font-family:'Syne';">Aa</div>
+                  <div>
+                    <div style="font-weight:700;font-family:'Syne';">Syne</div>
+                    <div style="font-size:11px;color:var(--w40);margin-top:1px;">Display bold para destaques</div>
+                  </div>
+                  <span class="check">✓</span>
+                </button>
+                <button class="option-btn" id="fontBtn-system" onclick="Theme.applyFont('system')">
+                  <div style="width:18px;font-size:14px;font-weight:800;">Aa</div>
+                  <div>
+                    <div style="font-weight:700;">Sistema</div>
+                    <div style="font-size:11px;color:var(--w40);margin-top:1px;">Fonte nativa do dispositivo</div>
+                  </div>
+                  <span class="check">✓</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Info -->
+            <div class="setting-card">
+              <div class="setting-card-title">ℹ️ Sistema</div>
+              <div style="display:flex;flex-direction:column;gap:10px;font-size:13px;color:var(--w70);">
+                <div style="display:flex;justify-content:space-between;padding:10px;background:var(--w5);border-radius:8px;">
+                  <span>Versão</span><span style="color:var(--white);font-weight:600;">FASE 1 · v1.0.0</span>
+                </div>
+                <div style="display:flex;justify-content:space-between;padding:10px;background:var(--w5);border-radius:8px;">
+                  <span>Desenvolvedor</span><span style="color:var(--orange);font-weight:600;">José Rrayan · Dev Chefe</span>
+                </div>
+                <div style="display:flex;justify-content:space-between;padding:10px;background:var(--w5);border-radius:8px;">
+                  <span>Backend</span><span style="color:var(--white);font-weight:600;">Supabase (PostgreSQL + JWT)</span>
+                </div>
+                <div style="display:flex;justify-content:space-between;padding:10px;background:var(--w5);border-radius:8px;">
+                  <span>Hosting</span><span style="color:var(--white);font-weight:600;">GitHub Pages · nupieepro.github.io</span>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /main-area -->
 
     <!-- ═══ MOBILE NAV ═══ -->
     <nav class="mobile-nav" id="mobileNav">
       <!-- Populated by JS -->
     </nav>
-  </div>
+
+  </div><!-- /app-shell -->
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
   <script src="js/app.js"></script>
   <script src="js/auth.js"></script>
   <script src="js/abj.js"></script>
   <script>
-    // Init dashboard
     (async () => {
       const profile = await App.initDashboard();
-      if (profile) {
-        Dashboard.render(profile);
-      }
+      if (profile) Dashboard.render(profile);
     })();
   </script>
 </body>
