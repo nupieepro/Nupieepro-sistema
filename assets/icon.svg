@@ -1,10 +1,9 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-  <!-- Background: Full Black -->
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 512 512">
+  <!-- Fundo preto -->
   <rect width="512" height="512" fill="#000000"/>
-  <!-- White N lettermark — bold, centered -->
-  <text x="256" y="320" text-anchor="middle" dominant-baseline="middle"
-        fill="#ffffff" font-size="300" font-family="Arial Black, Impact, Helvetica, sans-serif"
-        font-weight="900">N</text>
-  <!-- Orange accent bar -->
-  <rect x="172" y="388" width="168" height="10" rx="5" fill="#f75412"/>
+  <!-- Logo real do NUPIEEPRO centralizado (1414x2000 → escala por altura: 362x512) -->
+  <image href="1000279363.png"
+         x="75" y="0"
+         width="362" height="512"
+         preserveAspectRatio="xMidYMid meet"/>
 </svg>

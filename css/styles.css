@@ -4,7 +4,7 @@
    Fontes:  Plus Jakarta Sans (display) · Inter (body)
    ════════════════════════════════════════════════════════════════ */
 
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700&family=Syne:wght@400;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Plus+Jakarta+Sans:wght@600;700;800;900&family=Syne:wght@600;700;800&display=swap');
 
 /* ═══ DESIGN TOKENS ═══ */
 :root {
@@ -55,8 +55,8 @@
   --s8:  32px; --s10: 40px; --s12: 48px;
 
   /* ── Tipografia ── */
-  --f-body: 'Inter', system-ui, -apple-system, sans-serif;
-  --f-head: 'Plus Jakarta Sans', sans-serif;
+  --f-body: 'DM Sans', system-ui, -apple-system, sans-serif;
+  --f-head: 'Plus Jakarta Sans', 'DM Sans', sans-serif;
 
   /* ── Layout ── */
   --sidebar-w: 248px;
@@ -869,11 +869,12 @@ input, select, textarea { font-family: var(--f-body); }
 }
 
 /* ═══ FONT SYSTEM ═══ */
-:root { --f-body: 'Inter', system-ui, sans-serif; --f-head: 'Plus Jakarta Sans', sans-serif; }
+:root { --f-body: 'DM Sans', system-ui, sans-serif; --f-head: 'Plus Jakarta Sans', 'DM Sans', sans-serif; }
+[data-font="default"] { --f-body: 'DM Sans', system-ui, sans-serif; --f-head: 'Plus Jakarta Sans', sans-serif; }
 [data-font="jakarta"] { --f-body: 'Plus Jakarta Sans', sans-serif; --f-head: 'Plus Jakarta Sans', sans-serif; }
 [data-font="syne"]    { --f-body: 'Syne', sans-serif;              --f-head: 'Syne', sans-serif; }
 [data-font="system"]  { --f-body: system-ui, sans-serif;           --f-head: system-ui, sans-serif; }
-body { font-family: var(--f-body); }
+body { font-family: var(--f-body); font-feature-settings: "cv11", "ss01"; }
 
 /* ═══════════════════════════════════════════════════════════════
    RESPONSIVE — tablet + mobile
@@ -1113,4 +1114,116 @@ h1, h2, h3, h4, h5, h6 {
   textarea {
     font-size: 16px !important;
   }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   KANBAN — Colunas de demandas
+   ═══════════════════════════════════════════════════════════════ */
+.kanban-col {
+  flex: 1 1 220px;
+  min-width: 200px;
+  display: flex;
+  flex-direction: column;
+  background: var(--b-1);
+  border: 1px solid var(--b-2);
+  border-radius: var(--r-2);
+  overflow: hidden;
+}
+
+.kanban-col-header {
+  padding: 12px 16px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--t-2);
+  border-bottom: 2px solid var(--b-2);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.kanban-col-body {
+  flex: 1;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 120px;
+}
+
+.kanban-empty {
+  color: var(--t-4);
+  font-size: 12px;
+  text-align: center;
+  padding: 24px 8px;
+  font-style: italic;
+}
+
+.kanban-card {
+  background: var(--b-2);
+  border: 1px solid var(--b-3);
+  border-radius: var(--r-1);
+  padding: 10px 12px;
+  cursor: pointer;
+  transition: border-color 0.15s, transform 0.1s;
+}
+
+.kanban-card:hover {
+  border-color: var(--orange);
+  transform: translateY(-1px);
+}
+
+.kanban-card-title {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--t-1);
+  line-height: 1.4;
+  margin-bottom: 6px;
+}
+
+.kanban-card-footer {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.kanban-card-tag {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--orange);
+  background: rgba(247,84,18,0.12);
+  border-radius: 3px;
+  padding: 2px 5px;
+}
+
+.kanban-card-meta {
+  font-size: 10px;
+  color: var(--t-4);
+}
+
+#kanbanModal .modal-box {
+  background: var(--b-1);
+  border: 1px solid var(--b-2);
+  border-radius: var(--r-2);
+  padding: 24px;
+  width: 100%;
+  max-width: 480px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+#kanbanModal .modal-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--t-1);
+}
+
+#kanbanModal .modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }

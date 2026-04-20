@@ -3,15 +3,13 @@
    Alinhado com a plataforma real (dark theme, 6 coords, ABJ)
    ============================================================ */
 
-// Chave pública (anon/publishable) — segura para frontend.
-// Segurança real = RLS policies no banco (schema.sql).
-// NUNCA coloque a service_role key aqui.
-const SUPABASE_URL  = 'https://quwpyrdxyibcbyzwfilb.supabase.co';
-const SUPABASE_ANON = 'sb_publishable_VmEMT07DiE1f5DtxzgZomA_-F0gZIpM';
-
-const _sb = (SUPABASE_URL !== 'COLE_SUA_URL_AQUI')
-  ? supabase.createClient(SUPABASE_URL, SUPABASE_ANON)
+// Credenciais carregadas de js/config.js (gitignored).
+// Em produção, config.js é gerado pelo GitHub Actions via Secrets.
+const _sb = (window.NUPI_URL && window.NUPI_URL !== 'COLE_SUA_SUPABASE_URL_AQUI')
+  ? supabase.createClient(window.NUPI_URL, window.NUPI_KEY)
   : null;
+
+window._supabase = _sb;
 
 /* ============================================================
    Constants — NUPIEEPRO structure
@@ -134,11 +132,11 @@ const App = {
         return {
           id: 'dev-chefe',
           email: mock,
-          nome: 'Desenvolvedor / Assessor',
+          nome: 'JR',
           role: 'admin',
-          cargo: 'Dev Chefe & Assessor de Marketing',
-          iniciais: 'RV',
-          coordenadorias: { nome: 'Marketing', sigla: 'MKT', icone: '◬' }
+          cargo: 'Dev Chefe',
+          iniciais: 'JR',
+          coordenadorias: { nome: 'Geral', sigla: 'GER', icone: '⬡' }
         };
       }
       return null;
@@ -238,6 +236,7 @@ const App = {
 
   /** Init full dashboard (auth + sidebar + profile) */
   async initDashboard() {
+    // _appProfile é variável global acessada pelo ABJ e outros módulos
     Theme.init();
 
     const session = await App.requireAuth();
@@ -252,6 +251,8 @@ const App = {
       App.toast('Perfil não encontrado. Faça logout e tente novamente.', 'error');
       return null;
     }
+    // Expõe globalmente para módulos como ABJ
+    window._appProfile = profile;
 
     const coordName = profile.coordenadorias?.nome || 'Geral';
 
@@ -339,16 +340,18 @@ function goTo(id) {
   const pg = document.getElementById('page-' + id);
   if (pg) pg.classList.add('active');
 
-  // Update sidebar active
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   const navEl = document.getElementById('nav-' + id);
   if (navEl) navEl.classList.add('active');
 
-  // Close mobile sidebar + overlay
   const sidebar = document.getElementById('sidebar');
   const overlay = document.getElementById('sidebarOverlay');
   if (sidebar) sidebar.classList.remove('open');
   if (overlay) overlay.classList.remove('visible');
+
+  // Lazy-load de páginas com dados
+  if (id === 'pessoas') Pessoas.loadMembers();
+  if (id === 'tarefas') Kanban.load();
 }
 
 function toggleSidebar() {
@@ -610,6 +613,140 @@ const Cal = {
 };
 
 /* ============================================================
+   Gestão de Membros
+   ============================================================ */
+const Pessoas = {
+  _tab: 'membros',
+
+  switchTab(tab, el) {
+    this._tab = tab;
+    document.querySelectorAll('#pessoasTabBar .tab').forEach(t => t.classList.remove('active'));
+    if (el) el.classList.add('active');
+    ['membros','convidar','gerenciar'].forEach(t => {
+      const el2 = document.getElementById('pessoasTab' + t.charAt(0).toUpperCase() + t.slice(1));
+      if (el2) el2.style.display = t === tab ? '' : 'none';
+    });
+    if (tab === 'membros' || tab === 'gerenciar') Pessoas.loadMembers();
+  },
+
+  async loadMembers() {
+    const grid = document.getElementById('memberGrid');
+    const mgrid = document.getElementById('manageGrid');
+    const count = document.getElementById('memberCount');
+
+    // Dados mock enquanto Supabase não retorna
+    let members = [
+      { iniciais:'RB', nome:'Rayan Bezerra', cargo:'Desenvolvedor Chefe', coord:'Geral', email:'jjoserrayan2711@gmail.com', role:'admin', cor:'orange' },
+    ];
+
+    if (_sb) {
+      const { data } = await _sb.from('users')
+        .select('*, coordenadorias(nome,sigla)')
+        .eq('ativo', true)
+        .order('nome');
+      if (data && data.length) members = data.map(u => ({
+        iniciais: u.iniciais || u.nome?.[0] || '?',
+        nome: u.nome || u.email,
+        cargo: u.cargo || u.role,
+        coord: u.coordenadorias?.nome || 'Geral',
+        email: u.email,
+        role: u.role,
+        id: u.id,
+        cor: u.role === 'admin' ? 'orange' : 'blue'
+      }));
+    }
+
+    if (count) count.textContent = members.length + ' membros';
+
+    if (grid) grid.innerHTML = members.map(m => `
+      <div style="background:var(--c-s2);padding:14px;border-radius:12px;border:1px solid ${m.cor==='orange'?'var(--orange-border)':'var(--border)'};display:flex;align-items:center;gap:14px;">
+        <div style="width:44px;height:44px;border-radius:50%;background:${m.cor==='orange'?'var(--orange-dim)':'var(--blue-dim)'};border:2px solid ${m.cor==='orange'?'var(--orange)':'var(--blue)'};color:${m.cor==='orange'?'var(--orange)':'var(--blue)'};display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px;flex-shrink:0;">${m.iniciais}</div>
+        <div style="flex:1;min-width:0;">
+          <div style="font-weight:700;font-size:14px;">${m.nome}</div>
+          <div style="font-size:11px;color:var(--t-3);margin-top:2px;">${m.cargo} · ${m.coord}</div>
+          <div style="font-size:10px;color:var(--t-4);margin-top:1px;">${m.email}</div>
+        </div>
+      </div>
+    `).join('');
+
+    if (mgrid) mgrid.innerHTML = members.map(m => `
+      <div style="background:var(--c-s2);padding:12px 14px;border-radius:10px;border:1px solid var(--border);display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+        <div style="width:34px;height:34px;border-radius:50%;background:var(--w10);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:12px;flex-shrink:0;">${m.iniciais}</div>
+        <div style="flex:1;min-width:120px;">
+          <div style="font-weight:600;font-size:13px;">${m.nome}</div>
+          <div style="font-size:11px;color:var(--t-3);">${m.coord}</div>
+        </div>
+        <select style="background:var(--w5);border:1px solid var(--b-1);border-radius:8px;padding:5px 10px;color:var(--t-2);font-size:12px;outline:none;" onchange="Pessoas.updateRole('${m.id||m.email}',this.value)">
+          <option value="membro" ${m.role==='membro'?'selected':''}>Membro</option>
+          <option value="coordenador" ${m.role==='coordenador'?'selected':''}>Coordenador</option>
+          <option value="admin" ${m.role==='admin'?'selected':''}>Admin/Dev</option>
+        </select>
+      </div>
+    `).join('');
+  },
+
+  async gerarConvite() {
+    const email = document.getElementById('inviteEmail')?.value.trim();
+    const cargo = document.getElementById('inviteCargo')?.value.trim();
+    const coordSigla = document.getElementById('inviteCoord')?.value;
+    const role = document.getElementById('inviteRole')?.value;
+    const alertEl = document.getElementById('inviteAlert');
+
+    if (!email || !coordSigla || !cargo) {
+      if (alertEl) { alertEl.textContent = 'Preencha e-mail, cargo e coordenadoria.'; alertEl.className = 'alert-box error'; }
+      return;
+    }
+
+    // Gerar token único
+    const token = 'NUPI-' + Math.random().toString(36).slice(2,10).toUpperCase() + '-' + Date.now().toString(36).toUpperCase();
+    const expires = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+
+    if (_sb) {
+      const { data: coordData } = await _sb.from('coordenadorias').select('id').eq('sigla', coordSigla).single();
+      const { error } = await _sb.from('convites').insert({
+        token, email, cargo, role,
+        coordenadoria_id: coordData?.id,
+        usado: false,
+        expires_at: expires,
+        created_by: window._appProfile?.id || null
+      });
+      if (error) {
+        if (alertEl) { alertEl.textContent = 'Erro ao salvar convite: ' + error.message; alertEl.className = 'alert-box error'; }
+        return;
+      }
+    }
+
+    const link = `${window.location.origin}${window.location.pathname.replace('dashboard.html','')}convite.html?token=${token}`;
+    const input = document.getElementById('inviteLinkInput');
+    if (input) input.value = link;
+    const card = document.getElementById('inviteLinkCard');
+    if (card) card.style.display = '';
+    if (alertEl) { alertEl.textContent = 'Convite criado com sucesso!'; alertEl.className = 'alert-box success'; }
+    App.toast('Link de convite gerado!', 'success');
+  },
+
+  copiarLink() {
+    const val = document.getElementById('inviteLinkInput')?.value;
+    if (!val) return;
+    navigator.clipboard.writeText(val).then(() => App.toast('Link copiado!', 'success')).catch(() => {
+      document.getElementById('inviteLinkInput')?.select();
+      document.execCommand('copy');
+      App.toast('Link copiado!', 'success');
+    });
+  },
+
+  async updateRole(identifier, newRole) {
+    if (!_sb) { App.toast('Supabase necessário para alterar funções.', 'error'); return; }
+    const q = identifier.includes('@')
+      ? _sb.from('users').update({ role: newRole }).eq('email', identifier)
+      : _sb.from('users').update({ role: newRole }).eq('id', identifier);
+    const { error } = await q;
+    if (error) { App.toast('Erro ao atualizar: ' + error.message, 'error'); return; }
+    App.toast('Função atualizada com sucesso!', 'success');
+  }
+};
+
+/* ============================================================
    Mini Calendar (widget no dashboard)
    ============================================================ */
 const MiniCal = {
@@ -701,43 +838,82 @@ function markAllNotifRead() {
 /* ============================================================
    Role Switcher (Dev: GER ↔ MKT)
    ============================================================ */
+// Páginas por visão do admin (simula o que cada coord vê)
 const DEV_PAGES = {
   ger: [
-    { id: 'dashboard',     icon: '⬡', label: 'Painel Central' },
-    { id: 'abj',           icon: '⭐', label: 'Selo ABJ', badge: '!' },
-    { id: 'tarefas',       icon: '☰', label: 'Todas Demandas' },
-    { id: 'manu',          icon: '🗂', label: 'Repositório' },
-    { id: 'pessoas',       icon: '◒', label: 'Membros' },
-    { id: 'financeiro',    icon: '◎', label: 'Financeiro' },
-    { id: 'operacoes',     icon: '⚙', label: 'Operações' },
-    { id: 'projetos',      icon: '◫', label: 'Projetos' },
+    { id: 'dashboard',  icon: '⬡', label: 'Painel Central' },
+    { id: 'abj',        icon: '⭐', label: 'Selo ABJ', badge: '!' },
+    { id: 'tarefas',    icon: '☰', label: 'Todas Demandas' },
+    { id: 'pessoas',    icon: '◒', label: 'Membros & Gestão' },
+    { id: 'financeiro', icon: '◎', label: 'Financeiro' },
+    { id: 'operacoes',  icon: '⚙', label: 'Operações' },
+    { id: 'projetos',   icon: '◫', label: 'Projetos' },
+    { id: 'manu',       icon: '🗂', label: 'Repositório' },
+  ],
+  ops: [
+    { id: 'operacoes',  icon: '⚙', label: 'Operações Hub' },
+    { id: 'tarefas',    icon: '☰', label: 'Processos OPS' },
+    { id: 'manu',       icon: '🗂', label: 'Repositório' },
+  ],
+  gp: [
+    { id: 'pessoas',    icon: '◒', label: 'Membros e G.P' },
+    { id: 'tarefas',    icon: '☰', label: 'Tarefas G.P' },
   ],
   mkt: [
-    { id: 'marketing',     icon: '◬', label: 'Agência MKT' },
-    { id: 'tarefas',       icon: '☰', label: 'Demandas MKT' },
-    { id: 'manu',          icon: '🗂', label: 'Repositório' },
-  ]
+    { id: 'marketing',    icon: '◬', label: 'Agência MKT' },
+    { id: 'tarefas',      icon: '☰', label: 'Demandas MKT' },
+    { id: 'notificacoes', icon: '🔔', label: 'Notificações' },
+    { id: 'manu',         icon: '🗂', label: 'Repositório' },
+  ],
+  prj: [
+    { id: 'projetos',   icon: '◫', label: 'Ações Projetos' },
+    { id: 'tarefas',    icon: '☰', label: 'Tarefas PRJ' },
+  ],
+  fin: [
+    { id: 'financeiro', icon: '◎', label: 'Tesouraria' },
+    { id: 'tarefas',    icon: '☰', label: 'Tarefas FIN' },
+  ],
+};
+
+// Chip do usuário por role (JR em GER, RB em MKT, nome em outros)
+const DEV_CHIP = {
+  ger:  { iniciais: 'JR', nome: 'JR', cargo: 'Dev Chefe' },
+  ops:  { iniciais: 'JR', nome: 'JR', cargo: 'Preview OPS' },
+  gp:   { iniciais: 'JR', nome: 'JR', cargo: 'Preview G.P' },
+  mkt:  { iniciais: 'RB', nome: 'RB', cargo: 'Assessor MKT' },
+  prj:  { iniciais: 'JR', nome: 'JR', cargo: 'Preview PRJ' },
+  fin:  { iniciais: 'JR', nome: 'JR', cargo: 'Preview FIN' },
 };
 
 let _currentRole = 'ger';
 
 function switchRole(role) {
   _currentRole = role;
-  // Update tab UI
-  ['ger','mkt'].forEach(r => {
-    const tab = document.getElementById('roleTab' + r.charAt(0).toUpperCase() + r.slice(1));
-    if (tab) tab.classList.toggle('active', r === role);
-  });
-  // Rebuild nav
+  document.querySelectorAll('.role-tab').forEach(t => t.classList.remove('active'));
+  const activeTab = document.getElementById('roleTab-' + role);
+  if (activeTab) activeTab.classList.add('active');
   _buildNav(role);
+  // Atualiza chip do usuário
+  const chip = DEV_CHIP[role] || DEV_CHIP.ger;
+  const av = document.getElementById('sideAvatar');
+  const nm = document.getElementById('sideName');
+  const rl = document.getElementById('sideRole');
+  if (av) av.textContent = chip.iniciais;
+  if (nm) nm.textContent = chip.nome;
+  if (rl) rl.textContent = chip.cargo;
+  // Navega para a primeira página da visão
+  const firstPage = (DEV_PAGES[role] || DEV_PAGES.ger)[0];
+  if (firstPage) goTo(firstPage.id);
 }
+
+const ROLE_LABELS = { ger:'⬡ Coord. Geral', ops:'⚙ Operações', gp:'◒ G. Pessoas', mkt:'◬ Assessor MKT', prj:'◫ Projetos', fin:'◎ Finanças' };
 
 function _buildNav(role) {
   const nav = document.getElementById('sideNav');
   if (!nav) return;
 
   const pages = DEV_PAGES[role] || [];
-  let html = `<div class="sidebar-section">${role === 'ger' ? '⬡ Coord. Geral' : '◬ Marketing'}</div>`;
+  let html = `<div class="sidebar-section">${ROLE_LABELS[role] || role.toUpperCase()}</div>`;
 
   pages.forEach(p => {
     const badge = p.badge ? `<span class="nav-badge">${p.badge}</span>` : '';
@@ -749,16 +925,136 @@ function _buildNav(role) {
 
   html += '<div class="sidebar-section">Colaborativo</div>';
   html += `<div class="nav-item nav-shared" id="nav-compartilhado" onclick="goTo('compartilhado')">
-    <span class="nav-icon">📅</span><span class="nav-label">Calendário Universal</span>
+    <span class="nav-icon">📅</span><span class="nav-label">Calendário</span>
   </div>`;
 
   html += '<div class="sidebar-section">Sistema</div>';
-  html += `<div class="nav-item" onclick="goTo('configuracoes')">
+  html += `<div class="nav-item" id="nav-notificacoes" onclick="goTo('notificacoes')">
+    <span class="nav-icon">🔔</span><span class="nav-label">Notificações</span>
+  </div>`;
+  html += `<div class="nav-item" id="nav-configuracoes" onclick="goTo('configuracoes')">
     <span class="nav-icon">⚙</span><span class="nav-label">Configurações</span>
   </div>`;
-  html += `<a href="../Lojinha-Nupieepro/admin.html" target="_blank" class="nav-item">
-    <span class="nav-icon">🛒</span><span class="nav-label">Admin Lojinha</span>
-  </a>`;
 
   nav.innerHTML = html;
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   KANBAN MODULE — Demandas por coordenadoria
+   ═══════════════════════════════════════════════════════════════ */
+const Kanban = (() => {
+  const COLS = [
+    { id: 'afazer',    label: 'A Fazer',       status: 'pendente' },
+    { id: 'producao',  label: 'Em Produção',    status: 'em_producao' },
+    { id: 'evidencia', label: 'Evidência',      status: 'evidencia' },
+    { id: 'concluida', label: 'Concluídas',     status: 'concluida' },
+  ];
+
+  let _demands = [];
+  let _loaded = false;
+
+  async function load() {
+    if (!window._supabase) { _renderAll([]); return; }
+    try {
+      const { data, error } = await window._supabase
+        .from('demandas')
+        .select('*')
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      _demands = data || [];
+    } catch (e) {
+      console.warn('Kanban: sem tabela demandas, modo offline.', e.message);
+      _demands = JSON.parse(localStorage.getItem('_kanban_demands') || '[]');
+    }
+    _loaded = true;
+    _renderAll(_demands);
+  }
+
+  function _renderAll(list) {
+    COLS.forEach(col => {
+      const el = document.getElementById('kanban-' + col.id);
+      if (!el) return;
+      const items = list.filter(d => d.status === col.status);
+      if (items.length === 0) {
+        el.innerHTML = '<div class="kanban-empty">Vazio.</div>';
+        return;
+      }
+      el.innerHTML = items.map(d => _cardHtml(d)).join('');
+    });
+  }
+
+  function _cardHtml(d) {
+    const prazo = d.prazo ? `<span class="kanban-card-meta">📅 ${new Date(d.prazo).toLocaleDateString('pt-BR')}</span>` : '';
+    const coord = d.coordenadoria ? `<span class="kanban-card-tag">${d.coordenadoria.toUpperCase()}</span>` : '';
+    return `<div class="kanban-card" onclick="Kanban.abrirDetalhes('${d.id}')">
+      <div class="kanban-card-title">${_esc(d.titulo)}</div>
+      <div class="kanban-card-footer">${coord}${prazo}</div>
+    </div>`;
+  }
+
+  function _esc(s) {
+    return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  function abrirNovaDemanda() {
+    const m = document.getElementById('kanbanModal');
+    if (m) { m.style.display = 'flex'; }
+    document.getElementById('kTitulo')?.focus();
+  }
+
+  function fecharModal() {
+    const m = document.getElementById('kanbanModal');
+    if (m) m.style.display = 'none';
+    ['kTitulo','kCoord','kPrazo','kDesc'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.value = '';
+    });
+  }
+
+  async function salvar() {
+    const titulo = document.getElementById('kTitulo')?.value?.trim();
+    const coord  = document.getElementById('kCoord')?.value || 'ger';
+    const prazo  = document.getElementById('kPrazo')?.value || null;
+    const desc   = document.getElementById('kDesc')?.value?.trim() || '';
+    if (!titulo) { alert('Insira um título para a demanda.'); return; }
+
+    const now = new Date().toISOString();
+    const demand = { id: 'loc-' + Date.now(), titulo, coordenadoria: coord, prazo, descricao: desc, status: 'pendente', created_at: now };
+
+    if (window._supabase) {
+      try {
+        const { data, error } = await window._supabase
+          .from('demandas')
+          .insert([{ titulo, coordenadoria: coord, prazo, descricao: desc, status: 'pendente' }])
+          .select()
+          .single();
+        if (error) throw error;
+        _demands.unshift(data);
+      } catch (e) {
+        console.warn('Kanban: fallback local.', e.message);
+        _demands.unshift(demand);
+        _saveLocal();
+      }
+    } else {
+      _demands.unshift(demand);
+      _saveLocal();
+    }
+
+    _renderAll(_demands);
+    fecharModal();
+  }
+
+  function abrirDetalhes(id) {
+    const d = _demands.find(x => x.id == id || x.id == id);
+    if (!d) return;
+    // Abre modal de detalhes simples — futuramente expandir
+    const info = `Título: ${d.titulo}\nCoord: ${(d.coordenadoria||'').toUpperCase()}\nStatus: ${d.status}\nPrazo: ${d.prazo || '—'}\n\n${d.descricao || ''}`;
+    alert(info);
+  }
+
+  function _saveLocal() {
+    localStorage.setItem('_kanban_demands', JSON.stringify(_demands));
+  }
+
+  return { load, abrirNovaDemanda, fecharModal, salvar, abrirDetalhes };
+})();
