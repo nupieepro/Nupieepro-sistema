@@ -3,15 +3,13 @@
    Alinhado com a plataforma real (dark theme, 6 coords, ABJ)
    ============================================================ */
 
-// Chave pública (anon/publishable) — segura para frontend.
-// Segurança real = RLS policies no banco (schema.sql).
-// NUNCA coloque a service_role key aqui.
-const SUPABASE_URL  = 'https://quwpyrdxyibcbyzwfilb.supabase.co';
-const SUPABASE_ANON = 'sb_publishable_VmEMT07DiE1f5DtxzgZomA_-F0gZIpM';
-
-const _sb = (SUPABASE_URL !== 'COLE_SUA_URL_AQUI')
-  ? supabase.createClient(SUPABASE_URL, SUPABASE_ANON)
+// Credenciais carregadas de js/config.js (gitignored).
+// Em produção, config.js é gerado pelo GitHub Actions via Secrets.
+const _sb = (window.NUPI_URL && window.NUPI_URL !== 'COLE_SUA_SUPABASE_URL_AQUI')
+  ? supabase.createClient(window.NUPI_URL, window.NUPI_KEY)
   : null;
+
+window._supabase = _sb;
 
 /* ============================================================
    Constants — NUPIEEPRO structure

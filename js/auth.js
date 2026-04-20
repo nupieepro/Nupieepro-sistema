@@ -26,13 +26,7 @@ const Auth = {
   },
 
   async registerWithToken(token, nome, password) {
-    if (!_sb) {
-      if (token === 'beta_mestre') {
-        localStorage.setItem('mockSession', 'jjoserrayan2711@gmail.com');
-        return { user: { email: 'jjoserrayan2711@gmail.com' } };
-      }
-      throw new Error('Supabase não configurado.');
-    }
+    if (!_sb) throw new Error('Sistema offline. Verifique a conexão.');
 
     // Validate invite token
     const { data: convite, error: tokenErr } = await _sb
