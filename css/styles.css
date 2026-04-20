@@ -277,12 +277,12 @@ input, select, textarea { font-family: var(--f-body); }
 
 .btn-login {
   width: 100%; padding: 14px;
-  background: linear-gradient(135deg, var(--c-accent), #c93c00);
+  background: linear-gradient(135deg, var(--c-purple), #5c2fa8);
   color: var(--c-white); border: none; border-radius: var(--r-md);
   font-family: var(--f-head); font-size: 15px; font-weight: 700;
   letter-spacing: 0.06em; text-transform: uppercase; cursor: pointer;
   transition: all var(--t-2) var(--ease);
-  box-shadow: var(--sh-accent);
+  box-shadow: 0 8px 28px -8px rgba(54,31,100,0.65);
   position: relative; overflow: hidden;
 }
 .btn-login::after {
@@ -291,7 +291,7 @@ input, select, textarea { font-family: var(--f-body); }
   background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
   transition: left 0.55s var(--ease);
 }
-.btn-login:hover { transform: translateY(-2px); box-shadow: 0 12px 32px rgba(247,84,18,0.4); }
+.btn-login:hover { transform: translateY(-2px); box-shadow: 0 14px 36px -8px rgba(54,31,100,0.8); }
 .btn-login:hover::after { left: 140%; }
 .btn-login:active { transform: translateY(0); }
 .btn-login.loading { opacity: 0.7; pointer-events: none; }

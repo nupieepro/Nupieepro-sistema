@@ -9,6 +9,7 @@ const ASSETS = [
   './index.html',
   './dashboard.html',
   './convite.html',
+  './reset.html',
   './css/styles.css',
   './js/config.js',
   './js/app.js',
