@@ -2,12 +2,19 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="theme-color" content="#000000">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="NUPIEEPRO">
+  <meta name="mobile-web-app-capable" content="yes">
   <title>NUPIEEPRO — Dashboard</title>
   <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="assets/1000279363.png">
+  <link rel="icon" type="image/svg+xml" href="assets/icon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,700&family=Inter:wght@300;400;500;600;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
@@ -113,9 +120,34 @@
             </div>
           </div>
 
-          <div class="section-card">
-            <div class="section-title">Atividade Recente</div>
-            <div id="dashRecent"><p class="text-muted text-sm">Carregando...</p></div>
+          <div class="dash-two-col">
+            <!-- Atividade Recente -->
+            <div class="section-card">
+              <div class="section-title">Atividade Recente</div>
+              <div id="dashRecent"><p class="text-muted text-sm">Carregando...</p></div>
+            </div>
+
+            <!-- Mini-Calendário -->
+            <div class="section-card">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--s4);">
+                <div class="section-title" style="margin-bottom:0;">Agenda do Mês</div>
+                <button class="btn btn-ghost" style="font-size:11px;padding:4px 10px;" onclick="goTo('compartilhado')">Ver completo →</button>
+              </div>
+              <!-- Mini cal nav -->
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--s3);">
+                <button class="cal-nav-btn" style="padding:4px 10px;font-size:14px;" onclick="MiniCal.prev()">‹</button>
+                <span class="cal-month-label" id="miniCalLabel" style="font-size:13px;"></span>
+                <button class="cal-nav-btn" style="padding:4px 10px;font-size:14px;" onclick="MiniCal.next()">›</button>
+              </div>
+              <div class="mini-cal-grid" id="miniCalGrid">
+                <div class="cal-day-name">D</div><div class="cal-day-name">S</div>
+                <div class="cal-day-name">T</div><div class="cal-day-name">Q</div>
+                <div class="cal-day-name">Q</div><div class="cal-day-name">S</div>
+                <div class="cal-day-name">S</div>
+              </div>
+              <!-- Próximos eventos compactos -->
+              <div id="miniCalEvents" style="margin-top:var(--s3);display:flex;flex-direction:column;gap:6px;"></div>
+            </div>
           </div>
         </div>
       </div>

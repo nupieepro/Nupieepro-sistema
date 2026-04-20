@@ -101,7 +101,9 @@ function showAlert(msg, type, containerId = 'loginAlert') {
   const el = document.getElementById(containerId);
   if (!el) return;
   el.textContent = msg;
-  el.className = 'alert-box ' + type;
+  // Suporta tanto .alert (index.html inline CSS) quanto .alert-box (styles.css)
+  const base = el.dataset.alertClass || 'alert-box';
+  el.className = base + ' ' + type;
 }
 
 async function doLogin() {
@@ -123,7 +125,7 @@ async function doLogin() {
     showAlert(err.message || 'Erro ao fazer login.', 'error');
   } finally {
     btn.classList.remove('loading');
-    btn.textContent = 'Entrar';
+    btn.textContent = 'Entrar na Plataforma';
   }
 }
 

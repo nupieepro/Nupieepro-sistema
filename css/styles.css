@@ -934,4 +934,183 @@ body { font-family: var(--f-body); }
 @supports (padding: max(0px)) {
   .sidebar { padding-bottom: env(safe-area-inset-bottom); }
   .mobile-nav { padding-bottom: max(var(--s1), env(safe-area-inset-bottom)); }
+  .topbar { padding-top: env(safe-area-inset-top, 0); }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   DASHBOARD — LAYOUT DUAS COLUNAS
+   ═══════════════════════════════════════════════════════════════ */
+.dash-two-col {
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  gap: var(--s6);
+  align-items: start;
+}
+
+@media (max-width: 1100px) {
+  .dash-two-col { grid-template-columns: 1fr; }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   MINI CALENDÁRIO (widget dashboard)
+   ═══════════════════════════════════════════════════════════════ */
+.mini-cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+}
+
+.mini-cal-day {
+  aspect-ratio: 1;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 500;
+  border-radius: var(--r-xs);
+  cursor: pointer;
+  color: var(--t-2);
+  transition: background var(--t-1) var(--ease), color var(--t-1) var(--ease);
+  position: relative;
+}
+.mini-cal-day:hover { background: rgba(145,154,187,0.1); color: var(--c-white); }
+.mini-cal-day.today {
+  background: var(--c-accent);
+  color: var(--c-white);
+  font-weight: 800;
+  border-radius: 50%;
+}
+.mini-cal-day.has-event::after {
+  content: '';
+  position: absolute; bottom: 2px; left: 50%; transform: translateX(-50%);
+  width: 4px; height: 4px; border-radius: 50%;
+  background: var(--c-accent);
+}
+.mini-cal-day.today::after { background: var(--c-white); }
+.mini-cal-day.empty { pointer-events: none; }
+
+/* ═══════════════════════════════════════════════════════════════
+   MELHORIAS TIPOGRÁFICAS GERAIS
+   ═══════════════════════════════════════════════════════════════ */
+
+/* Hierarquia clara de headings */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--f-head);
+  font-weight: 700;
+  line-height: 1.2;
+  color: var(--c-white);
+}
+
+/* Topbar com sombra sutil ao scrollar */
+.topbar {
+  box-shadow: 0 1px 0 var(--b-1);
+}
+
+/* Sidebar: logo com padding mais generoso */
+.sidebar-logo {
+  padding: var(--s4) var(--s5);
+}
+
+/* Section title com traço laranja */
+.section-title {
+  display: flex;
+  align-items: center;
+  gap: var(--s2);
+}
+.section-title::before {
+  content: '';
+  display: inline-block;
+  width: 3px; height: 14px;
+  background: var(--c-accent);
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+/* KPI cards: valor com peso ainda maior */
+.sum-value {
+  font-weight: 900;
+  letter-spacing: -0.02em;
+}
+
+/* Melhorar legibilidade dos labels */
+.sum-label {
+  font-weight: 600;
+  letter-spacing: 0.12em;
+}
+
+/* Botões: transição mais suave e consistente */
+.btn {
+  letter-spacing: 0.02em;
+}
+
+/* Nav item: mais espaçado e legível */
+.nav-item {
+  padding: 10px var(--s3);
+  font-weight: 500;
+  letter-spacing: 0.01em;
+}
+
+/* User chip: mais destaque */
+.u-name {
+  font-family: var(--f-head);
+  font-weight: 700;
+  font-size: 13px;
+}
+
+/* Role switcher: visual mais refinado */
+.role-switcher {
+  margin: var(--s3) var(--s3) var(--s2);
+}
+.role-tab {
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  padding: 6px 8px;
+}
+
+/* Sidebar section label: mais sutil */
+.sidebar-section {
+  font-size: 9px;
+  letter-spacing: 0.18em;
+  padding: var(--s5) var(--s5) var(--s1);
+  opacity: 0.6;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   NOTIFICAÇÕES — dot animado
+   ═══════════════════════════════════════════════════════════════ */
+.notif-dot {
+  animation: none;
+  flex-shrink: 0;
+  margin-top: 4px;
+}
+.notif-item.unread .notif-dot {
+  animation: dotPulse 2s ease-in-out infinite;
+}
+@keyframes dotPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(247,84,18,0.5); }
+  50% { box-shadow: 0 0 0 4px rgba(247,84,18,0); }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   TOPBAR — botão de notificação com pulso quando há novas
+   ═══════════════════════════════════════════════════════════════ */
+.notif-btn:has(.notif-badge.visible) {
+  border-color: rgba(247,84,18,0.3);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   SCROLLBAR CUSTOMIZADA
+   ═══════════════════════════════════════════════════════════════ */
+.sidebar::-webkit-scrollbar { width: 3px; }
+.sidebar::-webkit-scrollbar-track { background: transparent; }
+.sidebar::-webkit-scrollbar-thumb { background: var(--b-2); border-radius: 2px; }
+
+/* ═══════════════════════════════════════════════════════════════
+   PWA: evitar zoom em inputs (iOS)
+   ═══════════════════════════════════════════════════════════════ */
+@media (max-width: 768px) {
+  input[type="email"],
+  input[type="password"],
+  input[type="text"],
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
 }

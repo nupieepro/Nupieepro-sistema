@@ -1,8 +1,9 @@
 /* ============================================================
-   NUPIEEPRO — Service Worker (PWA offline)
+   NUPIEEPRO — Service Worker v2
+   Network-first com fallback para cache offline
    ============================================================ */
 
-const CACHE_NAME = 'nupieepro-v1';
+const CACHE_NAME = 'nupieepro-v2';
 const ASSETS = [
   './',
   './index.html',
@@ -11,37 +12,48 @@ const ASSETS = [
   './css/styles.css',
   './js/app.js',
   './js/auth.js',
-  './manifest.json'
+  './js/abj.js',
+  './manifest.json',
+  './assets/icon.svg',
+  './assets/1000279363.png',
 ];
 
-// Install — cache shell assets
+// Install — pré-carrega shell do app
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS))
+    caches.open(CACHE_NAME).then((cache) =>
+      cache.addAll(ASSETS).catch((err) => console.warn('[SW] Cache addAll parcial:', err))
+    )
   );
   self.skipWaiting();
 });
 
-// Activate — clean old caches
+// Activate — remove caches antigos
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((keys) =>
-      Promise.all(keys.filter((k) => k !== CACHE_NAME).map((k) => caches.delete(k)))
+      Promise.all(
+        keys.filter((k) => k !== CACHE_NAME).map((k) => caches.delete(k))
+      )
     )
   );
   self.clients.claim();
 });
 
-// Fetch — network first, fallback to cache
+// Fetch — Network first, fallback to cache
 self.addEventListener('fetch', (event) => {
-  // Skip Supabase API calls — always network
-  if (event.request.url.includes('supabase.co')) return;
+  const url = event.request.url;
+
+  // Supabase sempre pela rede (auth + dados em tempo real)
+  if (url.includes('supabase.co') || url.includes('googleapis.com')) return;
+
+  // GET only
+  if (event.request.method !== 'GET') return;
 
   event.respondWith(
     fetch(event.request)
       .then((response) => {
-        // Cache successful GET responses
-        if (response.ok && event.request.method === 'GET') {
+        if (response.ok) {
           const clone = response.clone();
           caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
         }
