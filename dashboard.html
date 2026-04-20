@@ -14,7 +14,7 @@
   <link rel="icon" type="image/svg+xml" href="assets/icon.svg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,700&family=Inter:wght@300;400;500;600;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Plus+Jakarta+Sans:wght@600;700;800;900&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
@@ -33,9 +33,13 @@
       </div>
 
       <!-- Role switcher — só aparece para admin/dev -->
-      <div class="role-switcher d-none" id="roleSwitcher">
-        <div class="role-tab active" id="roleTabGer" onclick="switchRole('ger')">⬡ Geral</div>
-        <div class="role-tab" id="roleTabMkt" onclick="switchRole('mkt')">◬ MKT</div>
+      <div class="role-switcher d-none" id="roleSwitcher" style="flex-wrap:wrap;gap:2px;">
+        <div class="role-tab active" id="roleTab-ger" onclick="switchRole('ger')" title="Coord. Geral">⬡ GER</div>
+        <div class="role-tab" id="roleTab-ops" onclick="switchRole('ops')" title="Operações">⚙ OPS</div>
+        <div class="role-tab" id="roleTab-gp"  onclick="switchRole('gp')"  title="G. Pessoas">◒ G.P</div>
+        <div class="role-tab" id="roleTab-mkt" onclick="switchRole('mkt')" title="Assessor MKT">◬ MKT</div>
+        <div class="role-tab" id="roleTab-prj" onclick="switchRole('prj')" title="Projetos">◫ PRJ</div>
+        <div class="role-tab" id="roleTab-fin" onclick="switchRole('fin')" title="Finanças">◎ FIN</div>
       </div>
 
       <nav id="sideNav">
@@ -268,30 +272,72 @@
           <div style="display:flex;align-items:center;gap:12px;">
             <button class="topbar-toggle" onclick="toggleSidebar()">☰</button>
             <div>
-              <div class="topbar-title">Workflow de Demandas</div>
-              <div class="topbar-sub">Edição restrita: Coord. Geral e Dev Chefe</div>
+              <div class="topbar-title">Demandas</div>
+              <div class="topbar-sub">Cada coordenadoria adiciona — GER/Dev edita</div>
             </div>
           </div>
-          <button class="btn btn-primary" onclick="App.toast('Nova demanda — FASE 2','info')">+ Demanda</button>
+          <button class="btn btn-primary" onclick="Kanban.abrirNovaDemanda()">+ Nova Demanda</button>
         </div>
-        <div class="content">
-          <div style="display:flex;gap:20px;overflow-x:auto;padding-bottom:20px;">
-            <div style="flex:1;min-width:300px;background:var(--navy-card);border-radius:12px;padding:1rem;border:1px solid var(--border);">
-              <h4 style="margin-bottom:1rem;padding-bottom:8px;border-bottom:1px solid var(--border);font-size:13px;text-transform:uppercase;letter-spacing:0.08em;color:var(--w70);">🔴 A Fazer</h4>
-              <div style="background:var(--navy-mid);padding:1rem;border-radius:8px;border-left:4px solid var(--red);">
-                <div style="font-size:11px;font-weight:700;color:var(--red);margin-bottom:4px;">◬ MKT · #7442</div>
-                <div style="font-weight:600;font-size:14px;">Post Lojinha NUPIEEPRO</div>
-                <div style="font-size:12px;color:var(--w40);margin-top:4px;">Designada por ⬡ Coord. Geral</div>
+        <div class="content" style="overflow-x:auto;">
+          <div style="display:flex;gap:16px;min-width:900px;padding-bottom:8px;" id="kanbanBoard">
+            <!-- Colunas geradas por JS -->
+            <div class="kanban-col">
+              <div class="kanban-col-header" style="border-color:var(--red);">
+                <span class="pill-dot" style="background:var(--red);width:8px;height:8px;border-radius:50%;display:inline-block;"></span>
+                A Fazer
+              </div>
+              <div class="kanban-col-body" id="kanban-afazer">
+                <div class="kanban-empty">Nenhuma demanda pendente.</div>
               </div>
             </div>
-            <div style="flex:1;min-width:300px;background:var(--navy-card);border-radius:12px;padding:1rem;border:1px solid var(--border);">
-              <h4 style="margin-bottom:1rem;padding-bottom:8px;border-bottom:1px solid var(--border);font-size:13px;text-transform:uppercase;letter-spacing:0.08em;color:var(--w70);">🟡 Em Produção</h4>
-              <p class="text-muted text-sm">Sem demandas em andamento.</p>
+            <div class="kanban-col">
+              <div class="kanban-col-header" style="border-color:var(--yellow);">
+                <span class="pill-dot" style="background:var(--yellow);width:8px;height:8px;border-radius:50%;display:inline-block;"></span>
+                Em Produção
+              </div>
+              <div class="kanban-col-body" id="kanban-producao">
+                <div class="kanban-empty">Sem demandas em andamento.</div>
+              </div>
             </div>
-            <div style="flex:1;min-width:300px;background:var(--navy-card);border-radius:12px;padding:1rem;border:1px solid var(--border);">
-              <h4 style="margin-bottom:1rem;padding-bottom:8px;border-bottom:1px solid var(--border);font-size:13px;text-transform:uppercase;letter-spacing:0.08em;color:var(--w70);">🟢 Concluídas</h4>
-              <p class="text-muted text-sm">Vazio.</p>
+            <div class="kanban-col">
+              <div class="kanban-col-header" style="border-color:var(--orange);">
+                <span class="pill-dot" style="background:var(--orange);width:8px;height:8px;border-radius:50%;display:inline-block;"></span>
+                Evidência
+              </div>
+              <div class="kanban-col-body" id="kanban-evidencia">
+                <div class="kanban-empty">Aguardando evidências.</div>
+              </div>
             </div>
+            <div class="kanban-col">
+              <div class="kanban-col-header" style="border-color:var(--green);">
+                <span class="pill-dot" style="background:var(--green);width:8px;height:8px;border-radius:50%;display:inline-block;"></span>
+                Concluídas
+              </div>
+              <div class="kanban-col-body" id="kanban-concluida">
+                <div class="kanban-empty">Vazio.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Modal nova demanda -->
+        <div id="kanbanModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:500;align-items:center;justify-content:center;">
+          <div style="background:var(--c-s1);border:1px solid var(--b-2);border-radius:20px;padding:2rem;width:90%;max-width:480px;display:flex;flex-direction:column;gap:1.2rem;">
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+              <div style="font-family:var(--f-head);font-weight:700;font-size:16px;">Nova Demanda</div>
+              <button onclick="Kanban.fecharModal()" style="background:none;border:none;color:var(--t-3);font-size:20px;cursor:pointer;">✕</button>
+            </div>
+            <div class="field"><label>Título</label><input id="ndTitulo" placeholder="Ex: Criar post para Instagram"></div>
+            <div class="field"><label>Coordenadoria responsável</label>
+              <select id="ndCoord">
+                <option value="GER">⬡ Geral</option><option value="OPS">⚙ Operações</option>
+                <option value="GP">◒ G. Pessoas</option><option value="MKT">◬ Marketing</option>
+                <option value="PRJ">◫ Projetos</option><option value="FIN">◎ Finanças</option>
+              </select>
+            </div>
+            <div class="field"><label>Prazo (opcional)</label><input id="ndPrazo" type="date"></div>
+            <div class="field"><label>Descrição (opcional)</label><input id="ndDesc" placeholder="Detalhes da demanda"></div>
+            <button class="btn btn-primary" onclick="Kanban.salvar()">Salvar Demanda</button>
           </div>
         </div>
       </div>

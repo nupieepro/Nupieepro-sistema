@@ -134,10 +134,10 @@ const App = {
         return {
           id: 'dev-chefe',
           email: mock,
-          nome: 'Rayan Bezerra',
+          nome: 'JR',
           role: 'admin',
-          cargo: 'Desenvolvedor Chefe',
-          iniciais: 'RB',
+          cargo: 'Dev Chefe',
+          iniciais: 'JR',
           coordenadorias: { nome: 'Geral', sigla: 'GER', icone: '⬡' }
         };
       }
@@ -353,6 +353,7 @@ function goTo(id) {
 
   // Lazy-load de páginas com dados
   if (id === 'pessoas') Pessoas.loadMembers();
+  if (id === 'tarefas') Kanban.load();
 }
 
 function toggleSidebar() {
@@ -839,44 +840,82 @@ function markAllNotifRead() {
 /* ============================================================
    Role Switcher (Dev: GER ↔ MKT)
    ============================================================ */
+// Páginas por visão do admin (simula o que cada coord vê)
 const DEV_PAGES = {
   ger: [
-    { id: 'dashboard',     icon: '⬡', label: 'Painel Central' },
-    { id: 'abj',           icon: '⭐', label: 'Selo ABJ', badge: '!' },
-    { id: 'tarefas',       icon: '☰', label: 'Todas Demandas' },
-    { id: 'pessoas',       icon: '◒', label: 'Membros & Gestão' },
-    { id: 'financeiro',    icon: '◎', label: 'Financeiro' },
-    { id: 'operacoes',     icon: '⚙', label: 'Operações' },
-    { id: 'projetos',      icon: '◫', label: 'Projetos' },
-    { id: 'manu',          icon: '🗂', label: 'Repositório' },
+    { id: 'dashboard',  icon: '⬡', label: 'Painel Central' },
+    { id: 'abj',        icon: '⭐', label: 'Selo ABJ', badge: '!' },
+    { id: 'tarefas',    icon: '☰', label: 'Todas Demandas' },
+    { id: 'pessoas',    icon: '◒', label: 'Membros & Gestão' },
+    { id: 'financeiro', icon: '◎', label: 'Financeiro' },
+    { id: 'operacoes',  icon: '⚙', label: 'Operações' },
+    { id: 'projetos',   icon: '◫', label: 'Projetos' },
+    { id: 'manu',       icon: '🗂', label: 'Repositório' },
+  ],
+  ops: [
+    { id: 'operacoes',  icon: '⚙', label: 'Operações Hub' },
+    { id: 'tarefas',    icon: '☰', label: 'Processos OPS' },
+    { id: 'manu',       icon: '🗂', label: 'Repositório' },
+  ],
+  gp: [
+    { id: 'pessoas',    icon: '◒', label: 'Membros e G.P' },
+    { id: 'tarefas',    icon: '☰', label: 'Tarefas G.P' },
   ],
   mkt: [
-    { id: 'marketing',     icon: '◬', label: 'Agência MKT' },
-    { id: 'tarefas',       icon: '☰', label: 'Demandas MKT' },
-    { id: 'notificacoes',  icon: '🔔', label: 'Notificações' },
-    { id: 'manu',          icon: '🗂', label: 'Repositório' },
-  ]
+    { id: 'marketing',    icon: '◬', label: 'Agência MKT' },
+    { id: 'tarefas',      icon: '☰', label: 'Demandas MKT' },
+    { id: 'notificacoes', icon: '🔔', label: 'Notificações' },
+    { id: 'manu',         icon: '🗂', label: 'Repositório' },
+  ],
+  prj: [
+    { id: 'projetos',   icon: '◫', label: 'Ações Projetos' },
+    { id: 'tarefas',    icon: '☰', label: 'Tarefas PRJ' },
+  ],
+  fin: [
+    { id: 'financeiro', icon: '◎', label: 'Tesouraria' },
+    { id: 'tarefas',    icon: '☰', label: 'Tarefas FIN' },
+  ],
+};
+
+// Chip do usuário por role (JR em GER, RB em MKT, nome em outros)
+const DEV_CHIP = {
+  ger:  { iniciais: 'JR', nome: 'JR', cargo: 'Dev Chefe' },
+  ops:  { iniciais: 'JR', nome: 'JR', cargo: 'Preview OPS' },
+  gp:   { iniciais: 'JR', nome: 'JR', cargo: 'Preview G.P' },
+  mkt:  { iniciais: 'RB', nome: 'RB', cargo: 'Assessor MKT' },
+  prj:  { iniciais: 'JR', nome: 'JR', cargo: 'Preview PRJ' },
+  fin:  { iniciais: 'JR', nome: 'JR', cargo: 'Preview FIN' },
 };
 
 let _currentRole = 'ger';
 
 function switchRole(role) {
   _currentRole = role;
-  ['ger','mkt'].forEach(r => {
-    const tab = document.getElementById('roleTab' + r.charAt(0).toUpperCase() + r.slice(1));
-    if (tab) tab.classList.toggle('active', r === role);
-  });
+  document.querySelectorAll('.role-tab').forEach(t => t.classList.remove('active'));
+  const activeTab = document.getElementById('roleTab-' + role);
+  if (activeTab) activeTab.classList.add('active');
   _buildNav(role);
-  // Navega para a página principal do perfil selecionado
-  goTo(role === 'mkt' ? 'marketing' : 'dashboard');
+  // Atualiza chip do usuário
+  const chip = DEV_CHIP[role] || DEV_CHIP.ger;
+  const av = document.getElementById('sideAvatar');
+  const nm = document.getElementById('sideName');
+  const rl = document.getElementById('sideRole');
+  if (av) av.textContent = chip.iniciais;
+  if (nm) nm.textContent = chip.nome;
+  if (rl) rl.textContent = chip.cargo;
+  // Navega para a primeira página da visão
+  const firstPage = (DEV_PAGES[role] || DEV_PAGES.ger)[0];
+  if (firstPage) goTo(firstPage.id);
 }
+
+const ROLE_LABELS = { ger:'⬡ Coord. Geral', ops:'⚙ Operações', gp:'◒ G. Pessoas', mkt:'◬ Assessor MKT', prj:'◫ Projetos', fin:'◎ Finanças' };
 
 function _buildNav(role) {
   const nav = document.getElementById('sideNav');
   if (!nav) return;
 
   const pages = DEV_PAGES[role] || [];
-  let html = `<div class="sidebar-section">${role === 'ger' ? '⬡ Coord. Geral' : '◬ Marketing'}</div>`;
+  let html = `<div class="sidebar-section">${ROLE_LABELS[role] || role.toUpperCase()}</div>`;
 
   pages.forEach(p => {
     const badge = p.badge ? `<span class="nav-badge">${p.badge}</span>` : '';
@@ -888,16 +927,136 @@ function _buildNav(role) {
 
   html += '<div class="sidebar-section">Colaborativo</div>';
   html += `<div class="nav-item nav-shared" id="nav-compartilhado" onclick="goTo('compartilhado')">
-    <span class="nav-icon">📅</span><span class="nav-label">Calendário Universal</span>
+    <span class="nav-icon">📅</span><span class="nav-label">Calendário</span>
   </div>`;
 
   html += '<div class="sidebar-section">Sistema</div>';
-  html += `<div class="nav-item" onclick="goTo('configuracoes')">
+  html += `<div class="nav-item" id="nav-notificacoes" onclick="goTo('notificacoes')">
+    <span class="nav-icon">🔔</span><span class="nav-label">Notificações</span>
+  </div>`;
+  html += `<div class="nav-item" id="nav-configuracoes" onclick="goTo('configuracoes')">
     <span class="nav-icon">⚙</span><span class="nav-label">Configurações</span>
   </div>`;
-  html += `<a href="../Lojinha-Nupieepro/admin.html" target="_blank" class="nav-item">
-    <span class="nav-icon">🛒</span><span class="nav-label">Admin Lojinha</span>
-  </a>`;
 
   nav.innerHTML = html;
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   KANBAN MODULE — Demandas por coordenadoria
+   ═══════════════════════════════════════════════════════════════ */
+const Kanban = (() => {
+  const COLS = [
+    { id: 'afazer',    label: 'A Fazer',       status: 'pendente' },
+    { id: 'producao',  label: 'Em Produção',    status: 'em_producao' },
+    { id: 'evidencia', label: 'Evidência',      status: 'evidencia' },
+    { id: 'concluida', label: 'Concluídas',     status: 'concluida' },
+  ];
+
+  let _demands = [];
+  let _loaded = false;
+
+  async function load() {
+    if (!window._supabase) { _renderAll([]); return; }
+    try {
+      const { data, error } = await window._supabase
+        .from('demandas')
+        .select('*')
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      _demands = data || [];
+    } catch (e) {
+      console.warn('Kanban: sem tabela demandas, modo offline.', e.message);
+      _demands = JSON.parse(localStorage.getItem('_kanban_demands') || '[]');
+    }
+    _loaded = true;
+    _renderAll(_demands);
+  }
+
+  function _renderAll(list) {
+    COLS.forEach(col => {
+      const el = document.getElementById('kanban-' + col.id);
+      if (!el) return;
+      const items = list.filter(d => d.status === col.status);
+      if (items.length === 0) {
+        el.innerHTML = '<div class="kanban-empty">Vazio.</div>';
+        return;
+      }
+      el.innerHTML = items.map(d => _cardHtml(d)).join('');
+    });
+  }
+
+  function _cardHtml(d) {
+    const prazo = d.prazo ? `<span class="kanban-card-meta">📅 ${new Date(d.prazo).toLocaleDateString('pt-BR')}</span>` : '';
+    const coord = d.coordenadoria ? `<span class="kanban-card-tag">${d.coordenadoria.toUpperCase()}</span>` : '';
+    return `<div class="kanban-card" onclick="Kanban.abrirDetalhes('${d.id}')">
+      <div class="kanban-card-title">${_esc(d.titulo)}</div>
+      <div class="kanban-card-footer">${coord}${prazo}</div>
+    </div>`;
+  }
+
+  function _esc(s) {
+    return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  function abrirNovaDemanda() {
+    const m = document.getElementById('kanbanModal');
+    if (m) { m.style.display = 'flex'; }
+    document.getElementById('kTitulo')?.focus();
+  }
+
+  function fecharModal() {
+    const m = document.getElementById('kanbanModal');
+    if (m) m.style.display = 'none';
+    ['kTitulo','kCoord','kPrazo','kDesc'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.value = '';
+    });
+  }
+
+  async function salvar() {
+    const titulo = document.getElementById('kTitulo')?.value?.trim();
+    const coord  = document.getElementById('kCoord')?.value || 'ger';
+    const prazo  = document.getElementById('kPrazo')?.value || null;
+    const desc   = document.getElementById('kDesc')?.value?.trim() || '';
+    if (!titulo) { alert('Insira um título para a demanda.'); return; }
+
+    const now = new Date().toISOString();
+    const demand = { id: 'loc-' + Date.now(), titulo, coordenadoria: coord, prazo, descricao: desc, status: 'pendente', created_at: now };
+
+    if (window._supabase) {
+      try {
+        const { data, error } = await window._supabase
+          .from('demandas')
+          .insert([{ titulo, coordenadoria: coord, prazo, descricao: desc, status: 'pendente' }])
+          .select()
+          .single();
+        if (error) throw error;
+        _demands.unshift(data);
+      } catch (e) {
+        console.warn('Kanban: fallback local.', e.message);
+        _demands.unshift(demand);
+        _saveLocal();
+      }
+    } else {
+      _demands.unshift(demand);
+      _saveLocal();
+    }
+
+    _renderAll(_demands);
+    fecharModal();
+  }
+
+  function abrirDetalhes(id) {
+    const d = _demands.find(x => x.id == id || x.id == id);
+    if (!d) return;
+    // Abre modal de detalhes simples — futuramente expandir
+    const info = `Título: ${d.titulo}\nCoord: ${(d.coordenadoria||'').toUpperCase()}\nStatus: ${d.status}\nPrazo: ${d.prazo || '—'}\n\n${d.descricao || ''}`;
+    alert(info);
+  }
+
+  function _saveLocal() {
+    localStorage.setItem('_kanban_demands', JSON.stringify(_demands));
+  }
+
+  return { load, abrirNovaDemanda, fecharModal, salvar, abrirDetalhes };
+})();
