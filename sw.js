@@ -1,5 +1,5 @@
 /* ============================================================
-   NUPIEEPRO — Service Worker v4
+   NUPIEEPRO — Service Worker v7
    Network-first com fallback para cache offline
    ============================================================ */
 
