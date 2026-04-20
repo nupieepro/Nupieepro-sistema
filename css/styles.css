@@ -1,6 +1,6 @@
 /* ════════════════════════════════════════════════════════════════
    NUPIEEPRO — Design System
-   Paleta: #000000 · #29324F · #919ABB · #f75412 · #ffffff
+   Paleta: #000000 · #361f64 · #f75412 · #919ABB · #ffffff
    Fontes:  DM Sans (corpo) · Plus Jakarta Sans (display)
    ════════════════════════════════════════════════════════════════ */
 
@@ -9,16 +9,18 @@
 /* ═══ DESIGN TOKENS ═══ */
 :root {
   /* ── Paleta Oficial NUPIEEPRO 2026 ── */
-  --c-bg:     #000000;   /* Fundo absoluto        */
-  --c-s1:     #29324F;   /* Sidebar · surface 1   */
-  --c-s2:     #1A2038;   /* Surface 2 (mais escuro)*/
-  --c-s3:     #232D4A;   /* Surface 3 (cards)     */
-  --c-s4:     #2E3A5C;   /* Surface 4 (hover)     */
-  --c-s5:     #3A4870;   /* Surface 5 (borda alta) */
-  --c-slate:  #919ABB;   /* Texto secundário       */
-  --c-accent: #f75412;   /* Laranja primário       */
-  --c-accent2:#ff7a3d;   /* Laranja claro (hover)  */
-  --c-white:  #ffffff;   /* Texto primário         */
+  --c-bg:       #000000;   /* Fundo absoluto         */
+  --c-s1:       #1c1030;   /* Surface 1 (sidebar)    */
+  --c-s2:       #130b22;   /* Surface 2 (mais escuro)*/
+  --c-s3:       #180d28;   /* Surface 3 (cards)      */
+  --c-s4:       #241640;   /* Surface 4 (hover)      */
+  --c-s5:       #361f64;   /* Surface 5 = roxo brand */
+  --c-slate:    #919ABB;   /* Texto secundário       */
+  --c-accent:   #f75412;   /* Laranja primário       */
+  --c-accent2:  #ff7a3d;   /* Laranja claro (hover)  */
+  --c-white:    #ffffff;   /* Texto primário         */
+  --c-purple:   #361f64;   /* Roxo brand             */
+  --c-purple-l: #7c52c8;   /* Roxo claro (texto/icon)*/
 
   /* ── Texto ── */
   --t-1: #ffffff;
@@ -31,11 +33,16 @@
   --b-2: rgba(145,154,187,0.22);
   --b-3: rgba(145,154,187,0.35);
   --b-a: rgba(247,84,18,0.35);
+  --b-p: rgba(124,82,200,0.35);   /* Borda roxo ativo */
 
-  /* ── Accent dims ── */
+  /* ── Accent dims (laranja) ── */
   --a-1: rgba(247,84,18,0.07);
   --a-2: rgba(247,84,18,0.13);
   --a-3: rgba(247,84,18,0.25);
+
+  /* ── Accent dims (roxo) ── */
+  --p-1: rgba(54,31,100,0.18);
+  --p-2: rgba(54,31,100,0.30);
 
   /* ── Sombras ── */
   --sh-xs: 0 1px 3px rgba(0,0,0,0.35);
@@ -72,7 +79,7 @@
 
   /* ── Aliases legados (compatibilidade) ── */
   --black:       var(--c-bg);
-  --navy:        var(--c-s1);
+  --navy:        var(--c-purple);
   --navy-mid:    var(--c-s2);
   --navy-card:   var(--c-s3);
   --slate:       var(--c-slate);
@@ -174,8 +181,8 @@ input, select, textarea { font-family: var(--f-body); }
 .logo-wrap { display: flex; align-items: center; gap: 18px; }
 .logo-img { width: 72px; height: 72px; object-fit: contain; border-radius: var(--r-lg); }
 .logo-wordmark { font-family: var(--f-head); font-size: 26px; font-weight: 800; letter-spacing: 0.04em; }
-.logo-wordmark .pi { color: var(--c-accent); }
-.logo-sub-text { font-size: 9px; font-weight: 500; letter-spacing: 0.14em; color: var(--c-accent); text-transform: uppercase; margin-top: 2px; }
+.logo-wordmark .pi { color: var(--c-purple-l); }
+.logo-sub-text { font-size: 9px; font-weight: 500; letter-spacing: 0.14em; color: var(--c-purple-l); text-transform: uppercase; margin-top: 2px; }
 .brand-headline { font-family: var(--f-head); font-size: clamp(24px,3vw,38px); font-weight: 700; line-height: 1.2; }
 .brand-headline em { font-style: normal; color: var(--c-accent); }
 .brand-desc { font-size: 15px; color: var(--t-2); line-height: 1.75; max-width: 400px; }
@@ -333,9 +340,9 @@ input, select, textarea { font-family: var(--f-body); }
   font-family: var(--f-head);
   font-size: 15px; font-weight: 800; letter-spacing: 0.03em; line-height: 1;
 }
-.sidebar-logo-text span { color: #29324f; }
+.sidebar-logo-text span { color: var(--c-purple-l); }
 .sidebar-logo-sub {
-  font-size: 9px; color: #29324f; letter-spacing: 0.12em;
+  font-size: 9px; color: var(--c-purple-l); letter-spacing: 0.12em;
   text-transform: uppercase; margin-top: 3px; opacity: 0.8;
 }
 
@@ -360,11 +367,11 @@ input, select, textarea { font-family: var(--f-body); }
   border-color: var(--b-1);
 }
 .nav-item.active {
-  background: var(--a-2);
+  background: var(--p-1);
   color: var(--c-white);
-  border-color: var(--b-a);
+  border-color: var(--b-p);
 }
-.nav-item.active .nav-icon { color: var(--c-accent); }
+.nav-item.active .nav-icon { color: var(--c-purple-l); }
 .nav-icon { font-size: 14px; width: 18px; text-align: center; flex-shrink: 0; }
 .nav-label { font-weight: 500; flex: 1; }
 .nav-badge {
@@ -522,7 +529,7 @@ input, select, textarea { font-family: var(--f-body); }
   white-space: nowrap; flex-shrink: 0;
 }
 .tab:hover { color: var(--t-2); }
-.tab.active { color: var(--c-white); border-bottom-color: var(--c-accent); }
+.tab.active { color: var(--c-white); border-bottom-color: var(--c-purple-l); }
 
 /* ═══════════════════════════════════════════════════════════════
    CHIPS

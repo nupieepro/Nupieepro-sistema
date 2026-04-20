@@ -4,11 +4,10 @@
   "description": "Sistema de gestão interno do Núcleo Piauiense de Estudantes de Engenharia de Produção",
   "start_url": "./index.html",
   "scope": "./",
-  "id": "/nupieepro-sistema",
   "display": "standalone",
   "display_override": ["standalone", "minimal-ui"],
   "background_color": "#000000",
-  "theme_color": "#000000",
+  "theme_color": "#361f64",
   "orientation": "any",
   "lang": "pt-BR",
   "categories": ["productivity", "education"],
@@ -18,28 +17,19 @@
       "src": "assets/icon.svg",
       "sizes": "any",
       "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "assets/logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "assets/icon.svg",
-      "sizes": "any",
-      "type": "image/svg+xml",
+      "src": "assets/logo.png",
+      "sizes": "192x192",
+      "type": "image/png",
       "purpose": "maskable"
-    },
-    {
-      "src": "assets/logo.png",
-      "sizes": "1414x2000",
-      "type": "image/png",
-      "purpose": "any"
-    }
-  ],
-  "screenshots": [
-    {
-      "src": "assets/logo.png",
-      "sizes": "1414x2000",
-      "type": "image/png",
-      "form_factor": "narrow",
-      "label": "NUPIEEPRO — Tela de acesso"
     }
   ],
   "shortcuts": [

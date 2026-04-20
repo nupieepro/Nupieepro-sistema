@@ -1,7 +1,9 @@
-<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 512 512">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
   <rect width="512" height="512" fill="#000000"/>
-  <image href="logo.png"
-         x="75" y="0"
-         width="362" height="512"
-         preserveAspectRatio="xMidYMid meet"/>
+  <rect x="40" y="40" width="432" height="432" rx="88" fill="#361f64"/>
+  <rect x="112" y="128" width="68" height="256" rx="8" fill="#ffffff"/>
+  <rect x="332" y="128" width="68" height="256" rx="8" fill="#ffffff"/>
+  <polygon points="180,128 248,128 400,372 332,372" fill="#ffffff"/>
+  <circle cx="388" cy="120" r="36" fill="#f75412"/>
+  <circle cx="388" cy="120" r="22" fill="#000000"/>
 </svg>
