@@ -26,12 +26,13 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Gerar js/config.js a partir dos Secrets
+        env:
+          NUPI_URL: ${{ secrets.SUPABASE_URL }}
+          NUPI_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
         run: |
-          cat > js/config.js << 'ENDOFCONFIG'
-          /* Gerado automaticamente — não editar */
-          window.NUPI_URL = '${{ secrets.SUPABASE_URL }}';
-          window.NUPI_KEY = '${{ secrets.SUPABASE_ANON_KEY }}';
-          ENDOFCONFIG
+          echo "window.NUPI_URL = '$NUPI_URL';" > js/config.js
+          echo "window.NUPI_KEY = '$NUPI_KEY';" >> js/config.js
+          echo "Config gerado com URL: ${NUPI_URL:0:30}..."
 
       - name: Setup GitHub Pages
         uses: actions/configure-pages@v4

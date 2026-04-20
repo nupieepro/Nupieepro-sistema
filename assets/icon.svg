@@ -1,8 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 512 512">
-  <!-- Fundo preto -->
   <rect width="512" height="512" fill="#000000"/>
-  <!-- Logo real do NUPIEEPRO centralizado (1414x2000 → escala por altura: 362x512) -->
-  <image href="1000279363.png"
+  <image href="logo.png"
          x="75" y="0"
          width="362" height="512"
          preserveAspectRatio="xMidYMid meet"/>

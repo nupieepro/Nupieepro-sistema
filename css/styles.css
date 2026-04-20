@@ -1,10 +1,10 @@
 /* ════════════════════════════════════════════════════════════════
-   NUPIEEPRO — Design System Masterclass
+   NUPIEEPRO — Design System
    Paleta: #000000 · #29324F · #919ABB · #f75412 · #ffffff
-   Fontes:  Plus Jakarta Sans (display) · Inter (body)
+   Fontes:  DM Sans (corpo) · Plus Jakarta Sans (display)
    ════════════════════════════════════════════════════════════════ */
 
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Plus+Jakarta+Sans:wght@600;700;800;900&family=Syne:wght@600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Plus+Jakarta+Sans:wght@600;700;800;900&display=swap&display=swap');
 
 /* ═══ DESIGN TOKENS ═══ */
 :root {
@@ -123,7 +123,7 @@ html {
 }
 
 body {
-  font-family: var(--f-body);
+  font-family: 'DM Sans', ui-sans-serif, system-ui, -apple-system, sans-serif;
   font-size: 14px;
   line-height: 1.6;
   background: var(--c-bg);
