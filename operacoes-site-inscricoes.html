@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#000000">
+  <title>Inscrições — NUPIEEPRO</title>
+  <link rel="icon" type="image/svg+xml" href="assets/icon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=Plus+Jakarta+Sans:wght@700;800;900&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --black:  #000000;
+      --navy:   #29324F;
+      --orange: #f75412;
+      --white:  #ffffff;
+      --slate:  #919ABB;
+      --border: rgba(145,154,187,0.18);
+      --bg:     #050812;
+      --card:   rgba(255,255,255,0.035);
+    }
+    html, body {
+      min-height: 100%;
+      background: var(--bg);
+      color: var(--white);
+      font-family: 'DM Sans', system-ui, sans-serif;
+    }
+    a { color: var(--orange); text-decoration: none; }
+
+    /* Header */
+    .site-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 18px 32px;
+      border-bottom: 1px solid var(--border);
+      background: rgba(0,0,0,0.6);
+      backdrop-filter: blur(12px);
+      position: sticky; top: 0; z-index: 100;
+    }
+    .site-logo {
+      display: flex; align-items: center; gap: 10px;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 18px; font-weight: 800;
+    }
+    .site-logo img { width: 36px; height: 36px; object-fit: contain; }
+    .site-logo span { color: var(--orange); }
+
+    /* Hero */
+    .hero {
+      text-align: center;
+      padding: 64px 24px 48px;
+      background: radial-gradient(ellipse at 50% 0%, rgba(247,84,18,0.12) 0%, transparent 60%);
+    }
+    .hero-tag {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: rgba(247,84,18,0.12); border: 1px solid rgba(247,84,18,0.25);
+      border-radius: 100px; padding: 4px 14px;
+      font-size: 11px; font-weight: 700; letter-spacing: 0.1em;
+      color: var(--orange); text-transform: uppercase; margin-bottom: 20px;
+    }
+    .hero-title {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: clamp(28px, 5vw, 52px);
+      font-weight: 900; line-height: 1.1;
+      margin-bottom: 16px;
+    }
+    .hero-title span { color: var(--orange); }
+    .hero-sub { font-size: 16px; color: var(--slate); max-width: 520px; margin: 0 auto 32px; }
+
+    /* Event cards */
+    .events-grid {
+      max-width: 1000px; margin: 0 auto;
+      padding: 0 24px 64px;
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 20px;
+    }
+    .event-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      overflow: hidden;
+      transition: border-color 0.2s, transform 0.15s;
+    }
+    .event-card:hover { border-color: rgba(247,84,18,0.4); transform: translateY(-2px); }
+    .event-card-banner {
+      height: 120px; background: var(--navy);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 48px;
+    }
+    .event-card-body { padding: 20px; }
+    .event-status {
+      display: inline-block; font-size: 10px; font-weight: 700;
+      letter-spacing: 0.08em; text-transform: uppercase;
+      padding: 3px 10px; border-radius: 100px; margin-bottom: 10px;
+    }
+    .status-open   { background: rgba(52,199,89,0.15); color: #34c759; }
+    .status-closed { background: rgba(255,59,48,0.15); color: #ff3b30; }
+    .status-soon   { background: rgba(247,84,18,0.15); color: var(--orange); }
+    .event-title { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 17px; font-weight: 700; margin-bottom: 6px; }
+    .event-meta  { font-size: 12px; color: var(--slate); display: flex; flex-direction: column; gap: 3px; margin-bottom: 16px; }
+    .btn-inscricao {
+      width: 100%; padding: 11px;
+      background: var(--orange); color: #fff;
+      border: none; border-radius: 10px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px; font-weight: 700;
+      cursor: pointer; transition: opacity 0.15s;
+    }
+    .btn-inscricao:hover { opacity: 0.88; }
+    .btn-inscricao:disabled { opacity: 0.4; cursor: not-allowed; background: var(--slate); }
+
+    /* Modal de inscrição */
+    #inscricaoModal {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,0.75); z-index: 500;
+      align-items: center; justify-content: center;
+      padding: 16px;
+    }
+    .modal-box {
+      background: #0c1120; border: 1px solid var(--border);
+      border-radius: 20px; padding: 32px;
+      width: 100%; max-width: 480px;
+      max-height: 90vh; overflow-y: auto;
+    }
+    .modal-title { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 20px; font-weight: 800; margin-bottom: 6px; }
+    .modal-sub   { font-size: 13px; color: var(--slate); margin-bottom: 24px; }
+    .field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px; }
+    .field label { font-size: 12px; font-weight: 600; color: var(--slate); text-transform: uppercase; letter-spacing: 0.08em; }
+    .field input, .field select {
+      background: rgba(255,255,255,0.06); border: 1px solid var(--border);
+      border-radius: 10px; color: #fff;
+      font-family: 'DM Sans', sans-serif; font-size: 15px;
+      padding: 11px 14px; outline: none;
+    }
+    .field input:focus, .field select:focus { border-color: var(--orange); }
+    .field select option { background: #0c1120; }
+    .modal-actions { display: flex; gap: 10px; margin-top: 8px; }
+    .btn-cancel {
+      flex: 1; padding: 11px; background: transparent;
+      border: 1px solid var(--border); border-radius: 10px;
+      color: var(--slate); font-family: 'DM Sans', sans-serif;
+      font-size: 14px; cursor: pointer;
+    }
+    .btn-submit {
+      flex: 2; padding: 11px; background: var(--orange);
+      border: none; border-radius: 10px;
+      color: #fff; font-family: 'DM Sans', sans-serif;
+      font-size: 14px; font-weight: 700; cursor: pointer;
+    }
+    .btn-submit:hover { opacity: 0.88; }
+    #alertInscricao {
+      display: none; padding: 10px 14px;
+      border-radius: 8px; font-size: 13px;
+      margin-bottom: 14px;
+    }
+    #alertInscricao.success { background: rgba(52,199,89,0.15); color: #34c759; display: block; }
+    #alertInscricao.error   { background: rgba(255,59,48,0.15); color: #ff3b30; display: block; }
+
+    /* Empty state */
+    .empty-state { text-align: center; padding: 64px 24px; color: var(--slate); }
+    .empty-state .icon { font-size: 48px; margin-bottom: 16px; }
+
+    /* Footer */
+    footer {
+      border-top: 1px solid var(--border); padding: 24px;
+      text-align: center; font-size: 12px; color: var(--slate);
+    }
+
+    @media (max-width: 600px) {
+      .site-header { padding: 14px 16px; }
+      .hero { padding: 40px 16px 32px; }
+    }
+  </style>
+</head>
+<body>
+
+  <header class="site-header">
+    <div class="site-logo">
+      <img src="assets/logo.png" alt="NUPIEEPRO">
+      NUPIE<span>EPRO</span>
+    </div>
+    <a href="index.html" style="font-size:13px;color:var(--slate);">Sistema Interno →</a>
+  </header>
+
+  <section class="hero">
+    <div class="hero-tag">⚙ Coordenadoria de Operações</div>
+    <h1 class="hero-title">Inscrições em<br><span>Eventos NUPIEEPRO</span></h1>
+    <p class="hero-sub">Confira os eventos abertos e faça sua inscrição. Vagas limitadas.</p>
+  </section>
+
+  <div class="events-grid" id="eventosGrid">
+    <div class="empty-state" style="grid-column:1/-1;">
+      <div class="icon">📅</div>
+      <div>Carregando eventos...</div>
+    </div>
+  </div>
+
+  <!-- Modal -->
+  <div id="inscricaoModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:500;align-items:center;justify-content:center;padding:16px;">
+    <div class="modal-box">
+      <div class="modal-title" id="modalEventoNome">Inscrição</div>
+      <div class="modal-sub" id="modalEventoData">—</div>
+      <div id="alertInscricao"></div>
+      <form onsubmit="return false;">
+        <div class="field">
+          <label>Nome Completo</label>
+          <input type="text" id="inNome" placeholder="Seu nome completo" required>
+        </div>
+        <div class="field">
+          <label>E-mail</label>
+          <input type="email" id="inEmail" placeholder="seu@email.com" required>
+        </div>
+        <div class="field">
+          <label>CPF</label>
+          <input type="text" id="inCpf" placeholder="000.000.000-00" maxlength="14">
+        </div>
+        <div class="field">
+          <label>Curso</label>
+          <input type="text" id="inCurso" placeholder="Engenharia de Produção" required>
+        </div>
+        <div class="field">
+          <label>Instituição</label>
+          <input type="text" id="inInst" placeholder="UFPI, UESPI..." required>
+        </div>
+        <div class="field">
+          <label>Você é membro do NUPIEEPRO?</label>
+          <select id="inMembro">
+            <option value="nao">Não</option>
+            <option value="sim">Sim</option>
+          </select>
+        </div>
+        <div class="modal-actions">
+          <button class="btn-cancel" onclick="fecharModal()">Cancelar</button>
+          <button class="btn-submit" onclick="confirmarInscricao()">Confirmar Inscrição</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <footer>
+    NUPIEEPRO · Núcleo Piauiense de Estudantes de Engenharia de Produção · Selo ABJ 2026
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script src="js/config.js"></script>
+  <script>
+    const _sb = (window.NUPI_URL && window.NUPI_URL !== 'COLE_SUA_SUPABASE_URL_AQUI')
+      ? supabase.createClient(window.NUPI_URL, window.NUPI_KEY)
+      : null;
+
+    let _eventoAtual = null;
+
+    // Formata data BR
+    function fmtData(d) {
+      if (!d) return '—';
+      return new Date(d).toLocaleDateString('pt-BR', { day:'2-digit', month:'long', year:'numeric' });
+    }
+
+    // Carrega eventos do Supabase
+    async function carregarEventos() {
+      const grid = document.getElementById('eventosGrid');
+      let eventos = [];
+
+      if (_sb) {
+        try {
+          const { data } = await _sb
+            .from('eventos_inscricao')
+            .select('*')
+            .order('data_inicio', { ascending: true });
+          eventos = data || [];
+        } catch (e) {
+          console.warn('Supabase eventos:', e.message);
+        }
+      }
+
+      if (eventos.length === 0) {
+        grid.innerHTML = `
+          <div class="empty-state" style="grid-column:1/-1;">
+            <div class="icon">📅</div>
+            <p>Nenhum evento com inscrições abertas no momento.</p>
+            <p style="margin-top:8px;font-size:12px;">Fique atento às nossas redes sociais!</p>
+          </div>`;
+        return;
+      }
+
+      grid.innerHTML = eventos.map(ev => {
+        const aberto = ev.inscricoes_abertas;
+        const statusClass = aberto ? 'status-open' : 'status-closed';
+        const statusLabel = aberto ? 'Inscrições Abertas' : 'Encerrado';
+        const icon = ev.icone || '🎯';
+        return `
+          <div class="event-card">
+            <div class="event-card-banner">${icon}</div>
+            <div class="event-card-body">
+              <span class="event-status ${statusClass}">${statusLabel}</span>
+              <div class="event-title">${ev.nome}</div>
+              <div class="event-meta">
+                <span>📅 ${fmtData(ev.data_inicio)}${ev.data_fim ? ' → ' + fmtData(ev.data_fim) : ''}</span>
+                <span>📍 ${ev.local || 'A definir'}</span>
+                ${ev.vagas ? `<span>🪑 ${ev.vagas_ocupadas || 0}/${ev.vagas} vagas</span>` : ''}
+              </div>
+              <p style="font-size:13px;color:var(--slate);margin-bottom:16px;">${ev.descricao || ''}</p>
+              <button class="btn-inscricao" ${!aberto ? 'disabled' : ''} onclick="abrirModal(${JSON.stringify(ev).replace(/"/g,'&quot;')})">
+                ${aberto ? 'Inscrever-se' : 'Inscrições Encerradas'}
+              </button>
+            </div>
+          </div>`;
+      }).join('');
+    }
+
+    function abrirModal(ev) {
+      _eventoAtual = ev;
+      document.getElementById('modalEventoNome').textContent = ev.nome;
+      document.getElementById('modalEventoData').textContent = fmtData(ev.data_inicio) + (ev.local ? ' · ' + ev.local : '');
+      document.getElementById('alertInscricao').className = '';
+      document.getElementById('alertInscricao').textContent = '';
+      ['inNome','inEmail','inCpf','inCurso','inInst'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = '';
+      });
+      const modal = document.getElementById('inscricaoModal');
+      modal.style.display = 'flex';
+    }
+
+    function fecharModal() {
+      document.getElementById('inscricaoModal').style.display = 'none';
+      _eventoAtual = null;
+    }
+
+    async function confirmarInscricao() {
+      if (!_eventoAtual) return;
+      const nome  = document.getElementById('inNome').value.trim();
+      const email = document.getElementById('inEmail').value.trim();
+      const cpf   = document.getElementById('inCpf').value.trim();
+      const curso = document.getElementById('inCurso').value.trim();
+      const inst  = document.getElementById('inInst').value.trim();
+      const membro = document.getElementById('inMembro').value;
+      const alerta = document.getElementById('alertInscricao');
+
+      if (!nome || !email || !curso || !inst) {
+        alerta.className = 'error';
+        alerta.textContent = 'Preencha todos os campos obrigatórios.';
+        return;
+      }
+
+      const btnSubmit = document.querySelector('.btn-submit');
+      btnSubmit.disabled = true;
+      btnSubmit.textContent = 'Enviando...';
+
+      try {
+        if (_sb) {
+          const { error } = await _sb.from('inscricoes_eventos').insert([{
+            evento_id: _eventoAtual.id,
+            nome, email, cpf, curso, instituicao: inst,
+            e_membro: membro === 'sim',
+          }]);
+          if (error) throw error;
+        }
+        alerta.className = 'success';
+        alerta.textContent = '✓ Inscrição realizada! Você receberá confirmação por e-mail.';
+        setTimeout(fecharModal, 2500);
+      } catch (err) {
+        alerta.className = 'error';
+        alerta.textContent = 'Erro ao enviar inscrição: ' + (err.message || 'tente novamente.');
+      } finally {
+        btnSubmit.disabled = false;
+        btnSubmit.textContent = 'Confirmar Inscrição';
+      }
+    }
+
+    // Formata CPF automaticamente
+    document.addEventListener('DOMContentLoaded', () => {
+      carregarEventos();
+      const cpfInput = document.getElementById('inCpf');
+      if (cpfInput) {
+        cpfInput.addEventListener('input', (e) => {
+          let v = e.target.value.replace(/\D/g,'');
+          if (v.length > 11) v = v.slice(0,11);
+          v = v.replace(/(\d{3})(\d)/,'$1.$2')
+               .replace(/(\d{3})\.(\d{3})(\d)/,'$1.$2.$3')
+               .replace(/(\d{3})\.(\d{3})\.(\d{3})(\d)/,'$1.$2.$3-$4');
+          e.target.value = v;
+        });
+      }
+    });
+
+    // Fecha modal ao clicar fora
+    document.getElementById('inscricaoModal').addEventListener('click', (e) => {
+      if (e.target === document.getElementById('inscricaoModal')) fecharModal();
+    });
+  </script>
+</body>
+</html>

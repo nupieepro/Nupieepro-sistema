@@ -481,15 +481,45 @@ const Theme = {
 const MONTHS_PT = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho',
                    'Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
 
-// Mock events — keyed as "YYYY-M-D"
-const CAL_EVENTS = {
-  '2026-4-6':  [{ label:'Reunião Geral', tag:'⬡', color:'var(--orange)' }],
-  '2026-4-18': [{ label:'Data Hoje', tag:'⬡', color:'var(--green)' }],
-  '2026-4-25': [{ label:'Prazo Relatório OPS', tag:'⚙', color:'var(--blue)' }],
-  '2026-5-1':  [{ label:'Feriado Nacional', tag:'', color:'var(--red)' }],
-  '2026-6-15': [{ label:'Evento Estadual', tag:'◫', color:'var(--purple)' }],
-  '2026-7-31': [{ label:'Prazo ABJ #10', tag:'⭐', color:'var(--yellow)' }],
-};
+// Feriados nacionais BR calculados dinamicamente
+function _brHolidays(year) {
+  // Páscoa (algoritmo de Meeus/Jones/Butcher)
+  const a = year % 19, b = Math.floor(year/100), c = year % 100;
+  const d = Math.floor(b/4), e = b % 4, f = Math.floor((b+8)/25);
+  const g = Math.floor((b-f+1)/3), h = (19*a+b-d-g+15) % 30;
+  const i = Math.floor(c/4), k = c % 4;
+  const l = (32+2*e+2*i-h-k) % 7;
+  const m = Math.floor((a+11*h+22*l)/451);
+  const month = Math.floor((h+l-7*m+114)/31); // 1-indexed
+  const day   = ((h+l-7*m+114) % 31) + 1;
+  const easter = new Date(year, month-1, day);
+  const key = (d) => `${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}`;
+  const add = (d, days) => new Date(d.getTime() + days*864e5);
+
+  const h2 = {};
+  const set = (dt, label, color='var(--red)') => {
+    const k = key(dt);
+    if (!h2[k]) h2[k] = [];
+    h2[k].push({ label, tag:'🇧🇷', color });
+  };
+  set(new Date(year,0,1),  'Ano Novo');
+  set(add(easter,-47),     'Carnaval');
+  set(add(easter,-48),     'Carnaval');
+  set(add(easter,-2),      'Sexta-feira Santa');
+  set(new Date(year,3,21), 'Tiradentes', 'var(--yellow)');
+  set(new Date(year,4,1),  'Dia do Trabalho');
+  set(add(easter,60),      'Corpus Christi', 'var(--yellow)');
+  set(new Date(year,8,7),  'Independência do Brasil', 'var(--green)');
+  set(new Date(year,9,12), 'Nossa Sra. Aparecida');
+  set(new Date(year,10,2), 'Finados');
+  set(new Date(year,10,15),'Proclamação da República');
+  set(new Date(year,10,20),'Consciência Negra');
+  set(new Date(year,11,25),'Natal', 'var(--yellow)');
+  return h2;
+}
+
+// Eventos personalizados — carregados do Supabase ou localStorage
+let CAL_EVENTS = { ..._brHolidays(new Date().getFullYear()) };
 
 const Cal = {
   year: new Date().getFullYear(),

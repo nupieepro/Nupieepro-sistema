@@ -27,7 +27,7 @@
       "purpose": "maskable"
     },
     {
-      "src": "assets/1000279363.png",
+      "src": "assets/logo.png",
       "sizes": "1414x2000",
       "type": "image/png",
       "purpose": "any"
@@ -35,7 +35,7 @@
   ],
   "screenshots": [
     {
-      "src": "assets/1000279363.png",
+      "src": "assets/logo.png",
       "sizes": "1414x2000",
       "type": "image/png",
       "form_factor": "narrow",
