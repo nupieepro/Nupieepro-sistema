@@ -106,9 +106,9 @@
   --blue:        #5B9CF6;
   --blue-dim:    rgba(91,156,246,0.1);
   --blue-border: rgba(91,156,246,0.22);
-  --purple:      #A78BFA;
-  --purple-dim:  rgba(167,139,250,0.1);
-  --purple-border:rgba(167,139,250,0.22);
+  --purple:      #7c52c8;
+  --purple-dim:  rgba(54,31,100,0.18);
+  --purple-border:rgba(124,82,200,0.28);
   --radius:      var(--r-sm);
   --radius-lg:   var(--r-md);
   --transition:  var(--t-2) var(--ease);
@@ -143,8 +143,8 @@ body {
 }
 
 img { display: block; max-width: 100%; }
-a { color: var(--c-accent); text-decoration: none; transition: color var(--t-1) var(--ease); }
-a:hover { color: var(--c-accent2); }
+a { color: var(--c-purple-l); text-decoration: none; transition: color var(--t-1) var(--ease); }
+a:hover { color: #9b70e8; }
 button { font-family: var(--f-body); }
 input, select, textarea { font-family: var(--f-body); }
 
@@ -167,8 +167,8 @@ input, select, textarea { font-family: var(--f-body); }
 .bg-radial {
   position: fixed; inset: 0; pointer-events: none;
   background:
-    radial-gradient(ellipse 55% 50% at 20% 50%, rgba(247,84,18,0.07), transparent 65%),
-    radial-gradient(ellipse 40% 40% at 80% 20%, rgba(41,50,79,0.35), transparent 60%);
+    radial-gradient(ellipse 55% 50% at 20% 50%, rgba(54,31,100,0.3), transparent 65%),
+    radial-gradient(ellipse 40% 40% at 80% 20%, rgba(54,31,100,0.45), transparent 60%);
 }
 
 /* Form card (convite) */
@@ -184,7 +184,7 @@ input, select, textarea { font-family: var(--f-body); }
 .logo-wordmark .pi { color: var(--c-purple-l); }
 .logo-sub-text { font-size: 9px; font-weight: 500; letter-spacing: 0.14em; color: var(--c-purple-l); text-transform: uppercase; margin-top: 2px; }
 .brand-headline { font-family: var(--f-head); font-size: clamp(24px,3vw,38px); font-weight: 700; line-height: 1.2; }
-.brand-headline em { font-style: normal; color: var(--c-accent); }
+.brand-headline em { font-style: normal; color: var(--c-purple-l); }
 .brand-desc { font-size: 15px; color: var(--t-2); line-height: 1.75; max-width: 400px; }
 .stats-row { display: flex; gap: 2.5rem; }
 .stat-num { font-family: var(--f-head); font-size: 28px; font-weight: 800; color: var(--c-accent); }
@@ -217,9 +217,9 @@ input, select, textarea { font-family: var(--f-body); }
 }
 .field input::placeholder { color: var(--t-4); }
 .field input:focus, .field select:focus {
-  border-color: var(--b-a);
-  background: var(--a-1);
-  box-shadow: 0 0 0 3px var(--a-2);
+  border-color: var(--b-p);
+  background: var(--p-1);
+  box-shadow: 0 0 0 3px var(--p-1);
 }
 .field select { appearance: none; cursor: pointer; }
 .field select option { background: var(--c-s1); }
@@ -232,8 +232,8 @@ input, select, textarea { font-family: var(--f-body); }
   color: var(--t-2); font-size: 13px; cursor: pointer;
   transition: all var(--t-2) var(--ease); text-align: left;
 }
-.coord-btn:hover { border-color: var(--b-a); color: var(--c-white); background: var(--a-2); }
-.coord-btn.active { border-color: var(--b-a); background: var(--a-2); color: var(--c-white); }
+.coord-btn:hover { border-color: var(--b-p); color: var(--c-white); background: var(--p-1); }
+.coord-btn.active { border-color: var(--b-p); background: var(--p-2); color: var(--c-white); }
 .coord-icon { font-size: 15px; flex-shrink: 0; }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -393,9 +393,9 @@ input, select, textarea { font-family: var(--f-body); }
 .user-chip { display: flex; align-items: center; gap: var(--s3); }
 .u-avatar {
   width: 34px; height: 34px; border-radius: 50%;
-  background: var(--a-2); border: 1px solid var(--b-a);
+  background: var(--p-2); border: 1px solid var(--b-p);
   display: flex; align-items: center; justify-content: center;
-  font-size: 12px; font-weight: 700; color: var(--c-accent); flex-shrink: 0;
+  font-size: 12px; font-weight: 700; color: var(--c-purple-l); flex-shrink: 0;
 }
 .u-name { font-size: 13px; font-weight: 600; line-height: 1.2; }
 .u-role { font-size: 11px; color: var(--t-3); line-height: 1.2; margin-top: 1px; }
@@ -442,7 +442,7 @@ input, select, textarea { font-family: var(--f-body); }
   padding: var(--s1); line-height: 1; border-radius: var(--r-xs);
   transition: color var(--t-1);
 }
-.topbar-toggle:hover { color: var(--c-accent); }
+.topbar-toggle:hover { color: var(--c-purple-l); }
 
 /* Content */
 .content {
@@ -540,8 +540,8 @@ input, select, textarea { font-family: var(--f-body); }
   color: var(--t-3); font-family: var(--f-body); font-size: 12px;
   cursor: pointer; transition: all var(--t-1) var(--ease);
 }
-.chip:hover { border-color: var(--b-a); color: var(--c-white); }
-.chip.on { background: var(--a-2); border-color: var(--b-a); color: var(--c-white); }
+.chip:hover { border-color: var(--b-p); color: var(--c-white); }
+.chip.on { background: var(--p-1); border-color: var(--b-p); color: var(--c-white); }
 
 /* ═══════════════════════════════════════════════════════════════
    STATUS PILLS
@@ -628,7 +628,7 @@ input, select, textarea { font-family: var(--f-body); }
    ═══════════════════════════════════════════════════════════════ */
 .spinner {
   width: 20px; height: 20px;
-  border: 2px solid var(--b-1); border-top-color: var(--c-accent);
+  border: 2px solid var(--b-1); border-top-color: var(--c-purple-l);
   border-radius: 50%; animation: spin 0.55s linear infinite; display: inline-block;
 }
 @keyframes spin { to { transform: rotate(360deg); } }
@@ -644,13 +644,13 @@ input, select, textarea { font-family: var(--f-body); }
    ═══════════════════════════════════════════════════════════════ */
 .search-wrap { position: relative; }
 .search-wrap input {
-  background: var(--a-1); border: 1px solid var(--b-1);
+  background: var(--p-1); border: 1px solid var(--b-1);
   border-radius: var(--r-sm); padding: 7px 12px 7px 32px;
   font-size: 13px; color: var(--c-white); outline: none;
   width: 220px; transition: border-color var(--t-2) var(--ease), box-shadow var(--t-2) var(--ease);
 }
 .search-wrap input::placeholder { color: var(--t-4); }
-.search-wrap input:focus { border-color: var(--b-a); box-shadow: 0 0 0 3px var(--a-1); }
+.search-wrap input:focus { border-color: var(--b-p); box-shadow: 0 0 0 3px var(--p-1); }
 .search-icon { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--t-4); font-size: 12px; pointer-events: none; }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -685,7 +685,7 @@ input, select, textarea { font-family: var(--f-body); }
 /* ═══════════════════════════════════════════════════════════════
    CONVITE INFO
    ═══════════════════════════════════════════════════════════════ */
-.convite-info { background: var(--a-1); border: 1px solid var(--b-1); border-radius: var(--r-md); padding: var(--s4); margin-bottom: 1.5rem; }
+.convite-info { background: var(--p-1); border: 1px solid var(--b-p); border-radius: var(--r-md); padding: var(--s4); margin-bottom: 1.5rem; }
 .convite-info dt { font-size: 10px; color: var(--t-4); text-transform: uppercase; letter-spacing: 0.1em; }
 .convite-info dd { font-weight: 600; margin-bottom: var(--s2); }
 
@@ -704,7 +704,7 @@ input, select, textarea { font-family: var(--f-body); }
   -webkit-user-select: none; user-select: none;
 }
 .role-tab:hover { color: var(--t-2); }
-.role-tab.active { background: var(--a-2); border-color: var(--b-a); color: var(--c-white); }
+.role-tab.active { background: var(--p-2); border-color: var(--b-p); color: var(--c-white); }
 
 /* ═══════════════════════════════════════════════════════════════
    NOTIFICATIONS PAGE
@@ -718,7 +718,7 @@ input, select, textarea { font-family: var(--f-body); }
   cursor: pointer;
 }
 .notif-item:hover { background: rgba(145,154,187,0.08); }
-.notif-item.unread { background: var(--a-1); border-color: rgba(247,84,18,0.18); }
+.notif-item.unread { background: var(--p-1); border-color: rgba(124,82,200,0.22); }
 .notif-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--c-accent); flex-shrink: 0; margin-top: 5px; box-shadow: 0 0 6px rgba(247,84,18,0.5); }
 .notif-dot.read { background: var(--b-2); box-shadow: none; }
 .notif-body-text { flex: 1; }
@@ -745,7 +745,7 @@ input, select, textarea { font-family: var(--f-body); }
   font-size: 13px; cursor: pointer; outline: none;
   transition: border-color var(--t-1) var(--ease);
 }
-.cal-year-select:focus { border-color: var(--b-a); }
+.cal-year-select:focus { border-color: var(--b-p); }
 .cal-year-select option { background: var(--c-s1); }
 .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
 .cal-day-name { text-align: center; font-size: 10px; color: var(--t-4); padding: 6px 0; text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600; }
@@ -781,8 +781,8 @@ input, select, textarea { font-family: var(--f-body); }
   font-family: var(--f-body);
 }
 .option-btn:hover { border-color: var(--b-2); color: var(--c-white); background: rgba(145,154,187,0.08); }
-.option-btn.active { border-color: var(--b-a); background: var(--a-1); color: var(--c-white); }
-.option-btn .check { margin-left: auto; color: var(--c-accent); font-size: 15px; opacity: 0; transition: opacity var(--t-1); }
+.option-btn.active { border-color: var(--b-p); background: var(--p-1); color: var(--c-white); }
+.option-btn .check { margin-left: auto; color: var(--c-purple-l); font-size: 15px; opacity: 0; transition: opacity var(--t-1); }
 .option-btn.active .check { opacity: 1; }
 .color-dot { width: 18px; height: 18px; border-radius: 50%; flex-shrink: 0; border: 2px solid rgba(255,255,255,0.15); }
 
@@ -790,7 +790,7 @@ input, select, textarea { font-family: var(--f-body); }
    FOOTER / MISC
    ═══════════════════════════════════════════════════════════════ */
 .footer-note { font-size: 12px; color: var(--t-4); text-align: center; }
-.footer-note span { color: var(--c-accent); opacity: 0.8; }
+.footer-note span { color: var(--c-purple-l); opacity: 0.8; }
 
 /* ═══════════════════════════════════════════════════════════════
    UTILITIES
@@ -828,7 +828,7 @@ input, select, textarea { font-family: var(--f-body); }
   cursor: pointer; transition: color var(--t-1) var(--ease); min-width: 48px;
 }
 .mnav-item .mnav-icon { font-size: 20px; line-height: 1; }
-.mnav-item.active, .mnav-item:active { color: var(--c-accent); }
+.mnav-item.active, .mnav-item:active { color: var(--c-purple-l); }
 
 /* ═══════════════════════════════════════════════════════════════
    THEME SYSTEM (data-theme no <html>)
