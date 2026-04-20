@@ -7,7 +7,7 @@
   "display": "standalone",
   "display_override": ["standalone", "minimal-ui"],
   "background_color": "#000000",
-  "theme_color": "#361f64",
+  "theme_color": "#2d1f6f",
   "orientation": "any",
   "lang": "pt-BR",
   "categories": ["productivity", "education"],
@@ -17,10 +17,10 @@
       "src": "assets/icon.svg",
       "sizes": "any",
       "type": "image/svg+xml",
-      "purpose": "any maskable"
+      "purpose": "any"
     },
     {
-      "src": "assets/logo.png",
+      "src": "assets/arte-logo.png",
       "sizes": "1414x2000",
       "type": "image/png",
       "purpose": "any maskable"
