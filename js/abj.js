@@ -91,12 +91,53 @@ const ABJ = {
              <span>Resp: <strong>${item.coord || item.coord_responsavel}</strong></span>
           </div>
 
-          <button class="btn ${item.status === 'concluida' ? 'btn-ghost' : 'btn-primary'}" style="width: 100%; margin-top: 6px;" onclick="ABJ.openModal(${item.id})">
-            ${item.status === 'concluida' ? 'Ver Comprovantes' : 'Submeter Evidências'}
-          </button>
+          <div style="display:flex;gap:8px;margin-top:6px;">
+            <button class="btn ${item.status === 'concluida' ? 'btn-ghost' : 'btn-primary'}" style="flex:1;" onclick="ABJ.openModal(${item.id})">
+              ${item.status === 'concluida' ? '✓ Aprovada' : 'Submeter Evidências'}
+            </button>
+            ${ABJ.isAdmin() && item.status !== 'concluida' ? `
+            <button class="btn btn-ghost" style="border-color:var(--green-border);color:var(--green);white-space:nowrap;" title="Marcar como concluída (Admin)" onclick="ABJ.adminApprove(${item.id})">
+              ✓ Admin
+            </button>` : ''}
+          </div>
         </div>
       `;
     }).join('');
+  },
+
+  isAdmin() {
+    // Verifica perfil em memória (definido no initDashboard)
+    if (typeof _appProfile !== 'undefined' && _appProfile?.role === 'admin') return true;
+    // Fallback: mock session
+    const mock = localStorage.getItem('mockSession');
+    return mock === 'jjoserrayan2711@gmail.com';
+  },
+
+  async adminApprove(id) {
+    const item = this.data.find(d => d.id === id);
+    if (!item) return;
+
+    const pts = item.ptsMax || item.pontos_max || 0;
+    const ok = confirm(`Marcar "#${item.numero} — ${item.nome}" como CONCLUÍDA (${pts} pts)?\n\nAção direta de administrador — sem envio de evidência.`);
+    if (!ok) return;
+
+    item.status = 'concluida';
+    item.currentPts = pts;
+
+    if (_sb) {
+      // Atualiza no Supabase se disponível
+      await _sb.from('progresso_abj').upsert({
+        atividade_id: item.id,
+        pontos: pts,
+        status: 'concluida',
+        aprovado_por: 'admin',
+        updated_at: new Date().toISOString()
+      }, { onConflict: 'atividade_id' }).catch(console.error);
+    }
+
+    ABJ.renderCards('todas');
+    ABJ.updateHeader();
+    App.toast(`✓ Atividade #${item.numero} marcada como concluída (${pts} pts)`, 'success');
   },
 
   openModal(id) {

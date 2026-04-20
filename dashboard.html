@@ -528,50 +528,115 @@
       </div>
 
       <!-- ══════════════════════════════════════════════
-           PAGE: PESSOAS
+           PAGE: PESSOAS / GESTÃO DE MEMBROS
       ══════════════════════════════════════════════ -->
       <div class="page" id="page-pessoas">
         <div class="topbar">
           <div style="display:flex;align-items:center;gap:12px;">
             <button class="topbar-toggle" onclick="toggleSidebar()">☰</button>
             <div>
-              <div class="topbar-title">Membros e Gestão de Pessoas</div>
-              <div class="topbar-sub">Base oficial do núcleo</div>
+              <div class="topbar-title">Membros & Gestão</div>
+              <div class="topbar-sub">Diretório oficial e controle de acesso</div>
             </div>
           </div>
           <button class="btn btn-ghost" onclick="App.toast('Certificados ABEPRO — FASE 4','info')">🎓 Certificados</button>
         </div>
+
+        <!-- Abas: Membros / Convidar / Gerenciar -->
+        <div class="tab-bar" id="pessoasTabBar">
+          <div class="tab active" onclick="Pessoas.switchTab('membros',this)">Membros</div>
+          <div class="tab" id="tabConvidar" onclick="Pessoas.switchTab('convidar',this)">+ Convidar</div>
+          <div class="tab" id="tabGerenciar" onclick="Pessoas.switchTab('gerenciar',this)">Gerenciar Acessos</div>
+        </div>
+
         <div class="content">
-          <div class="section-card">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.2rem;">
-              <div class="section-title" style="margin-bottom:0;">Diretório Interno (16 Membros)</div>
-              <button class="btn btn-ghost" onclick="App.toast('Convidar membro — Página convite.html','info')">+ Convidar</button>
-            </div>
-            <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px;">
-              <div style="background:var(--navy-mid);padding:1rem;border-radius:12px;border:1px solid var(--orange-border);display:flex;align-items:center;gap:14px;">
-                <div style="width:46px;height:46px;border-radius:50%;background:var(--orange-dim);border:2px solid var(--orange);color:var(--orange);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:15px;flex-shrink:0;">JR</div>
-                <div>
-                  <div style="font-weight:700;font-size:14px;">José Rrayan</div>
-                  <div style="font-size:11px;color:var(--orange);margin-top:2px;">⬡ Dev Chefe · ◬ Assessor MKT</div>
-                  <div style="font-size:10px;color:var(--w40);margin-top:2px;">jjoserrayan2711@gmail.com</div>
-                </div>
+
+          <!-- ABA: Membros -->
+          <div id="pessoasTabMembros">
+            <div class="section-card">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.2rem;">
+                <div class="section-title" style="margin-bottom:0;">Diretório Interno</div>
+                <span style="font-size:12px;color:var(--w40);" id="memberCount">—</span>
               </div>
-              <div style="background:var(--navy-mid);padding:1rem;border-radius:12px;border:1px solid var(--border);display:flex;align-items:center;gap:14px;">
-                <div style="width:46px;height:46px;border-radius:50%;background:var(--blue-dim);color:var(--blue);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:15px;flex-shrink:0;">AC</div>
-                <div>
-                  <div style="font-weight:700;font-size:14px;">Amanda Costa</div>
-                  <div style="font-size:11px;color:var(--w70);margin-top:2px;">⚙ Coordenadora de Operações</div>
-                </div>
-              </div>
-              <div style="background:var(--navy-mid);padding:1rem;border-radius:12px;border:1px solid var(--border);display:flex;align-items:center;gap:14px;">
-                <div style="width:46px;height:46px;border-radius:50%;background:var(--w10);color:var(--white);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:15px;flex-shrink:0;">LC</div>
-                <div>
-                  <div style="font-weight:700;font-size:14px;">Lucas Carvalho</div>
-                  <div style="font-size:11px;color:var(--w70);margin-top:2px;">◫ Assessor de Projetos</div>
-                </div>
+              <div id="memberGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:14px;">
+                <p class="text-muted text-sm">Carregando membros...</p>
               </div>
             </div>
           </div>
+
+          <!-- ABA: Convidar -->
+          <div id="pessoasTabConvidar" style="display:none;">
+            <div class="section-card">
+              <div class="section-title">Convidar Novo Membro</div>
+              <p style="font-size:13px;color:var(--w40);margin-bottom:1.5rem;">
+                Preencha os dados abaixo. O sistema gera um link de convite exclusivo que a pessoa usa para criar conta e senha.
+              </p>
+              <div id="inviteAlert" class="alert-box"></div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+                <div class="field">
+                  <label>E-mail da pessoa</label>
+                  <input type="email" id="inviteEmail" placeholder="nome@email.com">
+                </div>
+                <div class="field">
+                  <label>Cargo / Função</label>
+                  <input type="text" id="inviteCargo" placeholder="Ex: Assessor de MKT">
+                </div>
+                <div class="field">
+                  <label>Coordenadoria</label>
+                  <select id="inviteCoord">
+                    <option value="">Selecionar...</option>
+                    <option value="GER">⬡ Geral</option>
+                    <option value="OPS">⚙ Operações</option>
+                    <option value="GP">◒ G. Pessoas</option>
+                    <option value="MKT">◬ Marketing</option>
+                    <option value="PRJ">◫ Projetos</option>
+                    <option value="FIN">◎ Finanças</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label>Nível de Acesso</label>
+                  <select id="inviteRole">
+                    <option value="membro">Membro</option>
+                    <option value="coordenador">Coordenador</option>
+                    <option value="admin">Admin / Dev</option>
+                  </select>
+                </div>
+              </div>
+              <button class="btn btn-primary" style="margin-top:1.5rem;width:100%;" onclick="Pessoas.gerarConvite()">
+                Gerar Link de Convite
+              </button>
+            </div>
+
+            <!-- Link gerado -->
+            <div class="section-card" id="inviteLinkCard" style="display:none;">
+              <div class="section-title">Link de Convite Gerado</div>
+              <p style="font-size:13px;color:var(--w40);margin-bottom:1rem;">
+                Envie este link por WhatsApp ou e-mail. Ele expira em 7 dias e só pode ser usado uma vez.
+              </p>
+              <div style="display:flex;gap:8px;align-items:center;">
+                <input id="inviteLinkInput" type="text" readonly
+                  style="flex:1;background:var(--w5);border:1px solid var(--b-a);border-radius:var(--r-md);padding:10px 14px;color:var(--orange);font-size:13px;font-family:monospace;outline:none;">
+                <button class="btn btn-primary" onclick="Pessoas.copiarLink()">Copiar</button>
+              </div>
+              <p style="font-size:11px;color:var(--w40);margin-top:10px;">
+                ℹ A pessoa acessa o link, cria a senha e entra no sistema automaticamente.
+              </p>
+            </div>
+          </div>
+
+          <!-- ABA: Gerenciar Acessos -->
+          <div id="pessoasTabGerenciar" style="display:none;">
+            <div class="section-card">
+              <div class="section-title">Gerenciar Acessos dos Membros</div>
+              <p style="font-size:13px;color:var(--w40);margin-bottom:1.5rem;">
+                Altere coordenadoria ou função de qualquer membro a qualquer momento.
+              </p>
+              <div id="manageGrid" style="display:flex;flex-direction:column;gap:10px;">
+                <p class="text-muted text-sm">Carregando...</p>
+              </div>
+            </div>
+          </div>
+
         </div>
       </div>
 

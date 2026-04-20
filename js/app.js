@@ -134,11 +134,11 @@ const App = {
         return {
           id: 'dev-chefe',
           email: mock,
-          nome: 'Desenvolvedor / Assessor',
+          nome: 'Rayan Bezerra',
           role: 'admin',
-          cargo: 'Dev Chefe & Assessor de Marketing',
-          iniciais: 'RV',
-          coordenadorias: { nome: 'Marketing', sigla: 'MKT', icone: '◬' }
+          cargo: 'Desenvolvedor Chefe',
+          iniciais: 'RB',
+          coordenadorias: { nome: 'Geral', sigla: 'GER', icone: '⬡' }
         };
       }
       return null;
@@ -238,6 +238,7 @@ const App = {
 
   /** Init full dashboard (auth + sidebar + profile) */
   async initDashboard() {
+    // _appProfile é variável global acessada pelo ABJ e outros módulos
     Theme.init();
 
     const session = await App.requireAuth();
@@ -252,6 +253,8 @@ const App = {
       App.toast('Perfil não encontrado. Faça logout e tente novamente.', 'error');
       return null;
     }
+    // Expõe globalmente para módulos como ABJ
+    window._appProfile = profile;
 
     const coordName = profile.coordenadorias?.nome || 'Geral';
 
@@ -339,16 +342,17 @@ function goTo(id) {
   const pg = document.getElementById('page-' + id);
   if (pg) pg.classList.add('active');
 
-  // Update sidebar active
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   const navEl = document.getElementById('nav-' + id);
   if (navEl) navEl.classList.add('active');
 
-  // Close mobile sidebar + overlay
   const sidebar = document.getElementById('sidebar');
   const overlay = document.getElementById('sidebarOverlay');
   if (sidebar) sidebar.classList.remove('open');
   if (overlay) overlay.classList.remove('visible');
+
+  // Lazy-load de páginas com dados
+  if (id === 'pessoas') Pessoas.loadMembers();
 }
 
 function toggleSidebar() {
@@ -610,6 +614,140 @@ const Cal = {
 };
 
 /* ============================================================
+   Gestão de Membros
+   ============================================================ */
+const Pessoas = {
+  _tab: 'membros',
+
+  switchTab(tab, el) {
+    this._tab = tab;
+    document.querySelectorAll('#pessoasTabBar .tab').forEach(t => t.classList.remove('active'));
+    if (el) el.classList.add('active');
+    ['membros','convidar','gerenciar'].forEach(t => {
+      const el2 = document.getElementById('pessoasTab' + t.charAt(0).toUpperCase() + t.slice(1));
+      if (el2) el2.style.display = t === tab ? '' : 'none';
+    });
+    if (tab === 'membros' || tab === 'gerenciar') Pessoas.loadMembers();
+  },
+
+  async loadMembers() {
+    const grid = document.getElementById('memberGrid');
+    const mgrid = document.getElementById('manageGrid');
+    const count = document.getElementById('memberCount');
+
+    // Dados mock enquanto Supabase não retorna
+    let members = [
+      { iniciais:'RB', nome:'Rayan Bezerra', cargo:'Desenvolvedor Chefe', coord:'Geral', email:'jjoserrayan2711@gmail.com', role:'admin', cor:'orange' },
+    ];
+
+    if (_sb) {
+      const { data } = await _sb.from('users')
+        .select('*, coordenadorias(nome,sigla)')
+        .eq('ativo', true)
+        .order('nome');
+      if (data && data.length) members = data.map(u => ({
+        iniciais: u.iniciais || u.nome?.[0] || '?',
+        nome: u.nome || u.email,
+        cargo: u.cargo || u.role,
+        coord: u.coordenadorias?.nome || 'Geral',
+        email: u.email,
+        role: u.role,
+        id: u.id,
+        cor: u.role === 'admin' ? 'orange' : 'blue'
+      }));
+    }
+
+    if (count) count.textContent = members.length + ' membros';
+
+    if (grid) grid.innerHTML = members.map(m => `
+      <div style="background:var(--c-s2);padding:14px;border-radius:12px;border:1px solid ${m.cor==='orange'?'var(--orange-border)':'var(--border)'};display:flex;align-items:center;gap:14px;">
+        <div style="width:44px;height:44px;border-radius:50%;background:${m.cor==='orange'?'var(--orange-dim)':'var(--blue-dim)'};border:2px solid ${m.cor==='orange'?'var(--orange)':'var(--blue)'};color:${m.cor==='orange'?'var(--orange)':'var(--blue)'};display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px;flex-shrink:0;">${m.iniciais}</div>
+        <div style="flex:1;min-width:0;">
+          <div style="font-weight:700;font-size:14px;">${m.nome}</div>
+          <div style="font-size:11px;color:var(--t-3);margin-top:2px;">${m.cargo} · ${m.coord}</div>
+          <div style="font-size:10px;color:var(--t-4);margin-top:1px;">${m.email}</div>
+        </div>
+      </div>
+    `).join('');
+
+    if (mgrid) mgrid.innerHTML = members.map(m => `
+      <div style="background:var(--c-s2);padding:12px 14px;border-radius:10px;border:1px solid var(--border);display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+        <div style="width:34px;height:34px;border-radius:50%;background:var(--w10);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:12px;flex-shrink:0;">${m.iniciais}</div>
+        <div style="flex:1;min-width:120px;">
+          <div style="font-weight:600;font-size:13px;">${m.nome}</div>
+          <div style="font-size:11px;color:var(--t-3);">${m.coord}</div>
+        </div>
+        <select style="background:var(--w5);border:1px solid var(--b-1);border-radius:8px;padding:5px 10px;color:var(--t-2);font-size:12px;outline:none;" onchange="Pessoas.updateRole('${m.id||m.email}',this.value)">
+          <option value="membro" ${m.role==='membro'?'selected':''}>Membro</option>
+          <option value="coordenador" ${m.role==='coordenador'?'selected':''}>Coordenador</option>
+          <option value="admin" ${m.role==='admin'?'selected':''}>Admin/Dev</option>
+        </select>
+      </div>
+    `).join('');
+  },
+
+  async gerarConvite() {
+    const email = document.getElementById('inviteEmail')?.value.trim();
+    const cargo = document.getElementById('inviteCargo')?.value.trim();
+    const coordSigla = document.getElementById('inviteCoord')?.value;
+    const role = document.getElementById('inviteRole')?.value;
+    const alertEl = document.getElementById('inviteAlert');
+
+    if (!email || !coordSigla || !cargo) {
+      if (alertEl) { alertEl.textContent = 'Preencha e-mail, cargo e coordenadoria.'; alertEl.className = 'alert-box error'; }
+      return;
+    }
+
+    // Gerar token único
+    const token = 'NUPI-' + Math.random().toString(36).slice(2,10).toUpperCase() + '-' + Date.now().toString(36).toUpperCase();
+    const expires = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+
+    if (_sb) {
+      const { data: coordData } = await _sb.from('coordenadorias').select('id').eq('sigla', coordSigla).single();
+      const { error } = await _sb.from('convites').insert({
+        token, email, cargo, role,
+        coordenadoria_id: coordData?.id,
+        usado: false,
+        expires_at: expires,
+        created_by: window._appProfile?.id || null
+      });
+      if (error) {
+        if (alertEl) { alertEl.textContent = 'Erro ao salvar convite: ' + error.message; alertEl.className = 'alert-box error'; }
+        return;
+      }
+    }
+
+    const link = `${window.location.origin}${window.location.pathname.replace('dashboard.html','')}convite.html?token=${token}`;
+    const input = document.getElementById('inviteLinkInput');
+    if (input) input.value = link;
+    const card = document.getElementById('inviteLinkCard');
+    if (card) card.style.display = '';
+    if (alertEl) { alertEl.textContent = 'Convite criado com sucesso!'; alertEl.className = 'alert-box success'; }
+    App.toast('Link de convite gerado!', 'success');
+  },
+
+  copiarLink() {
+    const val = document.getElementById('inviteLinkInput')?.value;
+    if (!val) return;
+    navigator.clipboard.writeText(val).then(() => App.toast('Link copiado!', 'success')).catch(() => {
+      document.getElementById('inviteLinkInput')?.select();
+      document.execCommand('copy');
+      App.toast('Link copiado!', 'success');
+    });
+  },
+
+  async updateRole(identifier, newRole) {
+    if (!_sb) { App.toast('Supabase necessário para alterar funções.', 'error'); return; }
+    const q = identifier.includes('@')
+      ? _sb.from('users').update({ role: newRole }).eq('email', identifier)
+      : _sb.from('users').update({ role: newRole }).eq('id', identifier);
+    const { error } = await q;
+    if (error) { App.toast('Erro ao atualizar: ' + error.message, 'error'); return; }
+    App.toast('Função atualizada com sucesso!', 'success');
+  }
+};
+
+/* ============================================================
    Mini Calendar (widget no dashboard)
    ============================================================ */
 const MiniCal = {
@@ -706,15 +844,16 @@ const DEV_PAGES = {
     { id: 'dashboard',     icon: '⬡', label: 'Painel Central' },
     { id: 'abj',           icon: '⭐', label: 'Selo ABJ', badge: '!' },
     { id: 'tarefas',       icon: '☰', label: 'Todas Demandas' },
-    { id: 'manu',          icon: '🗂', label: 'Repositório' },
-    { id: 'pessoas',       icon: '◒', label: 'Membros' },
+    { id: 'pessoas',       icon: '◒', label: 'Membros & Gestão' },
     { id: 'financeiro',    icon: '◎', label: 'Financeiro' },
     { id: 'operacoes',     icon: '⚙', label: 'Operações' },
     { id: 'projetos',      icon: '◫', label: 'Projetos' },
+    { id: 'manu',          icon: '🗂', label: 'Repositório' },
   ],
   mkt: [
     { id: 'marketing',     icon: '◬', label: 'Agência MKT' },
     { id: 'tarefas',       icon: '☰', label: 'Demandas MKT' },
+    { id: 'notificacoes',  icon: '🔔', label: 'Notificações' },
     { id: 'manu',          icon: '🗂', label: 'Repositório' },
   ]
 };
@@ -723,13 +862,13 @@ let _currentRole = 'ger';
 
 function switchRole(role) {
   _currentRole = role;
-  // Update tab UI
   ['ger','mkt'].forEach(r => {
     const tab = document.getElementById('roleTab' + r.charAt(0).toUpperCase() + r.slice(1));
     if (tab) tab.classList.toggle('active', r === role);
   });
-  // Rebuild nav
   _buildNav(role);
+  // Navega para a página principal do perfil selecionado
+  goTo(role === 'mkt' ? 'marketing' : 'dashboard');
 }
 
 function _buildNav(role) {
