@@ -6,6 +6,12 @@ js/config.js
 .env.*
 *.local
 
+# ─── Arquivos stray / duplicatas (já estão em assets/) ──────────
+Cópia de Arte_20260419_225925_0000.png
+Manual de Núcleos Estaduais 2026.pdf
+Regimento Interno NUPIEEPRO*.pdf
+assets/1000279363.png
+
 # ─── Backups e temporários ───────────────────────────────────────
 *.bak
 *.backup
