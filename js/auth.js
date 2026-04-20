@@ -168,6 +168,27 @@ async function forceLogout() {
   window.location.reload();
 }
 
+async function doResetPassword() {
+  const emailEl = document.getElementById('loginEmail');
+  const email = emailEl ? emailEl.value.trim() : '';
+  const target = email || prompt('Digite seu e-mail para recuperar a senha:');
+  if (!target) return;
+  if (!_sb) { showAlert('Sistema offline. Tente novamente mais tarde.', 'error'); return; }
+  try {
+    await Auth.resetPassword(target);
+    showAlert('E-mail de recuperação enviado! Verifique sua caixa de entrada.', 'success');
+  } catch (err) {
+    showAlert(err.message || 'Erro ao enviar e-mail de recuperação.', 'error');
+  }
+}
+
+function promptConviteLink() {
+  const token = prompt('Cole seu token de convite:');
+  if (token && token.trim()) {
+    window.location.href = 'convite.html?token=' + encodeURIComponent(token.trim());
+  }
+}
+
 /* ============================================================
    Convite (Invite) Page
    ============================================================ */
@@ -176,7 +197,15 @@ function initConvitePage() {
   if (!token) {
     const content = document.getElementById('conviteContent');
     if (content) {
-      content.innerHTML = '<p class="text-center text-muted mt-2">Token de convite não encontrado na URL.<br><br>O link deve ter o formato:<br><code style="color:var(--orange)">convite.html?token=SEU_TOKEN</code></p>';
+      content.innerHTML = `
+        <div style="text-align:center;padding:1.5rem 0;">
+          <div style="font-size:48px;margin-bottom:16px;">🔗</div>
+          <p style="color:var(--w70);margin-bottom:20px;line-height:1.6;">
+            Você precisa de um link de convite para criar sua conta.<br>
+            Solicite ao coordenador responsável.
+          </p>
+          <a href="index.html" style="color:var(--orange);font-weight:600;text-decoration:none;">← Voltar ao login</a>
+        </div>`;
     }
     return;
   }

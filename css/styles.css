@@ -333,9 +333,9 @@ input, select, textarea { font-family: var(--f-body); }
   font-family: var(--f-head);
   font-size: 15px; font-weight: 800; letter-spacing: 0.03em; line-height: 1;
 }
-.sidebar-logo-text span { color: var(--c-accent); }
+.sidebar-logo-text span { color: #29324f; }
 .sidebar-logo-sub {
-  font-size: 9px; color: var(--c-accent); letter-spacing: 0.12em;
+  font-size: 9px; color: #29324f; letter-spacing: 0.12em;
   text-transform: uppercase; margin-top: 3px; opacity: 0.8;
 }
 

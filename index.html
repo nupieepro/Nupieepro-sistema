@@ -155,7 +155,7 @@
       text-shadow: 0 2px 20px rgba(0,0,0,0.5);
     }
     .brand-name .hi { color: var(--white); }
-    .brand-name .lo { color: var(--orange); text-shadow: 0 0 28px rgba(247,84,18,0.45); }
+    .brand-name .lo { color: #29324f; text-shadow: 0 0 32px rgba(41,50,79,0.9), 0 0 8px rgba(100,120,200,0.4); }
 
     .brand-tagline {
       font-size: clamp(12px, 1.1vw, 14px);
@@ -171,27 +171,6 @@
       color: var(--w70);
       line-height: 1.8;
       max-width: 420px;
-    }
-
-    .brand-badges {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-    }
-    .brand-badge {
-      font-size: 11px;
-      font-weight: 600;
-      padding: 5px 12px;
-      border-radius: 100px;
-      background: rgba(41,50,79,0.5);
-      border: 1px solid rgba(145,154,187,0.18);
-      color: rgba(145,154,187,0.8);
-      letter-spacing: 0.04em;
-    }
-    .brand-badge--accent {
-      background: rgba(247,84,18,0.12);
-      border-color: rgba(247,84,18,0.3);
-      color: var(--orange);
     }
 
     /* Orange divider line */
@@ -400,7 +379,6 @@
       .screen { flex-direction: column; height: auto; min-height: 100svh; }
       .brand { padding: 2.5rem 1.5rem 1rem; gap: 1.2rem; align-items: center; text-align: center; }
       .brand-logo-img { width: 90px; height: 90px; }
-      .brand-badges { justify-content: center; }
       .brand-desc { display: none; }
       .form-wrap { width: 100%; padding: 1rem 1.25rem 3rem; }
       .form-wrap::before { display: none; }
@@ -432,7 +410,7 @@
         <img src="assets/logo.png" alt="NUPIEEPRO" class="brand-logo-img">
         <div>
           <div class="brand-name">
-            <span class="hi">nup</span><span class="lo">I</span><span class="hi">ee</span><span class="lo">PRO</span>
+            <span class="hi">NUPIE</span><span class="lo">EPRO</span>
           </div>
           <div class="brand-tagline">Núcleo Piauiense de Estudantes de Eng. de Produção</div>
         </div>
@@ -445,14 +423,6 @@
         demandas por coordenadoria, financeiro, calendário unificado e muito mais.
       </p>
 
-      <div class="brand-badges">
-        <span class="brand-badge">⚙ Ops</span>
-        <span class="brand-badge">◬ MKT</span>
-        <span class="brand-badge">◎ Fin</span>
-        <span class="brand-badge">◒ GP</span>
-        <span class="brand-badge">◫ PRJ</span>
-        <span class="brand-badge brand-badge--accent">⭐ Selo ABJ</span>
-      </div>
     </div>
 
     <!-- ══ RIGHT: FORM ══ -->
@@ -490,7 +460,9 @@
         </form>
 
         <div class="form-footer">
-          Recebeu um convite? <a href="convite.html">Ativar acesso único →</a>
+          <a href="#" onclick="doResetPassword(); return false;">Esqueci minha senha</a>
+          &nbsp;·&nbsp;
+          Recebeu convite? <a href="#" onclick="promptConviteLink(); return false;">Ativar acesso</a>
         </div>
 
       </div>
