@@ -136,10 +136,36 @@ function initLoginPage() {
     if (e.key === 'Enter') { e.preventDefault(); doLogin(); }
   });
 
-  // If already logged in, redirect
+  // Se há sessão ativa, mostra estado "já conectado" em vez de redirecionar silenciosamente
   Auth.getSession().then(session => {
-    if (session) App.redirect('dashboard.html');
+    if (!session) return;
+    // Só auto-redireciona se for sessão Supabase real (não mock)
+    const isMock = !_sb && !!localStorage.getItem('mockSession');
+    if (!isMock && _sb) {
+      // Sessão Supabase válida — oferece continuar ou trocar conta
+      const formCard = document.querySelector('.form-card');
+      if (formCard) {
+        formCard.innerHTML = `
+          <div class="form-header">
+            <div class="form-eyebrow">Sessão Ativa</div>
+            <div class="form-title">Você já está conectado</div>
+            <div class="form-sub">Continuar com a sessão atual ou entrar com outra conta.</div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:12px;margin-top:24px;">
+            <button class="login-btn" onclick="App.redirect('dashboard.html')">Continuar no Sistema →</button>
+            <button class="login-btn" style="background:transparent;border:1px solid rgba(145,154,187,0.25);color:var(--slate);" onclick="forceLogout()">Trocar de Conta</button>
+          </div>
+        `;
+      }
+    }
+    // Se mock: não faz nada, deixa o form aparecer normalmente
   });
+}
+
+async function forceLogout() {
+  if (_sb) await _sb.auth.signOut();
+  localStorage.removeItem('mockSession');
+  window.location.reload();
 }
 
 /* ============================================================
