@@ -150,6 +150,21 @@ const App = {
       .select('*, coordenadorias(nome, sigla, icone)')
       .eq('id', user.id)
       .single();
+
+    // Fallback: se não há linha em public.users, usa metadados do auth
+    if (!data) {
+      const meta = user.user_metadata || {};
+      const emailName = user.email?.split('@')[0] || 'usuario';
+      return {
+        id: user.id,
+        email: user.email,
+        nome: meta.nome || emailName,
+        role: meta.role || 'membro',
+        cargo: meta.cargo || 'Membro',
+        iniciais: meta.iniciais || emailName.slice(0, 2).toUpperCase(),
+        coordenadorias: { nome: 'Geral', sigla: 'GER', icone: '⬡' }
+      };
+    }
     return data;
   },
 
@@ -223,14 +238,20 @@ const App = {
 
   /** Init full dashboard (auth + sidebar + profile) */
   async initDashboard() {
-    // Apply saved theme & font immediately
     Theme.init();
 
     const session = await App.requireAuth();
     if (!session) return null;
 
+    // CRITICAL: torna o shell visível após autenticação confirmada
+    const shell = document.getElementById('appShell');
+    if (shell) shell.classList.add('visible');
+
     const profile = await App.getProfile();
-    if (!profile) return null;
+    if (!profile) {
+      App.toast('Perfil não encontrado. Faça logout e tente novamente.', 'error');
+      return null;
+    }
 
     const coordName = profile.coordenadorias?.nome || 'Geral';
 
@@ -272,8 +293,9 @@ const App = {
 
     App.buildMobileNav(coordName);
 
-    // Init calendar
+    // Init calendários
     Cal.init();
+    MiniCal.init();
 
     // Init notification count
     updateNotifCount();
@@ -584,6 +606,74 @@ const Cal = {
           </div>
         </div>`;
     }).join('');
+  }
+};
+
+/* ============================================================
+   Mini Calendar (widget no dashboard)
+   ============================================================ */
+const MiniCal = {
+  year: new Date().getFullYear(),
+  month: new Date().getMonth(),
+
+  init() {
+    const grid = document.getElementById('miniCalGrid');
+    if (!grid) return;
+    MiniCal.render();
+  },
+
+  prev() { MiniCal.month--; if (MiniCal.month < 0) { MiniCal.month = 11; MiniCal.year--; } MiniCal.render(); },
+  next() { MiniCal.month++; if (MiniCal.month > 11) { MiniCal.month = 0; MiniCal.year++; } MiniCal.render(); },
+
+  render() {
+    const grid = document.getElementById('miniCalGrid');
+    if (!grid) return;
+
+    const label = document.getElementById('miniCalLabel');
+    if (label) label.textContent = MONTHS_PT[MiniCal.month] + ' ' + MiniCal.year;
+
+    const headers = Array.from(grid.querySelectorAll('.cal-day-name'));
+    grid.innerHTML = '';
+    headers.forEach(h => grid.appendChild(h));
+
+    const today = new Date();
+    const firstDay = new Date(MiniCal.year, MiniCal.month, 1).getDay();
+    const daysInMonth = new Date(MiniCal.year, MiniCal.month + 1, 0).getDate();
+
+    for (let i = 0; i < firstDay; i++) {
+      const e = document.createElement('div'); e.className = 'mini-cal-day empty'; grid.appendChild(e);
+    }
+    for (let d = 1; d <= daysInMonth; d++) {
+      const cell = document.createElement('div');
+      cell.className = 'mini-cal-day';
+      const isToday = d === today.getDate() && MiniCal.month === today.getMonth() && MiniCal.year === today.getFullYear();
+      if (isToday) cell.classList.add('today');
+      const key = `${MiniCal.year}-${MiniCal.month + 1}-${d}`;
+      if (CAL_EVENTS[key]) cell.classList.add('has-event');
+      cell.textContent = d;
+      cell.onclick = () => goTo('compartilhado');
+      grid.appendChild(cell);
+    }
+
+    // Eventos próximos compactos
+    const evtsEl = document.getElementById('miniCalEvents');
+    if (!evtsEl) return;
+    const now = new Date();
+    const upcoming = Object.entries(CAL_EVENTS)
+      .map(([key, evts]) => { const [y,m,d] = key.split('-').map(Number); return { date: new Date(y,m-1,d), evts }; })
+      .filter(e => e.date >= now)
+      .sort((a,b) => a.date - b.date)
+      .slice(0, 3);
+
+    evtsEl.innerHTML = upcoming.map(({ date, evts }) => {
+      const ev = evts[0];
+      const ds = date.toLocaleDateString('pt-BR', { day:'2-digit', month:'short' });
+      return `<div style="display:flex;align-items:center;gap:8px;font-size:12px;padding:6px 8px;background:var(--w5);border-radius:8px;border:1px solid var(--b-1);">
+        <span style="color:${ev.color};font-size:13px;">${ev.tag || '📅'}</span>
+        <span style="flex:1;font-weight:500;">${ev.label}</span>
+        <span style="color:var(--t-3);white-space:nowrap;">${ds}</span>
+      </div>`;
+    }).join('') || '<p class="text-muted text-sm">Sem eventos próximos.</p>';
   }
 };
 

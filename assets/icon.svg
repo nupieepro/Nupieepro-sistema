@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Background: Full Black -->
+  <rect width="512" height="512" fill="#000000"/>
+  <!-- White N lettermark — bold, centered -->
+  <text x="256" y="320" text-anchor="middle" dominant-baseline="middle"
+        fill="#ffffff" font-size="300" font-family="Arial Black, Impact, Helvetica, sans-serif"
+        font-weight="900">N</text>
+  <!-- Orange accent bar -->
+  <rect x="172" y="388" width="168" height="10" rx="5" fill="#f75412"/>
+</svg>
