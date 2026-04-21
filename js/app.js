@@ -12,8 +12,10 @@ const _SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'; // Substituir pela su
 const _EMAILJS_PUB_KEY = 'WIiLVFRJPDeqTP7Ox';
 const _EMAILJS_SERVICE = 'service_85bjukt';
 
-let _sb = supabase.createClient(_SB_URL, _SB_KEY);
-window._supabase = _sb;
+// Inicialização Global do Supabase
+window._sb = supabase.createClient(_SB_URL, _SB_KEY);
+window._supabase = window._sb;
+const _sb = window._sb; // Atalho local para o app.js
 
 /* ============================================================
    Constants — NUPIEEPRO structure
