@@ -4,18 +4,29 @@
    ============================================================ */
 
 // Chave anon (publishable) é segura para frontend — segurança real = RLS no Supabase.
-// config.js pode sobrescrever via window.NUPI_URL / window.NUPI_KEY se disponível.
-const _SB_URL = 'https://ovhktunmrtmdfsnobvku.supabase.co'; // Substituir pela URL do seu projeto
-const _SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'; // Substituir pela sua Service Role Key ou Anon Key
-// IMPORTANTE: Para o "Hard Delete", seria ideal usar a Service Role Key, mas para o app público usa-se a Anon.
+const _SB_URL = 'https://ovhktunmrtmdfsnobvku.supabase.co';
+const _SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...';
 
 const _EMAILJS_PUB_KEY = 'WIiLVFRJPDeqTP7Ox';
 const _EMAILJS_SERVICE = 'service_85bjukt';
 
-// Inicialização Global do Supabase
-window._sb = supabase.createClient(_SB_URL, _SB_KEY);
-window._supabase = window._sb;
-const _sb = window._sb; // Atalho local para o app.js
+// Inicialização SEGURA do Supabase (try-catch para nunca travar o sistema)
+let _sb = null;
+try {
+  if (typeof supabase !== 'undefined' && _SB_KEY && !_SB_KEY.includes('...')) {
+    _sb = supabase.createClient(_SB_URL, _SB_KEY);
+    window._sb = _sb;
+    window._supabase = _sb;
+    console.log('Supabase: Conectado com sucesso.');
+  } else {
+    console.warn('Supabase: Chave não configurada. Sistema em modo offline/demo.');
+  }
+} catch (e) {
+  console.error('Supabase: Falha na conexão. Sistema em modo offline.', e.message);
+  _sb = null;
+}
+window._sb = window._sb || null;
+window._supabase = window._supabase || null;
 
 /* ============================================================
    Constants — NUPIEEPRO structure
@@ -161,11 +172,12 @@ const EmailService = {
 
 const MagicLink = {
   async generate(email) {
+    const sb = window._sb || window._supabase;
     const token = Math.random().toString(36).substring(2) + Date.now().toString(36);
     const expiresAt = new Date(Date.now() + 2 * 60000).toISOString(); // 2 min
 
-    if (_sb) {
-      const { error } = await _sb.from('magic_links').insert({
+    if (sb) {
+      const { error } = await sb.from('magic_links').insert({
         email, token, expires_at: expiresAt, used: false
       });
       if (error) throw error;
@@ -177,8 +189,9 @@ const MagicLink = {
   },
 
   async verify(token) {
-    if (!_sb) return null;
-    const { data, error } = await _sb.from('magic_links')
+    const sb = window._sb || window._supabase;
+    if (!sb) return null;
+    const { data, error } = await sb.from('magic_links')
       .select('*')
       .eq('token', token)
       .eq('used', false)
@@ -188,12 +201,12 @@ const MagicLink = {
 
     // Verificar expiração
     if (new Date() > new Date(data.expires_at)) {
-      App.toast('Link mágico expirado (2 min).', 'error');
+      window.App?.toast?.('Link mágico expirado (2 min).', 'error');
       return null;
     }
 
     // Marcar como usado
-    await _sb.from('magic_links').update({ used: true }).eq('token', token);
+    await sb.from('magic_links').update({ used: true }).eq('token', token);
     return data.email;
   }
 };
@@ -1018,34 +1031,27 @@ const Pessoas = {
     }
   },
 
-  async sendMagicLink(email) {
-    App.toast('Gerando acesso instantâneo...', 'info');
-    const link = await MagicLink.generate(email);
-    await EmailService.notifyInvite({ nome: email, email }, link);
-    App.toast('Magic Link (2 min) enviado com sucesso!', 'success');
-  }
-};
-    if (alertEl) { alertEl.textContent = 'Membro adicionado e e-mail enviado com sucesso!'; alertEl.className = 'alert-box success'; }
-    this.loadMembers();
-    // Limpar campos
-    ['inviteEmail','inviteNome','inviteCargo','invitePass','inviteBday','inviteMandate'].forEach(id => {
-      const el = document.getElementById(id); if (el) el.value = '';
-    });
-  },
-    // Limpar campos
-    ['inviteEmail','inviteNome','inviteCargo','invitePass','inviteBday','inviteMandate'].forEach(id => {
-      const el = document.getElementById(id); if (el) el.value = '';
-    });
+    }
   },
 
+  async sendMagicLink(email) {
+    window.App?.toast?.('Gerando acesso instantâneo...', 'info');
+    const link = await window.MagicLink?.generate?.(email);
+    await window.EmailService?.notifyInvite?.({ nome: email, email }, link);
+    window.App?.toast?.('Magic Link (2 min) enviado com sucesso!', 'success');
+  }
+};
+
+const PessoasExt = {
   async updateRole(identifier, newRole) {
-    if (!_sb) { App.toast('Supabase necessário para alterar funções.', 'error'); return; }
+    const sb = window._sb || window._supabase;
+    if (!sb) { window.App?.toast?.('Supabase necessário para alterar funções.', 'error'); return; }
     const q = identifier.includes('@')
-      ? _sb.from('users').update({ role: newRole }).eq('email', identifier)
-      : _sb.from('users').update({ role: newRole }).eq('id', identifier);
+      ? sb.from('users').update({ role: newRole }).eq('email', identifier)
+      : sb.from('users').update({ role: newRole }).eq('id', identifier);
     const { error } = await q;
-    if (error) { App.toast('Erro ao atualizar: ' + error.message, 'error'); return; }
-    App.toast('Função atualizada com sucesso!', 'success');
+    if (error) { window.App?.toast?.('Erro ao atualizar: ' + error.message, 'error'); return; }
+    window.App?.toast?.('Função atualizada com sucesso!', 'success');
   }
 };
 
@@ -1058,13 +1064,12 @@ const DashboardExtra = {
     const mural = document.getElementById('dashBirthdays');
     if (!listEl) return;
 
-    // Simulação ou Supabase: Pegar usuários que fazem niver este mês
+    const sb = window._sb || window._supabase;
     const month = new Date().getMonth() + 1;
     let bdays = [];
 
-    if (_sb) {
-      // Nota: Filtrar por mês no Supabase requer sintaxe específica ou extrair no JS
-      const { data } = await _sb.from('users').select('nome, nascimento, iniciais').not('nascimento', 'is', null);
+    if (sb) {
+      const { data } = await sb.from('users').select('nome, nascimento, iniciais').not('nascimento', 'is', null);
       bdays = (data || []).filter(u => {
         const m = new Date(u.nascimento + 'T12:00:00').getMonth() + 1;
         return m === month;
@@ -1636,3 +1641,16 @@ const Kanban = (() => {
 
   return { load, abrirNovaDemanda, fecharModal, salvar, abrirDetalhes };
 })();
+
+// V6.2 — Registro Global de Módulos Industriais (Elite Visibility)
+window.App          = App;
+window.Theme        = Theme;
+window.EmailService = EmailService;
+window.MagicLink    = MagicLink;
+window.Pessoas      = Pessoas;
+window.Kanban       = Kanban;
+window.Dashboard    = Dashboard;
+window.Auth         = Auth; // Caso auth esteja no mesmo escopo ou carregado
+window._sb          = window._sb || _sb;
+
+console.log('NUPIEEPRO V6.2: Todos os módulos globais registrados.');

@@ -1,23 +1,23 @@
-
-// Herança Global do Supabase V6.0
-const _sb = window._sb;
+// Blindagem Industrial V6.3 — Acesso Direto Garantido
 const Auth = {
   async login(email, password) {
-    if (!_sb) {
+    const sb = window._sb || window._supabase;
+    if (!sb) {
       if (email === 'jjoserrayan2711@gmail.com') {
         localStorage.setItem('mockSession', email);
         return { user: { id: 'dev-chefe', email } };
       }
-      throw new Error('Supabase não configurado. Cole sua URL e ANON KEY em js/app.js');
+      throw new Error('Sistema de dados offline. Verifique a URL do Supabase no app.js');
     }
-    const { data, error } = await _sb.auth.signInWithPassword({ email, password });
+    const { data, error } = await sb.auth.signInWithPassword({ email, password });
     if (error) throw error;
     return data;
   },
 
   async register(email, password, metadata = {}) {
-    if (!_sb) throw new Error('Supabase não configurado.');
-    const { data, error } = await _sb.auth.signUp({
+    const sb = window._sb || window._supabase;
+    if (!sb) throw new Error('Supabase não configurado.');
+    const { data, error } = await sb.auth.signUp({
       email, password, options: { data: metadata }
     });
     if (error) throw error;

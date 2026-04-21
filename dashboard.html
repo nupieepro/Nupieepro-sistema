@@ -959,18 +959,23 @@
   </div><!-- /app-shell -->
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-  <script src="js/app.js?v=11"></script>
-  <script src="js/auth.js?v=11"></script>
-  <script src="js/abj.js?v=11"></script>
+  <script src="js/app.js?v=12"></script>
+  <script src="js/auth.js?v=12"></script>
+  <script src="js/abj.js?v=12"></script>
   <script>
     (async () => {
-      Theme.init();
-      const profile = await App.initDashboard();
-      if (profile) {
-        Dashboard.render(profile);
-        if (profile.role === 'admin') {
-          const banner = document.getElementById('devBanner');
-          if (banner) banner.style.display = 'flex';
+      // Blindagem V6.5
+      if (typeof window.Theme !== 'undefined') window.Theme.init();
+      
+      const app = window.App;
+      if (app && typeof app.initDashboard === 'function') {
+        const profile = await app.initDashboard();
+        if (profile && typeof window.Dashboard !== 'undefined') {
+          window.Dashboard.render(profile);
+          if (profile.role === 'admin') {
+            const banner = document.getElementById('devBanner');
+            if (banner) banner.style.display = 'flex';
+          }
         }
       }
     })();
