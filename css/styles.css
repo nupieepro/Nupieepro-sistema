@@ -1253,3 +1253,13 @@ body { font-family: var(--f-body); font-feature-settings: "cv11", "ss01"; }
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
 }
+
+/* ─── TV MODE / KIOSK (Idea #4) ─── */
+body.tv-mode .sidebar { display: none !important; }
+body.tv-mode .main-area { margin-left: 0 !important; width: 100% !important; padding: 0 !important; }
+body.tv-mode .topbar { background: #000 !important; border-bottom: none !important; }
+body.tv-mode .topbar-sub, body.tv-mode .theme-pills { display: none !important; }
+body.tv-mode .content { padding: 40px !important; max-width: 1600px; margin: 0 auto; }
+body.tv-mode .section-card { border-width: 2px; }
+body.tv-mode #audit-percent { font-size: 3rem !important; }
+body.tv-mode #audit-bar { height: 40px !important; }

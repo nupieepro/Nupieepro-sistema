@@ -553,6 +553,18 @@ const App = {
       badge.textContent = count || 0;
       badge.classList.toggle('visible', count > 0);
     }
+  },
+
+  /** MODO TV / KIOSK (Idea #4) */
+  toggleTVMode() {
+    const body = document.body;
+    const isTV = body.classList.toggle('tv-mode');
+    if (isTV) {
+      if (body.requestFullscreen) body.requestFullscreen();
+      App.toast('Modo TV Ativado: Sidebar oculta para exibição.', 'info');
+    } else {
+      if (document.exitFullscreen) document.exitFullscreen();
+    }
   }
 };
 
@@ -634,6 +646,20 @@ const Dashboard = {
       const saldo = totalVendas - totalDespesas;
 
       Dashboard.setKPIs(totalPts, activeTasks, totalMembers, saldo, totalVendas, totalDespesas);
+      
+      // --- [1] AUDITORIA ABJ (TERMÔMETRO) ---
+      const auditPct = Math.round((totalPts / 50) * 100); // 50 é a meta padrão
+      const auditBar = document.getElementById('audit-bar');
+      const auditTxt = document.getElementById('audit-percent');
+      const auditStatus = document.getElementById('audit-status');
+      
+      if (auditBar) auditBar.style.width = Math.min(auditPct, 100) + '%';
+      if (auditTxt) auditTxt.textContent = auditPct + '%';
+      if (auditStatus) {
+        if (auditPct >= 100) auditStatus.textContent = '✅ Auditoria Completa! Selo Garantido.';
+        else if (auditPct >= 70) auditStatus.textContent = '🔥 Quase lá! Foco no fechamento.';
+        else auditStatus.textContent = '📊 Sincronizado. Continue reportando atividades.';
+      }
     } catch (err) {
       console.error('Dashboard fetch error:', err);
       Dashboard.renderDemo(profile);
@@ -643,6 +669,12 @@ const Dashboard = {
   renderDemo(profile) {
     // Show demo data when Supabase is not configured
     Dashboard.setKPIs(47, 10, 16, 1500, 2260, 760);
+    
+    // Demo Mode: Audit Termômetro
+    const auditBar = document.getElementById('audit-bar');
+    const auditTxt = document.getElementById('audit-percent');
+    if (auditBar) auditBar.style.width = '94%';
+    if (auditTxt) auditTxt.textContent = '94%';
     document.getElementById('dashRecent').innerHTML = `
       <div style="display:flex;flex-direction:column;gap:8px;">
         <div style="display:flex;align-items:center;gap:8px;padding:8px;background:var(--w5);border-radius:8px;font-size:13px;">

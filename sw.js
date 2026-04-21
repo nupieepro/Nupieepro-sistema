@@ -18,6 +18,8 @@ const ASSETS = [
   './manifest.json',
   './assets/icon.svg',
   './assets/arte-logo.png',
+  './assets/1000279363.png',
+  './assets/Cópia de Arte_20260421_200942_0000.png',
 ];
 
 // Install — pré-carrega shell do app
