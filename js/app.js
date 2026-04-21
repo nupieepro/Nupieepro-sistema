@@ -1031,9 +1031,6 @@ const Pessoas = {
     }
   },
 
-    }
-  },
-
   async sendMagicLink(email) {
     window.App?.toast?.('Gerando acesso instantâneo...', 'info');
     const link = await window.MagicLink?.generate?.(email);

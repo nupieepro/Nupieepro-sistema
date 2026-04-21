@@ -1,7 +1,9 @@
-// Blindagem Industrial V6.3 — Acesso Direto Garantido
+// Blindagem Industrial V6.6 — Auth Module
 const Auth = {
+  _db() { return window._sb || window._supabase; },
+
   async login(email, password) {
-    const sb = window._sb || window._supabase;
+    const sb = this._db();
     if (!sb) {
       if (email === 'jjoserrayan2711@gmail.com') {
         localStorage.setItem('mockSession', email);
@@ -15,7 +17,7 @@ const Auth = {
   },
 
   async register(email, password, metadata = {}) {
-    const sb = window._sb || window._supabase;
+    const sb = this._db();
     if (!sb) throw new Error('Supabase não configurado.');
     const { data, error } = await sb.auth.signUp({
       email, password, options: { data: metadata }
@@ -25,9 +27,10 @@ const Auth = {
   },
 
   async registerWithToken(token, nome, password) {
-    if (!_sb) throw new Error('Sistema offline. Verifique a conexão.');
+    const sb = this._db();
+    if (!sb) throw new Error('Sistema offline. Verifique a conexão.');
 
-    const { data: convite, error: tokenErr } = await _sb
+    const { data: convite, error: tokenErr } = await sb
       .from('convites')
       .select('*, coordenadorias(nome, sigla)')
       .eq('token', token)
@@ -38,7 +41,7 @@ const Auth = {
     if (tokenErr || !convite) throw new Error('Convite inválido ou expirado.');
 
     const iniciais = nome.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
-    const { data, error } = await _sb.auth.signUp({
+    const { data, error } = await sb.auth.signUp({
       email: convite.email,
       password,
       options: {
@@ -48,28 +51,32 @@ const Auth = {
     });
 
     if (error) throw error;
-    await _sb.from('convites').update({ usado: true }).eq('id', convite.id);
+    await sb.from('convites').update({ usado: true }).eq('id', convite.id);
     return data;
   },
 
   async logout() {
-    if (_sb) await _sb.auth.signOut();
+    const sb = this._db();
+    if (sb) await sb.auth.signOut();
     localStorage.removeItem('mockSession');
-    App.redirect('index.html');
+    if (window.App) window.App.redirect('index.html');
+    else window.location.href = 'index.html';
   },
 
   async getSession() {
-    if (!_sb) {
+    const sb = this._db();
+    if (!sb) {
       const mock = localStorage.getItem('mockSession');
       return mock ? { user: { email: mock } } : null;
     }
-    const { data: { session } } = await _sb.auth.getSession();
+    const { data: { session } } = await sb.auth.getSession();
     return session;
   },
 
   async resetPassword(email) {
-    if (!_sb) throw new Error('Supabase não configurado.');
-    const { error } = await _sb.auth.resetPasswordForEmail(email, {
+    const sb = this._db();
+    if (!sb) throw new Error('Supabase não configurado.');
+    const { error } = await sb.auth.resetPasswordForEmail(email, {
       redirectTo: new URL('reset.html', window.location.href).href
     });
     if (error) throw error;

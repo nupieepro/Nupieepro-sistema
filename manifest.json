@@ -43,7 +43,7 @@
       "name": "NUPIEEPRO",
       "short_name": "Início",
       "description": "Entrar no sistema",
-      "url": "/index.html",
+      "url": "./index.html",
       "icons": [{ "src": "assets/arte-logo.png", "sizes": "192x192" }]
     }
   ]
