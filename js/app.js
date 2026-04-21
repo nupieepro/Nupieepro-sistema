@@ -1142,9 +1142,6 @@ const DashboardExtra = {
   },
 
   async renderAssembleia() {
-    // Placeholder para sistema de votação da Coord. Geral
-  }
-};
     const listEl = document.getElementById('activeVotes');
     if (!listEl) return;
     // Mock ou Supabase: Carregar votações ativas
