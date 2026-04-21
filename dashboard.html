@@ -16,6 +16,14 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Plus+Jakarta+Sans:wght@600;700;800;900&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/styles.css">
+  
+  <script>
+    // Injeção Crítica: Impede a tela branca de "Blink" lendo a memória do tema antes de renderizar o HTML.
+    const _t = localStorage.getItem('nupie_theme') || 'default';
+    const _f = localStorage.getItem('nupie_font') || 'default';
+    if (_t !== 'default') document.documentElement.setAttribute('data-theme', _t);
+    if (_f !== 'default') document.documentElement.setAttribute('data-font', _f);
+  </script>
 </head>
 <body>
   <div class="app-shell" id="appShell">
@@ -429,20 +437,6 @@
                 <div style="font-size:11px;color:var(--t-3);margin-bottom:16px;">Jan/2026 · Coordenação Geral</div>
                 <a href="assets/Regimento Interno NUPIEEPRO 2026.pdf" target="_blank" download class="btn btn-ghost" style="width:100%;display:block;text-align:center;text-decoration:none;">⬇ Baixar PDF</a>
               </div>
-              <div id="opsLinksSection" style="display:none;">
-              <div style="background:var(--b-1);border:1px solid var(--b-2);border-radius:12px;padding:20px;text-align:center;">
-                <div style="font-size:36px;margin-bottom:12px;">🌐</div>
-                <div style="font-weight:700;color:var(--orange);font-size:13px;margin-bottom:6px;">Site de Inscrições OPS</div>
-                <div style="font-size:11px;color:var(--t-3);margin-bottom:16px;">Inscrições para eventos</div>
-                <a href="operacoes-site-inscricoes.html" target="_blank" class="btn btn-ghost" style="width:100%;display:block;text-align:center;text-decoration:none;">↗ Abrir</a>
-              </div>
-              <div style="background:var(--b-1);border:1px solid var(--b-2);border-radius:12px;padding:20px;text-align:center;">
-                <div style="font-size:36px;margin-bottom:12px;">⚙</div>
-                <div style="font-weight:700;color:var(--orange);font-size:13px;margin-bottom:6px;">Admin OPS — Credenciamento</div>
-                <div style="font-size:11px;color:var(--t-3);margin-bottom:16px;">Gestão interna de eventos</div>
-                <a href="adminoperacoes.html" target="_blank" class="btn btn-ghost" style="width:100%;display:block;text-align:center;text-decoration:none;">↗ Abrir</a>
-              </div>
-              </div>
             </div>
           </div>
         </div>
@@ -485,14 +479,24 @@
         <div class="topbar">
           <div style="display:flex;align-items:center;gap:12px;">
             <button class="topbar-toggle" onclick="toggleSidebar()">☰</button>
-            <div><div class="topbar-title">Operações Hub</div><div class="topbar-sub">Processos e rotinas do núcleo</div></div>
+            <div><div class="topbar-title">Central Operacional</div><div class="topbar-sub">Ferramentas de Inscrição e Credenciamento</div></div>
           </div>
         </div>
-        <div class="content">
-          <div class="section-card text-center text-muted" style="padding:4rem;">
-            <div style="font-size:40px;margin-bottom:1rem;">⚙</div>
-            <strong>Estruturador de Processos Operacionais</strong><br>
-            <span style="font-size:13px;">Fluxos de rotina diária e métricas do núcleo. — FASE 4</span>
+        <div class="content stagger-1">
+          <div class="summary-grid" style="grid-template-columns: 1fr 1fr; margin-bottom: 2rem;">
+            <div class="section-card text-center" style="padding:4rem; border-radius:16px; border: 1px solid var(--b-1); background:var(--s1);">
+                <div style="font-size:40px;margin-bottom:1rem;">🌐</div>
+                <strong style="color:var(--white);">Site de Inscrições (Público)</strong><br>
+                <p style="font-size:12px;color:var(--t-2);margin:0.5rem 0 1.5rem;">Cópia do site gerado para os alunos se inscreverem nos eventos estaduais.</p>
+                <a href="operacoes-site-inscricoes.html" target="_blank" class="btn" style="background:rgba(255,255,255,0.05); color:var(--white); border: 1px solid var(--b-2); width:100%;">Acessar Inscrições Externas</a>
+            </div>
+            
+            <div class="section-card text-center" style="padding:4rem; border-radius:16px; border: 1px solid var(--b-1); background:var(--s1);">
+                <div style="font-size:40px;margin-bottom:1rem;">⚙</div>
+                <strong style="color:var(--white);">Admin OPS: Credenciamento</strong><br>
+                <p style="font-size:12px;color:var(--t-2);margin:0.5rem 0 1.5rem;">Plataforma restrita de controle e validação de alunos por QR Code presencial.</p>
+                <a href="adminoperacoes.html" target="_blank" class="btn" style="background:var(--p-1); border: 1px solid var(--b-p); width:100%;">Abrir Dashboard de Credenciamento</a>
+            </div>
           </div>
         </div>
       </div>
@@ -525,23 +529,38 @@
             <button class="topbar-toggle" onclick="toggleSidebar()">☰</button>
             <div>
               <div class="topbar-title">Teses Financeiras</div>
-              <div class="topbar-sub">Tesouraria geral e orçamentos</div>
+              <div class="topbar-sub">Gestão da Lojinha e Tesouraria Global</div>
             </div>
           </div>
-          <button class="btn btn-primary" onclick="App.toast('Novo lançamento — FASE 4','info')">+ Lançamento</button>
         </div>
-        <div class="content">
-          <div class="summary-grid">
-            <div class="sum-card"><div class="sum-label">Caixa Atual</div><div class="sum-value" style="color:var(--green)" id="finCaixa">R$ 0</div></div>
-            <div class="sum-card"><div class="sum-label">Receitas (Mês)</div><div class="sum-value" id="finReceitas">R$ 0</div></div>
-            <div class="sum-card"><div class="sum-label">Despesas Previstas</div><div class="sum-value" style="color:var(--red)" id="finDespesas">R$ 0</div></div>
-            <div class="sum-card"><div class="sum-label">Filiação ABJ</div><div class="sum-value" style="color:var(--yellow)" id="finAbj">—</div></div>
-          </div>
-          <div class="section-card">
-            <div class="section-title">Últimas Movimentações</div>
-            <div id="finMovList">
-              <p class="text-muted text-sm" style="text-align:center;padding:2rem 0;">Nenhuma movimentação registrada.<br>Use <strong>+ Lançamento</strong> para adicionar.</p>
+        <div class="content stagger-1">
+          <h2 style="font-size:14px; text-transform:uppercase; letter-spacing:1px; margin-bottom:1rem; color:var(--orange);">Lojinha e Vendas</h2>
+          <div class="summary-grid" style="grid-template-columns: 1fr 1fr; margin-bottom: 3rem;">
+            
+            <div class="section-card text-center" style="padding:3.5rem; border-radius:16px; border: 1px solid var(--b-1); background:var(--s1);">
+                <div style="font-size:40px;margin-bottom:1rem;">🛒</div>
+                <strong style="color:var(--white);">Hub Público — Lojinha Nupieepro</strong><br>
+                <p style="font-size:12px;color:var(--t-2);margin:0.5rem 0 1.5rem;">Caminho de compra gerado pelo repositório oficial da Lojinha para divulgar aos alunos.</p>
+                <a href="https://nupieepro.github.io/Lojinha-Nupieepro/" target="_blank" class="btn" style="background:rgba(255,255,255,0.05); color:var(--white); border: 1px solid var(--b-2); width:100%;">Testar Site Público de Vendas</a>
             </div>
+
+            <div class="section-card text-center" style="padding:3.5rem; border-radius:16px; border: 1px solid var(--b-1); background:var(--s1); box-shadow: inset 0 0 50px rgba(247, 84, 18, 0.05);">
+                <div style="font-size:40px;margin-bottom:1rem;">🔐</div>
+                <strong style="color:var(--white);">Admin de Pedidos — Finanças Master</strong><br>
+                <p style="font-size:12px;color:var(--t-2);margin:0.5rem 0 1.5rem;">Visualização interna segura com dashboard de caixas, envios e lucros das coordenações.</p>
+                <a href="https://nupieepro.github.io/Lojinha-Nupieepro/admin" target="_blank" class="btn" style="background:var(--p-1); border: 1px solid var(--b-p); width:100%;">Acessar Controle do Admin</a>
+            </div>
+          </div>
+
+          <h2 style="font-size:14px; text-transform:uppercase; letter-spacing:1px; margin-bottom:1rem; color:var(--orange);">Auditoria Operacional (Visualização)</h2>
+          <div class="summary-grid" style="grid-template-columns: 1fr;">
+              <div class="section-card" style="padding:1.5rem; border-radius:12px; border: 1px solid rgba(255,255,255,0.05); display:flex; align-items:center; justify-content:space-between; background:var(--bg);">
+                  <div>
+                    <strong style="color:var(--white); font-size:14px;">Inscrições Ativas da OPS</strong>
+                    <p style="font-size:11px;color:var(--t-3);margin-top:2px;">Coordenação financeira possui ponte para apenas visualizar volume de inscrições.</p>
+                  </div>
+                  <a href="adminoperacoes.html" target="_blank" class="btn btn-ghost" style="font-size:12px;">Visualizar Credenciamento -></a>
+              </div>
           </div>
         </div>
       </div>

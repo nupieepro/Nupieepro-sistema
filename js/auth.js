@@ -94,7 +94,7 @@ function showPanelAlert(msg, type, id) {
   const el = document.getElementById(id);
   if (!el) return;
   el.textContent = msg;
-  el.className = 'panel-alert ' + type;
+  el.className = 'alert ' + type;
 }
 
 /* Abre/fecha painéis de recuperação e convite */

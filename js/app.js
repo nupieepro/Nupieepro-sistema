@@ -17,41 +17,60 @@ window._supabase = _sb;
 const META_ABJ = 882;
 
 const COORDENADORIAS = [
-  { sigla: 'GER', nome: 'Geral',      icon: '👑', cor: '--orange' },
-  { sigla: 'OPS', nome: 'Operações',   icon: '⚡', cor: '--blue' },
-  { sigla: 'GP',  nome: 'G. Pessoas',  icon: '🤝', cor: '--yellow' },
-  { sigla: 'MKT', nome: 'Marketing',   icon: '🚀', cor: '--red' },
-  { sigla: 'PRJ', nome: 'Projetos',    icon: '📐', cor: '--orange' },
-  { sigla: 'FIN', nome: 'Finanças',    icon: '💎', cor: '--green' },
+  { sigla: 'GER', nome: 'Geral',      icon: 'crown', cor: '--orange' },
+  { sigla: 'OPS', nome: 'Operações',   icon: 'zap',   cor: '--blue' },
+  { sigla: 'GP',  nome: 'G. Pessoas',  icon: 'users', cor: '--yellow' },
+  { sigla: 'MKT', nome: 'Marketing',   icon: 'rocket',cor: '--red' },
+  { sigla: 'PRJ', nome: 'Projetos',    icon: 'layout',cor: '--orange' },
+  { sigla: 'FIN', nome: 'Finanças',    icon: 'gem',   cor: '--green' },
 ];
+
+function getIcon(name) {
+  const icons = {
+    crown: '<path d="m2 4 3 12h14l3-12-6 7-4-7-4 7-6-7z"/><path d="M12 17H2l.5 2h19l.5-2H12z"/>',
+    zap: '<polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>',
+    users: '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>',
+    rocket: '<path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2.01c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/><path d="M9 12H4s.55-3.03 2-5c1.62-2.2 5-2.5 5-2.5"/><path d="M12 15v5s3.03-.55 5-2c2.2-1.62 2.5-5 2.5-5"/>',
+    layout: '<rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/>',
+    gem: '<path d="M6 3h12l4 6-10 12L2 9z"/><path d="M11 3 8 9l4 12 4-12-3-6"/><path d="M2 9h20"/>',
+    grid: '<rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="14" y="3" rx="1"/><rect width="7" height="7" x="14" y="14" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/>',
+    star: '<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>',
+    list: '<path d="M8 6h13"/><path d="M8 12h13"/><path d="M8 18h13"/><path d="M3 6h.01"/><path d="M3 12h.01"/><path d="M3 18h.01"/>',
+    folder: '<path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93l-1-2H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2z"/>',
+    settings: '<path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.1a2 2 0 0 1-1-1.72v-.51a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/>',
+    megaphone: '<path d="m3 11 18-5v12L3 14v-3z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/>',
+    banknote: '<rect width="20" height="12" x="2" y="6" rx="2"/><circle cx="12" cy="12" r="2"/><path d="M6 12h.01M18 12h.01"/>'
+  };
+  return `<svg data-lucide="${name}" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-${name}">${icons[name] || ''}</svg>`;
+}
 
 // Pages each coord can access
 const ROLE_PAGES = {
   'Geral':      [
-    { id: 'dashboard', icon: '⬡', label: 'Painel Central' },
-    { id: 'abj',       icon: '⭐️', label: 'Selo ABJ', badge: '!' },
-    { id: 'tarefas',   icon: '☰', label: 'Todas Demandas' },
-    { id: 'manu',      icon: '🗂', label: 'Repositório Central' },
+    { id: 'dashboard', icon: 'grid', label: 'Painel Central' },
+    { id: 'abj',       icon: 'star', label: 'Selo ABJ', badge: '!' },
+    { id: 'tarefas',   icon: 'list', label: 'Todas Demandas' },
+    { id: 'manu',      icon: 'folder', label: 'Repositório Central' },
   ],
   'Operações':  [
-    { id: 'operacoes', icon: '⚙', label: 'Operações Hub' },
-    { id: 'tarefas',   icon: '☰', label: 'Processos' },
+    { id: 'operacoes', icon: 'settings', label: 'Operações Hub' },
+    { id: 'tarefas',   icon: 'list',     label: 'Processos' },
   ],
   'G. Pessoas': [
-    { id: 'pessoas',   icon: '◒', label: 'Membros e G.P' },
-    { id: 'tarefas',   icon: '☰', label: 'Tarefas G.P' },
+    { id: 'pessoas',   icon: 'users',    label: 'Membros e G.P' },
+    { id: 'tarefas',   icon: 'list',     label: 'Tarefas G.P' },
   ],
   'Marketing':  [
-    { id: 'marketing', icon: '◬', label: 'Agência MKT' },
-    { id: 'tarefas',   icon: '☰', label: 'Demandas MKT' },
+    { id: 'marketing', icon: 'megaphone',label: 'Agência MKT' },
+    { id: 'tarefas',   icon: 'list',     label: 'Demandas MKT' },
   ],
   'Projetos':   [
-    { id: 'projetos',  icon: '◫', label: 'Ações Projetos' },
-    { id: 'tarefas',   icon: '☰', label: 'Tarefas PRJ' },
+    { id: 'projetos',  icon: 'layout',   label: 'Ações Projetos' },
+    { id: 'tarefas',   icon: 'list',     label: 'Tarefas PRJ' },
   ],
   'Finanças':   [
-    { id: 'financeiro', icon: '◎', label: 'Teses Financeiras' },
-    { id: 'tarefas',   icon: '☰', label: 'Tarefas FIN' },
+    { id: 'financeiro', icon: 'banknote', label: 'Teses Financeiras' },
+    { id: 'tarefas',   icon: 'list',     label: 'Tarefas FIN' },
   ],
 };
 
@@ -63,6 +82,18 @@ const COORD_TAG_CLASS = {
   'Projetos': 'tag-projetos',
   'Finanças': 'tag-financas',
 };
+
+/* ============================================================
+   Global UI Hooks (Spotlight & Haptics)
+   ============================================================ */
+document.addEventListener("mousemove", e => {
+  document.querySelectorAll(".sum-card, .section-card, .kanban-column, .cal-box").forEach(el => {
+    const rect = el.getBoundingClientRect();
+    el.style.setProperty('--mouse-x', `${e.clientX - rect.left}px`);
+    el.style.setProperty('--mouse-y', `${e.clientY - rect.top}px`);
+  });
+});
+function haptic(ms=15) { if(navigator.vibrate) navigator.vibrate(ms); }
 
 /* ============================================================
    Toast notifications
@@ -78,8 +109,24 @@ const App = {
     }
     const toast = document.createElement('div');
     toast.className = `toast toast--${type}`;
+    toast.style.position = 'relative';
+    toast.style.overflow = 'hidden';
     toast.textContent = message;
+
+    const prog = document.createElement('div');
+    prog.style.position = 'absolute';
+    prog.style.bottom = '0'; prog.style.left = '0';
+    prog.style.height = '3px'; prog.style.width = '100%';
+    prog.style.background = 'var(--c-white)';
+    prog.style.opacity = '0.4';
+    prog.style.transition = `width ${duration}ms linear`;
+    toast.appendChild(prog);
+
     container.appendChild(toast);
+    
+    // Animate progress shrink
+    requestAnimationFrame(() => requestAnimationFrame(() => { prog.style.width = '0%'; }));
+
     setTimeout(() => {
       toast.style.opacity = '0';
       toast.style.transform = 'translateX(100%)';
@@ -136,7 +183,7 @@ const App = {
           role: 'admin',
           cargo: 'Dev Chefe',
           iniciais: 'JR',
-          coordenadorias: { nome: 'Geral', sigla: 'GER', icone: '⬡' }
+          coordenadorias: { nome: 'Geral', sigla: 'GER', icon: 'crown' }
         };
       }
       return null;
@@ -145,7 +192,7 @@ const App = {
     if (!user) return null;
     const { data } = await _sb
       .from('users')
-      .select('*, coordenadorias(nome, sigla, icone)')
+      .select('*, coordenadorias(nome, sigla, icon)')
       .eq('id', user.id)
       .single();
 
@@ -160,7 +207,7 @@ const App = {
         role: meta.role || 'membro',
         cargo: meta.cargo || 'Membro',
         iniciais: meta.iniciais || emailName.slice(0, 2).toUpperCase(),
-        coordenadorias: { nome: 'Geral', sigla: 'GER', icone: '⬡' }
+        coordenadorias: { nome: 'Geral', sigla: 'GER', icon: 'crown' }
       };
     }
     return data;
@@ -181,31 +228,26 @@ const App = {
     const myPages = profile?.role === 'admin' 
       ? Object.values(ROLE_PAGES).flat().filter((v,i,a)=>a.findIndex(t=>(t.id === v.id))===i)
       : ROLE_PAGES[coordName] || [];
+
     let html = '<div class="sidebar-section">Meu painel</div>';
+    html += myPages.map(p => 
+      `<div class="nav-item" id="nav-${p.id}" onclick="goTo('${p.id}')">
+        <span class="nav-icon">${getIcon(p.icon)}</span>
+        <span class="nav-label">${p.label}</span>
+        ${p.badge ? `<span class="nav-badge">${p.badge}</span>` : ''}
+      </div>`
+    ).join('');
 
-    myPages.forEach(p => {
-      const badge = p.badge
-        ? `<span class="nav-badge">${p.badge}</span>`
-        : p.badgeId
-          ? `<span class="nav-badge" id="${p.badgeId}">0</span>`
-          : '';
-      html += `<div class="nav-item" id="nav-${p.id}" onclick="goTo('${p.id}')">
-        <span class="nav-icon">${p.icon}</span>
-        <span class="nav-label">${p.label}</span>${badge}
-      </div>`;
-    });
-
-    // Quick action
-    html += '<div class="sidebar-section">Ação Rápida</div>';
-    html += `<div class="nav-item" style="background:var(--orange-dim);border-color:var(--orange-border);color:var(--orange)" onclick="App.toast('ABJ modal — FASE 2','info')">
-      <span class="nav-icon">➕</span>
+    html += '<div class="sidebar-section">Operacional</div>';
+    html += `<div class="nav-item" style="background:var(--orange-dim);border-color:var(--orange-border);color:var(--orange)" onclick="App.toast('Módulo ABJ Ativado','info')">
+      <span class="nav-icon">${getIcon('star')}</span>
       <span class="nav-label" style="color:var(--orange)">Inserir Atividade ABJ</span>
     </div>`;
 
     // Shared
     html += '<div class="sidebar-section">Colaborativo</div>';
     html += `<div class="nav-item nav-shared" id="nav-compartilhado" onclick="goTo('compartilhado')">
-      <span class="nav-icon">🤝</span>
+      <span class="nav-icon">${getIcon('users')}</span>
       <span class="nav-label">Compartilhado</span>
     </div>`;
 
@@ -220,7 +262,7 @@ const App = {
     const myPages = (ROLE_PAGES[coordName] || []).slice(0, 5);
     mobileNav.innerHTML = myPages.map(p =>
       `<div class="mnav-item" onclick="goTo('${p.id}')">
-        <span class="mnav-icon">${p.icon}</span>
+        <span class="mnav-icon">${getIcon(p.icon)}</span>
         <span>${p.label}</span>
       </div>`
     ).join('');
@@ -257,41 +299,12 @@ const App = {
     const coordName = profile.coordenadorias?.nome || 'Geral';
 
     // Set user chip
+    const userRoleLabel = (profile.coordenadorias?.sigla === 'MKT') ? 'Assessor & Dev' : (profile.cargo || profile.role || 'Membro');
     document.getElementById('sideAvatar').textContent = profile.iniciais || profile.nome?.[0] || '?';
     document.getElementById('sideName').textContent   = profile.nome || 'Usuário';
-    document.getElementById('sideRole').textContent   = (profile.cargo || profile.role) + ' · ' + coordName;
+    document.getElementById('sideRole').textContent   = userRoleLabel + ' · ' + coordName;
 
-    if (profile.role === 'admin') {
-      // Show role switcher for admin/dev
-      const switcher = document.getElementById('roleSwitcher');
-      if (switcher) switcher.classList.remove('d-none');
-      // Build sidebar with dev pages (default: GER view)
-      _buildNav('ger');
-    } else {
-      // Regular user: build sidebar based on their coord
-      const pages = ROLE_PAGES[coordName] || [];
-      const nav = document.getElementById('sideNav');
-      if (nav) {
-        let html = `<div class="sidebar-section">${coordName}</div>`;
-        pages.forEach(p => {
-          const badge = p.badge ? `<span class="nav-badge">${p.badge}</span>` : '';
-          html += `<div class="nav-item" id="nav-${p.id}" onclick="goTo('${p.id}')">
-            <span class="nav-icon">${p.icon}</span>
-            <span class="nav-label">${p.label}</span>${badge}
-          </div>`;
-        });
-        html += '<div class="sidebar-section">Colaborativo</div>';
-        html += `<div class="nav-item nav-shared" id="nav-compartilhado" onclick="goTo('compartilhado')">
-          <span class="nav-icon">📅</span><span class="nav-label">Calendário Universal</span>
-        </div>`;
-        html += '<div class="sidebar-section">Sistema</div>';
-        html += `<div class="nav-item" onclick="goTo('configuracoes')">
-          <span class="nav-icon">⚙</span><span class="nav-label">Configurações</span>
-        </div>`;
-        nav.innerHTML = html;
-      }
-    }
-
+    App.buildSidebar(coordName);
     App.buildMobileNav(coordName);
 
     // Exibe links OPS apenas para coordenadores de ops ou admin/dev
@@ -338,6 +351,7 @@ const ALL_PAGES = [
 ];
 
 function goTo(id) {
+  haptic();
   ALL_PAGES.forEach(p => {
     const el = document.getElementById('page-' + p);
     if (el) el.classList.remove('active');

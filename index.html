@@ -312,30 +312,62 @@
       color: var(--orange);
     }
 
-    /* ── Fundo Palavras Técnicas ── */
-    .bg-words {
+    /* ── Arte Cinética Geométrica (Direita) ── */
+    .kinetic-art {
+      position: absolute;
+      right: 5%;
+      top: 50%;
+      transform: translateY(-50%) perspective(1000px);
+      width: 50vh;
+      height: 50vh;
+      max-width: 600px;
+      max-height: 600px;
+      pointer-events: none;
+      z-index: 0;
+      opacity: 0.6;
+    }
+    .k-ring {
       position: absolute;
       inset: 0;
-      z-index: 0;
-      overflow: hidden;
+      border-radius: 50%;
+      border: 1px solid rgba(247, 84, 18, 0.15);
+      animation: spinRing linear infinite;
+    }
+    .k-ring:nth-child(1) { animation-duration: 40s; border-style: dashed; border-width: 2px; border-color: rgba(247, 84, 18, 0.3); }
+    .k-ring:nth-child(2) { inset: 5%; animation-duration: 30s; animation-direction: reverse; border-color: rgba(47, 29, 112, 0.6); }
+    .k-ring:nth-child(3) { inset: 10%; animation-duration: 25s; border-style: dotted; border-width: 3px; border-color: rgba(255, 255, 255, 0.1); }
+    .k-ring:nth-child(4) { inset: 20%; animation-duration: 20s; animation-direction: reverse; box-shadow: 0 0 40px rgba(247, 84, 18, 0.05) inset; }
+    
+    @keyframes spinRing { 100% { transform: rotate(360deg) rotateX(15deg) rotateY(15deg); } }
+
+    /* ── Efeito Shimmer em Títulos ── */
+    .shimmer-text {
+      background: linear-gradient(90deg, var(--white) 0%, var(--orange) 50%, var(--white) 100%);
+      background-size: 200% auto;
+      color: transparent;
+      -webkit-background-clip: text;
+      background-clip: text;
+      animation: shimmerSweep 6s linear infinite;
+    }
+    @keyframes shimmerSweep { 100% { background-position: 200% center; } }
+
+    /* ── Cursor Magnético Vercel ── */
+    body { cursor: none; }
+    a, button, input { cursor: none; }
+    .custom-cursor {
+      position: fixed; top: 0; left: 0;
+      width: 14px; height: 14px;
+      background-color: var(--orange);
+      border-radius: 50%;
       pointer-events: none;
-      opacity: 0.15;
+      z-index: 9999;
+      transform: translate(-50%, -50%);
+      transition: width 0.25s cubic-bezier(0.16, 1, 0.3, 1), height 0.25s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.25s, mix-blend-mode 0.25s;
     }
-    .word-float {
-      position: absolute;
-      font-family: var(--font-head);
-      font-weight: 800;
-      color: var(--white);
-      white-space: nowrap;
-      animation: floatWord linear infinite;
-      text-transform: uppercase;
-      filter: blur(1px);
-    }
-    @keyframes floatWord {
-      from { transform: translateY(110vh) rotate(0deg); opacity: 0; }
-      10%  { opacity: 1; }
-      90%  { opacity: 1; }
-      to   { transform: translateY(-10vh) rotate(5deg); opacity: 0; }
+    .custom-cursor.hovering {
+      width: 54px; height: 54px;
+      background-color: #fff;
+      mix-blend-mode: difference;
     }
 
     /* ─── Animações ─── */
@@ -361,7 +393,13 @@
   <!-- Grid Arquitetural Especialista -->
   <div class="bg-grid"></div>
   <div class="bg-accent"></div>
-  <div class="bg-words" id="bgWords"></div>
+  
+  <div class="kinetic-art" id="kineticArt">
+    <div class="k-ring"></div>
+    <div class="k-ring"></div>
+    <div class="k-ring"></div>
+    <div class="k-ring"></div>
+  </div>
 
   <div class="container">
     
@@ -371,7 +409,7 @@
         <img src="assets/arte-logo.png" alt="NUPIEEPRO Logo" class="logo-icon">
         <div class="logo-text">NUPIE<span>EPRO</span></div>
       </div>
-      <h1 class="page-title">Gestão e<br>Alta Performance.</h1>
+      <h1 class="page-title shimmer-text">Gestão e<br>Alta Performance.</h1>
       <p class="page-subtitle">Acesso restrito à plataforma operacional e administrativa de coordenações.</p>
     </header>
 
@@ -438,36 +476,37 @@
     initLoginPage();
     if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
 
-    // Efeito Palavras Técnicas no fundo do Login
-    function spawnWords() {
-      const words = ["ENGENHARIA", "PRODUÇÃO", "GESTÃO", "DADOS", "ALTA PERFORMANCE", "ESTRATÉGIA", "LOGÍSTICA", "EXCELÊNCIA", "KAIZEN", "PROCESSOS", "INDICADORES"];
-      const container = document.getElementById('bgWords');
-      if (!container) return;
-      setInterval(() => {
-        const span = document.createElement('span');
-        span.className = 'word-float';
-        span.textContent = words[Math.floor(Math.random() * words.length)];
-        
-        // Random style attributes
-        const size = Math.random() * 20 + 12; // 12px to 32px
-        const left = Math.random() * 100; // 0% to 100%
-        const duration = Math.random() * 20 + 15; // 15s to 35s
-        
-        span.style.fontSize = size + 'px';
-        span.style.left = left + '%';
-        span.style.animationDuration = duration + 's';
-        
-        // Sometimes orange, sometimes purple, mostly white
-        const colorRand = Math.random();
-        if (colorRand > 0.85) span.style.color = 'var(--orange)';
-        else if (colorRand > 0.70) span.style.color = 'var(--purple)';
+    // ── Cursor Magnético Vercel e Arte Cinética (Parallax) ──
+    const cursor = document.createElement('div');
+    cursor.className = 'custom-cursor';
+    document.body.appendChild(cursor);
 
-        container.appendChild(span);
-        // remove after animation
-        setTimeout(() => span.remove(), duration * 1000);
-      }, 1500); // spawn every 1.5s
+    let mouseX = 0, mouseY = 0;
+    let cursorX = 0, cursorY = 0;
+    const kinetic = document.getElementById('kineticArt');
+
+    document.addEventListener('mousemove', (e) => {
+      mouseX = e.clientX; mouseY = e.clientY;
+      // Parallax sutil na arte
+      if (kinetic) {
+        const moveX = (mouseX - window.innerWidth / 2) * -0.02;
+        const moveY = (mouseY - window.innerHeight / 2) * -0.02;
+        kinetic.style.transform = `translateY(-50%) perspective(1000px) rotateX(${moveY}deg) rotateY(${moveX}deg)`;
+      }
+    });
+
+    function renderCursor() {
+      cursorX += (mouseX - cursorX) * 0.2;
+      cursorY += (mouseY - cursorY) * 0.2;
+      cursor.style.transform = `translate(${cursorX - 7}px, ${cursorY - 7}px)`;
+      requestAnimationFrame(renderCursor);
     }
-    spawnWords();
+    requestAnimationFrame(renderCursor);
+
+    document.querySelectorAll('a, button, input').forEach(el => {
+      el.addEventListener('mouseenter', () => cursor.classList.add('hovering'));
+      el.addEventListener('mouseleave', () => cursor.classList.remove('hovering'));
+    });
   </script>
 </body>
 </html>

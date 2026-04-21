@@ -137,7 +137,8 @@ body {
   color: var(--c-white);
   min-height: 100vh;
   min-height: -webkit-fill-available;
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: auto;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -153,10 +154,41 @@ button { font-family: var(--f-body); }
 input, select, textarea { font-family: var(--f-body); }
 
 /* Scrollbar */
-::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--b-2); border-radius: 2px; }
-::-webkit-scrollbar-thumb:hover { background: var(--b-3); }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.25); }
+
+/* ── Efeito Holofote (Spotlight) ── */
+.sum-card, .section-card, .kanban-column, .cal-box {
+  position: relative;
+  overflow: hidden;
+}
+.sum-card::after, .section-card::after, .kanban-column::after, .cal-box::after {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  border-radius: inherit;
+  opacity: 0;
+  transition: opacity 0.3s;
+  pointer-events: none;
+  box-shadow: inset 0 0 0 1px rgba(247, 84, 18, 0.5);
+  background: radial-gradient(600px circle at var(--mouse-x) var(--mouse-y), rgba(247, 84, 18, 0.08), transparent 40%);
+}
+.sum-card:hover::after, .section-card:hover::after, .kanban-column:hover::after, .cal-box:hover::after {
+  opacity: 1;
+}
+
+/* ── Animação em Cascata (Staggered Reveal) ── */
+.stagger-1 { animation: fadeUp 0.5s ease 0.1s both; }
+.stagger-2 { animation: fadeUp 0.5s ease 0.2s both; }
+.stagger-3 { animation: fadeUp 0.5s ease 0.3s both; }
+.stagger-4 { animation: fadeUp 0.5s ease 0.4s both; }
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(15px); }
+  to { opacity: 1; transform: translateY(0); }
+}
 
 /* ═══════════════════════════════════════════════════════════════
    LOGIN / CONVITE
