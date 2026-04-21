@@ -62,7 +62,9 @@ function getIcon(name) {
     folder: '<path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93l-1-2H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2z"/>',
     settings: '<path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.1a2 2 0 0 1-1-1.72v-.51a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/>',
     megaphone: '<path d="m3 11 18-5v12L3 14v-3z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/>',
-    banknote: '<rect width="20" height="12" x="2" y="6" rx="2"/><circle cx="12" cy="12" r="2"/><path d="M6 12h.01M18 12h.01"/>'
+    banknote: '<rect width="20" height="12" x="2" y="6" rx="2"/><circle cx="12" cy="12" r="2"/><path d="M6 12h.01M18 12h.01"/>',
+    file: '<path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/>',
+    shield: '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>'
   };
   return `<svg data-lucide="${name}" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-${name}">${icons[name] || ''}</svg>`;
 }
@@ -71,29 +73,40 @@ function getIcon(name) {
 const ROLE_PAGES = {
   'Geral':      [
     { id: 'dashboard', icon: 'grid', label: 'Painel Central' },
-    { id: 'abj',       icon: 'star', label: 'Selo ABJ', badge: '!' },
-    { id: 'tarefas',   icon: 'list', label: 'Todas Demandas' },
-    { id: 'manu',      icon: 'folder', label: 'Repositório Central' },
+    { id: 'geral_reunioes', icon: 'users', label: 'Reuniões e Check-in' },
+    { id: 'geral_planejamento', icon: 'layout', label: 'Planejamento Sem.' },
+    { id: 'geral_melhorias', icon: 'star', label: 'Caixa de Melhorias' },
+    { id: 'geral_parcerias', icon: 'gem', label: 'Parcerias Estratégicas' },
   ],
   'Operações':  [
-    { id: 'operacoes', icon: 'settings', label: 'Operações Hub' },
-    { id: 'tarefas',   icon: 'list',     label: 'Processos' },
+    { id: 'dashboard', icon: 'grid', label: 'Painel Central' },
+    { id: 'ops_relatorios', icon: 'file', label: 'Relatórios ABJ' },
+    { id: 'ops_pops', icon: 'folder', label: 'Cofre de POPs' },
+    { id: 'ops_arquivo', icon: 'folder', label: 'Arquivo Digital' },
   ],
   'G. Pessoas': [
-    { id: 'pessoas',   icon: 'users',    label: 'Membros e G.P' },
-    { id: 'tarefas',   icon: 'list',     label: 'Tarefas G.P' },
+    { id: 'dashboard', icon: 'grid', label: 'Painel Central' },
+    { id: 'gp_talentos', icon: 'users', label: 'Banco de Talentos' },
+    { id: 'gp_clima', icon: 'star', label: 'Pesquisa de Clima' },
+    { id: 'gp_tap', icon: 'layout', label: 'Módulo TAP (Inovação)' },
   ],
   'Marketing':  [
-    { id: 'marketing', icon: 'megaphone',label: 'Agência MKT' },
-    { id: 'tarefas',   icon: 'list',     label: 'Demandas MKT' },
+    { id: 'dashboard', icon: 'grid', label: 'Painel Central' },
+    { id: 'mkt_tracker', icon: 'megaphone', label: 'Social Media Tracker' },
+    { id: 'mkt_kanban', icon: 'list', label: 'Kanban da Lojinha' },
   ],
   'Projetos':   [
-    { id: 'projetos',  icon: 'layout',   label: 'Ações Projetos' },
-    { id: 'tarefas',   icon: 'list',     label: 'Tarefas PRJ' },
+    { id: 'dashboard', icon: 'grid', label: 'Painel Central' },
+    { id: 'prj_eventos', icon: 'star', label: 'Eventos Estaduais' },
+    { id: 'prj_enegep', icon: 'layout', label: 'Momento ENEGEP' },
+    { id: 'prj_treinamentos', icon: 'users', label: 'Treinamentos Externos' },
+    { id: 'prj_nupicast', icon: 'megaphone', label: 'NUPICAST Tracker' },
   ],
   'Finanças':   [
-    { id: 'financeiro', icon: 'banknote', label: 'Teses Financeiras' },
-    { id: 'tarefas',   icon: 'list',     label: 'Tarefas FIN' },
+    { id: 'dashboard', icon: 'grid', label: 'Painel Central' },
+    { id: 'fin_fluxo', icon: 'banknote', label: 'Fluxo de Caixa' },
+    { id: 'fin_abepro', icon: 'users', label: 'Associações ABJ' },
+    { id: 'fin_comercial', icon: 'gem', label: 'Calendário Comercial' },
   ],
 };
 
@@ -400,9 +413,17 @@ const App = {
       cName.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, "")
     ) || 'Geral';
     
-    const myPages = profile?.role === 'admin' 
-      ? Object.values(ROLE_PAGES).flat().filter((v,i,a)=>a.findIndex(t=>(t.id === v.id))===i)
-      : ROLE_PAGES[roleKey] || [];
+    const GLOBAL_PAGES = [
+      { id: 'global_visitas', icon: 'zap', label: 'Visitas Técnicas' },
+      { id: 'global_apresentacoes', icon: 'star', label: 'Apresentações Inst.' },
+      { id: 'global_producao', icon: 'file', label: 'Produção Científica' },
+      { id: 'global_assembleia', icon: 'users', label: 'Assembleia e Votos' }
+    ];
+
+    const isCoordGeral = profile?.role === 'coord' && cName.toUpperCase() === 'GERAL';
+    const myPages = (profile?.role === 'admin' || isCoordGeral)
+      ? Object.values(ROLE_PAGES).flat().concat(GLOBAL_PAGES).filter((v,i,a)=>a.findIndex(t=>(t.id === v.id))===i)
+      : (ROLE_PAGES[roleKey] || []).concat(GLOBAL_PAGES);
 
     let html = '<div class="sidebar-section">Meu painel</div>';
     html += myPages.map(p => 
@@ -483,6 +504,12 @@ const App = {
     }
     // Expõe globalmente para módulos como ABJ
     window._appProfile = profile;
+
+    // Checks de Mandato e Inatividade Global
+    if (typeof DashboardExtra !== 'undefined') {
+      DashboardExtra.syncMandates(profile);
+      DashboardExtra.checkGlobalInactivity();
+    }
 
     const coordName = profile.coordenadorias?.nome || 'Geral';
 
@@ -664,13 +691,24 @@ const Dashboard = {
    ============================================================ */
 const Theme = {
   apply(name) {
-    if (name === 'default') name = 'orange'; // Fallback industrial
+    if (name === 'default') name = 'dark-orange'; // Novo fallback dark
     document.documentElement.setAttribute('data-theme', name);
     localStorage.setItem('nupie_theme', name);
+    
     // Update active button
     document.querySelectorAll('[id^="themeBtn-"]').forEach(b => b.classList.remove('active'));
     const btn = document.getElementById('themeBtn-' + name);
     if (btn) btn.classList.add('active');
+
+    // Mudar cor da logo de acordo com o tema (usando CSS filter para evitar falta de imagem)
+    const logo = document.getElementById('sideLogoImg');
+    if (logo) {
+      if (name === 'dark-purple') {
+        logo.style.filter = 'hue-rotate(240deg) brightness(1.2)';
+      } else {
+        logo.style.filter = 'none';
+      }
+    }
   },
 
   applyFont(name) {
@@ -1162,7 +1200,14 @@ const DashboardExtra = {
   },
 
   async syncMandates(profile) {
-    if (!profile || !profile.mandate_start) return;
+    if (!profile) return;
+    
+    if (profile.graduacao_concluida === true) {
+      this.lockSystem('Seu acesso de Membro Efetivo foi revogado por conclusão do curso superior. Parabéns pela formação!');
+      return;
+    }
+
+    if (!profile.mandate_start) return;
     const start = new Date(profile.mandate_start);
     const now = new Date();
     const diffMs = now - start;
@@ -1172,7 +1217,20 @@ const DashboardExtra = {
     if (profile.role === 'conselheiro' && diffYears >= 1) {
       this.lockSystem('Seu mandato de Conselheiro (1 ano) expirou.');
     } else if (profile.role === 'coord' && diffYears >= 3) {
-      this.lockSystem('Seu mandato de Coordenador (3 anos) expirou.');
+      this.lockSystem('Seu tempo limite como Coordenador (3 anos) expirou.');
+    }
+  },
+
+  async checkGlobalInactivity() {
+    const sb = window._sb || window._supabase;
+    if (!sb) return;
+    const { data } = await sb.from('users').select('created_at').eq('ativo', true).order('created_at', { ascending: false }).limit(1);
+    if (data && data.length > 0) {
+      const lastActivity = new Date(data[0].created_at);
+      const diffYears = (new Date() - lastActivity) / (1000 * 60 * 60 * 24 * 365.25);
+      if (diffYears >= 2) {
+        window.App?.toast?.('ALERTA CRÍTICO: 2 anos sem atividade detectada! Risco de dissolução.', 'error', 15000);
+      }
     }
   },
 
@@ -1675,6 +1733,75 @@ const Kanban = (() => {
   return { load, abrirNovaDemanda, fecharModal, salvar, abrirDetalhes };
 })();
 
+/* ═══════════════════════════════════════════════════════════════
+   FINANCEIRO MODULE — Gestão e Regra dos 60 dias
+   ═══════════════════════════════════════════════════════════════ */
+const Financeiro = {
+  validarPlano() {
+    const nome = document.getElementById('comNome')?.value;
+    const dataStr = document.getElementById('comData')?.value;
+    if (!nome || !dataStr) { App.toast('Preencha nome e data.', 'error'); return; }
+
+    const dataEvento = new Date(dataStr);
+    const hoje = new Date();
+    const diffDias = Math.ceil((dataEvento - hoje) / (1000 * 60 * 60 * 24));
+
+    if (diffDias < 60) {
+      App.toast(`Bloqueio: Faltam apenas ${diffDias} dias. O prazo mínimo é 60 dias.`, 'error');
+    } else {
+      App.toast('Plano validado! Criando chamado de aprovação...', 'success');
+      // Lógica de salvamento aqui
+    }
+  },
+  novoLancamento() {
+    App.toast('Formulário de lançamento em desenvolvimento.', 'info');
+  }
+};
+
+/* ═══════════════════════════════════════════════════════════════
+   CYBERSECURITY 24H — Anti-hacking timer
+   ═══════════════════════════════════════════════════════════════ */
+const CyberSecurity = {
+  lastAction: Date.now(),
+  
+  init() {
+    // Monitorar cliques e teclas
+    ['mousedown', 'keydown', 'touchstart'].forEach(evt => {
+      window.addEventListener(evt, () => { this.lastAction = Date.now(); });
+    });
+
+    // Check a cada minuto
+    setInterval(() => this.check(), 60000);
+    console.log('CyberSecurity: Monitor de 24h ativo.');
+  },
+
+  check() {
+    const profile = window._appProfile;
+    if (!profile) return;
+
+    // Apenas para quem lida com financeiro ou admin
+    const isFin = (profile.coordenadorias?.sigla === 'FIN' || profile.role === 'admin');
+    if (!isFin) return;
+
+    const diffHrs = (Date.now() - this.lastAction) / (1000 * 60 * 60);
+    if (diffHrs >= 24) {
+      this.lockAndRotate();
+    }
+  },
+
+  async lockAndRotate() {
+    App.toast('SISTEMA BLOQUEADO: 24h de inatividade detectada em setor crítico.', 'error', 0);
+    // Em um sistema real, aqui chamaríamos uma Edge Function para rotacionar tokens
+    // Por enquanto, forçamos o logout e limpamos a sessão.
+    if (window._sb) await window._sb.auth.signOut();
+    localStorage.clear();
+    location.reload();
+  }
+};
+
+// Iniciar segurança
+CyberSecurity.init();
+
 // V6.2 — Registro Global de Módulos Industriais (Elite Visibility)
 window.App          = App;
 window.Theme        = Theme;
@@ -1684,6 +1811,8 @@ window.Pessoas      = Pessoas;
 window.Kanban       = Kanban;
 window.Dashboard    = Dashboard;
 window.Auth         = Auth; // Caso auth esteja no mesmo escopo ou carregado
+window.Financeiro   = Financeiro;
+window.CyberSecurity = CyberSecurity;
 window._sb          = window._sb || _sb;
 
 console.log('NUPIEEPRO V6.2: Todos os módulos globais registrados.');
