@@ -1170,5 +1170,11 @@ body { font-family: var(--f-body); font-feature-settings: "cv11", "ss01"; }
 }
 
 /* ── Highlight do Sistema de Gestão ── */
-.sidebar-logo-text span { color: var(--c-accent) !important; }
 .sidebar-logo-sub { color: var(--c-accent) !important; }
+
+/* ── Utilities for Mobile ── */
+.table-responsive {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}

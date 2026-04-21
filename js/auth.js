@@ -140,19 +140,24 @@ async function doLogin() {
   if (!email) { showAlert('Insira seu e-mail.', 'error'); return; }
   if (!password) { showAlert('Insira sua senha.', 'error'); return; }
 
+  // SEGURANÇA: Rate Limiter Anti-Brute-Force
+  if (typeof RateLimiter !== 'undefined' && !RateLimiter.check('login_' + email)) {
+    showAlert('Muitas tentativas. Aguarde 1 minuto.', 'error');
+    return;
+  }
+
   const btn = document.getElementById('btnLogin');
-  btn.classList.add('loading');
-  btn.textContent = 'Verificando...';
+  if (btn) { btn.classList.add('loading'); btn.textContent = 'Verificando...'; }
 
   try {
     await Auth.login(email, password);
-    App.toast('Login realizado!', 'success');
-    setTimeout(() => App.redirect('dashboard.html'), 500);
+    if (typeof RateLimiter !== 'undefined') RateLimiter.reset('login_' + email);
+    if (window.App) window.App.toast('Login realizado!', 'success');
+    setTimeout(() => { window.location.href = 'dashboard.html'; }, 500);
   } catch (err) {
     showAlert(err.message || 'E-mail ou senha incorretos.', 'error');
   } finally {
-    btn.classList.remove('loading');
-    btn.textContent = 'Entrar na Plataforma';
+    if (btn) { btn.classList.remove('loading'); btn.textContent = 'Entrar na Plataforma'; }
   }
 }
 
@@ -168,10 +173,11 @@ function initLoginPage() {
     if (e.key === 'Enter') { e.preventDefault(); doLogin(); }
   });
 
+  const sb = window._sb || window._supabase;
   Auth.getSession().then(session => {
     if (!session) return;
-    const isMock = !_sb && !!localStorage.getItem('mockSession');
-    if (!isMock && _sb) {
+    const isMock = !sb && !!localStorage.getItem('mockSession');
+    if (!isMock && sb) {
       const formCard = document.querySelector('.form-card');
       if (formCard) {
         formCard.innerHTML = `
@@ -181,7 +187,7 @@ function initLoginPage() {
             <div class="form-sub">Continuar ou entrar com outra conta.</div>
           </div>
           <div style="display:flex;flex-direction:column;gap:12px;margin-top:24px;">
-            <button class="login-btn" onclick="App.redirect('dashboard.html')">Continuar no Sistema →</button>
+            <button class="login-btn" onclick="window.location.href='dashboard.html'">Continuar no Sistema →</button>
             <button class="login-btn" style="background:transparent;border:1px solid rgba(145,154,187,0.2);color:var(--slate);" onclick="forceLogout()">Trocar de Conta</button>
           </div>
         `;
@@ -191,7 +197,8 @@ function initLoginPage() {
 }
 
 async function forceLogout() {
-  if (_sb) await _sb.auth.signOut();
+  const sb = window._sb || window._supabase;
+  if (sb) await sb.auth.signOut();
   localStorage.removeItem('mockSession');
   window.location.reload();
 }
@@ -207,7 +214,8 @@ async function doResetPassword() {
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     showPanelAlert('E-mail inválido.', 'error', 'resetAlert'); return;
   }
-  if (!_sb) { showPanelAlert('Sistema offline. Tente novamente mais tarde.', 'error', 'resetAlert'); return; }
+  const sb = window._sb || window._supabase;
+  if (!sb) { showPanelAlert('Sistema offline. Tente novamente mais tarde.', 'error', 'resetAlert'); return; }
 
   const btn = document.getElementById('btnReset');
   if (btn) { btn.disabled = true; btn.textContent = 'Enviando...'; }
@@ -239,7 +247,7 @@ function activarConvite() {
    Convite (Invite) Page
    ============================================================ */
 function initConvitePage() {
-  const token = App.param('token');
+  const token = (window.App ? window.App.param('token') : new URLSearchParams(window.location.search).get('token'));
   if (!token) {
     const content = document.getElementById('conviteContent');
     if (content) {
@@ -261,7 +269,8 @@ function initConvitePage() {
 
 async function loadConviteInfo(token) {
   const infoEl = document.getElementById('conviteInfo');
-  if (!_sb) {
+  const sb = window._sb || window._supabase;
+  if (!sb) {
     if (infoEl) infoEl.innerHTML = '<p class="text-center text-muted">Verificação requer conexão com o servidor.</p>';
     const form = document.getElementById('conviteForm');
     if (form) form.style.display = 'none';
@@ -269,7 +278,7 @@ async function loadConviteInfo(token) {
   }
 
   try {
-    const { data: convite, error } = await _sb
+    const { data: convite, error } = await sb
       .from('convites')
       .select('*, coordenadorias(nome, sigla)')
       .eq('token', token)
@@ -302,7 +311,7 @@ async function loadConviteInfo(token) {
 }
 
 async function doConviteRegister() {
-  const token = App.param('token');
+  const token = (window.App ? window.App.param('token') : new URLSearchParams(window.location.search).get('token'));
   const nome = document.getElementById('conviteNome').value.trim();
   const password = document.getElementById('convitePassword').value;
   const confirm = document.getElementById('conviteConfirm').value;
@@ -318,8 +327,8 @@ async function doConviteRegister() {
   try {
     await Auth.registerWithToken(token, nome, password);
     showAlert('Conta criada com sucesso!', 'success', 'conviteAlert');
-    App.toast('Bem-vindo ao NUPIEEPRO!', 'success');
-    setTimeout(() => App.redirect('dashboard.html'), 1000);
+    if (window.App) window.App.toast('Bem-vindo ao NUPIEEPRO!', 'success');
+    setTimeout(() => { window.location.href = 'dashboard.html'; }, 1000);
   } catch (err) {
     showAlert(err.message || 'Erro ao criar conta.', 'error', 'conviteAlert');
   } finally {

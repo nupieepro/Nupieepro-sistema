@@ -124,19 +124,44 @@ document.addEventListener("mousemove", e => {
 function haptic(ms=15) { if(navigator.vibrate) navigator.vibrate(ms); }
 
 /* ============================================================
-   Omni-Connect Email & Magic Link Logic (V6.0)
+   Omni-Connect Email & Security Engine (V6.7)
    ============================================================ */
+
+// === SEGURANÇA: Sanitizador XSS ===
+function sanitize(str) {
+  if (!str) return '';
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#x27;');
+}
+
+// === SEGURANÇA: Rate Limiter Anti-Brute-Force ===
+const RateLimiter = {
+  _attempts: {},
+  check(key, maxAttempts = 5, windowMs = 60000) {
+    const now = Date.now();
+    if (!this._attempts[key]) this._attempts[key] = [];
+    this._attempts[key] = this._attempts[key].filter(t => now - t < windowMs);
+    if (this._attempts[key].length >= maxAttempts) return false;
+    this._attempts[key].push(now);
+    return true;
+  },
+  reset(key) { delete this._attempts[key]; }
+};
+
+// === NOME DO REMETENTE ===
+const _EMAIL_SENDER = 'Nupieepro Sistem';
+
 const EmailService = {
   init() {
     if (typeof emailjs !== 'undefined') {
       emailjs.init(_EMAILJS_PUB_KEY);
-      console.log('EmailService: V6.0 Active');
+      console.log('EmailService: V6.7 Active | Sender:', _EMAIL_SENDER);
     }
   },
 
   async send(templateId, params) {
     if (typeof emailjs === 'undefined') return;
     try {
+      params.from_name = _EMAIL_SENDER;
       await emailjs.send(_EMAILJS_SERVICE, templateId, params);
       console.log('Email sent:', templateId);
     } catch (e) {
@@ -144,28 +169,49 @@ const EmailService = {
     }
   },
 
-  async notifyInvite(user, magicLink) {
-    await this.send('template_invite', { 
-      user_name: user.nome, 
-      target_email: user.email, 
-      context: 'Boas-vindas ao NUPIEEPRO!', 
-      link: magicLink 
-    });
-  },
-
+  // 🎂 Feliz Aniversário
   async notifyBirthday(user) {
+    const nome = sanitize(user.nome);
     await this.send('template_birthday', {
-      user_name: user.nome,
+      user_name: nome,
       target_email: user.email,
-      message: 'Feliz aniversário do time NUPIEEPRO!'
+      subject: `Hoje o dia é de celebração, ${nome}! 🎉`,
+      message: `Olá, ${nome}!\n\nHoje é um dia mais do que especial! 💙🧡\n\nEm nome de todo o Nupi, queremos te desejar um feliz aniversário e um ano repleto de realizações, saúde e muito sucesso. Que a sua jornada continue sendo de constante evolução e que você continue agregando tanto valor aos nossos projetos e à nossa equipe.\n\nAproveite muito o seu dia, celebre suas conquistas e conte com a gente para os próximos desafios!\n\nUm grande abraço,\nEquipe Nupi`
     });
   },
 
+  // 👋 Despedida
+  async notifyGoodbye(user, personalMsg) {
+    const nome = sanitize(user.nome);
+    const extra = personalMsg ? `\n\nMensagem personalizada: ${sanitize(personalMsg)}` : '';
+    await this.send('template_goodbye', {
+      user_name: nome,
+      target_email: user.email,
+      subject: `Até logo e muito sucesso na sua jornada! 🚀`,
+      message: `Olá, ${nome}.\n\nGrandes ciclos se encerram para que novas e incríveis histórias possam ser escritas. 💙🧡\n\nHoje nos despedimos, mas o sentimento que fica é de uma imensa gratidão por toda a sua dedicação, produtividade e pelas marcas positivas que você deixa no Nupi. Trabalhar ao seu lado foi um grande aprendizado para todos nós.\n\nDesejamos que a sua trajetória seja brilhante e cheia de novas conquistas. Lembre-se de que as portas estarão sempre abertas e que você sempre fará parte da nossa história. Voa alto!${extra}\n\nCom carinho e admiração,\nEquipe Nupi`
+    });
+  },
+
+  // 📩 Convite (Onboarding)
+  async notifyInvite(user, magicLink) {
+    const nome = sanitize(user.nome);
+    await this.send('template_invite', {
+      user_name: nome,
+      target_email: user.email,
+      subject: `Você acaba de dar o primeiro passo para algo incrível! ✨`,
+      link: magicLink,
+      message: `Olá, ${nome}!\n\nÉ com muita alegria que te convidamos para integrar oficialmente o nosso sistema e fazer parte do Nupi! 💙🧡\n\nA partir de agora, você faz parte de um ambiente focado em desenvolvimento, gestão e resultados. Aqui, nós construímos projetos, aprimoramos nossas habilidades e, o mais importante, crescemos juntos.\n\nPara começar a sua jornada com a gente, basta acessar a plataforma através do link abaixo, configurar o seu perfil e explorar o sistema.\n\n🔗 Acesse aqui: ${magicLink}\n\nEstamos muito felizes em ter você no time. Prepare-se para fazer a diferença!\n\nSeja muito bem-vindo(a),\nEquipe Nupi`
+    });
+  },
+
+  // 📋 Nova Demanda
   async notifyDemand(demand, targetEmail) {
     await this.send('template_demand', {
-      demand_title: demand.titulo,
+      demand_title: sanitize(demand.titulo),
       target_email: targetEmail,
-      sender: window._appProfile?.nome || 'Admin'
+      sender: sanitize(window._appProfile?.nome || 'Coordenação'),
+      subject: `Nova Demanda: ${sanitize(demand.titulo)}`,
+      message: `Uma nova demanda foi registrada no sistema.\n\nTítulo: ${sanitize(demand.titulo)}\nRemetente: ${sanitize(window._appProfile?.nome || 'Coordenação')}\n\nAcesse o sistema para verificar os detalhes.\n\nEquipe Nupi`
     });
   }
 };
@@ -532,15 +578,8 @@ function toggleSidebar() {
 const Dashboard = {
   async render(profile) {
     if (!_sb) {
-      // Demo mode    // Iniciar travas de mandato
-    DashboardExtra.syncMandates(profile);
-
-    // Módulos específicos
-    if (_currentRole === 'fin') Financeiro.checkTimer();
-    if (_currentRole === 'mkt') Marketing.loadKanban();
-    if (_currentRole === 'gp') GP.loadTalentBank();
-
-    this.renderStats();
+      Dashboard.renderDemo(profile);
+      return;
     }
 
     try {
@@ -1010,10 +1049,10 @@ const Pessoas = {
     App.loading(true);
     try {
       if (_sb) {
-        const { error } = await _sb.from('users').delete().eq('id', id);
+        const { error } = await sb.from('users').delete().eq('id', id);
         if (error) throw error;
-        // E-mail de Despedida
-        await EmailService.send('template_goodbye', { user_name: email, target_email: email });
+        // E-mail de Despedida Profissional V6.8
+        await window.EmailService?.notifyGoodbye?.({ nome: email, email });
       }
       App.toast('Membro removido do núcleo.', 'success');
       this.loadMembers();

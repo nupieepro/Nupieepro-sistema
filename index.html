@@ -4,6 +4,11 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="theme-color" content="#000000">
+  <!-- SEGURANÇA: CSP + Anti-Clickjacking + Anti-XSS -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://cdn.emailjs.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://*.supabase.co https://api.emailjs.com; img-src 'self' data: blob: https:;">
+  <meta http-equiv="X-Content-Type-Options" content="nosniff">
+  <meta http-equiv="X-Frame-Options" content="DENY">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="NUPIEEPRO">
@@ -154,7 +159,7 @@
     @keyframes revealSlideLeft { from { opacity: 0; transform: translateX(40px); } to { opacity: 1; transform: translateX(0); } }
 
     .logo-container { display: flex; align-items: center; gap: 12px; margin-bottom: 2rem; }
-    .logo-icon { width: 44px; height: 44px; animation: breathe 3s ease-in-out infinite alternate; }
+    .logo-icon { width: 44px; height: 44px; object-fit: contain; object-position: center; animation: breathe 3s ease-in-out infinite alternate; }
     .logo-text { font-family: var(--font-head); font-size: 26px; font-weight: 800; }
     .logo-text span { color: var(--orange); }
 
@@ -314,6 +319,9 @@
             <input type="password" id="loginPassword" class="form-input" placeholder="••••••••" required>
           </div>
 
+          <div style="font-size: 10px; color: rgba(255,255,255,0.4); margin-bottom: 1rem; text-align: left; line-height: 1.4;">
+            Ao acessar esta área restrita, você concorda com nossos <a href="#" style="color: var(--orange); text-decoration: none;">Termos de Uso e Política de Privacidade (LGPD)</a>, e autoriza o processamento seguro dos seus dados operacionais.
+          </div>
           <button id="btnLogin" class="btn-submit" onclick="doLogin()">
             Efetuar Login de Especialista
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
