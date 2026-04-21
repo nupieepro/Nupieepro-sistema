@@ -315,16 +315,21 @@
     /* ── Arte Cinética Geométrica (Direita) ── */
     .kinetic-art {
       position: absolute;
-      right: 5%;
+      right: -10%;
       top: 50%;
       transform: translateY(-50%) perspective(1000px);
-      width: 50vh;
-      height: 50vh;
-      max-width: 600px;
-      max-height: 600px;
+      width: 85vh;
+      height: 85vh;
+      max-width: 900px;
+      max-height: 900px;
       pointer-events: none;
       z-index: 0;
-      opacity: 0.6;
+      opacity: 0.8;
+      filter: drop-shadow(0 0 30px rgba(247, 84, 18, 0.25));
+    }
+    .kinetic-art.left {
+      right: auto;
+      left: -10%;
     }
     .k-ring {
       position: absolute;
@@ -333,10 +338,10 @@
       border: 1px solid rgba(247, 84, 18, 0.15);
       animation: spinRing linear infinite;
     }
-    .k-ring:nth-child(1) { animation-duration: 40s; border-style: dashed; border-width: 2px; border-color: rgba(247, 84, 18, 0.3); }
-    .k-ring:nth-child(2) { inset: 5%; animation-duration: 30s; animation-direction: reverse; border-color: rgba(47, 29, 112, 0.6); }
-    .k-ring:nth-child(3) { inset: 10%; animation-duration: 25s; border-style: dotted; border-width: 3px; border-color: rgba(255, 255, 255, 0.1); }
-    .k-ring:nth-child(4) { inset: 20%; animation-duration: 20s; animation-direction: reverse; box-shadow: 0 0 40px rgba(247, 84, 18, 0.05) inset; }
+    .k-ring:nth-child(1) { animation-duration: 45s; border-style: solid; border-width: 2px; border-color: rgba(247, 84, 18, 0.4); }
+    .k-ring:nth-child(2) { inset: 8%; animation-duration: 35s; animation-direction: reverse; border-color: rgba(47, 29, 112, 0.9); border-width: 2px; }
+    .k-ring:nth-child(3) { inset: 18%; animation-duration: 28s; border-style: solid; border-width: 1px; border-color: rgba(255, 255, 255, 0.25); }
+    .k-ring:nth-child(4) { inset: 32%; animation-duration: 22s; animation-direction: reverse; box-shadow: 0 0 80px rgba(247, 84, 18, 0.2) inset; border-color: var(--orange); border-width: 3px; }
     
     @keyframes spinRing { 100% { transform: rotate(360deg) rotateX(15deg) rotateY(15deg); } }
 
@@ -394,7 +399,14 @@
   <div class="bg-grid"></div>
   <div class="bg-accent"></div>
   
-  <div class="kinetic-art" id="kineticArt">
+  <div class="kinetic-art left" id="kineticArtLeft">
+    <div class="k-ring"></div>
+    <div class="k-ring"></div>
+    <div class="k-ring"></div>
+    <div class="k-ring"></div>
+  </div>
+  
+  <div class="kinetic-art" id="kineticArtRight">
     <div class="k-ring"></div>
     <div class="k-ring"></div>
     <div class="k-ring"></div>
@@ -483,16 +495,17 @@
 
     let mouseX = 0, mouseY = 0;
     let cursorX = 0, cursorY = 0;
-    const kinetic = document.getElementById('kineticArt');
+    const kineticL = document.getElementById('kineticArtLeft');
+    const kineticR = document.getElementById('kineticArtRight');
 
     document.addEventListener('mousemove', (e) => {
       mouseX = e.clientX; mouseY = e.clientY;
       // Parallax sutil na arte
-      if (kinetic) {
-        const moveX = (mouseX - window.innerWidth / 2) * -0.02;
-        const moveY = (mouseY - window.innerHeight / 2) * -0.02;
-        kinetic.style.transform = `translateY(-50%) perspective(1000px) rotateX(${moveY}deg) rotateY(${moveX}deg)`;
-      }
+      const moveX = (mouseX - window.innerWidth / 2) * -0.02;
+      const moveY = (mouseY - window.innerHeight / 2) * -0.02;
+      
+      if (kineticL) kineticL.style.transform = `translateY(-50%) perspective(1000px) rotateX(${moveY}deg) rotateY(${moveX}deg)`;
+      if (kineticR) kineticR.style.transform = `translateY(-50%) perspective(1000px) rotateX(${moveY}deg) rotateY(${moveX}deg)`;
     });
 
     function renderCursor() {

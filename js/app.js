@@ -225,6 +225,7 @@ const App = {
     const nav = document.getElementById('sideNav');
     if (!nav) return;
 
+    const profile = window._appProfile;
     const myPages = profile?.role === 'admin' 
       ? Object.values(ROLE_PAGES).flat().filter((v,i,a)=>a.findIndex(t=>(t.id === v.id))===i)
       : ROLE_PAGES[coordName] || [];
