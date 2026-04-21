@@ -6,486 +6,410 @@
   <meta name="theme-color" content="#000000">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="NUPIEEPRO">
-  <meta name="mobile-web-app-capable" content="yes">
-  <meta name="application-name" content="NUPIEEPRO">
-  <title>NUPIEEPRO — Acesso ao Sistema</title>
+  <title>NUPIEEPRO — Especialista em Gestão</title>
+  
+  <!-- Ícones e Web App -->
   <link rel="manifest" href="manifest.json">
   <link rel="apple-touch-icon" href="assets/arte-logo.png">
   <link rel="icon" href="assets/arte-logo.png" type="image/png">
+  
+  <!-- Tipografia de Alta Qualidade -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=Plus+Jakarta+Sans:wght@700;800;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@700;800;900&display=swap" rel="stylesheet">
+  
   <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
     :root {
       --black:   #000000;
       --purple:  #2f1d70;
       --orange:  #f75412;
       --white:   #ffffff;
       --surface: #29324f;
+      --border:  rgba(41, 50, 79, 0.4);
+      --font-body: 'Inter', system-ui, sans-serif;
+      --font-head: 'Plus Jakarta Sans', sans-serif;
     }
 
-    html {
-      background: #000000;
-      -webkit-font-smoothing: antialiased;
-      -moz-osx-font-smoothing: grayscale;
+    *, *::before, *::after { 
+      box-sizing: border-box; 
+      margin: 0; 
+      padding: 0; 
     }
 
-    body {
+    html, body {
+      background: var(--black);
+      color: var(--white);
+      font-family: var(--font-body);
       min-height: 100svh;
-      background: #000000;
-      color: #ffffff;
-      font-family: 'DM Sans', system-ui, sans-serif;
       display: flex;
-      flex-direction: column;
       align-items: center;
       justify-content: center;
       position: relative;
-      overflow-x: hidden;
+      overflow: hidden;
+      -webkit-font-smoothing: antialiased;
     }
 
-    /* ── Background — minimal, institutional ── */
-    .bg-layer {
-      position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden;
-    }
-    .bg-layer::before {
-      content: '';
+    /* ─── Background Arquitetural Especialista ─── */
+    .bg-grid {
       position: absolute;
-      bottom: -25%; left: -20%;
-      width: 65vw; height: 75vh;
-      background: radial-gradient(ellipse, rgba(47,29,112,0.45) 0%, transparent 65%);
-      filter: blur(90px);
-    }
-    .bg-layer::after {
-      content: '';
-      position: absolute;
-      top: -15%; right: -15%;
-      width: 50vw; height: 60vh;
-      background: radial-gradient(ellipse, rgba(247,84,18,0.07) 0%, transparent 60%);
-      filter: blur(70px);
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      background-size: 60px 60px;
+      background-image: 
+        linear-gradient(to right, rgba(41, 50, 79, 0.15) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(41, 50, 79, 0.15) 1px, transparent 1px);
+      mask-image: radial-gradient(ellipse at center, rgba(0,0,0,1) 10%, rgba(0,0,0,0) 80%);
+      -webkit-mask-image: radial-gradient(ellipse at center, rgba(0,0,0,1) 10%, rgba(0,0,0,0) 80%);
     }
 
-    /* ── Container ── */
-    .login-wrap {
-      position: relative; z-index: 1;
-      width: 100%; max-width: 468px;
-      padding: 3rem 1.5rem 4rem;
+    .bg-accent {
+      position: absolute;
+      top: 0; right: 0;
+      width: 45vw; height: 100vh;
+      background: linear-gradient(135deg, rgba(47,29,112,0.1), transparent 70%);
+      clip-path: polygon(100% 0, 100% 100%, 0 100%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ─── Layout Central ─── */
+    .container {
+      position: relative;
+      z-index: 10;
+      width: 100%;
+      max-width: 440px;
+      padding: 2rem;
       display: flex;
       flex-direction: column;
+      gap: 2rem;
+    }
+
+    /* ─── Identidade Premium ─── */
+    .brand-header {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      animation: revealUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+    }
+
+    .logo-container {
+      display: flex;
       align-items: center;
+      gap: 12px;
+      margin-bottom: 1.5rem;
     }
 
-    /* ── Brand block ── */
-    .brand-block {
-      display: flex; flex-direction: column; align-items: center;
-      margin-bottom: 2rem;
-      opacity: 0;
-      animation: fadeDown 0.55s cubic-bezier(0.16,1,0.3,1) 0ms both;
-    }
-
-    .brand-logo {
-      height: 164px;
-      width: auto;
+    .logo-icon {
+      width: 44px;
+      height: 44px;
       object-fit: contain;
-      margin-bottom: 1rem;
-      display: block;
-      filter: drop-shadow(0 6px 28px rgba(247,84,18,0.22));
+      animation: floatMagnificent 4s ease-in-out infinite alternate;
     }
 
-    .brand-name {
-      font-family: 'Plus Jakarta Sans', sans-serif;
-      font-size: 38px; font-weight: 900;
-      letter-spacing: -0.04em; line-height: 1;
-      text-align: center;
-      margin-bottom: 7px;
-    }
-    .brand-name .hi { color: #ffffff; }
-    .brand-name .lo { color: #f75412; }
-
-    .brand-tagline {
-      font-size: 9.5px; font-weight: 500;
-      letter-spacing: 0.20em; text-transform: uppercase;
-      color: rgba(255,255,255,0.28);
-      text-align: center;
+    @keyframes floatMagnificent {
+      0% { transform: translateY(0) scale(1); filter: drop-shadow(0 0 5px rgba(247, 84, 18, 0.3)); }
+      100% { transform: translateY(-4px) scale(1.06); filter: drop-shadow(0 0 15px rgba(247, 84, 18, 0.8)); }
     }
 
-    /* ── Form card ── */
-    .form-card {
-      width: 100%;
+    .logo-text {
+      font-family: var(--font-head);
+      font-size: 24px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      line-height: 1;
+    }
+
+    .logo-text span {
+      color: var(--orange);
+    }
+
+    .page-title {
+      font-family: var(--font-head);
+      font-size: 36px;
+      font-weight: 800;
+      letter-spacing: -0.04em;
+      line-height: 1.1;
+      margin-bottom: 0.5rem;
+      color: var(--white);
+    }
+
+    .page-subtitle {
+      font-size: 14px;
+      color: rgba(255, 255, 255, 0.5);
+      line-height: 1.5;
+      font-weight: 400;
+      max-width: 85%;
+    }
+
+    /* ─── Cartão de Formulário (Estrutural e Rígido) ─── */
+    .login-card {
+      background: rgba(10, 10, 15, 0.85);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--border);
+      border-radius: 4px; /* Cantos retos, ar profissional */
+      padding: 2rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+      box-shadow: 0 30px 60px rgba(0,0,0,0.5);
+      animation: revealUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.15s both;
       position: relative;
-      background: rgba(41,50,79,0.68);
-      backdrop-filter: blur(36px) saturate(1.15);
-      -webkit-backdrop-filter: blur(36px) saturate(1.15);
-      border-radius: 24px;
-      padding: 2.2rem 2rem;
-      box-shadow:
-        0 32px 72px -16px rgba(0,0,0,0.85),
-        0 0 0 1px rgba(47,29,112,0.35) inset;
-      opacity: 0;
-      animation: fadeUp 0.55s cubic-bezier(0.16,1,0.3,1) 160ms both;
     }
 
-    /* Gradient border via pseudo-element */
-    .form-card::before {
-      content: '';
-      position: absolute; inset: 0;
-      border-radius: 24px;
-      padding: 1px;
-      background: linear-gradient(135deg, rgba(247,84,18,0.55) 0%, rgba(47,29,112,0.55) 100%);
-      -webkit-mask:
-        linear-gradient(#fff 0 0) content-box,
-        linear-gradient(#fff 0 0);
-      -webkit-mask-composite: xor;
-      mask-composite: exclude;
+    /* Detalhe arquitetural na borda do cartão */
+    .login-card::before {
+      content: "";
+      position: absolute;
+      top: -1px; left: -1px; right: 50%; height: 1px;
+      background: linear-gradient(90deg, var(--purple), var(--orange));
+      z-index: 1;
+    }
+
+    /* ─── Campos do Formulário ─── */
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .form-label {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: rgba(255, 255, 255, 0.6);
+    }
+
+    .form-input {
+      width: 100%;
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--white);
+      padding: 14px 16px;
+      font-family: var(--font-body);
+      font-size: 15px;
+      border-radius: 2px;
+      outline: none;
+      transition: all 0.2s ease-in-out;
+    }
+
+    .form-input::placeholder {
+      color: rgba(255, 255, 255, 0.2);
+    }
+
+    .form-input:focus {
+      border-color: var(--orange);
+      background: rgba(247, 84, 18, 0.03);
+    }
+
+    /* ─── Botão Principal ─── */
+    .btn-submit {
+      margin-top: 0.5rem;
+      width: 100%;
+      background: var(--white);
+      color: var(--black);
+      border: none;
+      padding: 15px;
+      font-family: var(--font-head);
+      font-weight: 700;
+      font-size: 14px;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+      cursor: pointer;
+      border-radius: 2px;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .btn-submit:hover {
+      background: var(--orange);
+      color: var(--white);
+      transform: translateY(-2px);
+      box-shadow: 0 10px 20px rgba(247, 84, 18, 0.2);
+    }
+    .btn-submit.loading {
+      opacity: 0.6;
       pointer-events: none;
     }
 
-    /* ── Badge ── */
-    .badge-restrict {
-      display: inline-flex; align-items: center; gap: 7px;
-      background: rgba(47,29,112,0.65);
-      border: 1px solid rgba(247,84,18,0.30);
-      border-radius: 99px;
-      padding: 5px 14px;
-      margin-bottom: 1.4rem;
+    .btn-submit svg {
+      width: 18px;
+      height: 18px;
+      transition: transform 0.2s;
     }
-    .badge-dot {
-      width: 6px; height: 6px; border-radius: 50%;
-      background: #f75412;
-      box-shadow: 0 0 8px rgba(247,84,18,0.75);
-      flex-shrink: 0;
-      animation: blink 2.2s ease-in-out infinite;
-    }
-    @keyframes blink {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.35; }
-    }
-    .badge-text {
-      font-size: 9px; font-weight: 700;
-      letter-spacing: 0.24em; text-transform: uppercase;
-      color: #f75412;
+    .btn-submit:hover svg {
+      transform: translateX(4px);
     }
 
-    /* ── Card header ── */
-    .card-title {
-      font-family: 'Plus Jakarta Sans', sans-serif;
-      font-size: 21px; font-weight: 800;
-      margin-bottom: 5px;
+    /* ─── Alertas ─── */
+    .alert {
+      display: none;
+      font-size: 13px;
+      padding: 12px;
+      border-radius: 2px;
+      font-weight: 500;
+      border-left: 3px solid transparent;
     }
-    .card-sub {
-      font-size: 13px; color: rgba(255,255,255,0.38);
-      line-height: 1.55; margin-bottom: 1.6rem;
+    .alert.error {
+      display: block;
+      background: rgba(240, 80, 80, 0.1);
+      color: #f05050;
+      border-left-color: #f05050;
     }
-
-    /* ── Alert ── */
-    .alert-box {
-      display: none; padding: 11px 14px; border-radius: 11px;
-      font-size: 13px; font-weight: 500; margin-bottom: 1rem;
-      line-height: 1.45;
-    }
-    .alert-box.error   { display:block; background:rgba(240,80,80,0.10); border:1px solid rgba(240,80,80,0.22); color:#f09090; }
-    .alert-box.success { display:block; background:rgba(45,212,160,0.09); border:1px solid rgba(45,212,160,0.20); color:#2dd4a0; }
-
-    /* ── Fields ── */
-    .field { margin-bottom: 1.1rem; }
-
-    .field label {
-      display: block; font-size: 10px; font-weight: 700;
-      letter-spacing: 0.16em; text-transform: uppercase;
-      color: rgba(255,255,255,0.35); margin-bottom: 7px;
+    .alert.success {
+      display: block;
+      background: rgba(45, 212, 160, 0.1);
+      color: #2dd4a0;
+      border-left-color: #2dd4a0;
     }
 
-    .field-wrap { position: relative; }
-
-    .field-icon {
-      position: absolute; left: 14px; top: 50%;
-      transform: translateY(-50%); font-size: 14px;
-      pointer-events: none; opacity: 0.28;
-      transition: opacity 0.2s;
+    /* ─── Rodapé do Cartão ─── */
+    .card-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 1rem;
+      font-size: 12px;
     }
 
-    .field input {
-      width: 100%;
-      background: #000000;
-      border: 1px solid rgba(41,50,79,0.95);
-      border-radius: 12px;
-      padding: 13px 14px 13px 43px;
-      color: #ffffff;
-      font-family: 'DM Sans', sans-serif;
-      font-size: 14px; outline: none;
-      transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
-      caret-color: #f75412;
-    }
-    .field input::placeholder { color: rgba(255,255,255,0.18); }
-    .field input:focus {
-      border-color: #f75412;
-      background: rgba(247,84,18,0.04);
-      box-shadow: 0 0 0 3px rgba(247,84,18,0.12);
-    }
-    .field-wrap:focus-within .field-icon { opacity: 0.70; }
-
-    /* ── Primary button ── */
-    .btn-login {
-      width: 100%; padding: 14px; margin-top: 0.3rem;
-      background: linear-gradient(135deg, #f75412 0%, #2f1d70 100%);
-      color: #ffffff; border: none; border-radius: 12px;
-      font-family: 'Plus Jakarta Sans', sans-serif;
-      font-size: 15px; font-weight: 700;
-      letter-spacing: 0.07em; text-transform: uppercase;
-      cursor: pointer; position: relative; overflow: hidden;
-      transition: transform 0.2s ease, box-shadow 0.2s ease;
-      box-shadow: 0 8px 28px -6px rgba(247,84,18,0.40);
-    }
-    .btn-login::before {
-      content: '';
-      position: absolute; inset: 0;
-      background: linear-gradient(135deg, rgba(255,255,255,0.10) 0%, transparent 55%);
-      border-radius: inherit; pointer-events: none;
-    }
-    .btn-login:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 14px 36px -8px rgba(247,84,18,0.52);
-    }
-    .btn-login:active { transform: translateY(0); }
-    .btn-login.loading { opacity: 0.65; pointer-events: none; }
-
-    /* ── Footer actions ── */
-    .form-footer {
-      display: flex; gap: 8px; margin-top: 1.15rem;
-    }
-    .footer-btn {
-      flex: 1; background: transparent;
-      border: 1px solid rgba(47,29,112,0.60);
-      border-radius: 10px; padding: 10px 8px;
-      cursor: pointer; font-family: 'DM Sans', sans-serif;
-      font-size: 12px; font-weight: 600;
-      color: rgba(255,255,255,0.65);
-      transition: all 0.2s ease;
-      display: flex; align-items: center; justify-content: center;
-      gap: 6px; white-space: nowrap;
-    }
-    .footer-btn:hover {
-      background: rgba(47,29,112,0.32);
-      border-color: rgba(247,84,18,0.30);
-      color: #ffffff;
-    }
-    .footer-btn .fi { color: #f75412; font-style: normal; }
-    .footer-sep { width: 1px; background: rgba(47,29,112,0.55); flex-shrink: 0; }
-
-    /* ── Slide panels ── */
-    .slide-panel {
-      display: none; margin-top: 0.8rem;
-      padding: 1.3rem 1.25rem;
-      background: rgba(0,0,0,0.65);
-      border: 1px solid rgba(47,29,112,0.55);
-      border-radius: 16px;
-      animation: panelIn 0.22s cubic-bezier(0.16,1,0.3,1) both;
-    }
-    @keyframes panelIn {
-      from { opacity: 0; transform: translateY(-8px) scale(0.98); }
-      to   { opacity: 1; transform: translateY(0) scale(1); }
-    }
-    .slide-panel.open { display: block; }
-
-    .panel-label {
-      font-size: 9.5px; font-weight: 800;
-      letter-spacing: 0.22em; text-transform: uppercase;
-      margin-bottom: 5px;
-    }
-    .panel-label--orange { color: #f75412; }
-    .panel-label--white  { color: rgba(255,255,255,0.65); }
-    .panel-hint {
-      font-size: 12px; color: rgba(255,255,255,0.35);
-      line-height: 1.6; margin-bottom: 10px;
+    .btn-link {
+      background: none;
+      border: none;
+      color: rgba(255, 255, 255, 0.5);
+      cursor: pointer;
+      font-weight: 500;
+      transition: color 0.2s;
+      font-family: var(--font-body);
     }
 
-    .panel-input-wrap { position: relative; margin-bottom: 9px; }
-    .panel-input-icon {
-      position: absolute; left: 12px; top: 50%;
-      transform: translateY(-50%); font-size: 13px;
-      opacity: 0.32; pointer-events: none;
-    }
-    .panel-input {
-      width: 100%;
-      background: #000000;
-      border: 1px solid rgba(41,50,79,0.95);
-      border-radius: 10px;
-      padding: 11px 12px 11px 37px;
-      color: #fff; font-family: 'DM Sans', sans-serif;
-      font-size: 13px; outline: none;
-      transition: border-color 0.2s, box-shadow 0.2s;
-      caret-color: #f75412;
-    }
-    .panel-input::placeholder { color: rgba(255,255,255,0.16); }
-    .panel-input:focus {
-      border-color: #f75412;
-      box-shadow: 0 0 0 3px rgba(247,84,18,0.10);
+    .btn-link:hover {
+      color: var(--white);
     }
 
-    .panel-btn {
-      width: 100%; padding: 11px;
-      border: none; border-radius: 10px; cursor: pointer;
-      font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 700;
-      letter-spacing: 0.04em; transition: all 0.2s ease;
+    /* ─── Painéis Deslizantes (Reset / Convite) ─── */
+    .panel-wrap {
+      display: none;
+      border-top: 1px solid var(--border);
+      padding-top: 1.5rem;
+      margin-top: 0.5rem;
+      animation: revealDown 0.3s ease both;
     }
-    .panel-btn--orange {
-      background: linear-gradient(135deg, #f75412, #2f1d70);
-      color: #fff;
-      box-shadow: 0 4px 16px -4px rgba(247,84,18,0.38);
+    .panel-wrap.open {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
     }
-    .panel-btn--orange:hover { transform: translateY(-1px); box-shadow: 0 8px 22px -4px rgba(247,84,18,0.52); }
-    .panel-btn--ghost {
-      background: rgba(47,29,112,0.38);
-      border: 1px solid rgba(47,29,112,0.65);
-      color: rgba(255,255,255,0.78);
-    }
-    .panel-btn--ghost:hover { background: rgba(47,29,112,0.60); color: #fff; }
-    .panel-btn:disabled { opacity: 0.55; pointer-events: none; }
 
-    .panel-alert {
-      display: none; font-size: 12px; font-weight: 500;
-      padding: 8px 12px; border-radius: 9px; margin-bottom: 9px; line-height: 1.45;
+    .panel-title {
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      font-weight: 700;
+      color: var(--orange);
     }
-    .panel-alert.error   { display:block; background:rgba(240,80,80,0.10); border:1px solid rgba(240,80,80,0.22); color:#f09090; }
-    .panel-alert.success { display:block; background:rgba(45,212,160,0.09); border:1px solid rgba(45,212,160,0.20); color:#2dd4a0; }
 
-    /* ── Animations ── */
-    @keyframes fadeUp {
-      from { opacity: 0; transform: translateY(16px); }
+    /* ─── Animações ─── */
+    @keyframes revealUp {
+      from { opacity: 0; transform: translateY(20px); }
       to   { opacity: 1; transform: translateY(0); }
     }
-    @keyframes fadeDown {
-      from { opacity: 0; transform: translateY(-16px); }
-      to   { opacity: 1; transform: translateY(0); }
+    @keyframes revealDown {
+      from { opacity: 0; height: 0; transform: translateY(-10px); }
+      to   { opacity: 1; height: auto; transform: translateY(0); }
     }
 
-    /* ── Mobile ── */
+    /* Responsive */
     @media (max-width: 480px) {
-      .login-wrap { padding: 2.5rem 1.1rem 3.5rem; }
-      .brand-logo { height: 136px; }
-      .brand-name { font-size: 32px; }
-      .form-card { padding: 1.8rem 1.4rem; border-radius: 20px; }
-      .form-card::before { border-radius: 20px; }
+      .container { padding: 1.5rem; }
+      .login-card { padding: 1.5rem; }
+      .page-title { font-size: 28px; }
     }
   </style>
 </head>
 <body>
 
-  <div class="bg-layer" aria-hidden="true"></div>
+  <!-- Grid Arquitetural Especialista -->
+  <div class="bg-grid"></div>
+  <div class="bg-accent"></div>
 
-  <div class="login-wrap">
-
-    <!-- ── Brand ── -->
-    <div class="brand-block">
-      <img
-        src="assets/arte-logo.png"
-        alt="NUPIEEPRO"
-        class="brand-logo"
-        draggable="false"
-      >
-      <div class="brand-name"><span class="hi">NUPIE</span><span class="lo">EPRO</span></div>
-      <span class="brand-tagline">Núcleo Piauiense de Est. de Eng. de Produção</span>
-    </div>
-
-    <!-- ── Form card ── -->
-    <div class="form-card">
-
-      <div class="badge-restrict">
-        <span class="badge-dot"></span>
-        <span class="badge-text">Acesso Restrito</span>
+  <div class="container">
+    
+    <!-- Cabeçalho -->
+    <header class="brand-header">
+      <div class="logo-container">
+        <img src="assets/arte-logo.png" alt="NUPIEEPRO Logo" class="logo-icon">
+        <div class="logo-text">NUPIE<span>EPRO</span></div>
       </div>
+      <h1 class="page-title">Gestão e<br>Alta Performance.</h1>
+      <p class="page-subtitle">Acesso restrito à plataforma operacional e administrativa de coordenações.</p>
+    </header>
 
-      <div class="card-title">Entrar no Sistema</div>
-      <div class="card-sub">Use o e-mail corporativo fornecido pela coordenação.</div>
-
-      <div id="loginAlert" class="alert-box"></div>
+    <!-- Formulário -->
+    <div class="login-card">
+      <div id="loginAlert" class="alert"></div>
 
       <form id="loginForm" onsubmit="return false;" novalidate>
-
-        <div class="field">
-          <label>E-mail corporativo</label>
-          <div class="field-wrap">
-            <span class="field-icon">✉</span>
-            <input
-              type="email" id="loginEmail"
-              placeholder="seu@email.com"
-              required autocomplete="email"
-            >
-          </div>
+        
+        <div class="form-group" style="margin-bottom: 1rem;">
+          <label class="form-label" for="loginEmail">Credencial de Acesso</label>
+          <input type="email" id="loginEmail" class="form-input" placeholder="seu@email.com" required autocomplete="email">
         </div>
 
-        <div class="field">
-          <label>Senha de acesso</label>
-          <div class="field-wrap">
-            <span class="field-icon">🔒</span>
-            <input
-              type="password" id="loginPassword"
-              placeholder="••••••••••"
-              required autocomplete="current-password"
-            >
-          </div>
+        <div class="form-group" style="margin-bottom: 1.5rem;">
+          <label class="form-label" for="loginPassword">Chave de Segurança</label>
+          <input type="password" id="loginPassword" class="form-input" placeholder="••••••••" required autocomplete="current-password">
         </div>
 
-        <button id="btnLogin" class="btn-login" onclick="doLogin()">
-          Entrar na Plataforma
+        <button id="btnLogin" class="btn-submit" onclick="doLogin()">
+          Autenticar no Sistema
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
         </button>
 
       </form>
 
-      <div class="form-footer">
-        <button class="footer-btn" onclick="togglePanel('resetPanel')">
-          <i class="fi">🔑</i> Esqueci a senha
-        </button>
-        <div class="footer-sep"></div>
-        <button class="footer-btn" onclick="togglePanel('convitePanel')">
-          <i class="fi">✦</i> Ativar acesso
+      <!-- Rodapé de Ações -->
+      <div class="card-footer">
+        <button class="btn-link" onclick="togglePanel('resetPanel')">Recuperar Chave</button>
+        <button class="btn-link" onclick="togglePanel('convitePanel')">Validar Convite</button>
+      </div>
+
+      <!-- Painel: Recuperação -->
+      <div id="resetPanel" class="panel-wrap">
+        <div class="panel-title">Redefinir Chave</div>
+        <div id="resetAlert" class="alert"></div>
+        <input type="email" id="resetEmail" class="form-input" placeholder="E-mail vinculado">
+        <button id="btnReset" class="btn-submit" onclick="doResetPassword()" style="background:var(--purple);color:var(--white);font-size:12px;padding:12px;">
+          Enviar Link de Recuperação
         </button>
       </div>
 
-      <!-- Panel: recuperação de senha -->
-      <div id="resetPanel" class="slide-panel">
-        <div class="panel-label panel-label--orange">Recuperar Senha</div>
-        <p class="panel-hint">Informe o e-mail cadastrado. Enviaremos o link de redefinição.</p>
-        <div id="resetAlert" class="panel-alert"></div>
-        <div class="panel-input-wrap">
-          <span class="panel-input-icon">✉</span>
-          <input type="email" id="resetEmail" class="panel-input"
-                 placeholder="seu@email.com" autocomplete="email">
-        </div>
-        <button id="btnReset" class="panel-btn panel-btn--orange" onclick="doResetPassword()">
-          Enviar link →
+      <!-- Painel: Convite -->
+      <div id="convitePanel" class="panel-wrap">
+        <div class="panel-title">Ativação por Convite</div>
+        <div id="conviteAlert" class="alert"></div>
+        <input type="text" id="conviteTokenInput" class="form-input" placeholder="Cole o token de acesso">
+        <button class="btn-submit" onclick="activarConvite()" style="background:var(--surface);color:var(--white);font-size:12px;padding:12px;">
+          Processar Convite
         </button>
       </div>
 
-      <!-- Panel: ativar convite -->
-      <div id="convitePanel" class="slide-panel">
-        <div class="panel-label panel-label--white">Ativar via Convite</div>
-        <p class="panel-hint">Cole o token do convite recebido para criar sua conta.</p>
-        <div id="conviteAlert" class="panel-alert"></div>
-        <div class="panel-input-wrap">
-          <span class="panel-input-icon">🔗</span>
-          <input type="text" id="conviteTokenInput" class="panel-input"
-                 placeholder="Cole o token aqui…">
-        </div>
-        <button class="panel-btn panel-btn--ghost" onclick="activarConvite()">
-          Criar minha conta →
-        </button>
-      </div>
+    </div>
 
-    </div><!-- .form-card -->
+  </div>
 
-  </div><!-- .login-wrap -->
-
+  <!-- Scripts -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
   <script src="js/config.js"></script>
   <script src="js/app.js"></script>
   <script src="js/auth.js"></script>
   <script>
+    // Inicialização e Serviço Worker
     initLoginPage();
     if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
   </script>
-
 </body>
 </html>

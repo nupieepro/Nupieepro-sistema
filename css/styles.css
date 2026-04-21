@@ -8,19 +8,19 @@
 
 /* ═══ DESIGN TOKENS ═══ */
 :root {
-  /* ── Paleta Oficial NUPIEEPRO 2026 ── */
-  --c-bg:       #2d1f6f;   /* Fundo roxo brand        */
-  --c-s1:       #170d40;   /* Surface 1 (sidebar)     */
-  --c-s2:       #130b36;   /* Surface 2 (topbar)      */
-  --c-s3:       #221660;   /* Surface 3 (cards)       */
-  --c-s4:       #2c1e78;   /* Surface 4 (hover)       */
-  --c-s5:       #3a268e;   /* Surface 5 (active)      */
-  --c-slate:    #a89fd0;   /* Texto secundário lavanda*/
-  --c-accent:   #f75412;   /* Laranja primário        */
-  --c-accent2:  #ff8040;   /* Laranja claro (hover)   */
-  --c-white:    #ffffff;   /* Texto primário          */
-  --c-purple:   #2d1f6f;   /* Roxo brand              */
-  --c-purple-l: #9b7be8;   /* Roxo claro (ícones)     */
+  /* ── Paleta Especialista NUPIEEPRO 2026 ── */
+  --c-bg:       #000000;   /* Fundo absoluto        */
+  --c-s1:       #050505;   /* Surface 1 (sidebar)   */
+  --c-s2:       #0a0a0f;   /* Surface 2 (topbar)    */
+  --c-s3:       #29324f;   /* Surface 3 (cards mute)*/
+  --c-s4:       #3d497c;   /* Surface 4 (hover)     */
+  --c-s5:       #2f1d70;   /* Surface 5 (purple)    */
+  --c-slate:    #a89fd0;   /* Texto secundário      */
+  --c-accent:   #f75412;   /* Laranja primário      */
+  --c-accent2:  #ff8040;   /* Laranja hover         */
+  --c-white:    #ffffff;   /* Texto primário        */
+  --c-purple:   #2f1d70;   /* Roxo premium          */
+  --c-purple-l: #9b7be8;   /* Roxo light (ícones)   */
 
   /* ── Texto ── */
   --t-1: #ffffff;
@@ -1285,3 +1285,14 @@ h1, h2, h3, h4, h5, h6 {
   align-items: center;
   justify-content: space-between;
 }
+
+/* ═══ PREMIUM LOGO ANIMATION ═══ */
+#sideLogoImg {
+  animation: floatMagnificent 4s ease-in-out infinite alternate;
+}
+
+@keyframes floatMagnificent {
+  0% { transform: translateY(0) scale(1); filter: drop-shadow(0 0 5px rgba(247, 84, 18, 0.3)); }
+  100% { transform: translateY(-4px) scale(1.06); filter: drop-shadow(0 0 15px rgba(247, 84, 18, 0.8)); }
+}
+
