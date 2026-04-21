@@ -181,7 +181,7 @@ const App = {
           email: mock,
           nome: 'JR',
           role: 'admin',
-          cargo: 'Dev Chefe',
+          cargo: 'Desenvolvedor',
           iniciais: 'JR',
           coordenadorias: { nome: 'Geral', sigla: 'GER', icon: 'crown' }
         };
@@ -190,6 +190,10 @@ const App = {
     }
     const { data: { user } } = await _sb.auth.getUser();
     if (!user) return null;
+
+    // INTERVENÇÃO MASTER: Se for o e-mail do Dev, força o cargo/role independente do banco
+    const isDev = user.email === 'jjoserrayan2711@gmail.com';
+
     const { data } = await _sb
       .from('users')
       .select('*, coordenadorias(nome, sigla, icon)')
@@ -204,12 +208,13 @@ const App = {
         id: user.id,
         email: user.email,
         nome: meta.nome || emailName,
-        role: meta.role || 'membro',
-        cargo: meta.cargo || 'Membro',
+        role: isDev ? 'admin' : (meta.role || 'membro'),
+        cargo: isDev ? 'Desenvolvedor' : (meta.cargo || 'Membro'),
         iniciais: meta.iniciais || emailName.slice(0, 2).toUpperCase(),
         coordenadorias: { nome: 'Geral', sigla: 'GER', icon: 'crown' }
       };
     }
+    if (isDev) { data.role = 'admin'; data.cargo = 'Desenvolvedor'; }
     return data;
   },
 
@@ -251,6 +256,19 @@ const App = {
       <span class="nav-icon">${getIcon('star')}</span>
       <span class="nav-label" style="color:var(--orange)">Inserir Atividade ABJ</span>
     </div>`;
+
+    // Terminal do Dev (Admin only)
+    if (profile?.role === 'admin') {
+      html += '<div class="sidebar-section">Terminal do Dev</div>';
+      html += `<div class="nav-item" style="color:var(--orange); border-left:2px solid var(--orange);" onclick="window.open('https://quwpyrdxyibcbyzwfilb.supabase.co','_blank')">
+        <span class="nav-icon">${getIcon('settings')}</span>
+        <span class="nav-label">DB Supabase</span>
+      </div>`;
+      html += `<div class="nav-item" onclick="window.open('https://github.com/nupieepro/Lojinha-Nupieepro/blob/main/admin.html','_blank')">
+        <span class="nav-icon">${getIcon('gem')}</span>
+        <span class="nav-label">Admin Lojinha</span>
+      </div>`;
+    }
 
     // Shared
     html += '<div class="sidebar-section">Colaborativo</div>';
@@ -365,7 +383,13 @@ function goTo(id) {
     if (el) el.classList.remove('active');
   });
   const pg = document.getElementById('page-' + id);
-  if (pg) pg.classList.add('active');
+  if (pg) {
+    pg.classList.add('active');
+    // MASTER RESET: Garante que a página comece do topo ao navegar
+    const content = pg.querySelector('.content') || pg;
+    content.scrollTop = 0;
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
 
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   const navEl = document.getElementById('nav-' + id);

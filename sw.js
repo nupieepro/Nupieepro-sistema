@@ -1,9 +1,9 @@
 /* ============================================================
-   NUPIEEPRO — Service Worker v7
+   NUPIEEPRO — Service Worker v8
    Network-first com fallback para cache offline
    ============================================================ */
 
-const CACHE_NAME = 'nupieepro-v7';
+const CACHE_NAME = 'nupieepro-v8';
 const ASSETS = [
   './',
   './index.html',
@@ -17,7 +17,7 @@ const ASSETS = [
   './js/abj.js',
   './manifest.json',
   './assets/icon.svg',
-  './assets/logo.png',
+  './assets/arte-logo.png',
 ];
 
 // Install — pré-carrega shell do app
