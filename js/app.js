@@ -562,7 +562,14 @@ const App = {
 const ALL_PAGES = [
   'dashboard','abj','tarefas','pessoas','projetos',
   'operacoes','marketing','financeiro','compartilhado',
-  'manu','notificacoes','configuracoes'
+  'manu','notificacoes','configuracoes',
+  'geral_reunioes','geral_planejamento','geral_melhorias','geral_parcerias',
+  'mkt_tracker','mkt_kanban',
+  'fin_fluxo','fin_abepro','fin_comercial',
+  'prj_eventos','prj_enegep','prj_treinamentos','prj_nupicast',
+  'ops_relatorios','ops_pops','ops_arquivo',
+  'gp_talentos','gp_clima','gp_tap',
+  'global_visitas','global_apresentacoes','global_producao','global_assembleia'
 ];
 
 function goTo(id) {
@@ -664,25 +671,34 @@ const Dashboard = {
 
   setKPIs(pts, tasks, members, saldo, vendas, despesas) {
     const pct = Math.round((pts / META_ABJ) * 100);
-
     const el = (id) => document.getElementById(id);
-    if (!el('dashPts')) return; // guard for missing page
-    el('dashPts').textContent = pts;
-    el('dashPtsBar').style.width = Math.min(pct, 100) + '%';
-    el('dashAbjBar').style.width = Math.min(pct, 100) + '%';
-    el('dashAbjPct').textContent = pct + '%';
-    el('dashTasks').textContent = tasks;
-    el('dashTasksSub').textContent = tasks + ' em andamento';
-    el('dashMembers').textContent = members;
-    el('dashSaldo').textContent = App.currency(saldo);
-    el('dashSaldoSub').textContent = `↑ ${App.currency(vendas)} · ↓ ${App.currency(despesas)}`;
+    
+    // Novas IDs do Dashboard V7.0
+    if (el('stat-points')) el('stat-points').textContent = pts;
+    if (el('stat-points-trend')) el('stat-points-trend').textContent = pct + '% da meta';
+    if (el('stat-demands')) el('stat-demands').textContent = tasks;
+    if (el('stat-members')) el('stat-members').textContent = members;
+    if (el('stat-cash')) el('stat-cash').textContent = App.currency(saldo);
+    if (el('stat-cash-trend')) el('stat-cash-trend').textContent = `↑ ${App.currency(vendas)} / ↓ ${App.currency(despesas)}`;
 
-    el('quickBtns').innerHTML = `
-      <button class="btn btn-primary" onclick="goTo('abj')">⭐ Selo ABJ</button>
-      <button class="btn btn-ghost" onclick="goTo('tarefas')">☰ Demandas</button>
-      <button class="btn btn-ghost" onclick="goTo('compartilhado')">📅 Calendário</button>
-      <button class="btn btn-ghost" onclick="goTo('financeiro')">◎ Financeiro</button>
-    `;
+    // Suporte legado
+    if (el('dashPts')) el('dashPts').textContent = pts;
+    if (el('dashPtsBar')) el('dashPtsBar').style.width = Math.min(pct, 100) + '%';
+    if (el('dashAbjBar')) el('dashAbjBar').style.width = Math.min(pct, 100) + '%';
+    if (el('dashAbjPct')) el('dashAbjPct').textContent = pct + '%';
+    if (el('dashTasks')) el('dashTasks').textContent = tasks;
+    if (el('dashMembers')) el('dashMembers').textContent = members;
+    if (el('dashSaldo')) el('dashSaldo').textContent = App.currency(saldo);
+
+    const qb = el('quickBtns');
+    if (qb) {
+      qb.innerHTML = `
+        <button class="btn btn-primary" onclick="goTo('abj')">⭐ Selo ABJ</button>
+        <button class="btn btn-ghost" onclick="goTo('tarefas')">☰ Demandas</button>
+        <button class="btn btn-ghost" onclick="goTo('compartilhado')">📅 Calendário</button>
+        <button class="btn btn-ghost" onclick="goTo('financeiro')">◎ Financeiro</button>
+      `;
+    }
   }
 };
 
