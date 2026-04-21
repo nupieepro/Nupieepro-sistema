@@ -1296,3 +1296,33 @@ h1, h2, h3, h4, h5, h6 {
   100% { transform: translateY(-4px) scale(1.06); filter: drop-shadow(0 0 15px rgba(247, 84, 18, 0.8)); }
 }
 
+
+/* ═══════════════════════════════════════════════════════════════
+   THEMES (PERSISTENT & PURE)
+   ═══════════════════════════════════════════════════════════════ */
+[data-theme="black-orange"] {
+  --c-bg:       #000000;
+  --c-s1:       #050505;
+  --c-s2:       #0a0a0a;
+  --c-s3:       #111111;
+  --c-s4:       #1a1a1a;
+  --c-s5:       #222222;
+  --c-purple:   #f75412;
+  --c-purple-l: #ff8040;
+}
+
+[data-theme="black-purple"] {
+  --c-bg:       #000000;
+  --c-s1:       #050505;
+  --c-s2:       #0a0a0a;
+  --c-s3:       #111111;
+  --c-s4:       #1a1a1a;
+  --c-s5:       #222222;
+  --c-accent:   #2f1d70;
+  --c-accent2:  #49398f;
+}
+
+/* Alterar a cor do highlight do Sistema de Gestão para laranja */
+.sidebar-logo-text span { color: var(--c-accent) !important; }
+.sidebar-logo-sub { color: var(--c-accent) !important; }
+

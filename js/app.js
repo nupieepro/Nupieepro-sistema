@@ -17,12 +17,12 @@ window._supabase = _sb;
 const META_ABJ = 882;
 
 const COORDENADORIAS = [
-  { sigla: 'GER', nome: 'Geral',      icon: '⬡', cor: '--orange' }, // Triângulo/Pirâmide topo
-  { sigla: 'OPS', nome: 'Operações',   icon: '⚙', cor: '--blue' }, // Engrenagem/Operacional
-  { sigla: 'GP',  nome: 'G. Pessoas',  icon: '◒', cor: '--yellow' }, // Esfera/Integração
-  { sigla: 'MKT', nome: 'Marketing',   icon: '◬', cor: '--red' }, // Prisma
-  { sigla: 'PRJ', nome: 'Projetos',    icon: '◫', cor: '--orange' }, // Estrutura em barras
-  { sigla: 'FIN', nome: 'Finanças',    icon: '◎', cor: '--green' }, // Moeda dupla
+  { sigla: 'GER', nome: 'Geral',      icon: '👑', cor: '--orange' },
+  { sigla: 'OPS', nome: 'Operações',   icon: '⚡', cor: '--blue' },
+  { sigla: 'GP',  nome: 'G. Pessoas',  icon: '🤝', cor: '--yellow' },
+  { sigla: 'MKT', nome: 'Marketing',   icon: '🚀', cor: '--red' },
+  { sigla: 'PRJ', nome: 'Projetos',    icon: '📐', cor: '--orange' },
+  { sigla: 'FIN', nome: 'Finanças',    icon: '💎', cor: '--green' },
 ];
 
 // Pages each coord can access
@@ -896,10 +896,16 @@ const DEV_PAGES = {
     { id: 'tarefas',    icon: '☰', label: 'Tarefas G.P' },
   ],
   mkt: [
-    { id: 'marketing',    icon: '◬', label: 'Agência MKT' },
-    { id: 'tarefas',      icon: '☰', label: 'Demandas MKT' },
+    { id: 'dashboard',  icon: '⬡', label: 'Painel Central' },
+    { id: 'marketing',  icon: '🚀', label: 'Agência MKT' },
+    { id: 'abj',        icon: '⭐', label: 'Selo ABJ', badge: '!' },
+    { id: 'tarefas',    icon: '☰', label: 'Todas Demandas' },
+    { id: 'pessoas',    icon: '🤝', label: 'Membros & Gestão' },
+    { id: 'financeiro', icon: '💎', label: 'Financeiro' },
+    { id: 'operacoes',  icon: '⚡', label: 'Operações' },
+    { id: 'projetos',   icon: '📐', label: 'Projetos' },
+    { id: 'manu',       icon: '🗂', label: 'Repositório' },
     { id: 'notificacoes', icon: '🔔', label: 'Notificações' },
-    { id: 'manu',         icon: '🗂', label: 'Repositório' },
   ],
   prj: [
     { id: 'projetos',   icon: '◫', label: 'Ações Projetos' },
@@ -913,10 +919,10 @@ const DEV_PAGES = {
 
 // Chip do usuário por role (JR em GER, RB em MKT, nome em outros)
 const DEV_CHIP = {
-  ger:  { iniciais: 'JR', nome: 'JR', cargo: 'Dev Chefe' },
+  ger:  { iniciais: 'JR', nome: 'JR', cargo: 'Coord. Geral' },
   ops:  { iniciais: 'JR', nome: 'JR', cargo: 'Preview OPS' },
   gp:   { iniciais: 'JR', nome: 'JR', cargo: 'Preview G.P' },
-  mkt:  { iniciais: 'RB', nome: 'RB', cargo: 'Assessor MKT' },
+  mkt:  { iniciais: 'RB', nome: 'DevRB', cargo: 'Assessor & Dev' },
   prj:  { iniciais: 'JR', nome: 'JR', cargo: 'Preview PRJ' },
   fin:  { iniciais: 'JR', nome: 'JR', cargo: 'Preview FIN' },
 };
