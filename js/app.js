@@ -226,9 +226,16 @@ const App = {
     if (!nav) return;
 
     const profile = window._appProfile;
+    const cName = coordName || 'Geral';
+    // Sanitização para encontrar a chave correta no ROLE_PAGES (lidar com acentos e case)
+    const roleKey = Object.keys(ROLE_PAGES).find(k => 
+      k.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, "") === 
+      cName.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, "")
+    ) || 'Geral';
+    
     const myPages = profile?.role === 'admin' 
       ? Object.values(ROLE_PAGES).flat().filter((v,i,a)=>a.findIndex(t=>(t.id === v.id))===i)
-      : ROLE_PAGES[coordName] || [];
+      : ROLE_PAGES[roleKey] || [];
 
     let html = '<div class="sidebar-section">Meu painel</div>';
     html += myPages.map(p => 
