@@ -204,26 +204,11 @@ async function doResetPassword() {
   if (!_sb) { showPanelAlert('Sistema offline. Tente novamente mais tarde.', 'error', 'resetAlert'); return; }
 
   const btn = document.getElementById('btnReset');
-  if (btn) { btn.disabled = true; btn.textContent = 'Verificando...'; }
+  if (btn) { btn.disabled = true; btn.textContent = 'Enviando...'; }
 
   try {
-    // Verifica se o e-mail está cadastrado no sistema
-    const { data: usuario, error: lookupErr } = await _sb
-      .from('users')
-      .select('id')
-      .eq('email', email)
-      .maybeSingle();
-
-    if (lookupErr && lookupErr.code !== 'PGRST116') {
-      // Erro real de banco — continua e tenta enviar mesmo assim
-      console.warn('[Auth] Lookup error:', lookupErr.message);
-    } else if (!usuario) {
-      showPanelAlert('E-mail não encontrado no sistema. Solicite acesso à coordenação.', 'error', 'resetAlert');
-      return;
-    }
-
     await Auth.resetPassword(email);
-    showPanelAlert('Link enviado! Verifique sua caixa de entrada (e a pasta de spam).', 'success', 'resetAlert');
+    showPanelAlert('Se esse e-mail tiver cadastro, você receberá o link em instantes. Verifique também a pasta de spam.', 'success', 'resetAlert');
     if (emailEl) emailEl.value = '';
   } catch (err) {
     showPanelAlert(err.message || 'Erro ao enviar. Tente novamente.', 'error', 'resetAlert');
