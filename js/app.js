@@ -294,6 +294,11 @@ const App = {
 
     App.buildMobileNav(coordName);
 
+    // Exibe links OPS apenas para coordenadores de ops ou admin/dev
+    const isOps = profile.role === 'admin' || (profile.coordenadorias?.sigla || '').toUpperCase() === 'OPS';
+    const opsSection = document.getElementById('opsLinksSection');
+    if (opsSection) opsSection.style.display = isOps ? 'contents' : 'none';
+
     // Init calendários
     Cal.init();
     MiniCal.init();
@@ -352,6 +357,7 @@ function goTo(id) {
   // Lazy-load de páginas com dados
   if (id === 'pessoas') Pessoas.loadMembers();
   if (id === 'tarefas') Kanban.load();
+  if (id === 'abj')     ABJ.init();
 }
 
 function toggleSidebar() {
@@ -970,6 +976,125 @@ function _buildNav(role) {
 }
 
 /* ═══════════════════════════════════════════════════════════════
+   ABJ MODULE — 18 atividades oficiais + submissão de evidências
+   ═══════════════════════════════════════════════════════════════ */
+const ABJ_LIST = [
+  { id:1,  titulo:'Reunião de Planejamento Anual',      pts:40,  desc:'Participar da reunião de planejamento estratégico anual do núcleo.' },
+  { id:2,  titulo:'Filiação Oficial ABJ',               pts:50,  desc:'Registrar e confirmar a filiação do núcleo à Associação Brasileira de Júniores.' },
+  { id:3,  titulo:'Reunião Mensal de Diretoria',        pts:20,  desc:'Realizar a reunião mensal de diretoria com registro em ata.' },
+  { id:4,  titulo:'Relatório de Gestão',                pts:40,  desc:'Elaborar e publicar o relatório de gestão do período.' },
+  { id:5,  titulo:'Projeto de Extensão',                pts:60,  desc:'Executar e documentar um projeto de extensão universitária.' },
+  { id:6,  titulo:'Evento Técnico Realizado',           pts:80,  desc:'Organizar e realizar um evento técnico ou palestra para a comunidade.' },
+  { id:7,  titulo:'Publicação em Mídia Social',         pts:15,  desc:'Publicar conteúdo institucional nas redes sociais do núcleo.' },
+  { id:8,  titulo:'Webinar ou Evento Online',           pts:30,  desc:'Realizar ou participar de webinar representando o NUPIEEPRO.' },
+  { id:9,  titulo:'Visita Técnica',                     pts:40,  desc:'Organizar ou participar de visita técnica a empresa ou instituição.' },
+  { id:10, titulo:'Parceria com Empresa',               pts:60,  desc:'Firmar parceria formal com empresa ou instituição parceira.' },
+  { id:11, titulo:'Planejamento Estratégico Semestral', pts:50,  desc:'Elaborar e aprovar o planejamento estratégico semestral.' },
+  { id:12, titulo:'Cronograma de Atividades Publicado', pts:25,  desc:'Publicar e distribuir o cronograma oficial de atividades do semestre.' },
+  { id:13, titulo:'Mapeamento de Competências',         pts:50,  desc:'Realizar mapeamento das competências da equipe e apresentar resultados.' },
+  { id:14, titulo:'Programa de Mentoria Interna',       pts:50,  desc:'Criar ou participar de programa de mentoria para membros do núcleo.' },
+  { id:15, titulo:'Campanha de Conscientização',        pts:35,  desc:'Executar campanha de conscientização (ESG, segurança, saúde, etc.).' },
+  { id:16, titulo:'Representação em Evento Regional',   pts:70,  desc:'Representar o NUPIEEPRO em evento regional ou nacional da ABJ.' },
+  { id:17, titulo:'Premiação ou Certificação',          pts:80,  desc:'Receber premiação ou certificação oficial em nome do núcleo.' },
+  { id:18, titulo:'Relatório de Impacto Anual',         pts:60,  desc:'Produzir e publicar o relatório de impacto e resultados anuais.' },
+];
+
+const ABJ = (() => {
+  let _st = {};
+
+  const _load = () => { try { _st = JSON.parse(localStorage.getItem('abj_status') || '{}'); } catch { _st = {}; } };
+  const _save = () => localStorage.setItem('abj_status', JSON.stringify(_st));
+  const _get  = id => _st[id] || 'pendente';
+  const _pts  = () => ABJ_LIST.reduce((s,a) => s + (_get(a.id)==='aprovado' ? a.pts : 0), 0);
+
+  const _color  = s => ({ pendente:'var(--t-3)',  verificacao:'var(--yellow)', aprovado:'var(--green)' }[s]  || 'var(--t-3)');
+  const _border = s => ({ pendente:'var(--b-1)',  verificacao:'rgba(245,197,24,0.25)', aprovado:'rgba(45,212,160,0.25)' }[s] || 'var(--b-1)');
+  const _bg     = s => ({ pendente:'transparent',verificacao:'rgba(245,197,24,0.06)', aprovado:'rgba(45,212,160,0.06)' }[s]  || 'transparent');
+  const _label  = s => ({ pendente:'Pendente',    verificacao:'Em Revisão', aprovado:'Aprovado' }[s] || s);
+
+  function _card(a) {
+    const s = _get(a.id);
+    const action = s === 'aprovado'
+      ? `<span style="font-size:18px;">✅</span>`
+      : `<button onclick="ABJ.abrirEnvio(${a.id})" style="background:var(--a-2);border:1px solid var(--b-a);color:var(--orange);font-size:12px;font-weight:700;padding:5px 14px;border-radius:8px;cursor:pointer;">${s==='verificacao'?'Atualizar':'Submeter →'}</button>`;
+    return `<div style="background:${_bg(s)};border:1px solid ${_border(s)};border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:10px;">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;">
+        <div style="font-weight:700;font-size:13px;line-height:1.4;flex:1;">${a.titulo}</div>
+        <div style="font-weight:800;font-size:13px;color:var(--orange);white-space:nowrap;">${a.pts} pts</div>
+      </div>
+      <div style="font-size:12px;color:var(--t-3);line-height:1.5;">${a.desc}</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-top:2px;">
+        <span style="font-size:11px;font-weight:700;color:${_color(s)};border:1px solid ${_border(s)};padding:3px 10px;border-radius:100px;">${_label(s)}</span>
+        ${action}
+      </div>
+    </div>`;
+  }
+
+  function renderAll(items) {
+    const grid = document.getElementById('abjGrid');
+    if (!grid) return;
+    grid.innerHTML = items.length ? items.map(_card).join('') : '<p class="text-muted text-sm" style="padding:2rem;grid-column:1/-1;">Nenhuma atividade nesta categoria.</p>';
+    const el = document.getElementById('abjHeaderPts');
+    if (el) el.textContent = _pts();
+  }
+
+  function filter(tipo, tab) {
+    document.querySelectorAll('#page-abj .tab').forEach(t => t.classList.remove('active'));
+    if (tab) tab.classList.add('active');
+    const map = { todas: ABJ_LIST, concluidas: ABJ_LIST.filter(a => _get(a.id)==='aprovado'), pendente: ABJ_LIST.filter(a => _get(a.id)==='pendente'), verificacao: ABJ_LIST.filter(a => _get(a.id)==='verificacao') };
+    renderAll(map[tipo] || ABJ_LIST);
+  }
+
+  function abrirEnvio(id) {
+    const a = ABJ_LIST.find(x => x.id === id);
+    if (!a) return;
+    const m = document.getElementById('abjModal');
+    if (!m) return;
+    document.getElementById('abjModalTitle').textContent = a.titulo;
+    document.getElementById('abjModalPts').textContent   = a.pts + ' pts';
+    document.getElementById('abjEvidUrl').value  = '';
+    document.getElementById('abjEvidDesc').value = '';
+    document.getElementById('abjModalAlert').className = 'panel-alert';
+    m.dataset.actId = id;
+    m.style.display = 'flex';
+    setTimeout(() => document.getElementById('abjEvidUrl')?.focus(), 50);
+  }
+
+  function fecharModal() {
+    const m = document.getElementById('abjModal');
+    if (m) m.style.display = 'none';
+  }
+
+  async function enviarEvidencia() {
+    const m = document.getElementById('abjModal');
+    const id   = parseInt(m?.dataset.actId);
+    const url  = document.getElementById('abjEvidUrl')?.value.trim();
+    const desc = document.getElementById('abjEvidDesc')?.value.trim();
+    const alertEl = document.getElementById('abjModalAlert');
+    const btn = document.getElementById('abjModalBtn');
+    if (!url && !desc) { alertEl.textContent = 'Informe a URL ou uma descrição da evidência.'; alertEl.className = 'panel-alert error'; return; }
+    if (btn) { btn.disabled = true; btn.textContent = 'Enviando...'; }
+    try {
+      if (_sb) {
+        const { data: { user } } = await _sb.auth.getUser();
+        await _sb.from('evidencias_abj').insert({ atividade_id: id, user_id: user?.id, url_evidencia: url || null, descricao: desc || null, status: 'verificacao' });
+      }
+    } catch(_) {}
+    _st[id] = 'verificacao';
+    _save();
+    alertEl.textContent = 'Evidência enviada! Aguardando revisão.';
+    alertEl.className = 'panel-alert success';
+    setTimeout(() => fecharModal(), 1300);
+    filter('todas');
+    if (btn) { btn.disabled = false; btn.textContent = 'Enviar Evidência'; }
+  }
+
+  function init() { _load(); renderAll(ABJ_LIST); }
+
+  return { init, filter, abrirEnvio, fecharModal, enviarEvidencia };
+})();
+
+/* ═══════════════════════════════════════════════════════════════
    KANBAN MODULE — Demandas por coordenadoria
    ═══════════════════════════════════════════════════════════════ */
 const Kanban = (() => {
@@ -1029,23 +1154,23 @@ const Kanban = (() => {
   function abrirNovaDemanda() {
     const m = document.getElementById('kanbanModal');
     if (m) { m.style.display = 'flex'; }
-    document.getElementById('kTitulo')?.focus();
+    document.getElementById('ndTitulo')?.focus();
   }
 
   function fecharModal() {
     const m = document.getElementById('kanbanModal');
     if (m) m.style.display = 'none';
-    ['kTitulo','kCoord','kPrazo','kDesc'].forEach(id => {
+    ['ndTitulo','ndCoord','ndPrazo','ndDesc'].forEach(id => {
       const el = document.getElementById(id);
       if (el) el.value = '';
     });
   }
 
   async function salvar() {
-    const titulo = document.getElementById('kTitulo')?.value?.trim();
-    const coord  = document.getElementById('kCoord')?.value || 'ger';
-    const prazo  = document.getElementById('kPrazo')?.value || null;
-    const desc   = document.getElementById('kDesc')?.value?.trim() || '';
+    const titulo = document.getElementById('ndTitulo')?.value?.trim();
+    const coord  = document.getElementById('ndCoord')?.value || 'GER';
+    const prazo  = document.getElementById('ndPrazo')?.value || null;
+    const desc   = document.getElementById('ndDesc')?.value?.trim() || '';
     if (!titulo) { alert('Insira um título para a demanda.'); return; }
 
     const now = new Date().toISOString();

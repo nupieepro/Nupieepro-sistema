@@ -10,7 +10,7 @@
   <meta name="mobile-web-app-capable" content="yes">
   <title>NUPIEEPRO — Dashboard</title>
   <link rel="manifest" href="manifest.json">
-  <link rel="apple-touch-icon" href="assets/logo.png">
+  <link rel="apple-touch-icon" href="assets/arte-logo.png">
   <link rel="icon" type="image/svg+xml" href="assets/icon.svg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -24,7 +24,7 @@
     <aside class="sidebar" id="sidebar">
       <div class="sidebar-logo">
         <div style="background:#000;border-radius:12px;padding:4px;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,0.5);">
-          <img src="assets/logo.png" id="sideLogoImg" style="width:42px;height:42px;object-fit:contain;" alt="NUPIEEPRO">
+          <img src="assets/arte-logo.png" id="sideLogoImg" style="width:42px;height:42px;object-fit:contain;" alt="NUPIEEPRO">
         </div>
         <div>
           <div class="sidebar-logo-text">NUPIE<span>EPRO</span></div>
@@ -429,6 +429,7 @@
                 <div style="font-size:11px;color:var(--t-3);margin-bottom:16px;">Jan/2026 · Coordenação Geral</div>
                 <a href="assets/Regimento Interno NUPIEEPRO 2026.pdf" target="_blank" download class="btn btn-ghost" style="width:100%;display:block;text-align:center;text-decoration:none;">⬇ Baixar PDF</a>
               </div>
+              <div id="opsLinksSection" style="display:none;">
               <div style="background:var(--b-1);border:1px solid var(--b-2);border-radius:12px;padding:20px;text-align:center;">
                 <div style="font-size:36px;margin-bottom:12px;">🌐</div>
                 <div style="font-weight:700;color:var(--orange);font-size:13px;margin-bottom:6px;">Site de Inscrições OPS</div>
@@ -440,6 +441,7 @@
                 <div style="font-weight:700;color:var(--orange);font-size:13px;margin-bottom:6px;">Admin OPS — Credenciamento</div>
                 <div style="font-size:11px;color:var(--t-3);margin-bottom:16px;">Gestão interna de eventos</div>
                 <a href="adminoperacoes.html" target="_blank" class="btn btn-ghost" style="width:100%;display:block;text-align:center;text-decoration:none;">↗ Abrir</a>
+              </div>
               </div>
             </div>
           </div>
@@ -709,6 +711,22 @@
                   </div>
                   <span class="check">✓</span>
                 </button>
+                <button class="option-btn" id="themeBtn-dark-orange" onclick="Theme.apply('dark-orange')">
+                  <div class="color-dot" style="background:#000;border:2px solid #f75412;box-shadow:0 0 8px rgba(247,84,18,0.5);"></div>
+                  <div>
+                    <div style="font-weight:700;">Dark Orange</div>
+                    <div style="font-size:11px;color:var(--w40);margin-top:1px;">#000000 · #111 · laranja vivo</div>
+                  </div>
+                  <span class="check">✓</span>
+                </button>
+                <button class="option-btn" id="themeBtn-dark-purple" onclick="Theme.apply('dark-purple')">
+                  <div class="color-dot" style="background:#000;border:2px solid #7c52c8;box-shadow:0 0 8px rgba(124,82,200,0.5);"></div>
+                  <div>
+                    <div style="font-weight:700;">Dark Purple</div>
+                    <div style="font-size:11px;color:var(--w40);margin-top:1px;">#000000 · #08050f · roxo élfico</div>
+                  </div>
+                  <span class="check">✓</span>
+                </button>
               </div>
             </div>
 
@@ -756,16 +774,10 @@
               <div class="setting-card-title">ℹ️ Sistema</div>
               <div style="display:flex;flex-direction:column;gap:10px;font-size:13px;color:var(--w70);">
                 <div style="display:flex;justify-content:space-between;padding:10px;background:var(--w5);border-radius:8px;">
-                  <span>Versão</span><span style="color:var(--white);font-weight:600;">FASE 1 · v1.0.0</span>
+                  <span>Versão</span><span style="color:var(--white);font-weight:600;">NUPIEEPRO 2026</span>
                 </div>
                 <div style="display:flex;justify-content:space-between;padding:10px;background:var(--w5);border-radius:8px;">
-                  <span>Desenvolvedor</span><span style="color:var(--orange);font-weight:600;">JR · Dev Chefe</span>
-                </div>
-                <div style="display:flex;justify-content:space-between;padding:10px;background:var(--w5);border-radius:8px;">
-                  <span>Backend</span><span style="color:var(--white);font-weight:600;">Supabase (PostgreSQL + JWT)</span>
-                </div>
-                <div style="display:flex;justify-content:space-between;padding:10px;background:var(--w5);border-radius:8px;">
-                  <span>Hosting</span><span style="color:var(--white);font-weight:600;">GitHub Pages · nupieepro.github.io</span>
+                  <span>Plataforma</span><span style="color:var(--white);font-weight:600;">Web App (PWA)</span>
                 </div>
               </div>
             </div>

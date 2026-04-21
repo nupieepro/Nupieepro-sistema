@@ -868,6 +868,42 @@ input, select, textarea { font-family: var(--f-body); }
   --navy: #1e1545; --navy-mid: #160f36; --navy-card: #261a58;
 }
 
+/* Dark Black + Orange */
+[data-theme="dark-orange"] {
+  --c-bg:  #000000; --c-s1:  #0a0a0a;
+  --c-s2:  #060606; --c-s3:  #111111;
+  --c-s4:  #1a1a1a; --c-s5:  #222222;
+  --c-slate: #a0a0a0;
+  --t-2: #a0a0a0; --t-3: rgba(160,160,160,0.55);
+  --b-1: rgba(247,84,18,0.10); --b-2: rgba(247,84,18,0.22);
+  --b-a: rgba(247,84,18,0.38);
+  --a-1: rgba(247,84,18,0.07); --a-2: rgba(247,84,18,0.13);
+  --w70: #a0a0a0; --w40: rgba(160,160,160,0.55);
+  --w10: rgba(247,84,18,0.07); --w5: rgba(247,84,18,0.04);
+  --border: rgba(247,84,18,0.12);
+  --orange: #f75412; --orange-light: #ff7640;
+  --orange-dim: rgba(247,84,18,0.12); --orange-border: rgba(247,84,18,0.35);
+  --navy: #0a0a0a; --navy-mid: #060606; --navy-card: #111111;
+}
+
+/* Dark Black + Purple */
+[data-theme="dark-purple"] {
+  --c-bg:  #000000; --c-s1:  #08050f;
+  --c-s2:  #050308; --c-s3:  #0f0a1e;
+  --c-s4:  #160d2c; --c-s5:  #1e1040;
+  --c-slate: #a89fd0;
+  --t-2: #a89fd0; --t-3: rgba(168,159,208,0.55);
+  --b-1: rgba(160,120,255,0.10); --b-2: rgba(160,120,255,0.22);
+  --b-a: rgba(160,120,255,0.35);
+  --a-1: rgba(247,84,18,0.07); --a-2: rgba(247,84,18,0.13);
+  --w70: #a89fd0; --w40: rgba(168,159,208,0.55);
+  --w10: rgba(160,120,255,0.07); --w5: rgba(160,120,255,0.04);
+  --border: rgba(160,120,255,0.12);
+  --orange: #f75412; --orange-light: #ff7640;
+  --orange-dim: rgba(247,84,18,0.12); --orange-border: rgba(247,84,18,0.35);
+  --navy: #08050f; --navy-mid: #050308; --navy-card: #0f0a1e;
+}
+
 /* ═══ FONT SYSTEM ═══ */
 :root { --f-body: 'DM Sans', system-ui, sans-serif; --f-head: 'Plus Jakarta Sans', 'DM Sans', sans-serif; }
 [data-font="default"] { --f-body: 'DM Sans', system-ui, sans-serif; --f-head: 'Plus Jakarta Sans', sans-serif; }

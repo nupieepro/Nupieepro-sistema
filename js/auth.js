@@ -28,7 +28,6 @@ const Auth = {
   async registerWithToken(token, nome, password) {
     if (!_sb) throw new Error('Sistema offline. Verifique a conexão.');
 
-    // Validate invite token
     const { data: convite, error: tokenErr } = await _sb
       .from('convites')
       .select('*, coordenadorias(nome, sigla)')
@@ -39,25 +38,17 @@ const Auth = {
 
     if (tokenErr || !convite) throw new Error('Convite inválido ou expirado.');
 
-    // Create account with convite metadata
     const iniciais = nome.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
     const { data, error } = await _sb.auth.signUp({
       email: convite.email,
       password,
       options: {
-        data: {
-          nome,
-          role: convite.role,
-          cargo: convite.cargo,
-          coordenadoria_id: convite.coordenadoria_id,
-          iniciais
-        }
+        data: { nome, role: convite.role, cargo: convite.cargo,
+                coordenadoria_id: convite.coordenadoria_id, iniciais }
       }
     });
 
     if (error) throw error;
-
-    // Mark token used
     await _sb.from('convites').update({ usado: true }).eq('id', convite.id);
     return data;
   },
@@ -87,7 +78,7 @@ const Auth = {
 };
 
 /* ============================================================
-   Login Page — coord selection + email/password
+   Helpers de UI
    ============================================================ */
 let selectedCoord = null;
 
@@ -95,16 +86,52 @@ function showAlert(msg, type, containerId = 'loginAlert') {
   const el = document.getElementById(containerId);
   if (!el) return;
   el.textContent = msg;
-  // Suporta tanto .alert (index.html inline CSS) quanto .alert-box (styles.css)
-  const base = el.dataset.alertClass || 'alert-box';
+  const base = el.dataset.alertClass || el.className.split(' ')[0] || 'alert-box';
   el.className = base + ' ' + type;
 }
 
+function showPanelAlert(msg, type, id) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.textContent = msg;
+  el.className = 'panel-alert ' + type;
+}
+
+/* Abre/fecha painéis de recuperação e convite */
+function togglePanel(id) {
+  const target = document.getElementById(id);
+  if (!target) return;
+
+  const others = ['resetPanel', 'convitePanel'].filter(p => p !== id);
+  others.forEach(p => {
+    const el = document.getElementById(p);
+    if (el) el.classList.remove('open');
+  });
+
+  const isOpen = target.classList.contains('open');
+  target.classList.toggle('open', !isOpen);
+
+  if (!isOpen) {
+    // Pré-preenche e-mail no painel de recuperação
+    if (id === 'resetPanel') {
+      const email = document.getElementById('loginEmail')?.value.trim();
+      const resetInput = document.getElementById('resetEmail');
+      if (email && resetInput) resetInput.value = email;
+      resetInput?.focus();
+    } else if (id === 'convitePanel') {
+      document.getElementById('conviteTokenInput')?.focus();
+    }
+  }
+}
+
+/* ============================================================
+   Login Page
+   ============================================================ */
 async function doLogin() {
   const email = document.getElementById('loginEmail').value.trim();
   const password = document.getElementById('loginPassword').value;
 
-  if (!email) { showAlert('Insira seu email.', 'error'); return; }
+  if (!email) { showAlert('Insira seu e-mail.', 'error'); return; }
   if (!password) { showAlert('Insira sua senha.', 'error'); return; }
 
   const btn = document.getElementById('btnLogin');
@@ -116,7 +143,7 @@ async function doLogin() {
     App.toast('Login realizado!', 'success');
     setTimeout(() => App.redirect('dashboard.html'), 500);
   } catch (err) {
-    showAlert(err.message || 'Erro ao fazer login.', 'error');
+    showAlert(err.message || 'E-mail ou senha incorretos.', 'error');
   } finally {
     btn.classList.remove('loading');
     btn.textContent = 'Entrar na Plataforma';
@@ -131,34 +158,29 @@ function initLoginPage() {
   const form = document.getElementById('loginForm');
   if (!form) return;
 
-  // Enter key submits
   form.addEventListener('keydown', (e) => {
     if (e.key === 'Enter') { e.preventDefault(); doLogin(); }
   });
 
-  // Se há sessão ativa, mostra estado "já conectado" em vez de redirecionar silenciosamente
   Auth.getSession().then(session => {
     if (!session) return;
-    // Só auto-redireciona se for sessão Supabase real (não mock)
     const isMock = !_sb && !!localStorage.getItem('mockSession');
     if (!isMock && _sb) {
-      // Sessão Supabase válida — oferece continuar ou trocar conta
       const formCard = document.querySelector('.form-card');
       if (formCard) {
         formCard.innerHTML = `
           <div class="form-header">
             <div class="form-eyebrow">Sessão Ativa</div>
             <div class="form-title">Você já está conectado</div>
-            <div class="form-sub">Continuar com a sessão atual ou entrar com outra conta.</div>
+            <div class="form-sub">Continuar ou entrar com outra conta.</div>
           </div>
           <div style="display:flex;flex-direction:column;gap:12px;margin-top:24px;">
             <button class="login-btn" onclick="App.redirect('dashboard.html')">Continuar no Sistema →</button>
-            <button class="login-btn" style="background:transparent;border:1px solid rgba(145,154,187,0.25);color:var(--slate);" onclick="forceLogout()">Trocar de Conta</button>
+            <button class="login-btn" style="background:transparent;border:1px solid rgba(145,154,187,0.2);color:var(--slate);" onclick="forceLogout()">Trocar de Conta</button>
           </div>
         `;
       }
     }
-    // Se mock: não faz nada, deixa o form aparecer normalmente
   });
 }
 
@@ -169,6 +191,45 @@ async function forceLogout() {
 }
 
 /* ============================================================
+   Recuperação de Senha — verifica cadastro antes de enviar
+   ============================================================ */
+async function doResetPassword() {
+  const emailEl = document.getElementById('resetEmail');
+  const email = emailEl?.value.trim();
+
+  if (!email) { showPanelAlert('Insira seu e-mail.', 'error', 'resetAlert'); return; }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    showPanelAlert('E-mail inválido.', 'error', 'resetAlert'); return;
+  }
+  if (!_sb) { showPanelAlert('Sistema offline. Tente novamente mais tarde.', 'error', 'resetAlert'); return; }
+
+  const btn = document.getElementById('btnReset');
+  if (btn) { btn.disabled = true; btn.textContent = 'Enviando...'; }
+
+  try {
+    await Auth.resetPassword(email);
+    showPanelAlert('Se esse e-mail tiver cadastro, você receberá o link em instantes. Verifique também a pasta de spam.', 'success', 'resetAlert');
+    if (emailEl) emailEl.value = '';
+  } catch (err) {
+    showPanelAlert(err.message || 'Erro ao enviar. Tente novamente.', 'error', 'resetAlert');
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = 'Enviar link de redefinição →'; }
+  }
+}
+
+/* ============================================================
+   Ativar Convite
+   ============================================================ */
+function activarConvite() {
+  const tokenEl = document.getElementById('conviteTokenInput');
+  const token = tokenEl?.value.trim();
+  if (!token) {
+    showPanelAlert('Cole o token do seu convite.', 'error', 'conviteAlert'); return;
+  }
+  window.location.href = 'convite.html?token=' + encodeURIComponent(token);
+}
+
+/* ============================================================
    Convite (Invite) Page
    ============================================================ */
 function initConvitePage() {
@@ -176,7 +237,15 @@ function initConvitePage() {
   if (!token) {
     const content = document.getElementById('conviteContent');
     if (content) {
-      content.innerHTML = '<p class="text-center text-muted mt-2">Token de convite não encontrado na URL.<br><br>O link deve ter o formato:<br><code style="color:var(--orange)">convite.html?token=SEU_TOKEN</code></p>';
+      content.innerHTML = `
+        <div style="text-align:center;padding:1.5rem 0;">
+          <div style="font-size:48px;margin-bottom:16px;">🔗</div>
+          <p style="color:var(--w70,#919abb);margin-bottom:20px;line-height:1.6;">
+            Você precisa de um link de convite para criar sua conta.<br>
+            Solicite ao coordenador responsável.
+          </p>
+          <a href="index.html" style="color:#7c52c8;font-weight:600;text-decoration:none;">← Voltar ao login</a>
+        </div>`;
     }
     return;
   }
@@ -187,20 +256,9 @@ function initConvitePage() {
 async function loadConviteInfo(token) {
   const infoEl = document.getElementById('conviteInfo');
   if (!_sb) {
-    if (token === 'beta_mestre') {
-      infoEl.innerHTML = `
-        <dl class="convite-info">
-          <dt>Email Destino</dt>
-          <dd>jjoserrayan2711@gmail.com</dd>
-          <dt>Acesso Nível</dt>
-          <dd>Deus (Dev Chefe + MKT + Todas)</dd>
-        </dl>
-      `;
-      const form = document.getElementById('conviteForm');
-      if (form) form.style.display = 'flex';
-      return;
-    }
-    if (infoEl) infoEl.innerHTML = '<p class="text-center text-muted">Supabase não configurado.</p>';
+    if (infoEl) infoEl.innerHTML = '<p class="text-center text-muted">Verificação requer conexão com o servidor.</p>';
+    const form = document.getElementById('conviteForm');
+    if (form) form.style.display = 'none';
     return;
   }
 
@@ -214,24 +272,26 @@ async function loadConviteInfo(token) {
       .single();
 
     if (error || !convite) {
-      infoEl.innerHTML = '<p class="text-center" style="color:var(--red);">Convite inválido ou expirado.</p>';
+      if (infoEl) infoEl.innerHTML = '<p class="text-center" style="color:#f09595;">Convite inválido ou expirado.</p>';
       const form = document.getElementById('conviteForm');
       if (form) form.style.display = 'none';
       return;
     }
 
-    infoEl.innerHTML = `
-      <dl class="convite-info">
-        <dt>Email</dt>
-        <dd>${convite.email}</dd>
-        <dt>Coordenadoria</dt>
-        <dd>${convite.coordenadorias ? convite.coordenadorias.sigla + ' — ' + convite.coordenadorias.nome : 'Geral'}</dd>
-        <dt>Função</dt>
-        <dd>${convite.cargo || convite.role}</dd>
-      </dl>
-    `;
+    if (infoEl) {
+      infoEl.innerHTML = `
+        <dl class="convite-info">
+          <dt>Email</dt>
+          <dd>${convite.email}</dd>
+          <dt>Coordenadoria</dt>
+          <dd>${convite.coordenadorias ? convite.coordenadorias.sigla + ' — ' + convite.coordenadorias.nome : 'Geral'}</dd>
+          <dt>Função</dt>
+          <dd>${convite.cargo || convite.role}</dd>
+        </dl>
+      `;
+    }
   } catch {
-    infoEl.innerHTML = '<p class="text-center text-muted">Erro ao carregar convite.</p>';
+    if (infoEl) infoEl.innerHTML = '<p class="text-center text-muted">Erro ao carregar convite.</p>';
   }
 }
 
