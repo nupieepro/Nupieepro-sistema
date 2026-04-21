@@ -1358,6 +1358,24 @@ const Financeiro = {
   },
   loadAbepro() {
     // Lógica para controle de filiação
+  },
+  validarPlano() {
+    const nome = document.getElementById('comNome')?.value;
+    const dataStr = document.getElementById('comData')?.value;
+    if (!nome || !dataStr) { App.toast('Preencha nome e data.', 'error'); return; }
+
+    const dataEvento = new Date(dataStr);
+    const hoje = new Date();
+    const diffDias = Math.ceil((dataEvento - hoje) / (1000 * 60 * 60 * 24));
+
+    if (diffDias < 60) {
+      App.toast(`Bloqueio: Faltam apenas ${diffDias} dias. O prazo mínimo é 60 dias.`, 'error');
+    } else {
+      App.toast('Plano validado! Criando chamado de aprovação...', 'success');
+    }
+  },
+  novoLancamento() {
+    App.toast('Formulário de lançamento em desenvolvimento.', 'info');
   }
 };
 
@@ -1752,28 +1770,6 @@ const Kanban = (() => {
 /* ═══════════════════════════════════════════════════════════════
    FINANCEIRO MODULE — Gestão e Regra dos 60 dias
    ═══════════════════════════════════════════════════════════════ */
-const Financeiro = {
-  validarPlano() {
-    const nome = document.getElementById('comNome')?.value;
-    const dataStr = document.getElementById('comData')?.value;
-    if (!nome || !dataStr) { App.toast('Preencha nome e data.', 'error'); return; }
-
-    const dataEvento = new Date(dataStr);
-    const hoje = new Date();
-    const diffDias = Math.ceil((dataEvento - hoje) / (1000 * 60 * 60 * 24));
-
-    if (diffDias < 60) {
-      App.toast(`Bloqueio: Faltam apenas ${diffDias} dias. O prazo mínimo é 60 dias.`, 'error');
-    } else {
-      App.toast('Plano validado! Criando chamado de aprovação...', 'success');
-      // Lógica de salvamento aqui
-    }
-  },
-  novoLancamento() {
-    App.toast('Formulário de lançamento em desenvolvimento.', 'info');
-  }
-};
-
 /* ═══════════════════════════════════════════════════════════════
    CYBERSECURITY 24H — Anti-hacking timer
    ═══════════════════════════════════════════════════════════════ */
@@ -1781,12 +1777,9 @@ const CyberSecurity = {
   lastAction: Date.now(),
   
   init() {
-    // Monitorar cliques e teclas
     ['mousedown', 'keydown', 'touchstart'].forEach(evt => {
       window.addEventListener(evt, () => { this.lastAction = Date.now(); });
     });
-
-    // Check a cada minuto
     setInterval(() => this.check(), 60000);
     console.log('CyberSecurity: Monitor de 24h ativo.');
   },
@@ -1794,29 +1787,23 @@ const CyberSecurity = {
   check() {
     const profile = window._appProfile;
     if (!profile) return;
-
-    // Apenas para quem lida com financeiro ou admin
     const isFin = (profile.coordenadorias?.sigla === 'FIN' || profile.role === 'admin');
     if (!isFin) return;
 
     const diffHrs = (Date.now() - this.lastAction) / (1000 * 60 * 60);
-    if (diffHrs >= 24) {
-      this.lockAndRotate();
-    }
+    if (diffHrs >= 24) this.lockAndRotate();
   },
 
   async lockAndRotate() {
     App.toast('SISTEMA BLOQUEADO: 24h de inatividade detectada em setor crítico.', 'error', 0);
-    // Em um sistema real, aqui chamaríamos uma Edge Function para rotacionar tokens
-    // Por enquanto, forçamos o logout e limpamos a sessão.
     if (window._sb) await window._sb.auth.signOut();
     localStorage.clear();
     location.reload();
   }
 };
 
-// Iniciar segurança
-CyberSecurity.init();
+// Iniciar segurança (Chamado no final para garantir que todos os módulos existem)
+if (typeof CyberSecurity !== 'undefined') CyberSecurity.init();
 
 // V6.2 — Registro Global de Módulos Industriais (Elite Visibility)
 window.App          = App;
