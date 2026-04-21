@@ -609,21 +609,26 @@
             </div>
           </div>
 
-          <!-- ABA: Convidar -->
+          <!-- ABA: Novo Membro (Convidar ou Adição Direta) -->
           <div id="pessoasTabConvidar" style="display:none;">
             <div class="section-card">
-              <div class="section-title">Convidar Novo Membro</div>
+              <div class="section-title">Adicionar Novo Membro</div>
               <p style="font-size:13px;color:var(--w40);margin-bottom:1.5rem;">
-                Preencha os dados abaixo. O sistema gera um link de convite exclusivo que a pessoa usa para criar conta e senha.
+                Escolha entre gerar um <strong>Link de Convite</strong> (recomendado) ou fazer a <strong>Adição Direta</strong> (você define a senha).
               </p>
               <div id="inviteAlert" class="alert-box"></div>
-              <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+
+              <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));gap:16px;">
                 <div class="field">
                   <label>E-mail da pessoa</label>
                   <input type="email" id="inviteEmail" placeholder="nome@email.com">
                 </div>
                 <div class="field">
-                  <label>Cargo / Função</label>
+                  <label>Nome Completo</label>
+                  <input type="text" id="inviteNome" placeholder="Nome do Membro">
+                </div>
+                <div class="field">
+                  <label>Função / Especialidade</label>
                   <input type="text" id="inviteCargo" placeholder="Ex: Assessor de MKT">
                 </div>
                 <div class="field">
@@ -639,15 +644,26 @@
                   </select>
                 </div>
                 <div class="field">
-                  <label>Nível de Acesso</label>
+                  <label>Nível de Permissão</label>
                   <select id="inviteRole">
-                    <option value="membro">Membro</option>
-                    <option value="coordenador">Coordenador</option>
-                    <option value="admin">Admin / Dev</option>
+                    <option value="membro">Membro (Padrão)</option>
+                    <option value="coordenador">Coordenador (Gestão)</option>
+                    <option value="admin">Admin / Dev (Terminal)</option>
                   </select>
                 </div>
+                <div class="field" id="directPassField" style="display:none;">
+                  <label>Senha Inicial</label>
+                  <input type="password" id="invitePass" placeholder="••••••••">
+                </div>
               </div>
-              <button class="btn btn-primary" style="margin-top:1.5rem;width:100%;" onclick="Pessoas.gerarConvite()">
+
+              <!-- Switch modo -->
+              <div style="margin-top:1.5rem; display:flex; gap:12px; align-items:center;">
+                <button class="chip on" id="modeInvite" onclick="Pessoas.setAddMode('invite')">Geração de Link</button>
+                <button class="chip" id="modeDirect" onclick="Pessoas.setAddMode('direct')">Adição Direta (Senha)</button>
+              </div>
+
+              <button class="btn btn-primary" id="btnSubmitAdd" style="margin-top:1.5rem;width:100%;" onclick="Pessoas.processNewMember()">
                 Gerar Link de Convite
               </button>
             </div>
@@ -703,22 +719,31 @@
 
             <!-- Temas -->
             <div class="setting-card">
-              <div class="setting-card-title">🎨 Tema de Cores</div>
-              <div class="option-row" style="grid-template-columns: 1fr 1fr;">
+              <div class="setting-card-title">🎨 Tema de Cores Specialist</div>
+              <div class="option-row" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:12px;">
                 <button class="option-btn active" id="themeBtn-orange" onclick="Theme.apply('orange')">
                   <div class="color-dot" style="background:#000;border:2px solid #f75412;box-shadow:0 0 10px rgba(247,84,18,0.4);"></div>
-                  <div>
-                    <div style="font-weight:700;">Laranja Specialist</div>
-                    <div style="font-size:11px;color:var(--w40);margin-top:1px;">Preto + Laranja (Industrial)</div>
-                  </div>
+                  <div><div style="font-weight:700;">Laranja Industrial</div><div style="font-size:11px;color:var(--t-3);">Preto + Laranja</div></div>
                   <span class="check">✓</span>
                 </button>
                 <button class="option-btn" id="themeBtn-purple" onclick="Theme.apply('purple')">
-                  <div class="color-dot" style="background:#000;border:2px solid #2f1d70;box-shadow:0 0 10px rgba(47,29,112,0.4);"></div>
-                  <div>
-                    <div style="font-weight:700;">Roxo Specialist</div>
-                    <div style="font-size:11px;color:var(--w40);margin-top:1px;">Preto + Roxo (Premium)</div>
-                  </div>
+                  <div class="color-dot" style="background:#000;border:2px solid #7c52c8;box-shadow:0 0 10px rgba(124,82,200,0.4);"></div>
+                  <div><div style="font-weight:700;">Roxo Premium</div><div style="font-size:11px;color:var(--t-3);">Preto + Roxo</div></div>
+                  <span class="check">✓</span>
+                </button>
+                <button class="option-btn" id="themeBtn-midnight" onclick="Theme.apply('midnight')">
+                  <div class="color-dot" style="background:#02040a;border:2px solid #00f5ff;box-shadow:0 0 10px rgba(0,245,255,0.4);"></div>
+                  <div><div style="font-weight:700;">Midnight Blue</div><div style="font-size:11px;color:var(--t-3);">Deep Blue + Cyan</div></div>
+                  <span class="check">✓</span>
+                </button>
+                <button class="option-btn" id="themeBtn-matrix" onclick="Theme.apply('matrix')">
+                  <div class="color-dot" style="background:#000;border:2px solid #00ff41;box-shadow:0 0 10px rgba(0,255,65,0.4);"></div>
+                  <div><div style="font-weight:700;">Matrix Hacker</div><div style="font-size:11px;color:var(--t-3);">Black + Green</div></div>
+                  <span class="check">✓</span>
+                </button>
+                <button class="option-btn" id="themeBtn-cyberpunk" onclick="Theme.apply('cyberpunk')">
+                  <div class="color-dot" style="background:#000;border:2px solid #f3f315;box-shadow:0 0 10px rgba(243,243,21,0.4);"></div>
+                  <div><div style="font-weight:700;">Cyberpunk</div><div style="font-size:11px;color:var(--t-3);">Black + Acid Yellow</div></div>
                   <span class="check">✓</span>
                 </button>
               </div>
@@ -726,38 +751,26 @@
 
             <!-- Fontes -->
             <div class="setting-card">
-              <div class="setting-card-title">🔤 Fonte do Sistema</div>
-              <div class="option-row">
+              <div class="setting-card-title">🔤 Tipografia Técnica</div>
+              <div class="option-row" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:12px;">
                 <button class="option-btn active" id="fontBtn-default" onclick="Theme.applyFont('default')">
-                  <div style="width:18px;font-size:14px;font-weight:800;">Aa</div>
-                  <div>
-                    <div style="font-weight:700;">Inter (Padrão)</div>
-                    <div style="font-size:11px;color:var(--w40);margin-top:1px;">Leitura limpa e técnica</div>
-                  </div>
+                  <div style="width:24px;font-size:16px;font-weight:800;">Aa</div>
+                  <div><div style="font-weight:700;">Jakarta / DM Sans</div><div style="font-size:11px;color:var(--t-3);">Padrão Moderno</div></div>
                   <span class="check">✓</span>
                 </button>
-                <button class="option-btn" id="fontBtn-jakarta" onclick="Theme.applyFont('jakarta')">
-                  <div style="width:18px;font-size:14px;font-weight:800;font-family:'Plus Jakarta Sans';">Aa</div>
-                  <div>
-                    <div style="font-weight:700;font-family:'Plus Jakarta Sans';">Plus Jakarta Sans</div>
-                    <div style="font-size:11px;color:var(--w40);margin-top:1px;">Moderna e geométrica</div>
-                  </div>
+                <button class="option-btn" id="fontBtn-inter" onclick="Theme.applyFont('inter')">
+                  <div style="width:24px;font-size:16px;font-weight:800;font-family:'Inter';">Aa</div>
+                  <div><div style="font-weight:700;">Inter UI</div><div style="font-size:11px;color:var(--t-3);">Interface Técnica</div></div>
                   <span class="check">✓</span>
                 </button>
-                <button class="option-btn" id="fontBtn-syne" onclick="Theme.applyFont('syne')">
-                  <div style="width:18px;font-size:14px;font-weight:800;font-family:'Syne';">Aa</div>
-                  <div>
-                    <div style="font-weight:700;font-family:'Syne';">Syne</div>
-                    <div style="font-size:11px;color:var(--w40);margin-top:1px;">Display bold para destaques</div>
-                  </div>
+                <button class="option-btn" id="fontBtn-outfit" onclick="Theme.applyFont('outfit')">
+                  <div style="width:24px;font-size:16px;font-weight:800;font-family:'Outfit';">Aa</div>
+                  <div><div style="font-weight:700;">Outfit Geometric</div><div style="font-size:11px;color:var(--t-3);">Visual Display</div></div>
                   <span class="check">✓</span>
                 </button>
-                <button class="option-btn" id="fontBtn-system" onclick="Theme.applyFont('system')">
-                  <div style="width:18px;font-size:14px;font-weight:800;">Aa</div>
-                  <div>
-                    <div style="font-weight:700;">Sistema</div>
-                    <div style="font-size:11px;color:var(--w40);margin-top:1px;">Fonte nativa do dispositivo</div>
-                  </div>
+                <button class="option-btn" id="fontBtn-mono" onclick="Theme.applyFont('mono')">
+                  <div style="width:24px;font-size:16px;font-weight:800;font-family:'Roboto Mono';">Aa</div>
+                  <div><div style="font-weight:700;">Roboto Mono</div><div style="font-size:11px;color:var(--t-3);">Specialist / Dev</div></div>
                   <span class="check">✓</span>
                 </button>
               </div>

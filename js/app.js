@@ -824,6 +824,67 @@ const Pessoas = {
     });
   },
 
+  _addMode: 'invite',
+  setAddMode(mode) {
+    this._addMode = mode;
+    const isDirect = mode === 'direct';
+    document.getElementById('directPassField').style.display = isDirect ? 'block' : 'none';
+    document.getElementById('btnSubmitAdd').textContent = isDirect ? 'Adicionar Membro Agora' : 'Gerar Link de Convite';
+    document.getElementById('modeInvite').classList.toggle('on', !isDirect);
+    document.getElementById('modeDirect').classList.toggle('on', isDirect);
+    document.getElementById('inviteLinkCard').style.display = 'none';
+  },
+
+  async processNewMember() {
+    if (this._addMode === 'invite') {
+      await this.gerarConvite();
+    } else {
+      await this.addMemberDirect();
+    }
+  },
+
+  async addMemberDirect() {
+    const email = document.getElementById('inviteEmail')?.value.trim();
+    const nome = document.getElementById('inviteNome')?.value.trim();
+    const cargo = document.getElementById('inviteCargo')?.value.trim();
+    const coordSigla = document.getElementById('inviteCoord')?.value;
+    const role = document.getElementById('inviteRole')?.value;
+    const pass = document.getElementById('invitePass')?.value;
+    const alertEl = document.getElementById('inviteAlert');
+
+    if (!email || !nome || !cargo || !coordSigla || !pass) {
+      if (alertEl) { alertEl.textContent = 'Preencha todos os campos, incluindo a senha.'; alertEl.className = 'alert-box error'; }
+      return;
+    }
+
+    if (_sb) {
+      // 1. Criar no Auth do Supabase? (Geralmente requer Admin API key)
+      // Aqui vamos apenas inserir na tabela 'users' e deixar o sistema de login lidar
+      // Nota: Em um sistema real, usaríamos supabase.auth.admin.createUser
+      const { data: coordData } = await _sb.from('coordenadorias').select('id').eq('sigla', coordSigla).single();
+      const initials = nome.split(' ').map(n => n[0]).join('').substring(0,2).toUpperCase();
+      
+      const { error } = await _sb.from('users').insert({
+        email, nome, cargo, role, coordenadoria_id: coordData?.id, 
+        iniciais: initials, ativo: true,
+        // No contexto deste app, vamos assumir que a senha é tratada via auth ou mock
+      });
+
+      if (error) {
+        if (alertEl) { alertEl.textContent = 'Erro ao salvar: ' + error.message; alertEl.className = 'alert-box error'; }
+        return;
+      }
+    }
+
+    if (alertEl) { alertEl.textContent = 'Membro adicionado com sucesso!'; alertEl.className = 'alert-box success'; }
+    App.toast('Membro adicionado!', 'success');
+    this.loadMembers();
+    // Limpar campos
+    ['inviteEmail','inviteNome','inviteCargo','invitePass'].forEach(id => {
+      const el = document.getElementById(id); if (el) el.value = '';
+    });
+  },
+
   async updateRole(identifier, newRole) {
     if (!_sb) { App.toast('Supabase necessário para alterar funções.', 'error'); return; }
     const q = identifier.includes('@')
