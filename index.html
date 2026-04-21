@@ -27,6 +27,11 @@
   <!-- EmailJS SDK -->
   <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
   
+  <script>
+    const _t = localStorage.getItem('nupie_theme') || 'dark-orange';
+    document.documentElement.setAttribute('data-theme', _t === 'default' ? 'dark-orange' : _t);
+  </script>
+  
   <style>
     :root {
       --black:   #000000;

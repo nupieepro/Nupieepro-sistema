@@ -26,10 +26,10 @@
   <link rel="stylesheet" href="css/styles.css">
   
   <script>
-    // Injeção Crítica: Impede a tela branca de "Blink" lendo a memória do tema antes de renderizar o HTML.
-    const _t = localStorage.getItem('nupie_theme') || 'default';
+    // Injeção Crítica: Impede a tela branca de "Blink"
+    const _t = localStorage.getItem('nupie_theme') || 'dark-orange';
     const _f = localStorage.getItem('nupie_font') || 'default';
-    if (_t !== 'default') document.documentElement.setAttribute('data-theme', _t);
+    document.documentElement.setAttribute('data-theme', _t === 'default' ? 'dark-orange' : _t);
     if (_f !== 'default') document.documentElement.setAttribute('data-font', _f);
   </script>
 </head>
