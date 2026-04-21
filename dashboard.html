@@ -39,14 +39,9 @@
     <!-- ═══ SIDEBAR ═══ -->
     <aside class="sidebar" id="sidebar">
       <div class="sidebar-logo" style="background:#000; padding:1.5rem; display:flex; flex-direction:column; align-items:center; border-bottom:1px solid var(--b-1);">
-        <img src="assets/1000279363.png" id="sideLogoImg" style="height:60px; width:auto; max-width:100%; object-fit:contain;" alt="Logo">
+        <img src="assets/arte-logo.png" id="sideLogoImg" style="height:60px; width:auto; max-width:100%; object-fit:contain;" alt="NUPIEEPRO" onerror="this.src='assets/logo.png'">
         <div style="text-align:center; margin-top:10px;">
           <div class="sidebar-logo-text" style="font-size:1.2rem;">NUPIE<span>EPRO</span></div>
-          <div class="sidebar-logo-sub">Sistema de Gestão</div>
-        </div>
-      </div>
-        <div>
-          <div class="sidebar-logo-text">NUPIE<span>EPRO</span></div>
           <div class="sidebar-logo-sub">Sistema de Gestão</div>
         </div>
       </div>
@@ -184,6 +179,7 @@
             </div>
           </div>
 
+          <!-- Ações Rápidas -->
           <div class="section-card">
             <div class="section-title">Ações Rápidas</div>
             <div style="display:flex;gap:8px;flex-wrap:wrap;" id="quickBtns">
@@ -191,34 +187,38 @@
             </div>
           </div>
 
+          <!-- Dash Two-Col (Atividade + Agenda) -->
           <div class="dash-two-col">
             <!-- Atividade Recente -->
-            <div class="section-card">
-              <div class="section-title">Atividade Recente</div>
-              <div id="dashRecent"><p class="text-muted text-sm">Carregando...</p></div>
-            </div>
+            <section class="section-card">
+              <h3 class="section-title">🕒 Atividade Recente</h3>
+              <div id="dashRecent">
+                <p class="text-muted text-sm">Carregando atividades...</p>
+              </div>
+            </section>
 
-            <!-- Mini-Calendário -->
-            <div class="section-card">
+            <!-- Calendário Compacto -->
+            <section class="section-card">
               <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--s4);">
-                <div class="section-title" style="margin-bottom:0;">Agenda do Mês</div>
+                <h3 class="section-title" style="margin:0;">📅 Agenda do Núcleo</h3>
                 <button class="btn btn-ghost" style="font-size:11px;padding:4px 10px;" onclick="goTo('compartilhado')">Ver completo →</button>
               </div>
+              
               <!-- Mini cal nav -->
               <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--s3);">
                 <button class="cal-nav-btn" style="padding:4px 10px;font-size:14px;" onclick="MiniCal.prev()">‹</button>
                 <span class="cal-month-label" id="miniCalLabel" style="font-size:13px;"></span>
                 <button class="cal-nav-btn" style="padding:4px 10px;font-size:14px;" onclick="MiniCal.next()">›</button>
               </div>
+              
               <div class="mini-cal-grid" id="miniCalGrid">
                 <div class="cal-day-name">D</div><div class="cal-day-name">S</div>
                 <div class="cal-day-name">T</div><div class="cal-day-name">Q</div>
                 <div class="cal-day-name">Q</div><div class="cal-day-name">S</div>
                 <div class="cal-day-name">S</div>
               </div>
-              <!-- Próximos eventos compactos -->
               <div id="miniCalEvents" style="margin-top:var(--s3);display:flex;flex-direction:column;gap:6px;"></div>
-            </div>
+            </section>
           </div>
         </div>
       </div>

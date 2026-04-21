@@ -428,7 +428,7 @@ const App = {
     let html = '<div class="sidebar-section">Meu painel</div>';
     html += myPages.map(p => 
       `<div class="nav-item" id="nav-${p.id}" onclick="goTo('${p.id}')">
-        <span class="nav-icon">${getIcon(p.icon)}</span>
+        <span class="nav-icon"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${getIcon(p.icon)}</svg></span>
         <span class="nav-label">${p.label}</span>
         ${p.badge ? `<span class="nav-badge">${p.badge}</span>` : ''}
       </div>`
@@ -436,7 +436,7 @@ const App = {
 
     html += '<div class="sidebar-section">Operacional</div>';
     html += `<div class="nav-item" style="background:var(--orange-dim);border-color:var(--orange-border);color:var(--orange)" onclick="App.toast('Módulo ABJ Ativado','info')">
-      <span class="nav-icon">${getIcon('star')}</span>
+      <span class="nav-icon"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${getIcon('star')}</svg></span>
       <span class="nav-label" style="color:var(--orange)">Inserir Atividade ABJ</span>
     </div>`;
 
@@ -444,7 +444,7 @@ const App = {
     if (profile?.role === 'admin') {
       html += '<div class="sidebar-section">Terminal do Dev</div>';
       html += `<div class="nav-item" style="color:var(--orange); border-left:2px solid var(--orange);" onclick="window.open('https://supabase.com/dashboard/project/quwpyrdxyibcbyzwfilb','_blank')">
-        <span class="nav-icon">${getIcon('settings')}</span>
+        <span class="nav-icon"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${getIcon('settings')}</svg></span>
         <span class="nav-label">DB Supabase Dashboard</span>
       </div>`;
       html += `<div class="nav-item" onclick="window.open('https://nupieepro.github.io/Lojinha-Nupieepro/admin.html','_blank')">
@@ -471,7 +471,7 @@ const App = {
     const myPages = (ROLE_PAGES[coordName] || []).slice(0, 5);
     mobileNav.innerHTML = myPages.map(p =>
       `<div class="mnav-item" onclick="goTo('${p.id}')">
-        <span class="mnav-icon">${getIcon(p.icon)}</span>
+        <span class="mnav-icon"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${getIcon(p.icon)}</svg></span>
         <span>${p.label}</span>
       </div>`
     ).join('');
