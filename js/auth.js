@@ -1,7 +1,6 @@
-/* ============================================================
-   NUPIEEPRO — Authentication (Supabase JWT)
-   ============================================================ */
 
+// Herança Global do Supabase V6.0
+const _sb = window._sb;
 const Auth = {
   async login(email, password) {
     if (!_sb) {

@@ -1,6 +1,6 @@
-/* ============================================================
-   NUPIEEPRO — FASE 2: Selo ABJ Lógica Consolidada (18 Atividades)
-   ============================================================ */
+
+// Herança Global do Supabase V6.0
+const _sb = window._sb || window._supabase;
 
 const ABJ_LIST = [
   { id:1,  numero:1,  nome:'Reunião de Planejamento Anual',      ptsMax:40, coord:'Geral', desc:'Participar da reunião de planejamento estratégico anual do núcleo.' },
