@@ -1263,3 +1263,11 @@ body.tv-mode .content { padding: 40px !important; max-width: 1600px; margin: 0 a
 body.tv-mode .section-card { border-width: 2px; }
 body.tv-mode #audit-percent { font-size: 3rem !important; }
 body.tv-mode #audit-bar { height: 40px !important; }
+
+/* ─── ENHANCED SIDEBAR LOGO V7.4 ─── */
+.sidebar-logo img {
+  transition: transform 0.4s var(--spring);
+}
+.sidebar-logo:hover img {
+  transform: scale(1.1) rotate(-2deg);
+}

@@ -77,12 +77,24 @@ const ABJ = {
 
     // Atualiza barra na home
     const pct = Math.round((totalPts / 882) * 100);
+    
+    // Novas IDs do Termômetro Auditivo V7.2
+    const elPct = document.getElementById('audit-percent');
+    const elBar = document.getElementById('audit-bar');
+    const elStatus = document.getElementById('audit-status');
+
+    if (elPct) elPct.textContent = pct + '%';
+    if (elBar) elBar.style.width = Math.min(pct, 100) + '%';
+    if (elStatus) {
+      if (pct === 0) elStatus.textContent = 'Aguardando submissão de atividades...';
+      else if (pct < 50) elStatus.textContent = 'Auditoria em estágio inicial.';
+      else if (pct < 100) elStatus.textContent = 'Fase avançada de auditoria.';
+      else elStatus.textContent = 'Auditado 100% — Selo Ouro!';
+    }
+
+    // Fallbacks para IDs legadas (se existirem)
     const dashPtsBar = document.getElementById('dashPtsBar');
-    const dashAbjBar = document.getElementById('dashAbjBar');
-    const dashAbjPct = document.getElementById('dashAbjPct');
-    if(dashPtsBar) dashPtsBar.style.width = Math.min(pct, 100) + '%';
-    if(dashAbjBar) dashAbjBar.style.width = Math.min(pct, 100) + '%';
-    if(dashAbjPct) dashAbjPct.textContent = pct + '%';
+    if (dashPtsBar) dashPtsBar.style.width = Math.min(pct, 100) + '%';
   },
 
   filter(type, tabEl) {
