@@ -423,20 +423,27 @@
         </div>
         <div class="content">
           <div class="section-card">
-            <div class="section-title">Documentos Vigentes</div>
-            <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px;" id="repoGrid">
-              <div style="background:var(--b-1);border:1px solid var(--b-2);border-radius:12px;padding:20px;text-align:center;">
-                <div style="font-size:36px;margin-bottom:12px;">📄</div>
-                <div style="font-weight:700;color:var(--orange);font-size:13px;margin-bottom:6px;">Manual de Núcleos Estaduais 2026</div>
-                <div style="font-size:11px;color:var(--t-3);margin-bottom:16px;">ABJ 2026 · Coordenação Geral</div>
-                <a href="assets/Manual de Núcleos Estaduais 2026.pdf" target="_blank" download class="btn btn-ghost" style="width:100%;display:block;text-align:center;text-decoration:none;">⬇ Baixar PDF</a>
+            <div class="section-title">🛡️ Documentos Oficiais NUPIEEPRO</div>
+            <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:20px;" id="repoGrid">
+              
+              <!-- Card: Manual -->
+              <div style="background:var(--s1); border:1px solid var(--b-2); border-radius:16px; padding:28px; position:relative; overflow:hidden;">
+                <div style="position:absolute; top:-10px; right:-10px; font-size:60px; opacity:0.05; pointer-events:none;">⚙️</div>
+                <div style="font-size:32px; margin-bottom:16px;">📘</div>
+                <div style="font-weight:800; color:var(--orange); font-size:15px; margin-bottom:8px; font-family:var(--f-head);">Manual de Núcleos 2026</div>
+                <p style="font-size:12px; color:var(--t-3); margin-bottom:24px; line-height:1.5;">Guia técnico operacional dos núcleos estaduais da ABJ para o ciclo 2026.</p>
+                <a href="assets/Manual de Núcleos Estaduais 2026.pdf" target="_blank" class="btn btn-primary" style="width:100%; display:block; text-align:center; text-decoration:none; font-weight:700;">VISUALIZAR DOCUMENTO</a>
               </div>
-              <div style="background:var(--b-1);border:1px solid var(--b-2);border-radius:12px;padding:20px;text-align:center;">
-                <div style="font-size:36px;margin-bottom:12px;">⚖️</div>
-                <div style="font-weight:700;color:var(--orange);font-size:13px;margin-bottom:6px;">Regimento Interno NUPIEEPRO 2026</div>
-                <div style="font-size:11px;color:var(--t-3);margin-bottom:16px;">Jan/2026 · Coordenação Geral</div>
-                <a href="assets/Regimento Interno NUPIEEPRO 2026.pdf" target="_blank" download class="btn btn-ghost" style="width:100%;display:block;text-align:center;text-decoration:none;">⬇ Baixar PDF</a>
+
+              <!-- Card: Regimento -->
+              <div style="background:var(--s1); border:1px solid var(--b-2); border-radius:16px; padding:28px; position:relative; overflow:hidden;">
+                <div style="position:absolute; top:-10px; right:-10px; font-size:60px; opacity:0.05; pointer-events:none;">⚖️</div>
+                <div style="font-size:32px; margin-bottom:16px;">📜</div>
+                <div style="font-weight:800; color:var(--orange); font-size:15px; margin-bottom:8px; font-family:var(--f-head);">Regimento Interno NUPIEEPRO</div>
+                <p style="font-size:12px; color:var(--t-3); margin-bottom:24px; line-height:1.5;">Normas, deveres e estrutura organizacional vigente do núcleo Piauiense.</p>
+                <a href="assets/Regimento Interno NUPIEEPRO 2026.pdf" target="_blank" class="btn btn-ghost" style="width:100%; display:block; text-align:center; text-decoration:none; font-weight:700; border:1px solid var(--b-2);">VISUALIZAR DOCUMENTO</a>
               </div>
+
             </div>
           </div>
         </div>
@@ -548,7 +555,7 @@
                 <div style="font-size:40px;margin-bottom:1rem;">🔐</div>
                 <strong style="color:var(--white);">Admin de Pedidos — Finanças Master</strong><br>
                 <p style="font-size:12px;color:var(--t-2);margin:0.5rem 0 1.5rem;">Visualização interna segura com dashboard de caixas, envios e lucros das coordenações.</p>
-                <a href="https://nupieepro.github.io/Lojinha-Nupieepro/admin" target="_blank" class="btn" style="background:var(--p-1); border: 1px solid var(--b-p); width:100%;">Acessar Controle do Admin</a>
+                <a href="https://nupieepro.github.io/Lojinha-Nupieepro/admin.html" target="_blank" class="btn" style="background:var(--p-1); border: 1px solid var(--b-p); width:100%;">Acessar Controle do Admin</a>
             </div>
           </div>
 
@@ -697,52 +704,20 @@
             <!-- Temas -->
             <div class="setting-card">
               <div class="setting-card-title">🎨 Tema de Cores</div>
-              <div class="option-row">
-                <button class="option-btn active" id="themeBtn-default" onclick="Theme.apply('default')">
-                  <div class="color-dot" style="background:#000;border:2px solid #f75412;"></div>
+              <div class="option-row" style="grid-template-columns: 1fr 1fr;">
+                <button class="option-btn active" id="themeBtn-orange" onclick="Theme.apply('orange')">
+                  <div class="color-dot" style="background:#000;border:2px solid #f75412;box-shadow:0 0 10px rgba(247,84,18,0.4);"></div>
                   <div>
-                    <div style="font-weight:700;">NUPIEEPRO Padrão</div>
-                    <div style="font-size:11px;color:var(--w40);margin-top:1px;">#000000 · #29324f · #f75412</div>
-                  </div>
-                  <span class="check">✓</span>
-                </button>
-                <button class="option-btn" id="themeBtn-classic" onclick="Theme.apply('classic')">
-                  <div class="color-dot" style="background:#0D0B2B;border:2px solid #F07820;"></div>
-                  <div>
-                    <div style="font-weight:700;">Navy Clássico</div>
-                    <div style="font-size:11px;color:var(--w40);margin-top:1px;">#0D0B2B · #120F36 · #F07820</div>
+                    <div style="font-weight:700;">Laranja Specialist</div>
+                    <div style="font-size:11px;color:var(--w40);margin-top:1px;">Preto + Laranja (Industrial)</div>
                   </div>
                   <span class="check">✓</span>
                 </button>
                 <button class="option-btn" id="themeBtn-purple" onclick="Theme.apply('purple')">
-                  <div class="color-dot" style="background:#2d1b69;border:2px solid #f75412;"></div>
+                  <div class="color-dot" style="background:#000;border:2px solid #2f1d70;box-shadow:0 0 10px rgba(47,29,112,0.4);"></div>
                   <div>
-                    <div style="font-weight:700;">Roxo Profundo</div>
-                    <div style="font-size:11px;color:var(--w40);margin-top:1px;">#1a0f2e · #2d1b69 · #f75412</div>
-                  </div>
-                  <span class="check">✓</span>
-                </button>
-                <button class="option-btn" id="themeBtn-contrast" onclick="Theme.apply('contrast')">
-                  <div class="color-dot" style="background:#000;border:2px solid rgba(247,84,18,0.5);"></div>
-                  <div>
-                    <div style="font-weight:700;">Contraste Máximo</div>
-                    <div style="font-size:11px;color:var(--w40);margin-top:1px;">#000000 · bordas laranja</div>
-                  </div>
-                  <span class="check">✓</span>
-                </button>
-                <button class="option-btn" id="themeBtn-dark-orange" onclick="Theme.apply('dark-orange')">
-                  <div class="color-dot" style="background:#000;border:2px solid #f75412;box-shadow:0 0 8px rgba(247,84,18,0.5);"></div>
-                  <div>
-                    <div style="font-weight:700;">Dark Orange</div>
-                    <div style="font-size:11px;color:var(--w40);margin-top:1px;">#000000 · #111 · laranja vivo</div>
-                  </div>
-                  <span class="check">✓</span>
-                </button>
-                <button class="option-btn" id="themeBtn-dark-purple" onclick="Theme.apply('dark-purple')">
-                  <div class="color-dot" style="background:#000;border:2px solid #7c52c8;box-shadow:0 0 8px rgba(124,82,200,0.5);"></div>
-                  <div>
-                    <div style="font-weight:700;">Dark Purple</div>
-                    <div style="font-size:11px;color:var(--w40);margin-top:1px;">#000000 · #08050f · roxo élfico</div>
+                    <div style="font-weight:700;">Roxo Specialist</div>
+                    <div style="font-size:11px;color:var(--w40);margin-top:1px;">Preto + Roxo (Premium)</div>
                   </div>
                   <span class="check">✓</span>
                 </button>
@@ -818,10 +793,10 @@
   </div><!-- /app-shell -->
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-  <script src="js/config.js"></script>
-  <script src="js/app.js"></script>
-  <script src="js/auth.js"></script>
-  <script src="js/abj.js"></script>
+  <script src="js/config.js?v=9"></script>
+  <script src="js/app.js?v=9"></script>
+  <script src="js/auth.js?v=9"></script>
+  <script src="js/abj.js?v=9"></script>
   <script>
     (async () => {
       const profile = await App.initDashboard();

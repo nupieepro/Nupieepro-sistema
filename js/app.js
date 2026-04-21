@@ -17,16 +17,22 @@ window._supabase = _sb;
 const META_ABJ = 882;
 
 const COORDENADORIAS = [
-  { sigla: 'GER', nome: 'Geral',      icon: 'crown', cor: '--orange' },
-  { sigla: 'OPS', nome: 'Operações',   icon: 'zap',   cor: '--blue' },
-  { sigla: 'GP',  nome: 'G. Pessoas',  icon: 'users', cor: '--yellow' },
-  { sigla: 'MKT', nome: 'Marketing',   icon: 'rocket',cor: '--red' },
-  { sigla: 'PRJ', nome: 'Projetos',    icon: 'layout',cor: '--orange' },
-  { sigla: 'FIN', nome: 'Finanças',    icon: 'gem',   cor: '--green' },
+  { sigla: 'GER', nome: 'Geral',      icon: 'layout-dashboard', cor: '--orange' },
+  { sigla: 'OPS', nome: 'Operações',   icon: 'cpu',   cor: '--blue' },
+  { sigla: 'GP',  nome: 'G. Pessoas',  icon: 'user-cog', cor: '--yellow' },
+  { sigla: 'MKT', nome: 'Marketing',   icon: 'layers',cor: '--red' },
+  { sigla: 'PRJ', nome: 'Projetos',    icon: 'component',cor: '--orange' },
+  { sigla: 'FIN', nome: 'Finanças',    icon: 'trending-up',cor: '--green' },
 ];
 
 function getIcon(name) {
   const icons = {
+    'layout-dashboard': '<rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="14" y="3" rx="1"/><rect width="7" height="7" x="14" y="14" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/>',
+    cpu: '<rect width="16" height="16" x="4" y="4" rx="2"/><rect width="6" height="6" x="9" y="9" rx="1"/><path d="M15 2v2"/><path d="M15 20v2"/><path d="M2 15h2"/><path d="M2 9h2"/><path d="M20 15h2"/><path d="M20 9h2"/><path d="M9 2v2"/><path d="M9 20v2"/>',
+    'user-cog': '<circle cx="18" cy="15" r="3"/><circle cx="9" cy="7" r="4"/><path d="M10 15H6a4 4 0 0 0-4 4v2"/><path d="m21.7 16.4-.9-.3"/><path d="m15.2 13.9-.9-.3"/><path d="m16.6 18.7.3-.9"/><path d="m19.1 12.2.3-.9"/><path d="m19.6 18.7-.4-1"/><path d="m16.8 12.3-.4-1"/><path d="m14.3 16.6 1-.4"/><path d="m20.7 14.3 1-.4"/>',
+    layers: '<path d="m12.83 2.18a2 2 0 0 0-1.66 0L2.1 6.27a2 2 0 0 0 0 3.46l9.07 4.09a2 2 0 0 0 1.66 0l9.07-4.09a2 2 0 0 0 0-3.46z"/><path d="m2.1 14.73 9.07 4.09a2 2 0 0 0 1.66 0l9.07-4.09"/><path d="m2.1 10.58 9.07 4.09a2 2 0 0 0 1.66 0l9.07-4.09"/>',
+    component: '<path d="M5.5 8.5 2 12l3.5 3.5L9 12Z"/><path d="m15 5 3.5 3.5L22 12l-3.5 3.5L15 19l-3.5-3.5L8 12l3.5-3.5Z"/><path d="m11.5 15.5 3.5 3.5 3.5-3.5L15 12Z"/><path d="m11.5 8.5 3.5-3.5 3.5 3.5L15 12Z"/>',
+    'trending-up': '<polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/>',
     crown: '<path d="m2 4 3 12h14l3-12-6 7-4-7-4 7-6-7z"/><path d="M12 17H2l.5 2h19l.5-2H12z"/>',
     zap: '<polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>',
     users: '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>',
@@ -260,11 +266,11 @@ const App = {
     // Terminal do Dev (Admin only)
     if (profile?.role === 'admin') {
       html += '<div class="sidebar-section">Terminal do Dev</div>';
-      html += `<div class="nav-item" style="color:var(--orange); border-left:2px solid var(--orange);" onclick="window.open('https://quwpyrdxyibcbyzwfilb.supabase.co','_blank')">
+      html += `<div class="nav-item" style="color:var(--orange); border-left:2px solid var(--orange);" onclick="window.open('https://supabase.com/dashboard/project/quwpyrdxyibcbyzwfilb','_blank')">
         <span class="nav-icon">${getIcon('settings')}</span>
-        <span class="nav-label">DB Supabase</span>
+        <span class="nav-label">DB Supabase Dashboard</span>
       </div>`;
-      html += `<div class="nav-item" onclick="window.open('https://github.com/nupieepro/Lojinha-Nupieepro/blob/main/admin.html','_blank')">
+      html += `<div class="nav-item" onclick="window.open('https://nupieepro.github.io/Lojinha-Nupieepro/admin.html','_blank')">
         <span class="nav-icon">${getIcon('gem')}</span>
         <span class="nav-label">Admin Lojinha</span>
       </div>`;
@@ -425,7 +431,7 @@ const Dashboard = {
       // Fetch KPIs in parallel
       const [abjRes, tasksRes, membersRes, vendasRes, despesasRes] = await Promise.all([
         _sb.from('progresso_abj').select('pontos'),
-        _sb.from('demandas').select('coluna').neq('coluna', 'auditada'),
+        _sb.from('demandas').select('status').neq('status', 'auditada'),
         _sb.from('users').select('id', { count: 'exact', head: true }).eq('ativo', true),
         _sb.from('vendas').select('valor'),
         _sb.from('despesas').select('valor'),
@@ -503,7 +509,8 @@ const Dashboard = {
    ============================================================ */
 const Theme = {
   apply(name) {
-    document.documentElement.setAttribute('data-theme', name === 'default' ? '' : name);
+    if (name === 'default') name = 'orange'; // Fallback industrial
+    document.documentElement.setAttribute('data-theme', name);
     localStorage.setItem('nupie_theme', name);
     // Update active button
     document.querySelectorAll('[id^="themeBtn-"]').forEach(b => b.classList.remove('active'));

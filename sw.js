@@ -1,9 +1,9 @@
 /* ============================================================
-   NUPIEEPRO — Service Worker v8
+   NUPIEEPRO — Service Worker v9
    Network-first com fallback para cache offline
    ============================================================ */
 
-const CACHE_NAME = 'nupieepro-v8';
+const CACHE_NAME = 'nupieepro-v9';
 const ASSETS = [
   './',
   './index.html',
