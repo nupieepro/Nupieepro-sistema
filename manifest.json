@@ -7,17 +7,23 @@
   "display": "standalone",
   "display_override": ["standalone", "minimal-ui"],
   "background_color": "#000000",
-  "theme_color": "#2d1f6f",
+  "theme_color": "#000000",
   "orientation": "any",
   "lang": "pt-BR",
   "categories": ["productivity", "education"],
   "prefer_related_applications": false,
   "icons": [
     {
-      "src": "assets/icon.svg",
-      "sizes": "any",
-      "type": "image/svg+xml",
+      "src": "assets/arte-logo.png",
+      "sizes": "192x192",
+      "type": "image/png",
       "purpose": "any"
+    },
+    {
+      "src": "assets/arte-logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
     },
     {
       "src": "assets/arte-logo.png",
@@ -32,7 +38,7 @@
       "short_name": "Painel",
       "description": "Ir para o painel principal",
       "url": "./dashboard.html",
-      "icons": [{ "src": "assets/icon.svg", "sizes": "any" }]
+      "icons": [{ "src": "assets/arte-logo.png", "sizes": "192x192" }]
     }
   ]
 }

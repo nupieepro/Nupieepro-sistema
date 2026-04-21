@@ -71,7 +71,7 @@ const Auth = {
   async resetPassword(email) {
     if (!_sb) throw new Error('Supabase não configurado.');
     const { error } = await _sb.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/reset.html`
+      redirectTo: new URL('reset.html', window.location.href).href
     });
     if (error) throw error;
   }
