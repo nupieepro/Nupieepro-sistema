@@ -196,22 +196,26 @@
     }
 
     .btn-submit {
-      width: 100%;
+      width: auto;
+      align-self: flex-end;
+      min-width: 180px;
       background: var(--white);
       color: var(--black);
       border: none;
-      padding: 16px;
+      padding: 12px 24px;
       font-family: var(--font-head);
       font-weight: 800;
-      font-size: 13px;
+      font-size: 11px;
       text-transform: uppercase;
       letter-spacing: 1px;
       cursor: pointer;
       border-radius: 4px;
       display: flex;
       align-items: center;
-      justify-content: space-between;
+      justify-content: center;
+      gap: 12px;
       transition: all 0.3s;
+      margin-left: auto;
     }
     .btn-submit:hover {
       background: var(--orange);
