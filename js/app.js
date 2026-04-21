@@ -3,12 +3,12 @@
    Alinhado com a plataforma real (dark theme, 6 coords, ABJ)
    ============================================================ */
 
-// Credenciais carregadas de js/config.js (gitignored).
-// Em produção, config.js é gerado pelo GitHub Actions via Secrets.
-const _sb = (window.NUPI_URL && window.NUPI_URL !== 'COLE_SUA_SUPABASE_URL_AQUI')
-  ? supabase.createClient(window.NUPI_URL, window.NUPI_KEY)
-  : null;
+// Chave anon (publishable) é segura para frontend — segurança real = RLS no Supabase.
+// config.js pode sobrescrever via window.NUPI_URL / window.NUPI_KEY se disponível.
+const _SURL = window.NUPI_URL || 'https://quwpyrdxyibcbyzwfilb.supabase.co';
+const _SKEY = window.NUPI_KEY || 'sb_publishable_VmEMT07DiE1f5DtxzgZomA_-F0gZIpM';
 
+const _sb = supabase.createClient(_SURL, _SKEY);
 window._supabase = _sb;
 
 /* ============================================================

@@ -1,14 +1,15 @@
 /* ============================================================
-   NUPIEEPRO — Service Worker v2
+   NUPIEEPRO — Service Worker v7
    Network-first com fallback para cache offline
    ============================================================ */
 
-const CACHE_NAME = 'nupieepro-v3';
+const CACHE_NAME = 'nupieepro-v7';
 const ASSETS = [
   './',
   './index.html',
   './dashboard.html',
   './convite.html',
+  './reset.html',
   './css/styles.css',
   './js/config.js',
   './js/app.js',
