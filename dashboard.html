@@ -15,6 +15,10 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Plus+Jakarta+Sans:wght@600;700;800;900&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- EmailJS SDK -->
+  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+
   <link rel="stylesheet" href="css/styles.css">
   
   <script>
@@ -64,9 +68,20 @@
         </div>
         <button class="btn-logout" onclick="doLogout()">Sair</button>
       </div>
+
+      <!-- V6.0 Enterprise Signature -->
+      <div style="padding:1.5rem; text-align:center; border-top:1px solid var(--b-1); margin-top:auto;">
+        <div class="shimmer-text" style="font-size:10px; font-weight:800; line-height:1.2; opacity:0.8;">
+          GERAÇÃO DE ALTA PERFORMANCE INDUSTRIAL
+        </div>
+      </div>
     </aside>
 
     <!-- ═══ MAIN AREA ═══ -->
+    <div id="devBanner" style="display:none; background:var(--orange-dim); border-bottom:1px solid var(--orange-border); padding:6px 12px; font-size:10px; font-weight:800; text-transform:uppercase; letter-spacing:1px; color:var(--orange); align-items:center; gap:8px;">
+      <span class="pulse-dot"></span> DEV MODE ACTIVE — BYPASS ENABLED
+    </div>
+
     <div class="main-area">
 
       <!-- ══════════════════════════════════════════════
@@ -125,6 +140,14 @@
             </div>
           </div>
 
+          <!-- Mural de Aniversariantes do Mês -->
+          <div class="section-card" id="dashBirthdays" style="display:none;">
+            <div class="section-title">🎂 Aniversariantes do Mês</div>
+            <div id="birthdayList" style="display:flex;gap:12px;overflow-x:auto;padding-bottom:8px;scrollbar-width:thin;">
+              <!-- Populated by JS -->
+            </div>
+          </div>
+
           <div class="section-card">
             <div class="section-title">Ações Rápidas</div>
             <div style="display:flex;gap:8px;flex-wrap:wrap;" id="quickBtns">
@@ -159,6 +182,59 @@
               </div>
               <!-- Próximos eventos compactos -->
               <div id="miniCalEvents" style="margin-top:var(--s3);display:flex;flex-direction:column;gap:6px;"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══════════════════════════════════════════════
+           PAGE: GERAL (COORDENAÇÃO GERAL)
+      ══════════════════════════════════════════════ -->
+      <div class="page" id="page-geral">
+        <div class="topbar">
+          <div style="display:flex;align-items:center;gap:12px;">
+            <button class="topbar-toggle" onclick="toggleSidebar()">☰</button>
+            <div>
+              <div class="topbar-title">Gestão Estratégica</div>
+              <div class="topbar-sub">Assembleia, Votações e Governança</div>
+            </div>
+          </div>
+          <button class="btn btn-primary" onclick="Assembleia.novaVotacao()">+ Nova Votação</button>
+        </div>
+        <div class="content">
+          <div class="dash-two-col">
+            <div class="section-card">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
+                <div class="section-title" style="margin-bottom:0;">🗳️ Assembleia em Aberto</div>
+                <button class="btn btn-ghost" style="font-size:11px;" onclick="Assembleia.verResultados()">Resultados →</button>
+              </div>
+              <div id="activeVotes"><p class="text-muted text-sm">Nenhuma votação ativa no momento.</p></div>
+            </div>
+            <div class="section-card">
+              <div class="section-title">📊 Alertas de PCD (Presença)</div>
+              <div id="pcdAlerts"><p class="text-muted text-sm">Nenhum alerta crítico disparado.</p></div>
+            </div>
+          </div>
+
+          <div class="section-card">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
+                <div class="section-title" style="margin-bottom:0;">📅 Gerenciador de Reuniões (RGN)</div>
+                <button class="btn btn-ghost" style="font-size:11px;" onclick="Geral.novaReuniao()">+ Agendar Reunião</button>
+            </div>
+            <div class="table-responsive">
+              <table style="width:100%; border-collapse:collapse; font-size:13px;">
+                <thead>
+                  <tr style="border-bottom:1px solid var(--b-1); text-align:left; color:var(--t-3);">
+                    <th style="padding:12px;">Data</th>
+                    <th style="padding:12px;">Título</th>
+                    <th style="padding:12px;">Presença</th>
+                    <th style="padding:12px;">Ações</th>
+                  </tr>
+                </thead>
+                <tbody id="meetingTableBody">
+                  <!-- Populated by JS -->
+                </tbody>
+              </table>
             </div>
           </div>
         </div>
@@ -480,16 +556,30 @@
       </div>
 
       <!-- ══════════════════════════════════════════════
-           PAGE: OPERAÇÕES
+           PAGE: OPERAÇÕES HUB
       ══════════════════════════════════════════════ -->
       <div class="page" id="page-operacoes">
         <div class="topbar">
           <div style="display:flex;align-items:center;gap:12px;">
             <button class="topbar-toggle" onclick="toggleSidebar()">☰</button>
-            <div><div class="topbar-title">Central Operacional</div><div class="topbar-sub">Ferramentas de Inscrição e Credenciamento</div></div>
+            <div>
+                <div class="topbar-title">Operações Hub</div>
+                <div class="topbar-sub">Cofre de POPs e Auditoria de Relatórios</div>
+            </div>
           </div>
         </div>
         <div class="content stagger-1">
+          <div class="section-card">
+            <div class="section-title">📂 Cofre de POPs (Procedimentos Operacionais)</div>
+            <div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap:12px;" id="popVault">
+                <!-- POPs logic here -->
+                <div class="pop-item" style="background:var(--s1); border:1px solid var(--b-1); padding:16px; border-radius:12px;">
+                    <div style="font-size:20px; margin-bottom:8px;">📄</div>
+                    <div style="font-weight:700; font-size:13px;">Inscrição Eventos V2</div>
+                    <div style="font-size:10px; color:var(--orange);">Vence em 45 dias</div>
+                </div>
+            </div>
+          </div>
           <div class="summary-grid" style="grid-template-columns: 1fr 1fr; margin-bottom: 2rem;">
             <div class="section-card text-center" style="padding:4rem; border-radius:16px; border: 1px solid var(--b-1); background:var(--s1);">
                 <div style="font-size:40px;margin-bottom:1rem;">🌐</div>
@@ -515,14 +605,26 @@
         <div class="topbar">
           <div style="display:flex;align-items:center;gap:12px;">
             <button class="topbar-toggle" onclick="toggleSidebar()">☰</button>
-            <div><div class="topbar-title">Ações e Projetos</div><div class="topbar-sub">Editais PEEX e integração social</div></div>
+            <div><div class="topbar-title">Portfólio & Ações</div><div class="topbar-sub">Gestão de Patrocinadores e NUPICAST</div></div>
           </div>
+          <button class="btn btn-primary" onclick="Projetos.novoPatrocinador()">+ Adicionar Patrocinador</button>
         </div>
         <div class="content">
-          <div class="section-card text-center text-muted" style="padding:4rem;">
-            <div style="font-size:40px;margin-bottom:1rem;">◫</div>
-            <strong>Gestão de Projetos Estendidos</strong><br>
-            <span style="font-size:13px;">Acompanhamento de editais e ações sociais. — FASE 4</span>
+          <div class="section-card">
+            <div class="section-title">🤝 Galeria de Patrocinadores</div>
+            <div id="sponsorGrid" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap:16px;">
+                <!-- Sponsored populated by JS -->
+            </div>
+          </div>
+          <div class="dash-two-col">
+            <div class="section-card">
+              <div class="section-title">🎙️ NUPICAST Tracker</div>
+              <div id="nupicastList"></div>
+            </div>
+            <div class="section-card">
+              <div class="section-title">📅 Eventos Estratégicos</div>
+              <div id="projEvents"></div>
+            </div>
           </div>
         </div>
       </div>
@@ -573,18 +675,64 @@
       </div>
 
       <!-- ══════════════════════════════════════════════
-           PAGE: PESSOAS / GESTÃO DE MEMBROS
+           PAGE: MARKETING
       ══════════════════════════════════════════════ -->
-      <div class="page" id="page-pessoas">
+      <div class="page" id="page-marketing">
         <div class="topbar">
           <div style="display:flex;align-items:center;gap:12px;">
             <button class="topbar-toggle" onclick="toggleSidebar()">☰</button>
             <div>
-              <div class="topbar-title">Membros & Gestão</div>
-              <div class="topbar-sub">Diretório oficial e controle de acesso</div>
+              <div class="topbar-title">Agência MKT</div>
+              <div class="topbar-sub">Social Media Tracker e Lojinha</div>
             </div>
           </div>
-          <button class="btn btn-ghost" onclick="App.toast('Certificados ABEPRO — FASE 4','info')">🎓 Certificados</button>
+        </div>
+        <div class="content">
+           <div class="section-card">
+              <div class="section-title">📱 Social Media Tracker</div>
+              <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap:12px;">
+                <div class="stat-mini"><span>Insta Follows</span><strong>1.2k</strong></div>
+                <div class="stat-mini"><span>Post Status</span><strong>3 Agendados</strong></div>
+                <div class="stat-mini"><span>Lojinha Timer</span><strong style="color:var(--orange)">7d restantes</strong></div>
+              </div>
+           </div>
+           <div class="section-card">
+              <div class="section-title">🛍️ Kanban Lojinha [Fila de Produção]</div>
+              <div id="marketingKanban" style="display:flex; gap:16px; overflow-x:auto;"></div>
+           </div>
+        </div>
+      </div>
+
+      <!-- ══════════════════════════════════════════════
+           PAGE: GP (GESTÃO DE PESSOAS)
+      ══════════════════════════════════════════════ -->
+      <div class="page" id="page-gp">
+        <div class="topbar">
+          <div style="display:flex;align-items:center;gap:12px;">
+            <button class="topbar-toggle" onclick="toggleSidebar()">☰</button>
+            <div>
+              <div class="topbar-title">Talent Bank Hub</div>
+              <div class="topbar-sub">CRM de Talentos e Pesquisa de Clima</div>
+            </div>
+          </div>
+        </div>
+        <div class="content">
+          <div class="dash-two-col">
+            <div class="section-card">
+               <div class="section-title">📊 Pesquisa de Clima Semanal</div>
+               <div style="padding:1rem; background:var(--s1); border-radius:8px; border:1px solid var(--b-1);">
+                  <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
+                    <span>Sat. Geral</span>
+                    <strong style="color:var(--green)">4.8/5.0</strong>
+                  </div>
+                  <div class="progress-track"><div class="progress-fill" style="width:96%; background:var(--green)"></div></div>
+               </div>
+            </div>
+            <div class="section-card">
+               <div class="section-title">🎓 Banco de Talentos (CRM)</div>
+               <div id="talentGrid" style="display:flex; flex-direction:column; gap:8px;"></div>
+            </div>
+          </div>
         </div>
 
         <!-- Abas: Membros / Convidar / Gerenciar -->
@@ -719,31 +867,36 @@
 
             <!-- Temas -->
             <div class="setting-card">
-              <div class="setting-card-title">🎨 Tema de Cores Specialist</div>
-              <div class="option-row" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:12px;">
-                <button class="option-btn active" id="themeBtn-orange" onclick="Theme.apply('orange')">
+              <div class="setting-card-title">🎨 Galeria de Temas Specialist</div>
+              <div class="option-row" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap:12px;">
+                <button class="option-btn active" id="themeBtn-fusion" onclick="Theme.apply('fusion')">
+                  <div class="color-dot" style="background:#000;border:2px solid #2f1d70;box-shadow:0 0 10px rgba(47,29,112,0.4);"></div>
+                  <div><div style="font-weight:700;">Fusion Elite</div><div style="font-size:11px;color:var(--t-3);">Oficial NUPI</div></div>
+                  <span class="check">✓</span>
+                </button>
+                <button class="option-btn" id="themeBtn-luminous" onclick="Theme.apply('luminous')">
+                  <div class="color-dot" style="background:#fff;border:2px solid #2f1d70;box-shadow:0 0 10px rgba(0,0,0,0.1);"></div>
+                  <div><div style="font-weight:700;">Luminous</div><div style="font-size:11px;color:var(--t-3);">Modo Claro Premium</div></div>
+                  <span class="check">✓</span>
+                </button>
+                <button class="option-btn" id="themeBtn-orange" onclick="Theme.apply('orange')">
                   <div class="color-dot" style="background:#000;border:2px solid #f75412;box-shadow:0 0 10px rgba(247,84,18,0.4);"></div>
-                  <div><div style="font-weight:700;">Laranja Industrial</div><div style="font-size:11px;color:var(--t-3);">Preto + Laranja</div></div>
+                  <div><div style="font-weight:700;">Orange Indust.</div><div style="font-size:11px;color:var(--t-3);">Preto + Laranja</div></div>
                   <span class="check">✓</span>
                 </button>
-                <button class="option-btn" id="themeBtn-purple" onclick="Theme.apply('purple')">
-                  <div class="color-dot" style="background:#000;border:2px solid #7c52c8;box-shadow:0 0 10px rgba(124,82,200,0.4);"></div>
-                  <div><div style="font-weight:700;">Roxo Premium</div><div style="font-size:11px;color:var(--t-3);">Preto + Roxo</div></div>
+                <button class="option-btn" id="themeBtn-obsidian" onclick="Theme.apply('obsidian')">
+                  <div class="color-dot" style="background:#000;border:2px solid #fff;box-shadow:0 0 10px rgba(255,255,255,0.2);"></div>
+                  <div><div style="font-weight:700;">Obsidian</div><div style="font-size:11px;color:var(--t-3);">Absolute Dark</div></div>
                   <span class="check">✓</span>
                 </button>
-                <button class="option-btn" id="themeBtn-midnight" onclick="Theme.apply('midnight')">
-                  <div class="color-dot" style="background:#02040a;border:2px solid #00f5ff;box-shadow:0 0 10px rgba(0,245,255,0.4);"></div>
-                  <div><div style="font-weight:700;">Midnight Blue</div><div style="font-size:11px;color:var(--t-3);">Deep Blue + Cyan</div></div>
+                <button class="option-btn" id="themeBtn-rose" onclick="Theme.apply('rose')">
+                  <div class="color-dot" style="background:#fffafa;border:2px solid #d4a5a5;"></div>
+                  <div><div style="font-weight:700;">Rose Quartz</div><div style="font-size:11px;color:var(--t-3);">Elegante / Refinado</div></div>
                   <span class="check">✓</span>
                 </button>
-                <button class="option-btn" id="themeBtn-matrix" onclick="Theme.apply('matrix')">
-                  <div class="color-dot" style="background:#000;border:2px solid #00ff41;box-shadow:0 0 10px rgba(0,255,65,0.4);"></div>
-                  <div><div style="font-weight:700;">Matrix Hacker</div><div style="font-size:11px;color:var(--t-3);">Black + Green</div></div>
-                  <span class="check">✓</span>
-                </button>
-                <button class="option-btn" id="themeBtn-cyberpunk" onclick="Theme.apply('cyberpunk')">
-                  <div class="color-dot" style="background:#000;border:2px solid #f3f315;box-shadow:0 0 10px rgba(243,243,21,0.4);"></div>
-                  <div><div style="font-weight:700;">Cyberpunk</div><div style="font-size:11px;color:var(--t-3);">Black + Acid Yellow</div></div>
+                <button class="option-btn" id="themeBtn-glimmer" onclick="Theme.apply('glimmer')">
+                  <div class="color-dot" style="background:#030303;border:2px solid #666;"></div>
+                  <div><div style="font-weight:700;">Glimmer</div><div style="font-size:11px;color:var(--t-3);">Sofisticado</div></div>
                   <span class="check">✓</span>
                 </button>
               </div>
@@ -751,26 +904,26 @@
 
             <!-- Fontes -->
             <div class="setting-card">
-              <div class="setting-card-title">🔤 Tipografia Técnica</div>
-              <div class="option-row" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:12px;">
+              <div class="setting-card-title">🔤 Tipografia Industrial</div>
+              <div class="option-row" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap:12px;">
                 <button class="option-btn active" id="fontBtn-default" onclick="Theme.applyFont('default')">
                   <div style="width:24px;font-size:16px;font-weight:800;">Aa</div>
                   <div><div style="font-weight:700;">Jakarta / DM Sans</div><div style="font-size:11px;color:var(--t-3);">Padrão Moderno</div></div>
                   <span class="check">✓</span>
                 </button>
+                <button class="option-btn" id="fontBtn-montserrat" onclick="Theme.applyFont('montserrat')">
+                  <div style="width:24px;font-size:16px;font-weight:800;font-family:'Montserrat';">Aa</div>
+                  <div><div style="font-weight:700;">Montserrat</div><div style="font-size:11px;color:var(--t-3);">Visual Display</div></div>
+                  <span class="check">✓</span>
+                </button>
+                <button class="option-btn" id="fontBtn-fira" onclick="Theme.applyFont('fira')">
+                  <div style="width:24px;font-size:16px;font-weight:800;font-family:'Fira Code';">Aa</div>
+                  <div><div style="font-weight:700;">Fira Code</div><div style="font-size:11px;color:var(--t-3);">Specialist Mono</div></div>
+                  <span class="check">✓</span>
+                </button>
                 <button class="option-btn" id="fontBtn-inter" onclick="Theme.applyFont('inter')">
                   <div style="width:24px;font-size:16px;font-weight:800;font-family:'Inter';">Aa</div>
                   <div><div style="font-weight:700;">Inter UI</div><div style="font-size:11px;color:var(--t-3);">Interface Técnica</div></div>
-                  <span class="check">✓</span>
-                </button>
-                <button class="option-btn" id="fontBtn-outfit" onclick="Theme.applyFont('outfit')">
-                  <div style="width:24px;font-size:16px;font-weight:800;font-family:'Outfit';">Aa</div>
-                  <div><div style="font-weight:700;">Outfit Geometric</div><div style="font-size:11px;color:var(--t-3);">Visual Display</div></div>
-                  <span class="check">✓</span>
-                </button>
-                <button class="option-btn" id="fontBtn-mono" onclick="Theme.applyFont('mono')">
-                  <div style="width:24px;font-size:16px;font-weight:800;font-family:'Roboto Mono';">Aa</div>
-                  <div><div style="font-weight:700;">Roboto Mono</div><div style="font-size:11px;color:var(--t-3);">Specialist / Dev</div></div>
                   <span class="check">✓</span>
                 </button>
               </div>
@@ -812,8 +965,15 @@
   <script src="js/abj.js?v=9"></script>
   <script>
     (async () => {
+      Theme.init();
       const profile = await App.initDashboard();
-      if (profile) Dashboard.render(profile);
+      if (profile) {
+        Dashboard.render(profile);
+        if (profile.role === 'admin') {
+          const banner = document.getElementById('devBanner');
+          if (banner) banner.style.display = 'flex';
+        }
+      }
     })();
   </script>
 </body>

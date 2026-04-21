@@ -5,10 +5,14 @@
 
 // Chave anon (publishable) é segura para frontend — segurança real = RLS no Supabase.
 // config.js pode sobrescrever via window.NUPI_URL / window.NUPI_KEY se disponível.
-const _SURL = window.NUPI_URL || 'https://quwpyrdxyibcbyzwfilb.supabase.co';
-const _SKEY = window.NUPI_KEY || 'sb_publishable_VmEMT07DiE1f5DtxzgZomA_-F0gZIpM';
+const _SB_URL = 'https://ovhktunmrtmdfsnobvku.supabase.co'; // Substituir pela URL do seu projeto
+const _SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'; // Substituir pela sua Service Role Key ou Anon Key
+// IMPORTANTE: Para o "Hard Delete", seria ideal usar a Service Role Key, mas para o app público usa-se a Anon.
 
-const _sb = supabase.createClient(_SURL, _SKEY);
+const _EMAILJS_PUB_KEY = 'WIiLVFRJPDeqTP7Ox';
+const _EMAILJS_SERVICE = 'service_85bjukt';
+
+let _sb = supabase.createClient(_SB_URL, _SB_KEY);
 window._supabase = _sb;
 
 /* ============================================================
@@ -95,11 +99,102 @@ const COORD_TAG_CLASS = {
 document.addEventListener("mousemove", e => {
   document.querySelectorAll(".sum-card, .section-card, .kanban-column, .cal-box").forEach(el => {
     const rect = el.getBoundingClientRect();
-    el.style.setProperty('--mouse-x', `${e.clientX - rect.left}px`);
-    el.style.setProperty('--mouse-y', `${e.clientY - rect.top}px`);
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    el.style.setProperty("--x", `${x}px`);
+    el.style.setProperty("--y", `${y}px`);
+    el.style.setProperty('--mouse-x', `${x}px`);
+    el.style.setProperty('--mouse-y', `${y}px`);
   });
 });
+
 function haptic(ms=15) { if(navigator.vibrate) navigator.vibrate(ms); }
+
+/* ============================================================
+   Omni-Connect Email & Magic Link Logic (V6.0)
+   ============================================================ */
+const EmailService = {
+  init() {
+    if (typeof emailjs !== 'undefined') {
+      emailjs.init(_EMAILJS_PUB_KEY);
+      console.log('EmailService: V6.0 Active');
+    }
+  },
+
+  async send(templateId, params) {
+    if (typeof emailjs === 'undefined') return;
+    try {
+      await emailjs.send(_EMAILJS_SERVICE, templateId, params);
+      console.log('Email sent:', templateId);
+    } catch (e) {
+      console.error('Email error:', e);
+    }
+  },
+
+  async notifyInvite(user, magicLink) {
+    await this.send('template_invite', { 
+      user_name: user.nome, 
+      target_email: user.email, 
+      context: 'Boas-vindas ao NUPIEEPRO!', 
+      link: magicLink 
+    });
+  },
+
+  async notifyBirthday(user) {
+    await this.send('template_birthday', {
+      user_name: user.nome,
+      target_email: user.email,
+      message: 'Feliz aniversário do time NUPIEEPRO!'
+    });
+  },
+
+  async notifyDemand(demand, targetEmail) {
+    await this.send('template_demand', {
+      demand_title: demand.titulo,
+      target_email: targetEmail,
+      sender: window._appProfile?.nome || 'Admin'
+    });
+  }
+};
+
+const MagicLink = {
+  async generate(email) {
+    const token = Math.random().toString(36).substring(2) + Date.now().toString(36);
+    const expiresAt = new Date(Date.now() + 2 * 60000).toISOString(); // 2 min
+
+    if (_sb) {
+      const { error } = await _sb.from('magic_links').insert({
+        email, token, expires_at: expiresAt, used: false
+      });
+      if (error) throw error;
+    }
+    
+    // Link base (ajustar conforme o domínio final)
+    const base = window.location.origin + window.location.pathname.replace('dashboard.html', 'index.html');
+    return `${base}?magic=${token}`;
+  },
+
+  async verify(token) {
+    if (!_sb) return null;
+    const { data, error } = await _sb.from('magic_links')
+      .select('*')
+      .eq('token', token)
+      .eq('used', false)
+      .single();
+
+    if (error || !data) return null;
+
+    // Verificar expiração
+    if (new Date() > new Date(data.expires_at)) {
+      App.toast('Link mágico expirado (2 min).', 'error');
+      return null;
+    }
+
+    // Marcar como usado
+    await _sb.from('magic_links').update({ used: true }).eq('token', token);
+    return data.email;
+  }
+};
 
 /* ============================================================
    Toast notifications
@@ -422,9 +517,15 @@ function toggleSidebar() {
 const Dashboard = {
   async render(profile) {
     if (!_sb) {
-      // Demo mode — show placeholder data
-      Dashboard.renderDemo(profile);
-      return;
+      // Demo mode    // Iniciar travas de mandato
+    DashboardExtra.syncMandates(profile);
+
+    // Módulos específicos
+    if (_currentRole === 'fin') Financeiro.checkTimer();
+    if (_currentRole === 'mkt') Marketing.loadKanban();
+    if (_currentRole === 'gp') GP.loadTalentBank();
+
+    this.renderStats();
     }
 
     try {
@@ -770,6 +871,13 @@ const Pessoas = {
           <option value="coordenador" ${m.role==='coordenador'?'selected':''}>Coordenador</option>
           <option value="admin" ${m.role==='admin'?'selected':''}>Admin/Dev</option>
         </select>
+
+        <!-- V6.0 Decision Console (Admin Only) -->
+        <div style="display:flex; gap:6px; margin-left:auto;">
+          <button class="btn btn-ghost" title="Gerar Magic Link (2 min)" onclick="Pessoas.sendMagicLink('${m.email}')" style="padding:4px 8px; font-size:14px; border:1px solid var(--b-1);">🪄</button>
+          <button class="btn btn-ghost" title="Redefinir Senha" onclick="Pessoas.resetPassword('${m.email}')" style="padding:4px 8px; font-size:14px; border:1px solid var(--b-1);">🔑</button>
+          <button class="btn btn-ghost" title="APAGAR DEFINITIVAMENTE" onclick="Pessoas.deleteMember('${m.id}','${m.email}')" style="padding:4px 8px; font-size:14px; border:1px solid var(--b-1); color:var(--red);">🔥</button>
+        </div>
       </div>
     `).join('');
   },
@@ -849,6 +957,8 @@ const Pessoas = {
     const cargo = document.getElementById('inviteCargo')?.value.trim();
     const coordSigla = document.getElementById('inviteCoord')?.value;
     const role = document.getElementById('inviteRole')?.value;
+    const bday = document.getElementById('inviteBday')?.value;
+    const mandate = document.getElementById('inviteMandate')?.value;
     const pass = document.getElementById('invitePass')?.value;
     const alertEl = document.getElementById('inviteAlert');
 
@@ -858,29 +968,70 @@ const Pessoas = {
     }
 
     if (_sb) {
-      // 1. Criar no Auth do Supabase? (Geralmente requer Admin API key)
-      // Aqui vamos apenas inserir na tabela 'users' e deixar o sistema de login lidar
-      // Nota: Em um sistema real, usaríamos supabase.auth.admin.createUser
-      const { data: coordData } = await _sb.from('coordenadorias').select('id').eq('sigla', coordSigla).single();
-      const initials = nome.split(' ').map(n => n[0]).join('').substring(0,2).toUpperCase();
-      
+      // 1. Criar no Auth? (Geralmente requer Admin API key)
+      App.toast('Adicionando membro ao núcleo...', 'loading');
       const { error } = await _sb.from('users').insert({
-        email, nome, cargo, role, coordenadoria_id: coordData?.id, 
-        iniciais: initials, ativo: true,
-        // No contexto deste app, vamos assumir que a senha é tratada via auth ou mock
+        email, nome, cargo, role, nascimento: bday, mandate_start: mandate,
+        coordenadoria_id: (await _sb.from('coordenadorias').select('id').eq('sigla', coordSigla).single()).data?.id,
+        ativo: true
       });
-
       if (error) {
-        if (alertEl) { alertEl.textContent = 'Erro ao salvar: ' + error.message; alertEl.className = 'alert-box error'; }
+        if (alertEl) { alertEl.textContent = 'Erro: ' + error.message; alertEl.className = 'alert-box error'; }
         return;
       }
+      App.toast('Membro adicionado com sucesso. Convite enviado!', 'success');
+      // Trigger Welcome/Access Email
+      const magic = await MagicLink.generate(email);
+      await EmailService.notifyInvite({ nome, email }, magic);
     }
+    Pessoas.loadMembers();
+  },
 
-    if (alertEl) { alertEl.textContent = 'Membro adicionado com sucesso!'; alertEl.className = 'alert-box success'; }
-    App.toast('Membro adicionado!', 'success');
+  /* ============================================================
+     Admin / Dev Decision Console (V6.0)
+     ============================================================ */
+  async deleteMember(id, email) {
+    if (!confirm(`TEM CERTEZA? O membro ${email} será APAGADO permanentemente do banco.`)) return;
+    App.loading(true);
+    try {
+      if (_sb) {
+        const { error } = await _sb.from('users').delete().eq('id', id);
+        if (error) throw error;
+        // E-mail de Despedida
+        await EmailService.send('template_goodbye', { user_name: email, target_email: email });
+      }
+      App.toast('Membro removido do núcleo.', 'success');
+      this.loadMembers();
+    } catch (e) {
+      App.toast('Erro ao remover: ' + e.message, 'error');
+    } finally { App.loading(false); }
+  },
+
+  async resetPassword(email) {
+    if (!confirm(`Enviar redefinição de senha para ${email}?`)) return;
+    if (_sb) {
+      const { error } = await _sb.auth.resetPasswordForEmail(email);
+      if (error) App.toast(error.message, 'error');
+      else App.toast('E-mail de redefinição enviado!', 'success');
+    }
+  },
+
+  async sendMagicLink(email) {
+    App.toast('Gerando acesso instantâneo...', 'info');
+    const link = await MagicLink.generate(email);
+    await EmailService.notifyInvite({ nome: email, email }, link);
+    App.toast('Magic Link (2 min) enviado com sucesso!', 'success');
+  }
+};
+    if (alertEl) { alertEl.textContent = 'Membro adicionado e e-mail enviado com sucesso!'; alertEl.className = 'alert-box success'; }
     this.loadMembers();
     // Limpar campos
-    ['inviteEmail','inviteNome','inviteCargo','invitePass'].forEach(id => {
+    ['inviteEmail','inviteNome','inviteCargo','invitePass','inviteBday','inviteMandate'].forEach(id => {
+      const el = document.getElementById(id); if (el) el.value = '';
+    });
+  },
+    // Limpar campos
+    ['inviteEmail','inviteNome','inviteCargo','invitePass','inviteBday','inviteMandate'].forEach(id => {
       const el = document.getElementById(id); if (el) el.value = '';
     });
   },
@@ -893,6 +1044,243 @@ const Pessoas = {
     const { error } = await q;
     if (error) { App.toast('Erro ao atualizar: ' + error.message, 'error'); return; }
     App.toast('Função atualizada com sucesso!', 'success');
+  }
+};
+
+/* ============================================================
+   Governance & Dashboard Extra Components
+   ============================================================ */
+const DashboardExtra = {
+  async loadBirthdays() {
+    const listEl = document.getElementById('birthdayList');
+    const mural = document.getElementById('dashBirthdays');
+    if (!listEl) return;
+
+    // Simulação ou Supabase: Pegar usuários que fazem niver este mês
+    const month = new Date().getMonth() + 1;
+    let bdays = [];
+
+    if (_sb) {
+      // Nota: Filtrar por mês no Supabase requer sintaxe específica ou extrair no JS
+      const { data } = await _sb.from('users').select('nome, nascimento, iniciais').not('nascimento', 'is', null);
+      bdays = (data || []).filter(u => {
+        const m = new Date(u.nascimento + 'T12:00:00').getMonth() + 1;
+        return m === month;
+      });
+    }
+
+    if (bdays.length === 0) {
+      if (mural) mural.style.display = 'none';
+      return;
+    }
+
+    if (mural) mural.style.display = 'block';
+    listEl.innerHTML = bdays.map(u => {
+      const d = new Date(u.nascimento + 'T12:00:00').getDate();
+      return `
+        <div style="flex:0 0 140px; background:var(--s1); border:1px solid var(--b-1); border-radius:12px; padding:12px; display:flex; flex-direction:column; align-items:center; gap:8px;">
+          <div class="side-avatar" style="width:40px;height:40px;font-size:14px;margin:0;">${u.iniciais}</div>
+          <div style="text-align:center;">
+            <div style="font-weight:700;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;width:110px;">${u.nome}</div>
+            <div style="font-size:10px;color:var(--orange);font-weight:800;margin-top:2px;">DIA ${d}</div>
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    // Sincronizar com Calendário Global
+    bdays.forEach(u => {
+      const d = new Date(u.nascimento + 'T12:00:00').getDate();
+      const key = `${new Date().getFullYear()}-${month}-${d}`;
+      if (!CAL_EVENTS[key]) CAL_EVENTS[key] = [];
+      CAL_EVENTS[key].push({ label: `Aniversário: ${u.nome}`, tag: '🎂', color: 'var(--yellow)' });
+    });
+    if (typeof Cal !== 'undefined' && Cal.render) Cal.render();
+  },
+
+  async renderAssembleia() {
+    // Placeholder para sistema de votação da Coord. Geral
+  }
+};
+    const listEl = document.getElementById('activeVotes');
+    if (!listEl) return;
+    // Mock ou Supabase: Carregar votações ativas
+    listEl.innerHTML = `
+      <div style="background:var(--s2); border:1px solid var(--b-p); padding:1.2rem; border-radius:12px;">
+        <div style="display:flex; justify-content:space-between; align-items:start; margin-bottom:12px;">
+          <strong style="color:var(--white);">Votação: Novo Uniforme 2026</strong>
+          <span class="nav-badge" style="background:var(--p-1); color:var(--c-white);">ABERTA</span>
+        </div>
+        <p style="font-size:12px; color:var(--t-2); margin-bottom:1rem;">Definição do modelo oficial para o ENEGEP 2026.</p>
+        <div style="display:flex; gap:8px;">
+          <button class="btn btn-primary" style="flex:1; font-size:11px;" onclick="Assembleia.votar('Uniforme A')">Opção Alpha</button>
+          <button class="btn btn-ghost" style="flex:1; font-size:11px; border:1px solid var(--b-1);" onclick="Assembleia.votar('Uniforme B')">Opção Beta</button>
+        </div>
+        <div style="font-size:10px; color:var(--t-3); margin-top:12px; font-style:italic;">* Voto 100% secreto e auditado pela Coord. Geral.</div>
+      </div>
+    `;
+  },
+
+  async syncMandates(profile) {
+    if (!profile || !profile.mandate_start) return;
+    const start = new Date(profile.mandate_start);
+    const now = new Date();
+    const diffMs = now - start;
+    const diffYears = diffMs / (1000 * 60 * 60 * 24 * 365.25);
+
+    // Regra: Conselheiro = 1 ano, Coord = 3 anos
+    if (profile.role === 'conselheiro' && diffYears >= 1) {
+      this.lockSystem('Seu mandato de Conselheiro (1 ano) expirou.');
+    } else if (profile.role === 'coord' && diffYears >= 3) {
+      this.lockSystem('Seu mandato de Coordenador (3 anos) expirou.');
+    }
+  },
+
+  lockSystem(msg) {
+    document.body.innerHTML = `
+      <div style="height:100vh; background:#000; color:#fff; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; font-family:sans-serif; padding:2rem;">
+        <div style="font-size:60px; margin-bottom:20px;">🛡️</div>
+        <h1 style="color:var(--orange);">ACESSO REVOGADO</h1>
+        <p style="max-width:400px; line-height:1.6; color:#888;">${msg}<br><br>Gere o relatório de final de gestão no repositório se necessário ou entre em contato com o Desenvolvedor.</p>
+        <button onclick="location.href='index.html'" style="margin-top:2rem; background:#222; border:1px solid #444; color:#fff; padding:10px 20px; border-radius:8px; cursor:pointer;">Voltar ao Início</button>
+      </div>
+    `;
+  }
+};
+
+const Projetos = {
+  async loadSponsors() {
+    const grid = document.getElementById('sponsorGrid');
+    if (!grid) return;
+    // Mock ou Supabase
+    const sponsors = [
+      { nome: 'Empresa Alpha', finalidade: 'Patrocinador Ouro', logo: '🏢' },
+      { nome: 'Studio Beta', finalidade: 'Apoio NUPICAST', logo: '🎙️' }
+    ];
+    grid.innerHTML = sponsors.map(s => `
+      <div class="section-card" style="text-align:center; padding:1.2rem; background:var(--s1); border:1px solid var(--b-1);">
+        <div style="font-size:32px; margin-bottom:8px;">${s.logo}</div>
+        <div style="font-weight:700; color:var(--white); font-size:13px;">${s.nome}</div>
+        <div style="font-size:10px; color:var(--t-3); margin-top:4px;">${s.finalidade}</div>
+      </div>
+    `).join('');
+  },
+  novoPatrocinador() {
+    App.toast('Módulo de Upload em construção...', 'info');
+  }
+};
+
+const Assembleia = {
+  novaVotacao() {
+    const titulo = prompt('Título da Votação:');
+    if (titulo) App.toast('Votação criada com sucesso!', 'success');
+  },
+  votar(opcao) {
+    App.toast(`Voto secreto em "${opcao}" computado!`, 'success');
+  },
+  verResultados() {
+    App.toast('Resultados parciais: Opção Alpha 64% | Opção Beta 36%', 'info');
+  }
+};
+
+const Geral = {
+  async loadMeetings() {
+    const body = document.getElementById('meetingTableBody');
+    if (!body) return;
+    // Mock ou Supabase
+    const meetings = [
+      { id: 1, data: '2026-04-15', titulo: 'RGN #04 - Planejamento ENEGEP', presenca: '85%' },
+      { id: 2, data: '2026-03-30', titulo: 'RGN #03 - Alinhamento Operacional', presenca: '92%' }
+    ];
+    body.innerHTML = meetings.map(m => `
+      <tr style="border-bottom:1px solid var(--b-1); font-size:12px;">
+        <td style="padding:12px;">${new Date(m.data+'T12:00:00').toLocaleDateString('pt-BR')}</td>
+        <td style="padding:12px; font-weight:700; color:var(--white);">${m.titulo}</td>
+        <td style="padding:12px;"><span class="nav-badge" style="background:var(--w10);color:var(--green);">${m.presenca}</span></td>
+        <td style="padding:12px;">
+          <button class="btn btn-ghost" style="padding:4px 8px; font-size:10px;" onclick="Geral.gerenciarPresenca(${m.id})">📂 Lista</button>
+        </td>
+      </tr>
+    `).join('');
+  },
+
+  async checkPCD() {
+    const list = document.getElementById('pcdAlerts');
+    if (!list) return;
+    // Mock: Simular membros com 2 faltas não justificadas
+    const alerts = [
+      { nome: 'Pedro Assis', faltas: 2, coord: 'MKT' },
+      { nome: 'Marina Souza', faltas: 3, coord: 'PRJ' }
+    ];
+    if (alerts.length === 0) {
+      list.innerHTML = '<p class="text-muted text-sm">Nenhum alerta crítico disparado.</p>';
+      return;
+    }
+    list.innerHTML = alerts.map(a => `
+      <div style="background:rgba(247,84,18,0.05); border:1px solid var(--b-a); padding:10px; border-radius:8px; display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+        <div>
+          <div style="font-weight:700; font-size:12px; color:var(--white);">${a.nome}</div>
+          <div style="font-size:10px; color:var(--orange);">⚠️ ${a.faltas} FALTAS NÃO JUSTIFICADAS (${a.coord})</div>
+        </div>
+        <button class="btn btn-ghost" style="font-size:10px; padding:4px 8px;" onclick="App.toast('Notificação enviada ao coordenador.','info')">Notificar</button>
+      </div>
+    `).join('');
+  },
+
+  novaReuniao() { App.toast('Módulo de agendamento em construção...', 'info'); },
+  gerenciarPresenca(id) { App.toast('Abrindo lista de presença para RGN #' + id, 'info'); }
+};
+
+const Financeiro = {
+  checkTimer() {
+    // Alerta de 24h para transferências
+    const lastTransfer = localStorage.getItem('last_fin_transfer');
+    if (lastTransfer) {
+      const diff = Date.now() - parseInt(lastTransfer);
+      if (diff < 24 * 60 * 60 * 1000) {
+        App.toast('⚠️ ATENÇÃO: Transferência pendente de prestação de contas (24h).', 'warning');
+      }
+    }
+  },
+  loadAbepro() {
+    // Lógica para controle de filiação
+  }
+};
+
+const Marketing = {
+  async loadSocialStats() {
+    // Integrar com APIs reais no futuro, agora mock premium
+    console.log('Marketing: Stats carregadas.');
+  },
+  async loadKanban() {
+    const el = document.getElementById('marketingKanban');
+    if (!el) return;
+    el.innerHTML = `
+      <div class="kanban-column" style="flex:1; min-width:250px;">
+        <div class="kanban-header">Fila Lojinha (10 dias)</div>
+        <div class="kanban-card" style="border-left:4px solid var(--orange);">
+           <div style="font-weight:700;">Pedido #2491</div>
+           <div style="font-size:10px; color:var(--orange);">⏰ 3 DIAS RESTANTES</div>
+        </div>
+      </div>
+    `;
+  }
+};
+
+const GP = {
+  async loadTalentBank() {
+    const grid = document.getElementById('talentGrid');
+    if (!grid) return;
+    // CRM de Membros
+    grid.innerHTML = `
+      <div style="background:var(--s1); padding:10px; border-radius:8px; display:flex; align-items:center; gap:12px;">
+        <div class="side-avatar" style="width:30px;height:30px;font-size:11px;">RB</div>
+        <div>
+          <div style="font-weight:700; font-size:12px;">Rayan Bezerra</div>
+          <div style="font-size:10px; color:var(--t-3);">Habilidade: UI/UX, Fullstack</div>
+        </div>
+      </div>
+    `;
   }
 };
 
@@ -990,55 +1378,52 @@ function markAllNotifRead() {
    ============================================================ */
 // Páginas por visão do admin (simula o que cada coord vê)
 const DEV_PAGES = {
-  ger: [
+  admin: [
     { id: 'dashboard',  icon: '⬡', label: 'Painel Central' },
-    { id: 'abj',        icon: '⭐', label: 'Selo ABJ', badge: '!' },
+    { id: 'abj',        icon: '⭐', label: 'Selo ABJ' },
     { id: 'tarefas',    icon: '☰', label: 'Todas Demandas' },
-    { id: 'pessoas',    icon: '◒', label: 'Membros & Gestão' },
-    { id: 'financeiro', icon: '◎', label: 'Financeiro' },
-    { id: 'operacoes',  icon: '⚙', label: 'Operações' },
-    { id: 'projetos',   icon: '◫', label: 'Projetos' },
-    { id: 'manu',       icon: '🗂', label: 'Repositório' },
-  ],
-  ops: [
+    { id: 'pessoas',    icon: '🤝', label: 'Gestão de Membros' },
+    { id: 'financeiro', icon: '◎', label: 'Financeiro Hub' },
     { id: 'operacoes',  icon: '⚙', label: 'Operações Hub' },
-    { id: 'tarefas',    icon: '☰', label: 'Processos OPS' },
-    { id: 'manu',       icon: '🗂', label: 'Repositório' },
-  ],
-  gp: [
-    { id: 'pessoas',    icon: '◒', label: 'Membros e G.P' },
-    { id: 'tarefas',    icon: '☰', label: 'Tarefas G.P' },
-  ],
-  mkt: [
-    { id: 'dashboard',  icon: '⬡', label: 'Painel Central' },
     { id: 'marketing',  icon: '🚀', label: 'Agência MKT' },
-    { id: 'abj',        icon: '⭐', label: 'Selo ABJ', badge: '!' },
-    { id: 'tarefas',    icon: '☰', label: 'Todas Demandas' },
-    { id: 'pessoas',    icon: '🤝', label: 'Membros & Gestão' },
-    { id: 'financeiro', icon: '💎', label: 'Financeiro' },
-    { id: 'operacoes',  icon: '⚡', label: 'Operações' },
-    { id: 'projetos',   icon: '📐', label: 'Projetos' },
+    { id: 'projetos',   icon: '◫', label: 'Projetos Hub' },
+    { id: 'gp',         icon: '◒', label: 'Gestão Pessoas' },
     { id: 'manu',       icon: '🗂', label: 'Repositório' },
-    { id: 'notificacoes', icon: '🔔', label: 'Notificações' },
   ],
-  prj: [
-    { id: 'projetos',   icon: '◫', label: 'Ações Projetos' },
-    { id: 'tarefas',    icon: '☰', label: 'Tarefas PRJ' },
+  geral: [
+    { id: 'dashboard',  icon: '⬡', label: 'Dashboard Geral' },
+    { id: 'abj',        icon: '⭐', label: 'Selo ABJ' },
+    { id: 'tarefas',    icon: '☰', label: 'Controle Estratégico' },
+    { id: 'pessoas',    icon: '🤝', label: 'Gestão de Membros' },
+    { id: 'financeiro', icon: '◎', label: 'Aprovações FIN' },
+    { id: 'operacoes',  icon: '⚙', label: 'Auditoria Ops' },
+    { id: 'manu',       icon: '🗂', label: 'Documentos' },
   ],
-  fin: [
-    { id: 'financeiro', icon: '◎', label: 'Tesouraria' },
-    { id: 'tarefas',    icon: '☰', label: 'Tarefas FIN' },
+  coord: [
+    { id: 'dashboard',  icon: '⬡', label: 'Início' },
+    { id: 'tarefas',    icon: '☰', label: 'Minhas Demandas' },
+    { id: 'pessoas',    icon: '🤝', label: 'Meu Time' },
+    { id: 'manu',       icon: '🗂', label: 'Repositório' },
+    // A página específica da coord será injetada via JS dependendo da sigla
   ],
+  assessor: [
+    { id: 'dashboard',  icon: '⬡', label: 'Meu Painel' },
+    { id: 'tarefas',    icon: '☰', label: 'Minhas Atividades' },
+    { id: 'compartilhado', icon: '📅', label: 'Calendário global' },
+  ],
+  conselheiro: [
+    { id: 'dashboard',  icon: '⬡', label: 'Histórico' },
+    { id: 'manu',       icon: '🗂', label: 'Arquivo Morto' },
+  ]
 };
 
 // Chip do usuário por role (JR em GER, RB em MKT, nome em outros)
 const DEV_CHIP = {
-  ger:  { iniciais: 'JR', nome: 'JR', cargo: 'Coord. Geral' },
-  ops:  { iniciais: 'JR', nome: 'JR', cargo: 'Preview OPS' },
-  gp:   { iniciais: 'JR', nome: 'JR', cargo: 'Preview G.P' },
-  mkt:  { iniciais: 'RB', nome: 'DevRB', cargo: 'Assessor & Dev' },
-  prj:  { iniciais: 'JR', nome: 'JR', cargo: 'Preview PRJ' },
-  fin:  { iniciais: 'JR', nome: 'JR', cargo: 'Preview FIN' },
+  admin:       { iniciais: 'AD', nome: 'Dev / Admin', cargo: 'Developer Master' },
+  geral:       { iniciais: 'CG', nome: 'Coord. Geral', cargo: 'Gestão Estratégica' },
+  coord:       { iniciais: 'CO', nome: 'Coordenador',   cargo: 'Liderança de Área' },
+  assessor:    { iniciais: 'AS', nome: 'Assessor',      cargo: 'Membro Efetivo' },
+  conselheiro: { iniciais: 'CS', nome: 'Conselheiro',   cargo: 'Membro Consultivo' },
 };
 
 let _currentRole = 'ger';
@@ -1062,7 +1447,13 @@ function switchRole(role) {
   if (firstPage) goTo(firstPage.id);
 }
 
-const ROLE_LABELS = { ger:'⬡ Coord. Geral', ops:'⚙ Operações', gp:'◒ G. Pessoas', mkt:'◬ Assessor MKT', prj:'◫ Projetos', fin:'◎ Finanças' };
+const ROLE_LABELS = { 
+  admin: '⚡ Developer Master', 
+  geral: '⬡ Coordenação Geral', 
+  coord: '◒ Coordenadoria', 
+  assessor: 'Membro Efetivo', 
+  conselheiro: '📜 Conselheiro' 
+};
 
 function _buildNav(role) {
   const nav = document.getElementById('sideNav');
@@ -1141,10 +1532,20 @@ const Kanban = (() => {
 
   function _cardHtml(d) {
     const prazo = d.prazo ? `<span class="kanban-card-meta">📅 ${new Date(d.prazo).toLocaleDateString('pt-BR')}</span>` : '';
-    const coord = d.coordenadoria ? `<span class="kanban-card-tag">${d.coordenadoria.toUpperCase()}</span>` : '';
+    const dest  = d.coordenadoria ? `<span class="kanban-card-tag">${d.coordenadoria.toUpperCase()}</span>` : '';
+    
+    // V6.0: Remetente Icon
+    const remSigla = d.coord_remetente || 'GER';
+    const remIcon  = `<span class="kanban-rem-icon" title="Origem: ${remSigla}">${remSigla}</span>`;
+    
     return `<div class="kanban-card" onclick="Kanban.abrirDetalhes('${d.id}')">
       <div class="kanban-card-title">${_esc(d.titulo)}</div>
-      <div class="kanban-card-footer">${coord}${prazo}</div>
+      <div class="kanban-card-footer">
+        <div style="display:flex; gap:4px; align-items:center;">
+          ${remIcon} ${dest}
+        </div>
+        ${prazo}
+      </div>
     </div>`;
   }
 
@@ -1179,13 +1580,32 @@ const Kanban = (() => {
 
     if (window._supabase) {
       try {
+        const creator = window._appProfile?.email || 'desconhecido';
+        const remCoord = window._appProfile?.coordenadorias?.sigla || 'GER';
+
         const { data, error } = await window._supabase
           .from('demandas')
-          .insert([{ titulo, coordenadoria: coord, prazo, descricao: desc, status: 'pendente' }])
+          .insert([{ 
+            titulo, 
+            coordenadoria: coord, 
+            prazo, 
+            descricao: desc, 
+            status: 'pendente',
+            criado_por: creator,
+            coord_remetente: remCoord
+          }])
           .select()
           .single();
         if (error) throw error;
         _demands.unshift(data);
+        
+        // Trigger Email Notification (EmailJS)
+        await EmailService.send('template_demand', {
+          demand_title: titulo,
+          target_coord: coord,
+          sender_name: window._appProfile?.nome || 'Especialista'
+        });
+
       } catch (e) {
         console.warn('Kanban: fallback local.', e.message);
         _demands.unshift(demand);

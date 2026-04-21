@@ -19,6 +19,9 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Plus+Jakarta+Sans:wght@700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   
+  <!-- EmailJS SDK -->
+  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+  
   <style>
     :root {
       --black:   #000000;
@@ -56,7 +59,7 @@
       position: absolute;
       inset: 0;
       background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%), 
-                  linear-gradient(90deg, rgba(255, 0, 0, 0.02), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.02));
+                  linear-gradient(90deg, rgba(255, 0, 0, 0.02), rgba(0, 255, 0, 0.01), rgba(0, 255, 0, 0.02));
       background-size: 100% 3px, 3px 100%;
       z-index: 10;
       opacity: 0.3;
@@ -157,22 +160,34 @@
 
     @keyframes breathe { 0% { transform: scale(1); filter: brightness(1); } 100% { transform: scale(1.08); filter: brightness(1.3) drop-shadow(0 0 10px var(--orange)); } }
 
+    /* ─── Identidade Visual V6.0 Omni-Connect ─── */
     .shimmer-text {
       font-family: var(--font-head);
       font-size: clamp(40px, 5.5vw, 68px);
       line-height: 0.95;
       font-weight: 900;
       letter-spacing: -2px;
-      margin-bottom: 1.5rem;
-      background: linear-gradient(90deg, #fff 0%, var(--orange) 50%, #fff 100%);
-      background-size: 200% auto;
+      margin-bottom: 2rem;
+      /* Gradiente Enterprise Multicolorido */
+      background: linear-gradient(91deg, 
+        #ffffff 0%, 
+        #f75412 25%, 
+        #2f1d70 50%, 
+        #29324f 75%, 
+        #ffffff 100%);
+      background-size: 300% auto;
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
-      animation: shimmerLines 6s linear infinite;
+      animation: shimmerElite 8s ease-in-out infinite;
+      filter: drop-shadow(0 0 15px rgba(247, 84, 18, 0.2));
     }
-    @keyframes shimmerLines { 100% { background-position: 200% center; } }
+    @keyframes shimmerElite {
+      0% { background-position: 0% center; }
+      50% { background-position: 150% center; }
+      100% { background-position: 300% center; }
+    }
 
-    .subtitle { font-size: 18px; color: rgba(255,255,255,0.5); max-width: 480px; line-height: 1.5; font-weight: 400; }
+    .subtitle { font-size: 18px; color: rgba(255,255,255,0.5); max-width: 520px; line-height: 1.6; font-weight: 400; }
 
     /* ─── Form Elements ─── */
     .login-box { width: 100%; }
@@ -330,8 +345,26 @@
   <script src="js/app.js?v=9"></script>
   <script src="js/auth.js?v=9"></script>
   <script>
-    initLoginPage();
-    if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
+    (async () => {
+      // Init e-mail
+      if (typeof EmailService !== 'undefined') EmailService.init();
+
+      // MAGIC LINK V6.0: Clicou, Entrou.
+      const magic = new URLSearchParams(window.location.search).get('magic');
+      if (magic && typeof MagicLink !== 'undefined') {
+        const email = await MagicLink.verify(magic);
+        if (email) {
+          localStorage.setItem('mockSession', email);
+          App.toast('Sessão restaurada via Magic Link!', 'success');
+          setTimeout(() => App.redirect('dashboard.html'), 800);
+          return;
+        }
+      }
+
+      initLoginPage();
+      Theme.init();
+      if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
+    })();
 
     const cursor = document.createElement('div');
     cursor.className = 'custom-cursor';
@@ -358,6 +391,17 @@
     document.querySelectorAll('a, button, input').forEach(el => {
       el.addEventListener('mouseenter', () => cursor.classList.add('hovering'));
       el.addEventListener('mouseleave', () => cursor.classList.remove('hovering'));
+    });
+
+    // V6.0 — Higiene de URL e Segurança
+    window.addEventListener('load', () => {
+      const url = new URL(window.location);
+      if (url.searchParams.has('magic') || url.searchParams.has('recovery')) {
+        setTimeout(() => {
+          window.history.replaceState({}, document.title, window.location.pathname);
+          console.log('V6.0: Tokens de sessão higienizados.');
+        }, 1000);
+      }
     });
   </script>
 </body>

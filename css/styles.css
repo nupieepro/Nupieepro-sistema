@@ -4,7 +4,7 @@
    Fontes:  DM Sans (corpo) · Plus Jakarta Sans (display)
    ════════════════════════════════════════════════════════════════ */
 
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Plus+Jakarta+Sans:wght@600;700;800;900&family=Inter:wght@400;700&family=Roboto+Mono:wght@400;700&family=Outfit:wght@400;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Plus+Jakarta+Sans:wght@600;700;800;900&family=Inter:wght@400;700&family=Roboto+Mono:wght@400;700&family=Outfit:wght@400;700&family=Montserrat:wght@400;700&family=Fira+Code:wght@400;500&display=swap');
 
 /* ═══ DESIGN TOKENS ═══ */
 :root {
@@ -961,11 +961,58 @@ input, select, textarea { font-family: var(--f-body); }
   --c-accent: #f3f315;
 }
 
+/* Fusion Elite — Oficial NUPI (Roxo + Laranja) */
+[data-theme="fusion"] {
+  --c-bg: #000000; --c-s1: #080510; --c-s2: #0d0a1a;
+  --c-s3: #2f1d70; --c-s4: #f75412; --c-s5: #ffffff;
+  --c-accent: #f75412; --c-purple: #2f1d70;
+  --t-2: #a89fd0; --t-3: rgba(168,159,208,0.55);
+  --border: rgba(155,123,232,0.15);
+}
+
+/* Luminous Specialist — White/Light High-End */
+[data-theme="luminous"] {
+  --c-bg: #ffffff; --c-s1: #f8f9fa; --c-s2: #f1f3f5;
+  --c-s3: #e9ecef; --c-s4: #dee2e6; --c-s5: #2f1d70;
+  --c-slate: #495057; --t-1: #000000; --t-2: #2f1d70;
+  --t-3: rgba(47,29,112,0.55); --t-4: rgba(47,29,112,0.15);
+  --b-1: rgba(0,0,0,0.06); --b-2: rgba(0,0,0,0.12);
+  --b-3: rgba(0,0,0,0.20); --b-a: rgba(247,84,18,0.45);
+  --border: rgba(0,0,0,0.08); --c-white: #000000;
+  --c-accent: #f75412; --sh-sm: 0 4px 6px rgba(0,0,0,0.05);
+}
+
+/* Obsidian Stealth — Absolute Dark / High Contrast */
+[data-theme="obsidian"] {
+  --c-bg: #000000; --c-s1: #050505; --c-s2: #0a0a0a;
+  --c-s3: #121212; --c-s4: #1a1a1a; --c-s5: #ffffff;
+  --c-slate: #888888; --t-1: #ffffff; --t-2: #dddddd;
+  --border: rgba(255,255,255,0.1); --c-accent: #ffffff;
+}
+
+/* Rose Quartz Specialist — Refined Clean Pinkish */
+[data-theme="rose"] {
+  --c-bg: #ffffff; --c-s1: #fffafa; --c-s2: #fdf2f2;
+  --c-s3: #faeaea; --c-s4: #f7e0e0; --c-s5: #2f1d70;
+  --t-1: #1a1a1a; --t-2: #2f1d70; --c-accent: #d4a5a5;
+  --border: rgba(212,165,165,0.2);
+}
+
+/* Glimmer Specialist — Elegant / Soft Accents */
+[data-theme="glimmer"] {
+  --c-bg: #030303; --c-s1: #080808; --c-s2: #0d0d0d;
+  --c-s3: #151515; --c-s4: #202020; --c-s5: #f75412;
+  --t-2: #888888; --border: rgba(255,255,255,0.05);
+  --c-accent: #666666;
+}
+
 /* ═══ FONT SYSTEM ═══ */
-[data-font="inter"]  { --f-body: 'Inter', sans-serif; --f-head: 'Inter', sans-serif; }
-[data-font="mono"]   { --f-body: 'Roboto Mono', monospace; --f-head: 'Roboto Mono', monospace; }
-[data-font="outfit"] { --f-body: 'Outfit', sans-serif; --f-head: 'Outfit', sans-serif; }
-[data-font="default"] { --f-body: 'DM Sans', sans-serif; --f-head: 'Plus Jakarta Sans', sans-serif; }
+[data-font="inter"]      { --f-body: 'Inter', sans-serif;         --f-head: 'Inter', sans-serif; }
+[data-font="mono"]       { --f-body: 'Roboto Mono', monospace;    --f-head: 'Roboto Mono', monospace; }
+[data-font="outfit"]     { --f-body: 'Outfit', sans-serif;        --f-head: 'Outfit', sans-serif; }
+[data-font="fira"]       { --f-body: 'Fira Code', monospace;      --f-head: 'Fira Code', monospace; }
+[data-font="montserrat"] { --f-body: 'Montserrat', sans-serif;    --f-head: 'Montserrat', sans-serif; }
+[data-font="default"]    { --f-body: 'DM Sans', sans-serif;       --f-head: 'Plus Jakarta Sans', sans-serif; }
 body { font-family: var(--f-body); font-feature-settings: "cv11", "ss01"; }
 
 /* ═══════════════════════════════════════════════════════════════

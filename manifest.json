@@ -21,9 +21,15 @@
     },
     {
       "src": "assets/arte-logo.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "assets/arte-logo.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
     },
     {
       "src": "assets/arte-logo.png",
@@ -34,10 +40,10 @@
   ],
   "shortcuts": [
     {
-      "name": "Dashboard",
-      "short_name": "Painel",
-      "description": "Ir para o painel principal",
-      "url": "./dashboard.html",
+      "name": "NUPIEEPRO",
+      "short_name": "Início",
+      "description": "Entrar no sistema",
+      "url": "/index.html",
       "icons": [{ "src": "assets/arte-logo.png", "sizes": "192x192" }]
     }
   ]
