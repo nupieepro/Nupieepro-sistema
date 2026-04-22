@@ -3,23 +3,21 @@
    Network-first com fallback para cache offline
    ============================================================ */
 
-const CACHE_NAME = 'nupieepro-v9';
+const CACHE_NAME = 'nupieepro-v10';
 const ASSETS = [
   './',
   './index.html',
   './dashboard.html',
   './convite.html',
   './reset.html',
+  './operacoes-site-inscricoes.html',
   './css/styles.css',
-  './js/config.js',
+  './js/config.defaults.js',
   './js/app.js',
   './js/auth.js',
   './js/abj.js',
   './manifest.json',
   './assets/icon.svg',
-  './assets/arte-logo.png',
-  './assets/1000279363.png',
-  './assets/C%C3%B3pia%20de%20Arte_20260421_200942_0000.png',
 ];
 
 // Install — pré-carrega shell do app

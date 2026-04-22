@@ -234,7 +234,7 @@ async function doResetPassword() {
 /* ============================================================
    Ativar Convite
    ============================================================ */
-function activarConvite() {
+function ativarConvite() {
   const tokenEl = document.getElementById('conviteTokenInput');
   const token = tokenEl?.value.trim();
   if (!token) {

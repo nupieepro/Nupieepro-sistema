@@ -1,12 +1,11 @@
 /* ============================================================
    NUPIEEPRO — Configuração de ambiente (EXEMPLO)
 
-   1. Copie este arquivo para js/config.js
-   2. Preencha com suas credenciais reais
-   3. NUNCA commite js/config.js (já está no .gitignore)
+   O repositório usa js/config.defaults.js (versionado) com a URL/anon
+   do projeto. Para outro ambiente, edite config.defaults.js localmente
+   ou ajuste os Secrets no GitHub Actions (deploy sobrescreve defaults).
 
-   Em produção, o GitHub Actions cria config.js automaticamente
-   a partir dos Secrets do repositório.
+   Este arquivo serve apenas de referência de variáveis.
    ============================================================ */
 
 window.NUPI_URL = 'COLE_SUA_SUPABASE_URL_AQUI';

@@ -161,7 +161,7 @@ const ABJ = {
   },
 
   isAdmin() {
-    if (typeof _appProfile !== 'undefined' && _appProfile?.role === 'admin') return true;
+    if (window._appProfile?.role === 'admin') return true;
     return localStorage.getItem('mockSession') === 'jjoserrayan2711@gmail.com';
   },
 
@@ -190,7 +190,7 @@ const ABJ = {
 
     ABJ.renderCards('todas');
     ABJ.updateHeader();
-    App.toast(`✓ Atividade #${item.numero} provada (${item.ptsMax} pts)`, 'success');
+    App.toast(`✓ Atividade #${item.numero} aprovada (${item.ptsMax} pts)`, 'success');
   },
 
   openModal(id) {

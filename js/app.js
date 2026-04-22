@@ -420,7 +420,7 @@ const App = {
       { id: 'global_assembleia', icon: 'users', label: 'Assembleia e Votos' }
     ];
 
-    const isCoordGeral = profile?.role === 'coord' && cName.toUpperCase() === 'GERAL';
+    const isCoordGeral = profile?.role === 'coordenador' && cName.toUpperCase() === 'GERAL';
     const myPages = (profile?.role === 'admin' || isCoordGeral)
       ? Object.values(ROLE_PAGES).flat().concat(GLOBAL_PAGES).filter((v,i,a)=>a.findIndex(t=>(t.id === v.id))===i)
       : (ROLE_PAGES[roleKey] || []).concat(GLOBAL_PAGES);
@@ -428,7 +428,7 @@ const App = {
     let html = '<div class="sidebar-section">Meu painel</div>';
     html += myPages.map(p => 
       `<div class="nav-item" id="nav-${p.id}" onclick="goTo('${p.id}')">
-        <span class="nav-icon"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${getIcon(p.icon)}</svg></span>
+        <span class="nav-icon">${getIcon(p.icon)}</span>
         <span class="nav-label">${p.label}</span>
         ${p.badge ? `<span class="nav-badge">${p.badge}</span>` : ''}
       </div>`
@@ -436,7 +436,7 @@ const App = {
 
     html += '<div class="sidebar-section">Operacional</div>';
     html += `<div class="nav-item" style="background:var(--orange-dim);border-color:var(--orange-border);color:var(--orange)" onclick="App.toast('Módulo ABJ Ativado','info')">
-      <span class="nav-icon"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${getIcon('star')}</svg></span>
+      <span class="nav-icon">${getIcon('star')}</span>
       <span class="nav-label" style="color:var(--orange)">Inserir Atividade ABJ</span>
     </div>`;
 
@@ -444,7 +444,7 @@ const App = {
     if (profile?.role === 'admin') {
       html += '<div class="sidebar-section">Terminal do Dev</div>';
       html += `<div class="nav-item" style="color:var(--orange); border-left:2px solid var(--orange);" onclick="window.open('https://supabase.com/dashboard/project/quwpyrdxyibcbyzwfilb','_blank')">
-        <span class="nav-icon"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${getIcon('settings')}</svg></span>
+        <span class="nav-icon">${getIcon('settings')}</span>
         <span class="nav-label">DB Supabase Dashboard</span>
       </div>`;
       html += `<div class="nav-item" onclick="window.open('https://nupieepro.github.io/Lojinha-Nupieepro/admin.html','_blank')">
@@ -471,7 +471,7 @@ const App = {
     const myPages = (ROLE_PAGES[coordName] || []).slice(0, 5);
     mobileNav.innerHTML = myPages.map(p =>
       `<div class="mnav-item" onclick="goTo('${p.id}')">
-        <span class="mnav-icon"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${getIcon(p.icon)}</svg></span>
+        <span class="mnav-icon">${getIcon(p.icon).replace('width="18" height="18"', 'width="20" height="20"')}</span>
         <span>${p.label}</span>
       </div>`
     ).join('');
@@ -1040,12 +1040,12 @@ const Pessoas = {
 
     if (_sb) {
       const { data: coordData } = await _sb.from('coordenadorias').select('id').eq('sigla', coordSigla).single();
-      const { error } = await _sb.from('convites').insert({
+        const { error } = await _sb.from('convites').insert({
         token, email, cargo, role,
         coordenadoria_id: coordData?.id,
         usado: false,
         expires_at: expires,
-        created_by: window._appProfile?.id || null
+        criado_por: window._appProfile?.id || null
       });
       if (error) {
         if (alertEl) { alertEl.textContent = 'Erro ao salvar convite: ' + error.message; alertEl.className = 'alert-box error'; }
@@ -1109,7 +1109,7 @@ const Pessoas = {
 
     if (_sb) {
       // 1. Criar no Auth? (Geralmente requer Admin API key)
-      App.toast('Adicionando membro ao núcleo...', 'loading');
+      App.toast('Adicionando membro ao núcleo...', 'info');
       const { error } = await _sb.from('users').insert({
         email, nome, cargo, role, nascimento: bday, mandate_start: mandate,
         coordenadoria_id: (await _sb.from('coordenadorias').select('id').eq('sigla', coordSigla).single()).data?.id,
@@ -1135,7 +1135,7 @@ const Pessoas = {
     App.loading(true);
     try {
       if (_sb) {
-        const { error } = await sb.from('users').delete().eq('id', id);
+        const { error } = await _sb.from('users').delete().eq('id', id);
         if (error) throw error;
         // E-mail de Despedida Profissional V6.8
         await window.EmailService?.notifyGoodbye?.({ nome: email, email });
@@ -1175,6 +1175,10 @@ const PessoasExt = {
     if (error) { window.App?.toast?.('Erro ao atualizar: ' + error.message, 'error'); return; }
     window.App?.toast?.('Função atualizada com sucesso!', 'success');
   }
+};
+
+Pessoas.updateRole = function (identifier, newRole) {
+  return PessoasExt.updateRole(identifier, newRole);
 };
 
 /* ============================================================
@@ -1264,7 +1268,7 @@ const DashboardExtra = {
     // Regra: Conselheiro = 1 ano, Coord = 3 anos
     if (profile.role === 'conselheiro' && diffYears >= 1) {
       this.lockSystem('Seu mandato de Conselheiro (1 ano) expirou.');
-    } else if (profile.role === 'coord' && diffYears >= 3) {
+    } else if (profile.role === 'coordenador' && diffYears >= 3) {
       this.lockSystem('Seu tempo limite como Coordenador (3 anos) expirou.');
     }
   },
