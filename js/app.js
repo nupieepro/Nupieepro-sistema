@@ -487,55 +487,52 @@ const App = {
 
   /** Init full dashboard (auth + sidebar + profile) */
   async initDashboard() {
-    // _appProfile é variável global acessada pelo ABJ e outros módulos
-    Theme.init();
+    try {
+      Theme.init();
 
-    const session = await App.requireAuth();
-    if (!session) return null;
+      const session = await App.requireAuth();
+      if (!session) return null;
 
-    // CRITICAL: torna o shell visível após autenticação confirmada
-    const shell = document.getElementById('appShell');
-    if (shell) shell.classList.add('visible');
+      const shell = document.getElementById('appShell');
+      if (shell) shell.classList.add('visible');
 
-    const profile = await App.getProfile();
-    if (!profile) {
-      App.toast('Perfil não encontrado. Faça logout e tente novamente.', 'error');
+      const profile = await App.getProfile();
+      if (!profile) {
+        App.toast('Perfil não encontrado. Faça logout.', 'error');
+        return null;
+      }
+      window._appProfile = profile;
+
+      if (typeof DashboardExtra !== 'undefined') {
+        DashboardExtra.syncMandates(profile);
+        DashboardExtra.checkGlobalInactivity();
+      }
+
+      const coordName = profile.coordenadorias?.nome || 'Geral';
+
+      document.getElementById('sideAvatar').textContent = profile.iniciais || profile.nome?.[0] || '?';
+      document.getElementById('sideName').textContent   = profile.nome || 'Usuário';
+      document.getElementById('sideRole').textContent   = (profile.cargo || profile.role || 'Membro') + ' · ' + coordName;
+
+      App.buildSidebar(coordName);
+      App.buildMobileNav(coordName);
+
+      const isOps = profile.role === 'admin' || (profile.coordenadorias?.sigla || '').toUpperCase() === 'OPS';
+      const opsSection = document.getElementById('opsLinksSection');
+      if (opsSection) opsSection.style.display = isOps ? 'contents' : 'none';
+
+      if (typeof Cal !== 'undefined') Cal.init();
+      if (typeof MiniCal !== 'undefined') MiniCal.init();
+
+      updateNotifCount();
+      await App.loadNotifCount().catch(e => console.warn('Notif check failed:', e));
+
+      return profile;
+    } catch (err) {
+      console.error('Critical Init Error:', err);
+      App.toast('Erro ao carregar dashboard. Tente recarregar.', 'error');
       return null;
     }
-    // Expõe globalmente para módulos como ABJ
-    window._appProfile = profile;
-
-    // Checks de Mandato e Inatividade Global
-    if (typeof DashboardExtra !== 'undefined') {
-      DashboardExtra.syncMandates(profile);
-      DashboardExtra.checkGlobalInactivity();
-    }
-
-    const coordName = profile.coordenadorias?.nome || 'Geral';
-
-    // Set user chip
-    const userRoleLabel = (profile.coordenadorias?.sigla === 'MKT') ? 'Assessor & Dev' : (profile.cargo || profile.role || 'Membro');
-    document.getElementById('sideAvatar').textContent = profile.iniciais || profile.nome?.[0] || '?';
-    document.getElementById('sideName').textContent   = profile.nome || 'Usuário';
-    document.getElementById('sideRole').textContent   = userRoleLabel + ' · ' + coordName;
-
-    App.buildSidebar(coordName);
-    App.buildMobileNav(coordName);
-
-    // Exibe links OPS apenas para coordenadores de ops ou admin/dev
-    const isOps = profile.role === 'admin' || (profile.coordenadorias?.sigla || '').toUpperCase() === 'OPS';
-    const opsSection = document.getElementById('opsLinksSection');
-    if (opsSection) opsSection.style.display = isOps ? 'contents' : 'none';
-
-    // Init calendários
-    Cal.init();
-    MiniCal.init();
-
-    // Init notification count
-    updateNotifCount();
-    await App.loadNotifCount();
-
-    return profile;
   },
 
   async loadNotifCount() {
@@ -729,18 +726,23 @@ const Dashboard = {
    ============================================================ */
 const Theme = {
   apply(name) {
-    if (name === 'default') name = 'dark-orange'; // Novo fallback dark
+    if (name === 'default') name = 'dark-orange';
     document.documentElement.setAttribute('data-theme', name);
     localStorage.setItem('nupie_theme', name);
     
-    // Update active button
     document.querySelectorAll('[id^="themeBtn-"]').forEach(b => b.classList.remove('active'));
     const btn = document.getElementById('themeBtn-' + name);
     if (btn) btn.classList.add('active');
 
-    // Logo mantem cores originais para manter identidade premium
     const logo = document.getElementById('sideLogoImg');
     if (logo) logo.style.filter = 'none';
+  },
+
+  set(name) {
+    this.apply(name);
+    const menu = document.getElementById('themeMenu');
+    if (menu) menu.classList.remove('show');
+    App.toast(`Tema alterado`, 'success');
   },
 
   applyFont(name) {
