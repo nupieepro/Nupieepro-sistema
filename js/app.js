@@ -555,16 +555,6 @@ const App = {
     }
   },
 
-  /** MODO TV / KIOSK (Idea #4) */
-  toggleTVMode() {
-    const body = document.body;
-    const isTV = body.classList.toggle('tv-mode');
-    if (isTV) {
-      if (body.requestFullscreen) body.requestFullscreen();
-      App.toast('Modo TV Ativado: Sidebar oculta para exibição.', 'info');
-    } else {
-      if (document.exitFullscreen) document.exitFullscreen();
-    }
   }
 };
 
@@ -748,15 +738,9 @@ const Theme = {
     const btn = document.getElementById('themeBtn-' + name);
     if (btn) btn.classList.add('active');
 
-    // Mudar cor da logo de acordo com o tema (usando CSS filter para evitar falta de imagem)
+    // Logo mantem cores originais para manter identidade premium
     const logo = document.getElementById('sideLogoImg');
-    if (logo) {
-      if (name === 'dark-purple') {
-        logo.style.filter = 'hue-rotate(240deg) brightness(1.2)';
-      } else {
-        logo.style.filter = 'none';
-      }
-    }
+    if (logo) logo.style.filter = 'none';
   },
 
   applyFont(name) {

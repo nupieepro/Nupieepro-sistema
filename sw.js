@@ -17,7 +17,7 @@ const ASSETS = [
   './js/auth.js',
   './js/abj.js',
   './manifest.json',
-  './assets/icon.svg',
+  './assets/icon.png',
 ];
 
 // Install — pré-carrega shell do app

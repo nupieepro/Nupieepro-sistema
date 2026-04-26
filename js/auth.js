@@ -187,8 +187,8 @@ function initLoginPage() {
             <div class="form-sub">Continuar ou entrar com outra conta.</div>
           </div>
           <div style="display:flex;flex-direction:column;gap:12px;margin-top:24px;">
-            <button class="login-btn" onclick="window.location.href='dashboard.html'">Continuar no Sistema →</button>
-            <button class="login-btn" style="background:transparent;border:1px solid rgba(145,154,187,0.2);color:var(--slate);" onclick="forceLogout()">Trocar de Conta</button>
+            <button class="btn-login" onclick="window.location.href='dashboard.html'">Continuar no Sistema →</button>
+            <button class="btn-login" style="background:transparent;border:1px solid rgba(145,154,187,0.2);color:var(--slate);" onclick="forceLogout()">Trocar de Conta</button>
           </div>
         `;
       }

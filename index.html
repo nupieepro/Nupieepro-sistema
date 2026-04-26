@@ -16,8 +16,8 @@
   
   <!-- Ícones e Web App -->
   <link rel="manifest" href="manifest.json">
-  <link rel="apple-touch-icon" href="assets/icon.svg">
-  <link rel="icon" href="assets/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="assets/icon.png">
+  <link rel="icon" href="assets/icon.png" type="image/png">
   
   <!-- Tipografia de Alta Qualidade -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -50,8 +50,8 @@
       background: var(--black);
       color: var(--white);
       font-family: var(--font-body);
-      height: 100vh;
-      overflow: hidden;
+      min-height: 100svh;
+      overflow-x: hidden;
       -webkit-font-smoothing: antialiased;
     }
 
@@ -173,7 +173,7 @@
     /* ─── Identidade Visual V6.0 Omni-Connect ─── */
     .shimmer-text {
       font-family: var(--font-head);
-      font-size: clamp(40px, 5.5vw, 68px);
+      font-size: clamp(32px, 6vw, 68px);
       line-height: 0.95;
       font-weight: 900;
       letter-spacing: -2px;
@@ -272,10 +272,21 @@
     .custom-cursor.hovering { width: 44px; height: 44px; background: #fff; mix-blend-mode: difference; }
 
     @media (max-width: 900px) {
-      .container { flex-direction: column; overflow-y: auto; height: auto; }
-      .brand-section { padding: 80px 40px; }
-      .login-section { width: 100%; height: auto; padding: 60px 40px; border-left: none; border-top: 1px solid var(--border); }
+      .container { flex-direction: column; height: auto; }
+      .brand-section { padding: 60px 24px; text-align: center; align-items: center; min-height: 50vh; }
+      .shimmer-text { font-size: clamp(34px, 10vw, 48px); margin-bottom: 1.5rem; letter-spacing: -1px; }
+      .subtitle { font-size: 16px; margin-bottom: 1rem; opacity: 0.7; }
+      .login-section { width: 100%; height: auto; padding: 40px 24px; border-left: none; border-top: 1px solid var(--border); background: rgba(5, 5, 5, 0.9); }
+      .hud-overlay, .gear { display: none !important; visibility: hidden; }
       body { overflow-y: auto; }
+      .btn-submit { width: 100%; margin-left: 0; padding: 16px; font-size: 13px; }
+    }
+
+    @media (max-width: 480px) {
+      .brand-section { padding: 40px 16px; min-height: 40vh; }
+      .shimmer-text { font-size: 32px; }
+      .login-section { padding: 30px 16px; }
+      .logo-container { justify-content: center; }
     }
   </style>
 </head>
@@ -302,7 +313,7 @@
   <main class="container">
     <div class="brand-section">
       <div class="logo-container">
-        <img src="assets/icon.svg" alt="Logo" class="logo-icon">
+        <img src="assets/icon.png" alt="Logo" class="logo-icon">
         <div class="logo-text">NUPIE<span>EPRO</span></div>
       </div>
       <h1 class="shimmer-text">Geração de Alta<br>Performance Industrial.</h1>

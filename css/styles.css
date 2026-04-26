@@ -272,6 +272,10 @@ input, select, textarea { font-family: var(--f-body); }
   position: fixed; inset: 0; z-index: 200;
   background: var(--c-bg);
   display: flex; align-items: center; justify-content: center;
+  overflow-y: auto;
+}
+@media (max-width: 900px) {
+  .login-screen { position: relative; min-height: 100vh; height: auto; display: block; }
 }
 .login-screen.hidden { display: none; }
 
@@ -288,6 +292,11 @@ input, select, textarea { font-family: var(--f-body); }
   min-height: 100vh; align-items: center;
   padding: var(--s8); gap: 4rem; position: relative; z-index: 1;
 }
+@media (max-width: 900px) {
+  .login-container { flex-direction: column; padding: var(--s6); gap: 2rem; justify-content: center; }
+  .brand-panel { text-align: center; align-items: center; }
+  .brand-desc { margin: 0 auto; }
+}
 .brand-panel { flex: 1; display: flex; flex-direction: column; gap: 2.5rem; }
 .logo-wrap { display: flex; align-items: center; gap: 18px; }
 .logo-img { width: 72px; height: 72px; object-fit: contain; border-radius: var(--r-lg); }
@@ -301,6 +310,9 @@ input, select, textarea { font-family: var(--f-body); }
 .stat-num { font-family: var(--f-head); font-size: 28px; font-weight: 800; color: var(--c-accent); }
 .stat-label { font-size: 11px; color: var(--t-3); text-transform: uppercase; letter-spacing: 0.1em; }
 .form-panel { width: 420px; flex-shrink: 0; }
+@media (max-width: 480px) {
+  .form-panel { width: 100%; }
+}
 .form-card {
   background: var(--c-s1);
   border: 1px solid var(--b-1);
@@ -1166,6 +1178,13 @@ body { font-family: var(--f-body); font-feature-settings: "cv11", "ss01"; }
   .main-area { padding-bottom: calc(var(--mobile-nav-h) + env(safe-area-inset-bottom)); }
 }
 
+@media (max-width: 480px) {
+  .summary-grid { grid-template-columns: 1fr; }
+  .content { padding: var(--s4) var(--s3); }
+  .sum-value { font-size: 24px; }
+  .topbar-title { font-size: 14px !important; }
+}
+
 /* ─── iOS safe area support ─── */
 @supports (padding: max(0px)) {
   .sidebar { padding-bottom: env(safe-area-inset-bottom); }
@@ -1253,16 +1272,6 @@ body { font-family: var(--f-body); font-feature-settings: "cv11", "ss01"; }
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
 }
-
-/* ─── TV MODE / KIOSK (Idea #4) ─── */
-body.tv-mode .sidebar { display: none !important; }
-body.tv-mode .main-area { margin-left: 0 !important; width: 100% !important; padding: 0 !important; }
-body.tv-mode .topbar { background: #000 !important; border-bottom: none !important; }
-body.tv-mode .topbar-sub, body.tv-mode .theme-pills { display: none !important; }
-body.tv-mode .content { padding: 40px !important; max-width: 1600px; margin: 0 auto; }
-body.tv-mode .section-card { border-width: 2px; }
-body.tv-mode #audit-percent { font-size: 3rem !important; }
-body.tv-mode #audit-bar { height: 40px !important; }
 
 /* ─── ENHANCED SIDEBAR LOGO V7.4 ─── */
 .sidebar-logo img {
