@@ -1,0 +1,2 @@
+-- seed.sql — Seeds de produção / dados iniciais obrigatórios
+-- Cole o conteúdo aqui
