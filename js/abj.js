@@ -1,226 +1,246 @@
-
-// Herança Global do Supabase V6.0
-const _sb = window._sb || window._supabase;
-
-const ABJ_LIST = [
-  { id:1,  numero:1,  nome:'Reunião de Planejamento Anual',      ptsMax:40, coord:'Geral', desc:'Participar da reunião de planejamento estratégico anual do núcleo.' },
-  { id:2,  numero:2,  nome:'Filiação Oficial ABJ',               ptsMax:50, coord:'Finanças', desc:'Registrar e confirmar a filiação do núcleo à Associação Brasileira de Júniores.' },
-  { id:3,  numero:3,  nome:'Reunião Mensal de Diretoria',        ptsMax:20, coord:'Geral', desc:'Realizar a reunião mensal de diretoria com registro em ata.' },
-  { id:4,  numero:4,  nome:'Relatório de Gestão',                ptsMax:40, coord:'Geral', desc:'Elaborar e publicar o relatório de gestão do período.' },
-  { id:5,  numero:5,  nome:'Projeto de Extensão',                ptsMax:60, coord:'Projetos', desc:'Executar e documentar um projeto de extensão universitária.' },
-  { id:6,  numero:6,  nome:'Evento Técnico Realizado',           ptsMax:80, coord:'Operações', desc:'Organizar e realizar um evento técnico ou palestra para a comunidade.' },
-  { id:7,  numero:7,  nome:'Publicação em Mídia Social',         ptsMax:15, coord:'Marketing', desc:'Publicar conteúdo institucional nas redes sociais do núcleo.' },
-  { id:8,  numero:8,  nome:'Webinar ou Evento Online',           ptsMax:30, coord:'Projetos', desc:'Realizar ou participar de webinar representando o NUPIEEPRO.' },
-  { id:9,  numero:9,  nome:'Visita Técnica',                     ptsMax:40, coord:'Operações', desc:'Organizar ou participar de visita técnica a empresa ou instituição.' },
-  { id:10, numero:10, nome:'Parceria com Empresa',               ptsMax:60, coord:'Geral', desc:'Firmar parceria formal com empresa ou instituição parceira.' },
-  { id:11, numero:11, nome:'Planejamento Estratégico Semestral', ptsMax:50, coord:'Geral', desc:'Elaborar e aprovar o planejamento estratégico semestral.' },
-  { id:12, numero:12, nome:'Cronograma Oficial',                 ptsMax:25, coord:'G. Pessoas', desc:'Publicar e distribuir o cronograma oficial de atividades do semestre.' },
-  { id:13, numero:13, nome:'Mapeamento de Competências',         ptsMax:50, coord:'G. Pessoas', desc:'Realizar mapeamento das competências da equipe e apresentar resultados.' },
-  { id:14, numero:14, nome:'Programa de Mentoria Interna',       ptsMax:50, coord:'G. Pessoas', desc:'Criar ou participar de programa de mentoria para membros do núcleo.' },
-  { id:15, numero:15, nome:'Campanha de Conscientização',        ptsMax:35, coord:'Marketing', desc:'Executar campanha de conscientização (ESG, segurança, saúde, etc.).' },
-  { id:16, numero:16, nome:'Representação Nacional',             ptsMax:70, coord:'Geral', desc:'Representar o NUPIEEPRO em evento regional ou nacional da ABJ.' },
-  { id:17, numero:17, nome:'Premiação Oficial',                  ptsMax:80, coord:'Projetos', desc:'Receber premiação ou certificação oficial em nome do núcleo.' },
-  { id:18, numero:18, nome:'Relatório de Impacto Anual',         ptsMax:60, coord:'Operações', desc:'Produzir e publicar o relatório de impacto e resultados anuais.' },
+'use strict';
+const ABJ_ESTRELAS = [
+  {n:1, prazo:'2026-03-31', premiacao:'Abril',       atividades:[1,2,3,4,6],   label:'1ª Estrela'},
+  {n:2, prazo:'2026-05-31', premiacao:'Junho',       atividades:[8,9],         label:'2ª Estrela'},
+  {n:3, prazo:'2026-07-31', premiacao:'Agosto',      atividades:[7,13,14],     label:'3ª Estrela'},
+  {n:4, prazo:'2026-08-31', premiacao:'Setembro',    atividades:[5,16],        label:'4ª Estrela'},
+  {n:5, prazo:'2026-09-30', premiacao:'ENEGEP 2026', atividades:[11,12,18],    label:'5ª Estrela'},
 ];
-
-const ABJ = {
-  data: [],
-  _statusMap: {}, // local cache for status
-
-  async init() {
-    this.data = JSON.parse(JSON.stringify(ABJ_LIST)); // Copy standard list
-
-    // Load local storage states first
+const ABJModule = (() => {
+  let _atividades = [];   
+  let _progresso  = [];   
+  async function carregar() {
+    if (!window._supabase) return;
     try {
-      this._statusMap = JSON.parse(localStorage.getItem('abj_status') || '{}');
-    } catch {
-      this._statusMap = {};
-    }
-
-    // Assign states to data
-    this.data.forEach(item => {
-      item.status = this._statusMap[item.id] || 'pendente';
-      item.currentPts = (item.status === 'concluidas' || item.status === 'concluida') ? item.ptsMax : 0;
-      item.color = (item.status === 'pendente') ? 'red' : (item.status === 'verificacao' ? 'yellow' : 'green');
-    });
-
-    // If Supabase is connected, override with real data
-    if (window._supabase) {
-      try {
-        const { data: realData, error } = await _sb.from('progresso_abj').select('*');
-        if (!error && realData) {
-          realData.forEach(p => {
-             let item = this.data.find(d => d.id === p.atividade_id);
-             if (item) {
-                item.status = p.status;
-                item.currentPts = p.status === 'concluida' ? item.ptsMax : 0;
-                item.color = (item.status === 'pendente') ? 'red' : (item.status === 'verificacao' ? 'yellow' : 'green');
-             }
-          });
-        }
-      } catch (e) {
-        console.warn('ABJ: Usando cache local. Não foi possível puxar progresso ABJ.', e.message);
-      }
-    }
-    
-    this.renderCards('todas');
-    this.updateHeader();
-  },
-
-  updateHeader() {
-    const totalPts = this.data.reduce((sum, item) => sum + (item.status === 'concluida' || item.status === 'concluidas' ? item.ptsMax : 0), 0);
-    const dashPts = document.getElementById('dashPts');
-    if (dashPts) dashPts.textContent = totalPts;
-    
-    const abjHeaderPts = document.getElementById('abjHeaderPts');
-    if (abjHeaderPts) abjHeaderPts.textContent = totalPts;
-
-    // Atualiza barra na home
-    const pct = Math.round((totalPts / 882) * 100);
-    
-    // Novas IDs do Termômetro Auditivo V7.2
-    const elPct = document.getElementById('audit-percent');
-    const elBar = document.getElementById('audit-bar');
-    const elStatus = document.getElementById('audit-status');
-
-    if (elPct) elPct.textContent = pct + '%';
-    if (elBar) elBar.style.width = Math.min(pct, 100) + '%';
-    if (elStatus) {
-      if (pct === 0) elStatus.textContent = 'Aguardando submissão de atividades...';
-      else if (pct < 50) elStatus.textContent = 'Auditoria em estágio inicial.';
-      else if (pct < 100) elStatus.textContent = 'Fase avançada de auditoria.';
-      else elStatus.textContent = 'Auditado 100% — Selo Ouro!';
-    }
-
-    // Fallbacks para IDs legadas (se existirem)
-    const dashPtsBar = document.getElementById('dashPtsBar');
-    if (dashPtsBar) dashPtsBar.style.width = Math.min(pct, 100) + '%';
-  },
-
-  filter(type, tabEl) {
-    document.querySelectorAll('#page-abj .tab').forEach(t => t.classList.remove('active'));
-    if (tabEl) tabEl.classList.add('active');
-    this.renderCards(type);
-  },
-
-  renderCards(filterType) {
-    const grid = document.getElementById('abjGrid');
-    if (!grid) return;
-
-    let filtered = this.data;
-    if (filterType !== 'todas') {
-      filtered = this.data.filter(d => {
-        if (filterType === 'concluidas') return d.status === 'concluida' || d.status === 'concluidas';
-        return d.status === filterType;
-      });
-    }
-
-    if (filtered.length === 0) {
-      grid.innerHTML = `<div class="text-muted" style="padding: 2rem;">Nenhuma atividade nesta categoria.</div>`;
+      const [r1, r2] = await Promise.all([
+        window._supabase.from('atividades_abj').select('*').eq('ativo',true).order('numero'),
+        window._supabase.from('progresso_abj').select('*,evidencias_abj(*)')
+      ]);
+      _atividades = r1.data || [];
+      _progresso  = r2.data || [];
+    } catch(e) { console.warn('[ABJ]',e.message); }
+  }
+  function _statusAtv(numero) {
+    const atv = _atividades.find(a=>a.numero===numero);
+    if (!atv) return 'pendente';
+    const prog = _progresso.find(p=>p.atividade_id===atv.id);
+    return prog?.status || 'pendente';
+  }
+  function _proximaEstrela() {
+    return ABJ_ESTRELAS.find(e=>new Date(e.prazo) >= new Date()) || null;
+  }
+  function _diasAte(data) {
+    return Math.max(0, Math.ceil((new Date(data+'T23:59:59')-new Date())/86400000));
+  }
+  function renderCountdown(id) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    const prox = _proximaEstrela();
+    if (!prox) { el.innerHTML='<span style="color:var(--c-accent);font-weight:700">🏆 Todas as estrelas!</span>'; return; }
+    const atualizar = () => {
+      const dias = _diasAte(prox.prazo);
+      const tot  = (new Date(prox.prazo+'T23:59:59')-new Date());
+      const hrs  = Math.floor((tot%86400000)/3600000);
+      const min  = Math.floor((tot%3600000)/60000);
+      el.innerHTML=`
+        <div style="font-size:12px;color:var(--c-slate);font-weight:600;margin-bottom:8px">
+          ${prox.label} — prazo ${new Date(prox.prazo).toLocaleDateString('pt-BR',{day:'2-digit',month:'long'})}
+        </div>
+        <div class="abj-countdown">
+          <div class="abj-countdown-unit"><span class="abj-countdown-num">${String(dias).padStart(2,'0')}</span>dias</div>
+          <span style="color:var(--c-accent);font-weight:900;font-size:18px">:</span>
+          <div class="abj-countdown-unit"><span class="abj-countdown-num">${String(hrs).padStart(2,'0')}</span>horas</div>
+          <span style="color:var(--c-accent);font-weight:900;font-size:18px">:</span>
+          <div class="abj-countdown-unit"><span class="abj-countdown-num">${String(min).padStart(2,'0')}</span>min</div>
+        </div>
+        <div style="margin-top:8px;font-size:11px;color:var(--c-slate)">
+          Atividades: ${prox.atividades.map(n=>{
+            const a=_atividades.find(x=>x.numero===n);
+            const st=_statusAtv(n);
+            const cor=st==='concluido'?'var(--green)':st==='em_andamento'?'var(--yellow)':'var(--c-slate)';
+            return `<span style="color:${cor};font-weight:600">#${n}</span>`;
+          }).join(' · ')}
+        </div>`;
+    };
+    atualizar();
+    setInterval(atualizar,60000);
+  }
+  function renderEstrelas(id) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.innerHTML=`<div class="abj-stars-row">${ABJ_ESTRELAS.map(e=>{
+      const earned = new Date(e.prazo)<new Date();
+      return `<div class="abj-star${earned?' earned':''}">
+        <div class="abj-star-icon">⭐</div>
+        <div>${e.label}</div>
+        <div style="font-size:9px;opacity:.7">${new Date(e.prazo).toLocaleDateString('pt-BR',{day:'2-digit',month:'short'})}</div>
+      </div>`;
+    }).join('')}</div>`;
+  }
+  function _renderLista() {
+    const el = document.getElementById('abj-lista');
+    if (!el) return;
+    if (!_atividades.length) {
+      el.innerHTML='<div style="padding:20px;text-align:center;color:var(--c-slate)">Carregando atividades do banco...</div>';
       return;
     }
-
-    grid.innerHTML = filtered.map(item => {
-      let stPill = '';
-      let isDone = (item.status === 'concluida' || item.status === 'concluidas');
-      
-      if (item.status === 'pendente') stPill = `<span class="status-pill sp-pending"><div class="pill-dot" style="background:var(--red)"></div> Pendente</span>`;
-      else if (item.status === 'verificacao') stPill = `<span class="status-pill sp-progress"><div class="pill-dot" style="background:var(--yellow)"></div> Em Revisão</span>`;
-      else if (isDone) stPill = `<span class="status-pill sp-done"><div class="pill-dot" style="background:var(--green)"></div> Aprovada</span>`;
-
-      return `
-        <div style="background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 1.5rem; display: flex; flex-direction: column; gap: 12px; transition: transform 0.2s, box-shadow 0.2s;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 8px 24px rgba(0,0,0,0.3)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none';">
-          
-          <div style="display:flex; justify-content: space-between; align-items: flex-start;">
-            <div style="background: var(--w5); color: var(--w70); padding: 4px 10px; border-radius: 4px; font-weight: 700; font-size: 11px; border: 1px solid var(--border);">Ação #${item.numero}</div>
-            ${stPill}
-          </div>
-
-          <div>
-             <h3 style="font-family: var(--font-head); font-size: 16px; margin-bottom: 4px; color: var(--white);">${item.nome}</h3>
-             <p style="font-size: 12px; color: var(--w40); line-height: 1.4;">${item.desc}</p>
-          </div>
-
-          <div style="display: flex; justify-content: space-between; font-size: 11px; color: var(--w70); margin-top: auto; padding-top: 12px; border-top: 1px solid var(--border);">
-             <span>Pontos: <strong style="color:var(--orange)">${item.ptsMax}</strong></span>
-             <span>Resp: <strong>${item.coord}</strong></span>
-          </div>
-
-          <div style="display:flex;gap:8px;margin-top:6px;">
-            <button class="btn ${isDone ? 'btn-ghost' : 'btn-primary'}" style="${isDone ? 'border-color:transparent;color:var(--green);flex:1;' : 'flex:1;'}" onclick="ABJ.openModal(${item.id})">
-              ${isDone ? '✓ Verificada' : 'Submeter Evidências'}
-            </button>
-            ${ABJ.isAdmin() && !isDone ? `
-            <button class="btn btn-ghost" style="border-color:rgba(45,212,160,0.3);color:var(--green);white-space:nowrap;" title="Aprovar Diretamente (Admin)" onclick="ABJ.adminApprove(${item.id})">
-              Admin ✓
-            </button>` : ''}
-          </div>
+    const obrig = _atividades.filter(a=>![10,15,17].includes(a.numero));
+    const opcio = _atividades.filter(a=>[10,15,17].includes(a.numero));
+    const _grupo = (lista, titulo) => `
+      <div style="margin-bottom:20px">
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;
+                    color:var(--c-slate);margin-bottom:10px;padding-left:4px">${titulo}</div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          ${lista.map(_card).join('')}
         </div>
-      `;
-    }).join('');
-  },
-
-  isAdmin() {
-    if (window._appProfile?.role === 'admin') return true;
-    return localStorage.getItem('mockSession') === 'jjoserrayan2711@gmail.com';
-  },
-
-  async adminApprove(id) {
-    const item = this.data.find(d => d.id === id);
-    if (!item) return;
-
-    if (!confirm(`Aprovar sumariamente a atividade "#${item.numero} — ${item.nome}" (${item.ptsMax} pts)?`)) return;
-
-    item.status = 'concluida';
-    item.currentPts = item.ptsMax;
-    
-    // Save to local
-    this._statusMap[id] = 'concluida';
-    localStorage.setItem('abj_status', JSON.stringify(this._statusMap));
-
-    if (window._supabase) {
-      await _sb.from('progresso_abj').upsert({
-        atividade_id: item.id,
-        pontos: item.ptsMax,
-        status: 'concluida',
-        aprovado_por: 'admin',
-        updated_at: new Date().toISOString()
-      }, { onConflict: 'atividade_id' }).catch(console.error);
-    }
-
-    ABJ.renderCards('todas');
-    ABJ.updateHeader();
-    App.toast(`✓ Atividade #${item.numero} aprovada (${item.ptsMax} pts)`, 'success');
-  },
-
-  openModal(id) {
-    const item = this.data.find(d => d.id === id);
-    if (!item) return;
-    if (item.status === 'concluida' || item.status === 'concluidas') {
-       App.toast('Essa atividade já foi auditada e aprovada pela Coordenação Geral.', 'success');
-       return;
-    }
-
-    // Modal Simulation (fallback since specific HTML modal for ABJ might be missing in dashboard.html)
-    if (confirm(`Deseja submeter evidências e enviar a atividade #${item.numero} para Em Revisão?`)) {
-       item.status = 'verificacao';
-       this._statusMap[id] = 'verificacao';
-       localStorage.setItem('abj_status', JSON.stringify(this._statusMap));
-       
-       if (window._supabase) {
-         _sb.from('progresso_abj').upsert({
-            atividade_id: id, status: 'verificacao', pontos: 0, updated_at: new Date().toISOString()
-         }).catch(console.error);
-       }
-       
-       ABJ.renderCards('todas');
-       ABJ.updateHeader();
-       App.toast('Evidência enviada para a Coordenadoria Geral!', 'success');
+      </div>`;
+    const _card = (a) => {
+      const prog = _progresso.find(p=>p.atividade_id===a.id);
+      const st   = prog?.status||'pendente';
+      const dias = _diasAte(a.prazo||'2026-12-31');
+      const urgente = dias<=7&&st==='pendente';
+      const cBadge = st==='concluido'?'var(--green)':st==='em_andamento'?'var(--yellow)':'var(--c-slate)';
+      return `
+        <div class="abj-card" onclick="ABJModule.abrirDetalhe('${a.id}')"
+          ${urgente?'data-urgente="true"':''}>
+          <div style="display:flex;align-items:center;gap:10px">
+            <span style="font-size:20px;flex-shrink:0">
+              ${['📋','🎨','🎯','📊','📜','🎤','📅','📅','🤝','📱','🏅','🎓','🏭','🎪','🏆','🌎','💡','📚','📋'][a.numero-1]||'📌'}
+            </span>
+            <div style="flex:1;min-width:0">
+              <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:3px">
+                <span style="font-weight:700;font-size:13px;color:var(--c-white)">${a.numero}. ${a.nome}</span>
+                <span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:99px;
+                             background:${cBadge}22;color:${cBadge};border:1px solid ${cBadge}44;text-transform:uppercase">
+                  ${st.replace('_',' ')}
+                </span>
+                ${![10,15,17].includes(a.numero)?'':`<span style="font-size:10px;background:var(--b-1);color:var(--c-slate);padding:2px 7px;border-radius:99px">Opcional</span>`}
+              </div>
+              <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+                <span style="font-size:12px;color:var(--c-slate)">${a.pontos_por_entrada||0} pts</span>
+                <span style="font-size:11px;color:${urgente?'var(--c-accent)':'var(--c-slate)'}">
+                  ${urgente?'⚠️ ':'📅 '}${a.prazo||'—'}
+                  ${dias>0?`(${dias}d)`:'<b style="color:var(--red)">Vencido</b>'}
+                </span>
+              </div>
+            </div>
+            <span style="color:var(--c-slate);font-size:18px">›</span>
+          </div>
+        </div>`;
+    };
+    el.innerHTML =
+      _grupo(obrig, `✅ Obrigatórias (${obrig.length})`) +
+      _grupo(opcio, `⭐ Opcionais (${opcio.length}) — contam no Ranking`);
+  }
+  async function abrirDetalhe(id) {
+    const a = _atividades.find(x=>x.id===id);
+    if (!a) return;
+    const prog = _progresso.find(p=>p.atividade_id===id);
+    const st   = prog?.status||'pendente';
+    const podeEnviar = ['pendente','em_andamento'].includes(st);
+    abrirModal({ titulo:`${a.nome}`, tipo:'info', corpo:`
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px">
+        <div style="background:var(--b-1);border-radius:8px;padding:10px">
+          <div style="font-size:10px;color:var(--c-slate);text-transform:uppercase;font-weight:700;margin-bottom:4px">Pontuação</div>
+          <div style="font-weight:800;font-size:16px;color:var(--c-accent)">${a.pontos_por_entrada||0} pts</div>
+        </div>
+        <div style="background:var(--b-1);border-radius:8px;padding:10px">
+          <div style="font-size:10px;color:var(--c-slate);text-transform:uppercase;font-weight:700;margin-bottom:4px">Prazo</div>
+          <div style="font-weight:700;color:var(--c-white);font-size:12px">${a.prazo||'—'}</div>
+        </div>
+      </div>
+      <p style="font-size:13px;color:var(--c-slate);line-height:1.6;margin-bottom:14px">${a.descricao||''}</p>
+      ${podeEnviar?`
+        <div style="border-top:1px solid var(--b-1);padding-top:14px">
+          <div style="font-size:11px;font-weight:700;color:var(--c-slate);text-transform:uppercase;margin-bottom:10px">Registrar evidência</div>
+          <textarea id="abj-desc" class="evidence-textarea"
+            placeholder="Descreva o que foi feito..."></textarea>
+          <label class="evidence-area" onclick="document.getElementById('abj-file').click()">
+            <input type="file" id="abj-file" accept="image
+  async function _enviar(atvId, atvDbId) {
+    const desc = document.getElementById('abj-desc')?.value?.trim();
+    const file = document.getElementById('abj-file')?.files?.[0];
+    if (!desc) { mostrarToast('Descreve o que foi feito!','warning'); return; }
+    fecharModal();
+    mostrarToast('Enviando...','info',2000);
+    try {
+      const { data: prog, error } = await window._supabase
+        .from('progresso_abj')
+        .upsert({
+          atividade_id: atvDbId,
+          status: 'em_andamento',
+          observacao: desc,
+          registrado_por: window._appProfile?.id,
+        pontos: 0,
+          mes_ref: new Date().toLocaleDateString('pt-BR',{month:'long',year:'numeric'})
+        }, { onConflict: 'atividade_id' })
+        .select().single();
+      if (error) throw error;
+      if (file && prog?.id) {
+        const ext  = file.name.split('.').pop();
+        const path = `abj/${prog.id}/${Date.now()}.${ext}`;
+        const { data: up } = await window._supabase.storage
+          .from('evidencias').upload(path,file,{upsert:true});
+        if (up) {
+          const { data: url } = window._supabase.storage.from('evidencias').getPublicUrl(path);
+          await window._supabase.from('evidencias_abj').insert([{
+            progresso_id: prog.id,
+            tipo: file.type.startsWith('image/')? 'foto':'documento',
+            url: url?.publicUrl||'',
+            descricao: desc
+          }]);
+        }
+      }
+      await carregar();
+      _renderLista();
+      mostrarToast('Registrado! Coordenação vai revisar. 👍','success');
+    } catch(e) {
+      console.error('[ABJ enviar]',e);
+      mostrarToast('Erro ao enviar. Tenta de novo!','error');
     }
   }
-};
-
-// Initialize after dashboard loads
-setTimeout(() => {
-  ABJ.init();
-}, 800);
+  async function init() {
+    const pg = document.getElementById('page-abj');
+    if (!pg) return;
+    const content = pg.querySelector('.content')||pg;
+    const totalPts = _progresso.reduce((s,p)=>s+(p.pontos||0),0);
+    content.innerHTML=`
+      <div style="display:flex;flex-direction:column;gap:16px">
+        <!-- Header -->
+        <div class="section-card" style="padding:20px 24px">
+          <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:16px">
+            <div>
+              <h2 style="font-family:var(--f-head);font-size:20px;font-weight:800;color:var(--c-white);margin-bottom:4px">
+                🏅 Selo ABEPRO Jovem 2026
+              </h2>
+              <p style="font-size:13px;color:var(--c-slate)">18 atividades · 5 estrelas · Gestão 2026</p>
+            </div>
+            <div style="text-align:right">
+              <div style="font-size:11px;color:var(--c-slate);margin-bottom:4px">PONTUAÇÃO</div>
+              <div style="font-family:var(--f-head);font-size:28px;font-weight:900;color:var(--c-accent)">
+                ${totalPts} <span style="font-size:14px;color:var(--c-slate)">pts</span>
+              </div>
+            </div>
+          </div>
+          <div id="abj-estrelas"></div>
+        </div>
+        <!-- Countdown -->
+        <div class="section-card" style="padding:16px 20px">
+          <div style="font-size:11px;font-weight:700;color:var(--c-slate);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px">⏱️ Próximo prazo</div>
+          <div id="abj-countdown"></div>
+        </div>
+        <!-- Lista -->
+        <div class="section-card" style="padding:20px 24px">
+          <div style="font-size:11px;font-weight:700;color:var(--c-slate);text-transform:uppercase;letter-spacing:.06em;margin-bottom:16px">📋 Atividades</div>
+          <div id="abj-lista"></div>
+        </div>
+      </div>`;
+    await carregar();
+    renderEstrelas('abj-estrelas');
+    renderCountdown('abj-countdown');
+    _renderLista();
+  }
+  return { init, carregar, abrirDetalhe, renderEstrelas, renderCountdown };
+})();
+window.ABJModule    = ABJModule;
+window.ABJ_ESTRELAS = ABJ_ESTRELAS;

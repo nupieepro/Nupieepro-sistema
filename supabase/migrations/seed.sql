@@ -1,2 +1,81 @@
--- seed.sql — Seeds de produção / dados iniciais obrigatórios
--- Cole o conteúdo aqui
+INSERT INTO coordenadorias (nome, sigla, icone, cor, descricao) VALUES
+  ('Geral',            'GER', '⚙️', '#29324f', 'Coordenadoria Geral do NUPIEEPRO'),
+  ('Marketing',        'MKT', '📢', '#f75412', 'Comunicação, redes sociais e divulgação'),
+  ('Financeira',       'FIN', '💰', '#22c55e', 'Gestão financeira e Lojinha'),
+  ('Projetos',         'PRJ', '🎪', '#3b82f6', 'Eventos, treinamentos e NUPICAST'),
+  ('Operações',        'OPS', '📋', '#8b5cf6', 'Documentos, relatórios e POPs'),
+  ('Gestão de Pessoas','GP',  '👥', '#ec4899', 'Membros, clima e TAP')
+ON CONFLICT (sigla) DO NOTHING;
+INSERT INTO atividades_abj (numero, nome, descricao, tipo, coord_responsavel, pontos_por_entrada, pontos_max, prazo, prazo_cor) VALUES
+  (1,  'Nome e Logotipo',
+       'Definição do nome e criação do logotipo oficial, exclusivo e alinhado à identidade do Núcleo Estadual.',
+       'unico','GER',3,3,'2026-03-31','red'),
+  (2,  'Missão, Visão e Valores',
+       'Elaboração da missão, visão e valores alinhados às diretrizes de uma entidade estudantil sem fins lucrativos.',
+       'unico','GER',5,5,'2026-03-31','red'),
+  (3,  'Apresentação Institucional',
+       'Criar uma apresentação sobre o que é o Núcleo, a ABEPRO Jovem e a Engenharia de Produção.',
+       'unico','GER',3,3,'2026-03-31','red'),
+  (4,  'Regimento e/ou PCD',
+       'Criar documento para estabelecer normas de funcionamento do Núcleo e deveres dos membros.',
+       'unico','OPS',3,3,'2026-03-31','red'),
+  (5,  'Apresentação sobre ABJ e o Núcleo',
+       'Apresentações em instituições de ensino, empresas e entidades sobre Engenharia de Produção.',
+       'mensal','GER',4,NULL,'2026-08-31','orange'),
+  (6,  'Planejamento 1º Semestre',
+       'Planejamento estratégico do primeiro semestre com ações conjuntas com o Representante Estadual.',
+       'semestral','GER',4,4,'2026-03-31','red'),
+  (7,  'Planejamento 2º Semestre',
+       'Planejamento estratégico do segundo semestre com ações conjuntas com o Representante Estadual.',
+       'semestral','GER',4,4,'2026-07-31','orange'),
+  (8,  'Reunião Geral de Núcleos',
+       'Participação nas reuniões mensais com a Diretoria de Núcleos da ABJ. Presença mínima 80%.',
+       'mensal','OPS',5,NULL,'2026-05-31','orange'),
+  (9,  'Rede Social Ativa',
+       'Mínimo de 1 publicação por semana nas redes sociais do Núcleo.',
+       'mensal','MKT',3,NULL,'2026-05-31','orange'),
+  (10, 'Núcleo Associado à ABEPRO',
+       'Número de associação dos membros à ABEPRO. Pontuação por percentual.',
+       'percentual','FIN',2,10,'2026-08-31','orange'),
+  (11, 'Treinamentos Internos e/ou Externos',
+       'Oferta de treinamentos, palestras, mesas-redondas e cursos de capacitação.',
+       'mensal','PRJ',5,NULL,'2026-09-30','yellow'),
+  (12, 'Visitas Técnicas',
+       'Organização e participação em visitas técnicas relacionadas à Engenharia de Produção.',
+       'semestral','PRJ',5,NULL,'2026-09-30','yellow'),
+  (13, 'Evento Estadual',
+       'Planejar, organizar e executar um evento estadual do Núcleo.',
+       'unico','PRJ',20,20,'2026-07-31','orange'),
+  (14, 'Momento ENEGEP',
+       'Conceder espaço para ex-participantes do ENEGEP compartilharem vivências.',
+       'unico','PRJ',30,30,'2026-07-31','orange'),
+  (15, 'Evento Regional',
+       'Planejar e realizar um evento regional voltado para públicos além do estado.',
+       'unico','PRJ',40,40,'2026-11-30','gray'),
+  (16, 'Atividade Inovadora',
+       'Desenvolver e executar uma ação inédita incorporando ferramentas das 10 áreas da EP.',
+       'categorizado','GP',40,40,'2026-08-31','orange'),
+  (17, 'Produção Científica',
+       'Submissão de trabalhos acadêmicos para incentivar a produção científica.',
+       'escalonado','GER',5,25,'2026-09-30','gray'),
+  (18, 'Relatório Mensal',
+       'Resumo de todas as atividades realizadas, entregue até o último dia de cada mês.',
+       'mensal','OPS',10,NULL,'2026-09-30','yellow')
+ON CONFLICT (numero) DO NOTHING;
+CREATE TABLE IF NOT EXISTS push_subscriptions (
+  id         uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id    uuid REFERENCES users(id) ON DELETE CASCADE,
+  endpoint   text NOT NULL,
+  p256dh     text,
+  auth       text,
+  updated_at timestamptz DEFAULT now(),
+  UNIQUE(user_id)
+);
+DROP POLICY IF EXISTS "push_sub_own" ON push_subscriptions;
+CREATE POLICY "push_sub_own"
+  ON push_subscriptions FOR ALL
+  USING (auth.uid() = user_id);
+SELECT
+  (SELECT COUNT(*) FROM coordenadorias)  AS coordenadorias_inseridas,
+  (SELECT COUNT(*) FROM atividades_abj)  AS atividades_abj_inseridas,
+  'Seed v3 concluído!' AS status;
