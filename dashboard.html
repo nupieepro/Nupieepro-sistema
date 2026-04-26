@@ -43,23 +43,15 @@
 
     <!-- ═══ SIDEBAR ═══ -->
     <aside class="sidebar" id="sidebar">
-      <div class="sidebar-logo" style="background:#000; padding:1.5rem; display:flex; flex-direction:column; align-items:center; border-bottom:1px solid var(--b-1);">
-        <img src="assets/logo.png" id="sideLogoImg" style="height:60px; width:auto; max-width:100%; object-fit:contain;" alt="NUPIEEPRO">
-        <div style="text-align:center; margin-top:10px;">
-          <div class="sidebar-logo-text" style="font-size:1.2rem;">NUPIE<span>EPRO</span></div>
-          <div class="sidebar-logo-sub">Sistema de Gestão</div>
+      <div class="sidebar-logo" style="background:#000; padding:2rem 1.5rem; display:flex; flex-direction:column; align-items:center; border-bottom:1px solid var(--b-1);">
+        <img src="assets/logo.png" id="sideLogoImg" style="height:85px; width:auto; max-width:100%; object-fit:contain; margin-bottom:12px;" alt="NUPIEEPRO">
+        <div style="text-align:center;">
+          <div class="sidebar-logo-text" style="font-size:1.4rem; letter-spacing:0.05em;">NUPIE<span>EPRO</span></div>
+          <div class="sidebar-logo-sub" style="font-size:10px; opacity:0.6; margin-top:4px;">PLATAFORMA DE GESTÃO INDUSTRIAL</div>
         </div>
       </div>
 
-      <!-- Role switcher — só aparece para admin/dev -->
-      <div class="role-switcher d-none" id="roleSwitcher" style="flex-wrap:wrap;gap:2px;">
-        <div class="role-tab active" id="roleTab-ger" onclick="switchRole('ger')" title="Coord. Geral">⬡ GER</div>
-        <div class="role-tab" id="roleTab-ops" onclick="switchRole('ops')" title="Operações">⚙ OPS</div>
-        <div class="role-tab" id="roleTab-gp"  onclick="switchRole('gp')"  title="G. Pessoas">◒ G.P</div>
-        <div class="role-tab" id="roleTab-mkt" onclick="switchRole('mkt')" title="Assessor MKT">◬ MKT</div>
-        <div class="role-tab" id="roleTab-prj" onclick="switchRole('prj')" title="Projetos">◫ PRJ</div>
-        <div class="role-tab" id="roleTab-fin" onclick="switchRole('fin')" title="Finanças">◎ FIN</div>
-      </div>
+
 
       <nav id="sideNav">
         <!-- Populated by JS based on user role/coord -->
@@ -85,9 +77,7 @@
     </aside>
 
     <!-- ═══ MAIN AREA ═══ -->
-    <div id="devBanner" style="display:none; background:var(--orange-dim); border-bottom:1px solid var(--orange-border); padding:6px 12px; font-size:10px; font-weight:800; text-transform:uppercase; letter-spacing:1px; color:var(--orange); align-items:center; gap:8px;">
-      <span class="pulse-dot"></span> DEV MODE ACTIVE — BYPASS ENABLED
-    </div>
+
 
     <div class="main-area">
 
@@ -1211,10 +1201,6 @@
         const profile = await app.initDashboard();
         if (profile && typeof window.Dashboard !== 'undefined') {
           window.Dashboard.render(profile);
-          if (profile.role === 'admin') {
-            const banner = document.getElementById('devBanner');
-            if (banner) banner.style.display = 'flex';
-          }
         }
       }
     })();
