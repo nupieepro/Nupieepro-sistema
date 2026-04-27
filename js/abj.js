@@ -156,8 +156,18 @@ const ABJModule = (() => {
           <textarea id="abj-desc" class="evidence-textarea"
             placeholder="Descreva o que foi feito..."></textarea>
           <label class="evidence-area" onclick="document.getElementById('abj-file').click()">
-            <input type="file" id="abj-file" accept="image
-  async function _enviar(atvId, atvDbId) {
+            <input type="file" id="abj-file" accept="image/*,application/pdf" style="display:none">
+            📎 Anexar comprovante (opcional)
+          </label>
+        </div>
+      `:''}
+    `, botoes:[
+      {texto:'Fechar', classe:'btn-ghost', acao:fecharModal},
+      ...(podeEnviar ? [{texto:'Enviar ✓', classe:'btn-primary', acao:()=>_enviar(a.id)}] : [])
+    ]});
+  }
+
+  async function _enviar(atvDbId) {
     const desc = document.getElementById('abj-desc')?.value?.trim();
     const file = document.getElementById('abj-file')?.files?.[0];
     if (!desc) { mostrarToast('Descreve o que foi feito!','warning'); return; }
@@ -171,7 +181,7 @@ const ABJModule = (() => {
           status: 'em_andamento',
           observacao: desc,
           registrado_por: window._appProfile?.id,
-        pontos: 0,
+          pontos: 0,
           mes_ref: new Date().toLocaleDateString('pt-BR',{month:'long',year:'numeric'})
         }, { onConflict: 'atividade_id' })
         .select().single();
@@ -243,4 +253,5 @@ const ABJModule = (() => {
   return { init, carregar, abrirDetalhe, renderEstrelas, renderCountdown };
 })();
 window.ABJModule    = ABJModule;
+window.ABJ          = ABJModule;
 window.ABJ_ESTRELAS = ABJ_ESTRELAS;
