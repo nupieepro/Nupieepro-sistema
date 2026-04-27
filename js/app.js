@@ -550,8 +550,6 @@ const App = {
       badge.textContent = count || 0;
       badge.classList.toggle('visible', count > 0);
     }
-  },
-
   }
 };
 
@@ -1826,6 +1824,73 @@ const CyberSecurity = {
 
 // Iniciar segurança (Chamado no final para garantir que todos os módulos existem)
 if (typeof CyberSecurity !== 'undefined') CyberSecurity.init();
+
+/* ============================================================
+   Helpers globais — Modal e Toast
+   ============================================================ */
+
+function mostrarToast(mensagem, tipo, duracao) {
+  App.toast(mensagem, tipo || 'info', duracao || 3500);
+}
+
+function fecharModal() {
+  const el = document.getElementById('__appModal');
+  if (el) {
+    el.style.opacity = '0';
+    el.style.transform = 'translateY(100%)';
+    setTimeout(() => { if (el) el.style.display = 'none'; }, 220);
+  }
+}
+
+function abrirModal({ titulo = '', tipo = 'info', corpo = '', botoes = [] } = {}) {
+  let overlay = document.getElementById('__appModal');
+  if (!overlay) {
+    overlay = document.createElement('div');
+    overlay.id = '__appModal';
+    overlay.style.cssText = [
+      'position:fixed;inset:0;z-index:900',
+      'background:rgba(0,0,0,0.72)',
+      'display:flex;align-items:flex-end;justify-content:center',
+      'padding:0;backdrop-filter:blur(6px)',
+      'transition:opacity .2s'
+    ].join(';');
+    overlay.addEventListener('click', e => { if (e.target === overlay) fecharModal(); });
+    document.body.appendChild(overlay);
+
+    const style = document.createElement('style');
+    style.textContent = '@keyframes _nupiSlideUp{from{transform:translateY(60px);opacity:0}to{transform:translateY(0);opacity:1}}';
+    document.head.appendChild(style);
+  }
+
+  overlay.innerHTML = `
+    <div id="__appModalBox" style="
+      background:var(--c-s1,#111);
+      border:1px solid var(--b-2,#2a2a2a);
+      border-radius:20px 20px 0 0;
+      padding:1.5rem;
+      width:100%;max-width:560px;
+      max-height:82vh;overflow-y:auto;
+      display:flex;flex-direction:column;gap:1rem;
+      animation:_nupiSlideUp .26s ease;
+    ">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div style="font-family:var(--f-head,'sans-serif');font-weight:700;font-size:16px;color:var(--c-white,#fff)">${titulo}</div>
+        <button onclick="fecharModal()" style="background:none;border:none;color:var(--t-3,#888);font-size:22px;cursor:pointer;padding:4px;line-height:1">✕</button>
+      </div>
+      <div style="color:var(--c-slate,#aaa);font-size:13px;line-height:1.6">${corpo}</div>
+      ${botoes.length ? `<div style="display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap;padding-top:4px">
+        ${botoes.map((b, i) => `<button class="btn ${b.classe || 'btn-primary'}" data-mid="${i}">${b.texto}</button>`).join('')}
+      </div>` : ''}
+    </div>`;
+
+  overlay.style.display = 'flex';
+  overlay.style.opacity = '1';
+
+  botoes.forEach((b, i) => {
+    const btn = overlay.querySelector(`[data-mid="${i}"]`);
+    if (btn && typeof b.acao === 'function') btn.addEventListener('click', b.acao);
+  });
+}
 
 // V6.2 — Registro Global de Módulos Industriais (Elite Visibility)
 window.App          = App;
