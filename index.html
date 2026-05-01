@@ -181,16 +181,19 @@
       font-weight: 900;
       letter-spacing: -2px;
       margin-bottom: 2rem;
-      /* [V9.0] Brilho Dinâmico por Tema */
+      /* [V9.0] Shimmer Camaleão Multi-Tone */
       background: linear-gradient(91deg, 
         var(--c-white, #ffffff) 0%, 
-        var(--c-accent, #f75412) 50%, 
+        var(--c-accent, #f75412) 20%, 
+        var(--c-accent2, #ff7d33) 40%, 
+        var(--c-accent, #f75412) 60%, 
+        var(--c-white, #ffffff) 80%,
         var(--c-white, #ffffff) 100%);
       background-size: 200% auto;
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
-      animation: shimmerElite 6s linear infinite;
-      filter: drop-shadow(0 0 20px var(--a-3, rgba(247, 84, 18, 0.3)));
+      animation: shimmerElite 5s linear infinite;
+      filter: drop-shadow(0 0 25px var(--a-3, rgba(247, 84, 18, 0.4)));
     }
     @keyframes shimmerElite {
       0% { background-position: 0% center; }
