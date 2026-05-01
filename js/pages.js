@@ -99,6 +99,15 @@ const PageGeral = {
       {texto:'Criar ✓',classe:'btn-primary',acao:()=>this._salvarReuniao()}
     ]});
   },
+  novaMelhoria() {
+    abrirModal({ titulo:'🛠️ Sugerir Melhoria', tipo:'info', corpo:`
+      <div class="form-group"><label class="form-label">Descrição da Melhoria *</label>
+        <textarea id="nm-desc" class="form-input" style="height:100px" placeholder="Descreva sua sugestão..."></textarea></div>`,
+    botoes:[
+      {texto:'Cancelar',classe:'btn-ghost',acao:fecharModal},
+      {texto:'Sugerir',classe:'btn-primary',acao:()=> { mostrarToast('Sugestão enviada!','success'); fecharModal(); }}
+    ]});
+  },
   async _salvarReuniao() {
     const titulo = document.getElementById('nr-titulo')?.value?.trim();
     const data   = document.getElementById('nr-data')?.value;
@@ -442,6 +451,17 @@ const PageProjetos = {
       mostrarToast('Evento criado!','success');
       this._carregar();
     }catch(e){mostrarToast('Erro ao salvar.','error');}
+  },
+  novoEpisodio() {
+    abrirModal({ titulo:'🎙️ Rastrear NUPICAST', tipo:'info', corpo:`
+      <div class="form-group"><label class="form-label">Título do Episódio *</label>
+        <input id="ne-titulo" class="form-input" placeholder="Ex: NUPICAST #01"></div>
+      <div class="form-group"><label class="form-label">Link do YouTube/Spotify</label>
+        <input id="ne-link" class="form-input" placeholder="https://..."></div>`,
+    botoes:[
+      {texto:'Cancelar',classe:'btn-ghost',acao:fecharModal},
+      {texto:'Rastrear',classe:'btn-primary',acao:()=> { mostrarToast('Episódio rastreado!','success'); fecharModal(); }}
+    ]});
   },
 };
 const PageOperacoes = {

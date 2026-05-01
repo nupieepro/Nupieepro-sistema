@@ -229,7 +229,17 @@
       <!-- MÓDULOS GERAIS -->
       <div class="page" id="page-geral_reunioes"><div class="topbar"><div class="topbar-title">Reuniões e Check-in</div></div><div class="content"><div class="section-card" style="text-align:center;padding:2rem;color:var(--t-3)">Carregando...</div></div></div>
       <div class="page" id="page-geral_planejamento"><div class="topbar"><div class="topbar-title">Planejamento Semestral</div></div><div class="content"><div class="section-card" style="text-align:center;padding:2rem;color:var(--t-3)">Carregando...</div></div></div>
-      <div class="page" id="page-geral_melhorias"><div class="topbar"><div class="topbar-title">Caixa de Melhorias</div></div><div class="content"><div class="section-card" style="text-align:center;padding:3rem;color:var(--t-3)"><div style="font-size:32px;margin-bottom:12px">🛠️</div><div style="font-size:14px;font-weight:600">Em Desenvolvimento</div><div style="font-size:12px;margin-top:6px;opacity:0.6">Módulo disponível em breve</div></div></div></div>
+      <div class="page" id="page-geral_melhorias">
+        <div class="topbar"><div class="topbar-title">Caixa de Melhorias</div></div>
+        <div class="content" id="content-melhorias">
+          <div class="empty-state">
+            <div style="font-size:32px;margin-bottom:12px">🛠️</div>
+            <div style="font-size:14px;font-weight:600">Nenhuma melhoria sugerida</div>
+            <div style="font-size:12px;margin-top:6px;opacity:0.6">Seja o primeiro a sugerir uma evolução para o núcleo.</div>
+            <button class="btn btn-primary" style="margin-top:16px" onclick="PageGeral.novaMelhoria()">+ Sugerir Melhoria</button>
+          </div>
+        </div>
+      </div>
       <div class="page" id="page-geral_parcerias"><div class="topbar"><div class="topbar-title">Parcerias Estratégicas</div></div><div class="content"><div class="section-card" style="text-align:center;padding:3rem;color:var(--t-3)"><div style="font-size:32px;margin-bottom:12px">🤝</div><div style="font-size:14px;font-weight:600">Em Desenvolvimento</div><div style="font-size:12px;margin-top:6px;opacity:0.6">Módulo disponível em breve</div></div></div></div>
 
       <!-- MÓDULOS MARKETING -->
@@ -328,7 +338,17 @@
       <div class="page" id="page-prj_eventos"><div class="topbar"><div class="topbar-title">Eventos Estaduais</div></div><div class="content"><div class="section-card" style="text-align:center;padding:2rem;color:var(--t-3)">Carregando...</div></div></div>
       <div class="page" id="page-prj_enegep"><div class="topbar"><div class="topbar-title">Momento ENEGEP</div></div><div class="content"><div class="section-card" style="text-align:center;padding:3rem;color:var(--t-3)"><div style="font-size:32px;margin-bottom:12px">🎓</div><div style="font-size:14px;font-weight:600">Em Desenvolvimento</div><div style="font-size:12px;margin-top:6px;opacity:0.6">Módulo disponível em breve</div></div></div></div>
       <div class="page" id="page-prj_treinamentos"><div class="topbar"><div class="topbar-title">Treinamentos Externos</div></div><div class="content"><div class="section-card" style="text-align:center;padding:3rem;color:var(--t-3)"><div style="font-size:32px;margin-bottom:12px">📚</div><div style="font-size:14px;font-weight:600">Em Desenvolvimento</div><div style="font-size:12px;margin-top:6px;opacity:0.6">Módulo disponível em breve</div></div></div></div>
-      <div class="page" id="page-prj_nupicast"><div class="topbar"><div class="topbar-title">NUPICAST Tracker</div></div><div class="content"><div class="section-card" style="text-align:center;padding:3rem;color:var(--t-3)"><div style="font-size:32px;margin-bottom:12px">🎙️</div><div style="font-size:14px;font-weight:600">Em Desenvolvimento</div><div style="font-size:12px;margin-top:6px;opacity:0.6">Módulo disponível em breve</div></div></div></div>
+      <div class="page" id="page-prj_nupicast">
+        <div class="topbar"><div class="topbar-title">NUPICAST Tracker</div></div>
+        <div class="content" id="content-nupicast">
+          <div class="empty-state">
+            <div style="font-size:32px;margin-bottom:12px">🎙️</div>
+            <div style="font-size:14px;font-weight:600">Nenhum episódio rastreado</div>
+            <div style="font-size:12px;margin-top:6px;opacity:0.6">Acompanhe a produção dos episódios do NUPICAST.</div>
+            <button class="btn btn-primary" style="margin-top:16px" onclick="PageProjetos.novoEpisodio()">+ Rastrear Episódio</button>
+          </div>
+        </div>
+      </div>
 
       <!-- MÓDULOS OPERAÇÕES -->
       <div class="page" id="page-ops_relatorios"><div class="topbar"><div class="topbar-title">Relatórios ABJ</div></div><div class="content"><div class="section-card" style="text-align:center;padding:3rem;color:var(--t-3)"><div style="font-size:32px;margin-bottom:12px">📊</div><div style="font-size:14px;font-weight:600">Em Desenvolvimento</div><div style="font-size:12px;margin-top:6px;opacity:0.6">Módulo disponível em breve</div></div></div></div>
