@@ -14,8 +14,8 @@
   <meta name="apple-mobile-web-app-title" content="NUPIEEPRO">
   <title>NUPIEEPRO — Dashboard</title>
   <link rel="manifest" href="manifest.json">
-  <link rel="apple-touch-icon" href="assets/icon.png">
-  <link rel="icon" href="assets/icon.png" type="image/png">
+  <link rel="apple-touch-icon" href="assets/icon-192.png">
+  <link rel="icon" href="assets/icon-192.png" type="image/png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Plus+Jakarta+Sans:wght@600;700;800;900&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
@@ -88,7 +88,7 @@
         <div class="topbar">
           <div style="display:flex;align-items:center;gap:12px;">
             <button class="topbar-toggle" onclick="toggleSidebar()">☰</button>
-            <img src="assets/icon.png" class="d-md-none" style="height:32px; object-fit:contain; filter: drop-shadow(0 0 5px var(--orange));" alt="Logo">
+            <img src="assets/icon-192.png" class="d-md-none" style="height:32px; object-fit:contain; filter: drop-shadow(0 0 5px var(--orange));" alt="Logo">
             <div>
               <div class="topbar-title">Dashboard</div>
               <div class="topbar-sub" style="display:flex;align-items:center;gap:6px;">
@@ -226,15 +226,15 @@
         </div>
       </div>
 
-      <!-- MÓDULOS GERAIS (PLACEHOLDERS) -->
-      <div class="page" id="page-geral_reunioes"><div class="topbar"><div class="topbar-title">Reuniões e Check-in</div></div><div class="content"><div class="section-card">Carregando módulo...</div></div></div>
-      <div class="page" id="page-geral_planejamento"><div class="topbar"><div class="topbar-title">Planejamento Semestral</div></div><div class="content"><div class="section-card">Carregando módulo...</div></div></div>
-      <div class="page" id="page-geral_melhorias"><div class="topbar"><div class="topbar-title">Caixa de Melhorias</div></div><div class="content"><div class="section-card">Carregando módulo...</div></div></div>
-      <div class="page" id="page-geral_parcerias"><div class="topbar"><div class="topbar-title">Parcerias Estratégicas</div></div><div class="content"><div class="section-card">Carregando módulo...</div></div></div>
+      <!-- MÓDULOS GERAIS -->
+      <div class="page" id="page-geral_reunioes"><div class="topbar"><div class="topbar-title">Reuniões e Check-in</div></div><div class="content"><div class="section-card" style="text-align:center;padding:2rem;color:var(--t-3)">Carregando...</div></div></div>
+      <div class="page" id="page-geral_planejamento"><div class="topbar"><div class="topbar-title">Planejamento Semestral</div></div><div class="content"><div class="section-card" style="text-align:center;padding:2rem;color:var(--t-3)">Carregando...</div></div></div>
+      <div class="page" id="page-geral_melhorias"><div class="topbar"><div class="topbar-title">Caixa de Melhorias</div></div><div class="content"><div class="section-card" style="text-align:center;padding:3rem;color:var(--t-3)"><div style="font-size:32px;margin-bottom:12px">🛠️</div><div style="font-size:14px;font-weight:600">Em Desenvolvimento</div><div style="font-size:12px;margin-top:6px;opacity:0.6">Módulo disponível em breve</div></div></div></div>
+      <div class="page" id="page-geral_parcerias"><div class="topbar"><div class="topbar-title">Parcerias Estratégicas</div></div><div class="content"><div class="section-card" style="text-align:center;padding:3rem;color:var(--t-3)"><div style="font-size:32px;margin-bottom:12px">🤝</div><div style="font-size:14px;font-weight:600">Em Desenvolvimento</div><div style="font-size:12px;margin-top:6px;opacity:0.6">Módulo disponível em breve</div></div></div></div>
 
       <!-- MÓDULOS MARKETING -->
-      <div class="page" id="page-mkt_tracker"><div class="topbar"><div class="topbar-title">Social Media Tracker</div></div><div class="content"><div class="section-card">Carregando módulo...</div></div></div>
-      <div class="page" id="page-mkt_kanban"><div class="topbar"><div class="topbar-title">Kanban da Lojinha</div></div><div class="content"><div class="section-card">Carregando módulo...</div></div></div>
+      <div class="page" id="page-mkt_tracker"><div class="topbar"><div class="topbar-title">Social Media Tracker</div></div><div class="content"><div class="section-card" style="text-align:center;padding:2rem;color:var(--t-3)">Carregando...</div></div></div>
+      <div class="page" id="page-mkt_kanban"><div class="topbar"><div class="topbar-title">Kanban da Lojinha</div></div><div class="content"><div class="section-card" style="text-align:center;padding:3rem;color:var(--t-3)"><div style="font-size:32px;margin-bottom:12px">🛍️</div><div style="font-size:14px;font-weight:600">Em Desenvolvimento</div><div style="font-size:12px;margin-top:6px;opacity:0.6">Módulo disponível em breve</div></div></div></div>
 
       <!-- MÓDULOS FINANCEIROS -->
       <div class="page" id="page-fin_fluxo">
@@ -325,15 +325,15 @@
       </div>
 
       <!-- MÓDULOS PROJETOS -->
-      <div class="page" id="page-prj_eventos"><div class="topbar"><div class="topbar-title">Eventos Estaduais</div></div><div class="content"><div class="section-card">Carregando módulo...</div></div></div>
-      <div class="page" id="page-prj_enegep"><div class="topbar"><div class="topbar-title">Momento ENEGEP</div></div><div class="content"><div class="section-card">Carregando módulo...</div></div></div>
-      <div class="page" id="page-prj_treinamentos"><div class="topbar"><div class="topbar-title">Treinamentos Externos</div></div><div class="content"><div class="section-card">Carregando módulo...</div></div></div>
-      <div class="page" id="page-prj_nupicast"><div class="topbar"><div class="topbar-title">NUPICAST Tracker</div></div><div class="content"><div class="section-card">Carregando módulo...</div></div></div>
+      <div class="page" id="page-prj_eventos"><div class="topbar"><div class="topbar-title">Eventos Estaduais</div></div><div class="content"><div class="section-card" style="text-align:center;padding:2rem;color:var(--t-3)">Carregando...</div></div></div>
+      <div class="page" id="page-prj_enegep"><div class="topbar"><div class="topbar-title">Momento ENEGEP</div></div><div class="content"><div class="section-card" style="text-align:center;padding:3rem;color:var(--t-3)"><div style="font-size:32px;margin-bottom:12px">🎓</div><div style="font-size:14px;font-weight:600">Em Desenvolvimento</div><div style="font-size:12px;margin-top:6px;opacity:0.6">Módulo disponível em breve</div></div></div></div>
+      <div class="page" id="page-prj_treinamentos"><div class="topbar"><div class="topbar-title">Treinamentos Externos</div></div><div class="content"><div class="section-card" style="text-align:center;padding:3rem;color:var(--t-3)"><div style="font-size:32px;margin-bottom:12px">📚</div><div style="font-size:14px;font-weight:600">Em Desenvolvimento</div><div style="font-size:12px;margin-top:6px;opacity:0.6">Módulo disponível em breve</div></div></div></div>
+      <div class="page" id="page-prj_nupicast"><div class="topbar"><div class="topbar-title">NUPICAST Tracker</div></div><div class="content"><div class="section-card" style="text-align:center;padding:3rem;color:var(--t-3)"><div style="font-size:32px;margin-bottom:12px">🎙️</div><div style="font-size:14px;font-weight:600">Em Desenvolvimento</div><div style="font-size:12px;margin-top:6px;opacity:0.6">Módulo disponível em breve</div></div></div></div>
 
       <!-- MÓDULOS OPERAÇÕES -->
-      <div class="page" id="page-ops_relatorios"><div class="topbar"><div class="topbar-title">Relatórios ABJ</div></div><div class="content"><div class="section-card">Carregando módulo...</div></div></div>
-      <div class="page" id="page-ops_pops"><div class="topbar"><div class="topbar-title">Cofre de POPs</div></div><div class="content"><div class="section-card">Carregando módulo...</div></div></div>
-      <div class="page" id="page-ops_arquivo"><div class="topbar"><div class="topbar-title">Arquivo Digital</div></div><div class="content"><div class="section-card">Carregando módulo...</div></div></div>
+      <div class="page" id="page-ops_relatorios"><div class="topbar"><div class="topbar-title">Relatórios ABJ</div></div><div class="content"><div class="section-card" style="text-align:center;padding:3rem;color:var(--t-3)"><div style="font-size:32px;margin-bottom:12px">📊</div><div style="font-size:14px;font-weight:600">Em Desenvolvimento</div><div style="font-size:12px;margin-top:6px;opacity:0.6">Módulo disponível em breve</div></div></div></div>
+      <div class="page" id="page-ops_pops"><div class="topbar"><div class="topbar-title">Cofre de POPs</div></div><div class="content"><div class="section-card" style="text-align:center;padding:2rem;color:var(--t-3)">Carregando...</div></div></div>
+      <div class="page" id="page-ops_arquivo"><div class="topbar"><div class="topbar-title">Arquivo Digital</div></div><div class="content"><div class="section-card" style="text-align:center;padding:3rem;color:var(--t-3)"><div style="font-size:32px;margin-bottom:12px">🗂️</div><div style="font-size:14px;font-weight:600">Em Desenvolvimento</div><div style="font-size:12px;margin-top:6px;opacity:0.6">Módulo disponível em breve</div></div></div></div>
 
       <!-- MÓDULOS GESTÃO DE PESSOAS -->
       <div class="page" id="page-gp_talentos">
@@ -417,10 +417,10 @@
       </div>
 
       <!-- MÓDULOS GLOBAIS -->
-      <div class="page" id="page-global_visitas"><div class="topbar"><div class="topbar-title">Visitas Técnicas</div></div><div class="content"><div class="section-card">Carregando módulo...</div></div></div>
-      <div class="page" id="page-global_apresentacoes"><div class="topbar"><div class="topbar-title">Apresentações Institucionais</div></div><div class="content"><div class="section-card">Carregando módulo...</div></div></div>
-      <div class="page" id="page-global_producao"><div class="topbar"><div class="topbar-title">Produção Científica</div></div><div class="content"><div class="section-card">Carregando módulo...</div></div></div>
-      <div class="page" id="page-global_assembleia"><div class="topbar"><div class="topbar-title">Assembleia e Votações</div></div><div class="content"><div class="section-card">Carregando módulo...</div></div></div>
+      <div class="page" id="page-global_visitas"><div class="topbar"><div class="topbar-title">Visitas Técnicas</div></div><div class="content"><div class="section-card" style="text-align:center;padding:3rem;color:var(--t-3)"><div style="font-size:32px;margin-bottom:12px">🏭</div><div style="font-size:14px;font-weight:600">Em Desenvolvimento</div><div style="font-size:12px;margin-top:6px;opacity:0.6">Módulo disponível em breve</div></div></div></div>
+      <div class="page" id="page-global_apresentacoes"><div class="topbar"><div class="topbar-title">Apresentações Institucionais</div></div><div class="content"><div class="section-card" style="text-align:center;padding:3rem;color:var(--t-3)"><div style="font-size:32px;margin-bottom:12px">🎤</div><div style="font-size:14px;font-weight:600">Em Desenvolvimento</div><div style="font-size:12px;margin-top:6px;opacity:0.6">Módulo disponível em breve</div></div></div></div>
+      <div class="page" id="page-global_producao"><div class="topbar"><div class="topbar-title">Produção Científica</div></div><div class="content"><div class="section-card" style="text-align:center;padding:3rem;color:var(--t-3)"><div style="font-size:32px;margin-bottom:12px">🔬</div><div style="font-size:14px;font-weight:600">Em Desenvolvimento</div><div style="font-size:12px;margin-top:6px;opacity:0.6">Módulo disponível em breve</div></div></div></div>
+      <div class="page" id="page-global_assembleia"><div class="topbar"><div class="topbar-title">Assembleia e Votações</div></div><div class="content"><div class="section-card" style="text-align:center;padding:3rem;color:var(--t-3)"><div style="font-size:32px;margin-bottom:12px">🗳️</div><div style="font-size:14px;font-weight:600">Em Desenvolvimento</div><div style="font-size:12px;margin-top:6px;opacity:0.6">Módulo disponível em breve</div></div></div></div>
 
       <!-- ══════════════════════════════════════════════
            PAGE: GERAL (COORDENAÇÃO GERAL)
@@ -906,35 +906,6 @@
                   <a href="adminoperacoes.html" target="_blank" class="btn btn-ghost" style="font-size:12px;">Visualizar Credenciamento -></a>
               </div>
           </div>
-        </div>
-      </div>
-
-      <!-- ══════════════════════════════════════════════
-           PAGE: MARKETING
-      ══════════════════════════════════════════════ -->
-      <div class="page" id="page-marketing">
-        <div class="topbar">
-          <div style="display:flex;align-items:center;gap:12px;">
-            <button class="topbar-toggle" onclick="toggleSidebar()">☰</button>
-            <div>
-              <div class="topbar-title">Agência MKT</div>
-              <div class="topbar-sub">Social Media Tracker e Lojinha</div>
-            </div>
-          </div>
-        </div>
-        <div class="content">
-           <div class="section-card">
-              <div class="section-title">📱 Social Media Tracker</div>
-              <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap:12px;">
-                <div class="stat-mini"><span>Insta Follows</span><strong>1.2k</strong></div>
-                <div class="stat-mini"><span>Post Status</span><strong>3 Agendados</strong></div>
-                <div class="stat-mini"><span>Lojinha Timer</span><strong style="color:var(--orange)">7d restantes</strong></div>
-              </div>
-           </div>
-           <div class="section-card">
-              <div class="section-title">🛍️ Kanban Lojinha [Fila de Produção]</div>
-              <div id="marketingKanban" style="display:flex; gap:16px; overflow-x:auto;"></div>
-           </div>
         </div>
       </div>
 
