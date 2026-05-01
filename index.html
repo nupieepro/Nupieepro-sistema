@@ -29,29 +29,37 @@
   
   <!-- EmailJS SDK -->
   <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
-  
+
+  <!-- Temas: aplicar antes do render para evitar flash de cor errada -->
   <script>
     const _t = localStorage.getItem('nupie_theme') || 'nucleo';
     document.documentElement.setAttribute('data-theme', _t === 'default' ? 'nucleo' : _t);
   </script>
-  
+
+  <!-- Sistema de temas completo — mesmo do dashboard -->
+  <link rel="stylesheet" href="css/themes-override.css">
+
   <style>
     :root {
-      --black:   var(--c-bg, #000000);
-      --orange:  var(--c-accent, #f75412);
-      --orange-dim: var(--a-2, rgba(247, 84, 18, 0.15));
-      --white:   var(--c-white, #ffffff);
-      --border:  var(--border, rgba(255, 255, 255, 0.08));
+      --black:      var(--c-bg,     #000000);
+      --white:      var(--c-white,  #ffffff);
       --font-body: 'DM Sans', sans-serif;
       --font-head: 'Plus Jakarta Sans', sans-serif;
       --font-mono: 'JetBrains Mono', monospace;
+      /* Fallbacks para quando themes-override.css ainda não carregou */
+      --orange:     var(--c-accent, #f75412);
+      --orange-dim: var(--a-2,     rgba(247,84,18,0.12));
+    }
+
+    /* Login sempre com fundo escuro — independente do tema claro/escuro */
+    html, body {
+      background: #000 !important;
+      color: #fff;
     }
 
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     html, body {
-      background: var(--black);
-      color: var(--white);
       font-family: var(--font-body);
       min-height: 100svh;
       overflow-x: hidden;
@@ -64,7 +72,7 @@
       inset: 0;
       z-index: 5;
       pointer-events: none;
-      border: 1px solid rgba(247, 84, 18, 0.1);
+      border: 1px solid var(--orange-dim);
       margin: 20px;
     }
     .hud-overlay::before {
@@ -77,7 +85,7 @@
       z-index: 10;
       opacity: 0.3;
     }
-    .hud-line { position: absolute; background: rgba(247, 84, 18, 0.15); }
+    .hud-line { position: absolute; background: var(--orange-dim); }
     .hud-v { width: 1px; height: 100%; left: 8%; }
     .hud-h { height: 1px; width: 100%; top: 12%; }
     
@@ -94,7 +102,7 @@
     .hud-tag::after {
       content: '';
       position: absolute; left: 0; top: 0; width: 100%; height: 100%;
-      background: linear-gradient(transparent, var(--orange-dim), transparent);
+      background: linear-gradient(transparent, var(--a-2, var(--orange-dim)), transparent);
       animation: scanlineHUD 4s linear infinite;
     }
     .hud-tl { top: 40px; left: 40px; }
@@ -106,9 +114,9 @@
     .bg-blueprint {
       position: absolute;
       inset: 0;
-      background-image: 
-        linear-gradient(rgba(247, 84, 18, 0.04) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(247, 84, 18, 0.04) 1px, transparent 1px);
+      background-image:
+        linear-gradient(var(--a-1, rgba(247,84,18,0.04)) 1px, transparent 1px),
+        linear-gradient(90deg, var(--a-1, rgba(247,84,18,0.04)) 1px, transparent 1px);
       background-size: 50px 50px;
       z-index: 1;
     }

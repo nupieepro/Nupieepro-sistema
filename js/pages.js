@@ -661,75 +661,545 @@ const PagePessoas = {
     ]});
   }
 };
+/* ══════════════════════════════════════════════════════════════
+   PageDev — Painel de Administração do Sistema (Admin Only)
+   Acesso exclusivo: role === 'admin'  (JR e afins)
+   ══════════════════════════════════════════════════════════════ */
 const PageDev = {
-  _temAcesso(){return window._appProfile?.role==='admin';},
-  async init(){this._renderUsuarios();},
-  _renderUsuarios(){
-    const pg=document.getElementById('page-dev_usuarios');
-    if(!pg)return;
-    const ct=pg.querySelector('.content')||pg;
-    if(!this._temAcesso()){
-      ct.innerHTML='<div style="padding:40px;text-align:center;color:var(--c-slate)">🔒 Acesso restrito.</div>';
+  _tab: 'usuarios',
+  _coords: [],   /* cache de coordenadorias */
+
+  _temAcesso() { return window._appProfile?.role === 'admin'; },
+
+  /* ── Entry point ── */
+  async init() {
+    /* Pré-carrega coordenadorias para selects */
+    if (_sb() && !this._coords.length) {
+      const { data } = await _sb().from('coordenadorias').select('id,nome,sigla').order('nome');
+      this._coords = data || [];
+    }
+    this._render();
+  },
+
+  /* ── Shell com tabs ── */
+  _render() {
+    const pg = document.getElementById('page-dev_usuarios');
+    if (!pg) return;
+    const ct = pg.querySelector('.content') || pg;
+    if (!this._temAcesso()) {
+      ct.innerHTML = '<div style="padding:40px;text-align:center;color:var(--c-slate)">🔒 Acesso restrito ao administrador do sistema.</div>';
       return;
     }
-    ct.innerHTML=_sc('Usuários do Sistema','👤',`
-      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px">
-        ${_btn('Recarregar',"PageDev._carregar()",'btn-ghost')}
+    const tabs = [
+      { id:'usuarios',    icon:'👥', label:'Usuários'    },
+      { id:'convites',    icon:'📩', label:'Convites'    },
+      { id:'permissoes',  icon:'🔐', label:'Permissões'  },
+      { id:'logs',        icon:'📋', label:'Logs'        },
+      { id:'sistema',     icon:'⚙️', label:'Sistema'     },
+    ];
+    ct.innerHTML = `
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid var(--b-1)">
+        ${tabs.map(t=>`
+          <button onclick="PageDev._switchTab('${t.id}')"
+                  id="devtab-${t.id}"
+                  style="padding:8px 14px;border-radius:8px;border:1px solid var(--b-2);background:${this._tab===t.id?'var(--c-accent)':'var(--b-1)'};
+                         color:${this._tab===t.id?'#fff':'var(--c-slate)'};font-size:12px;font-weight:700;cursor:pointer;font-family:var(--f-body)">
+            ${t.icon} ${t.label}
+          </button>`).join('')}
       </div>
-      <div id="dev-lista">
-        <div style="padding:20px;text-align:center;color:var(--c-slate);font-size:13px">Carregando...</div>
-      </div>`) +
-    _sc('Versão do Sistema','🔖',`
-      <div style="display:flex;flex-direction:column;gap:8px;font-size:13px">
-        <div style="display:flex;justify-content:space-between;padding:10px;background:var(--b-1);border-radius:8px">
-          <span style="color:var(--c-slate)">App Core</span>
-          <span style="color:var(--c-white);font-weight:600">v8.0</span>
-        </div>
-        <div style="display:flex;justify-content:space-between;padding:10px;background:var(--b-1);border-radius:8px">
-          <span style="color:var(--c-slate)">ABJ Module</span>
-          <span style="color:var(--c-white);font-weight:600">v3.0</span>
-        </div>
-        <div style="display:flex;justify-content:space-between;padding:10px;background:var(--b-1);border-radius:8px">
-          <span style="color:var(--c-slate)">Supabase</span>
-          <span style="color:${window._supabase?'var(--green)':'var(--red)'};font-weight:600">
-            ${window._supabase?'✅ Conectado':'❌ Offline'}
-          </span>
-        </div>
-        <div style="display:flex;justify-content:space-between;padding:10px;background:var(--b-1);border-radius:8px">
-          <span style="color:var(--c-slate)">Online</span>
-          <span style="color:${navigator.onLine?'var(--green)':'var(--red)'};font-weight:600">
-            ${navigator.onLine?'✅ Online':'🔴 Offline'}
-          </span>
-        </div>
-      </div>`);
-    this._carregar();
+      <div id="devTabContent"></div>`;
+    this._loadTab(this._tab);
   },
-  async _carregar(){
-    const el=document.getElementById('dev-lista');
-    if(!el||!_sb())return;
+
+  _switchTab(id) {
+    this._tab = id;
+    document.querySelectorAll('[id^="devtab-"]').forEach(b => {
+      const active = b.id === `devtab-${id}`;
+      b.style.background = active ? 'var(--c-accent)' : 'var(--b-1)';
+      b.style.color      = active ? '#fff' : 'var(--c-slate)';
+    });
+    this._loadTab(id);
+  },
+
+  _loadTab(id) {
+    const fn = {
+      usuarios:   () => this._tabUsuarios(),
+      convites:   () => this._tabConvites(),
+      permissoes: () => this._tabPermissoes(),
+      logs:       () => this._tabLogs(),
+      sistema:    () => this._tabSistema(),
+    }[id];
+    if (fn) fn();
+  },
+
+  /* ══════════════════════════
+     TAB: USUÁRIOS
+  ══════════════════════════ */
+  _tabUsuarios() {
+    const el = document.getElementById('devTabContent');
+    if (!el) return;
+    const coordOpts = this._coords.map(c=>`<option value="${c.id}">${c.nome}</option>`).join('');
+    el.innerHTML = `
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;align-items:center">
+        <input id="devSearch" class="form-input" style="max-width:220px;padding:8px 12px"
+               placeholder="🔍 Buscar nome ou e-mail…" oninput="PageDev._filtrarUsuarios()">
+        <select id="devFiltroRole" class="form-select" style="max-width:160px" onchange="PageDev._filtrarUsuarios()">
+          <option value="">Todos os roles</option>
+          <option value="admin">Admin</option>
+          <option value="coordenador">Coordenador</option>
+          <option value="assessor">Assessor</option>
+          <option value="conselheiro">Conselheiro</option>
+          <option value="membro">Membro</option>
+        </select>
+        <select id="devFiltroCoord" class="form-select" style="max-width:180px" onchange="PageDev._filtrarUsuarios()">
+          <option value="">Todas as coords</option>
+          ${coordOpts}
+        </select>
+        <button class="btn btn-primary" onclick="PageDev._novoConviteRapido()"
+                style="margin-left:auto;font-size:12px">+ Convidar membro</button>
+      </div>
+      <div id="devListaUsuarios">
+        <div style="padding:20px;text-align:center;color:var(--c-slate)"><span class="spinner"></span></div>
+      </div>`;
+    this._carregarUsuarios();
+  },
+
+  async _carregarUsuarios() {
+    const el = document.getElementById('devListaUsuarios');
+    if (!el || !_sb()) return;
     try {
-      const {data}=await _sb().from('users')
-        .select('*,coordenadorias(nome,sigla)')
-        .order('created_at',{ascending:false});
-      el.innerHTML=data?.length
-        ?data.map(u=>`
-          <div style="background:var(--b-1);border:1px solid var(--b-2);border-radius:10px;
-                      padding:12px 16px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+      const { data } = await _sb()
+        .from('users')
+        .select('*,coordenadorias(nome,sigla,cor)')
+        .order('created_at', { ascending: false });
+      window._devUsuarios = data || [];
+      this._renderUsuariosFiltrados(data || []);
+    } catch(e) {
+      el.innerHTML = '<div style="padding:16px;color:var(--c-slate)">Erro ao carregar usuários.</div>';
+    }
+  },
+
+  _filtrarUsuarios() {
+    const q     = (document.getElementById('devSearch')?.value || '').toLowerCase();
+    const role  = document.getElementById('devFiltroRole')?.value  || '';
+    const coord = document.getElementById('devFiltroCoord')?.value || '';
+    let list = window._devUsuarios || [];
+    if (q)     list = list.filter(u => (u.nome+u.email).toLowerCase().includes(q));
+    if (role)  list = list.filter(u => u.role === role);
+    if (coord) list = list.filter(u => u.coordenadoria_id === coord);
+    this._renderUsuariosFiltrados(list);
+  },
+
+  _renderUsuariosFiltrados(list) {
+    const el = document.getElementById('devListaUsuarios');
+    if (!el) return;
+    if (!list.length) {
+      el.innerHTML = '<div style="padding:20px;text-align:center;color:var(--c-slate);font-size:13px">Nenhum usuário encontrado.</div>';
+      return;
+    }
+    el.innerHTML = list.map(u => {
+      const nivel = (window.Permissoes?.getNivelInfo(u.role, u.coordenadorias?.sigla)) || { cor:'#666', badge: u.role };
+      const ativoStyle = u.ativo ? 'var(--green)' : 'var(--red)';
+      return `
+        <div style="background:var(--b-1);border:1px solid var(--b-2);border-radius:10px;
+                    padding:12px 16px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:8px">
+          <div style="display:flex;align-items:center;gap:12px">
+            <div style="width:36px;height:36px;border-radius:50%;background:${nivel.cor}22;border:1px solid ${nivel.cor}44;
+                        display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;color:${nivel.cor}">
+              ${sanitize(u.iniciais||'?')}
+            </div>
             <div>
-              <div style="font-weight:700;font-size:13px;color:var(--c-white)">${sanitize(u.nome||u.email||'—')}</div>
-              <div style="font-size:12px;color:var(--c-slate)">${sanitize(u.email||'—')} · ${sanitize(u.coordenadorias?.nome||'—')}</div>
+              <div style="font-weight:700;font-size:13px;color:var(--c-white)">
+                ${sanitize(u.apelido ? u.nome + ' <span style="color:var(--c-slate)">(' + u.apelido + ')</span>' : u.nome||u.email||'—')}
+              </div>
+              <div style="font-size:11px;color:var(--c-slate)">${sanitize(u.email||'—')} · ${sanitize(u.coordenadorias?.nome||'Sem coord')} · ${u.cargo||'—'}</div>
+              ${u.aniversario ? `<div style="font-size:10px;color:var(--c-slate)">🎂 ${_fmt(u.aniversario)}</div>` : ''}
             </div>
-            <div style="display:flex;gap:6px;flex-wrap:wrap">
-              <span style="font-size:11px;font-weight:700;padding:3px 9px;border-radius:99px;
-                           background:${u.ativo?'var(--green)':'var(--red)'}22;
-                           color:${u.ativo?'var(--green)':'var(--red)'};
-                           border:1px solid ${u.ativo?'var(--green)':'var(--red)'}44">
-                ${u.role||'membro'}
+          </div>
+          <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+            <span style="font-size:10px;font-weight:800;padding:3px 8px;border-radius:99px;
+                         background:${nivel.cor}18;color:${nivel.cor};border:1px solid ${nivel.cor}33">
+              ${nivel.badge}
+            </span>
+            <span style="font-size:10px;font-weight:700;padding:3px 8px;border-radius:99px;
+                         background:${ativoStyle}18;color:${ativoStyle};border:1px solid ${ativoStyle}33">
+              ${u.ativo ? '● Ativo' : '○ Inativo'}
+            </span>
+            <button class="btn btn-ghost" style="font-size:11px;padding:5px 10px"
+                    onclick="PageDev.editarUsuario('${u.id}')">✏️ Editar</button>
+          </div>
+        </div>`;
+    }).join('');
+  },
+
+  editarUsuario(userId) {
+    const u = (window._devUsuarios || []).find(x => x.id === userId);
+    if (!u) return;
+    const coordOpts = this._coords.map(c =>
+      `<option value="${c.id}" ${u.coordenadoria_id === c.id ? 'selected' : ''}>${c.nome}</option>`
+    ).join('');
+    abrirModal({ titulo:`✏️ Editar: ${u.nome || u.email}`, tipo:'info', corpo:`
+      <div class="form-group"><label class="form-label">Nome completo</label>
+        <input id="eu-nome" class="form-input" value="${sanitize(u.nome||'')}"></div>
+      <div class="form-group"><label class="form-label">Apelido</label>
+        <input id="eu-apelido" class="form-input" value="${sanitize(u.apelido||'')}"></div>
+      <div class="form-group"><label class="form-label">Cargo</label>
+        <input id="eu-cargo" class="form-input" value="${sanitize(u.cargo||'')}"></div>
+      <div class="form-group"><label class="form-label">Role (nível de acesso)</label>
+        <select id="eu-role" class="form-select">
+          <option value="admin"      ${u.role==='admin'?'selected':''}>👨‍💻 Admin</option>
+          <option value="coordenador"${u.role==='coordenador'?'selected':''}>📋 Coordenador</option>
+          <option value="assessor"   ${u.role==='assessor'?'selected':''}>✅ Assessor</option>
+          <option value="conselheiro"${u.role==='conselheiro'?'selected':''}>⭐ Conselheiro</option>
+          <option value="membro"     ${u.role==='membro'?'selected':''}>👤 Membro</option>
+        </select></div>
+      <div class="form-group"><label class="form-label">Coordenadoria</label>
+        <select id="eu-coord" class="form-select"><option value="">— Sem coord —</option>${coordOpts}</select></div>
+      <div class="form-group"><label class="form-label">Aniversário</label>
+        <input id="eu-aniv" type="date" class="form-input" value="${u.aniversario||''}"></div>
+      <div class="form-group"><label class="form-label">Status</label>
+        <select id="eu-ativo" class="form-select">
+          <option value="true"  ${u.ativo?'selected':''}>● Ativo</option>
+          <option value="false" ${!u.ativo?'selected':''}>○ Inativo (desligado)</option>
+        </select></div>
+      <p style="font-size:11px;color:var(--c-slate);margin-top:8px">
+        ⚠️ Ao inativar, o sistema envia automaticamente o e-mail de despedida.
+      </p>`,
+    botoes:[
+      { texto:'Cancelar', classe:'btn-ghost', acao: fecharModal },
+      { texto:'Salvar alterações', classe:'btn-primary', acao: () => this._salvarEdicaoUsuario(userId, u) }
+    ]});
+  },
+
+  async _salvarEdicaoUsuario(userId, uOriginal) {
+    const nome   = document.getElementById('eu-nome')?.value.trim();
+    const apelido= document.getElementById('eu-apelido')?.value.trim() || null;
+    const cargo  = document.getElementById('eu-cargo')?.value.trim() || null;
+    const role   = document.getElementById('eu-role')?.value;
+    const coordId= document.getElementById('eu-coord')?.value || null;
+    const aniv   = document.getElementById('eu-aniv')?.value || null;
+    const ativo  = document.getElementById('eu-ativo')?.value === 'true';
+    if (!nome) { mostrarToast('Nome é obrigatório.','error'); return; }
+    try {
+      await _sb().from('users').update({ nome, apelido, cargo, role, coordenadoria_id: coordId, aniversario: aniv, ativo })
+        .eq('id', userId);
+      /* Se desativou → envia e-mail de despedida */
+      if (!ativo && uOriginal.ativo) {
+        const coord = this._coords.find(c => c.id === coordId);
+        await window.EmailsModule?.enviarDespedida({ ...uOriginal, nome, apelido, cargo }, coord?.nome);
+      }
+      fecharModal();
+      mostrarToast('Usuário atualizado!', 'success');
+      this._carregarUsuarios();
+    } catch(e) {
+      mostrarToast('Erro ao salvar: ' + e.message, 'error');
+    }
+  },
+
+  /* ══════════════════════════
+     TAB: CONVITES
+  ══════════════════════════ */
+  _tabConvites() {
+    const el = document.getElementById('devTabContent');
+    if (!el) return;
+    el.innerHTML = `
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+        <span style="font-size:13px;color:var(--c-slate)">Convites enviados e pendentes</span>
+        <button class="btn btn-primary" style="font-size:12px" onclick="PageDev.novoConvite()">+ Novo convite</button>
+      </div>
+      <div id="devConvites">
+        <div style="padding:20px;text-align:center;color:var(--c-slate)"><span class="spinner"></span></div>
+      </div>`;
+    this._carregarConvites();
+  },
+
+  async _carregarConvites() {
+    const el = document.getElementById('devConvites');
+    if (!el || !_sb()) return;
+    try {
+      const { data } = await _sb()
+        .from('convites')
+        .select('*,coordenadorias(nome,sigla)')
+        .order('created_at', { ascending: false })
+        .limit(30);
+      el.innerHTML = (data||[]).map(c => {
+        const exp     = new Date(c.expires_at);
+        const expirou = exp < new Date() || c.usado;
+        const expStr  = _fmt(c.expires_at);
+        return `
+          <div style="background:var(--b-1);border:1px solid var(--b-2);border-radius:10px;
+                      padding:12px 16px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:8px">
+            <div>
+              <div style="font-weight:700;font-size:13px;color:var(--c-white)">${sanitize(c.email)}</div>
+              <div style="font-size:11px;color:var(--c-slate)">${sanitize(c.coordenadorias?.nome||'—')} · ${c.cargo||c.role} · Expira ${expStr}</div>
+            </div>
+            <div style="display:flex;gap:6px;align-items:center">
+              <span style="font-size:10px;font-weight:800;padding:3px 8px;border-radius:99px;
+                           background:${c.usado?'var(--green)18':expirou?'var(--red)18':'var(--a-2)'};
+                           color:${c.usado?'var(--green)':expirou?'var(--red)':'var(--c-accent)'};
+                           border:1px solid ${c.usado?'var(--green)44':expirou?'var(--red)44':'var(--b-a)'}">
+                ${c.usado ? '✅ Usado' : expirou ? '⏰ Expirado' : '⏳ Pendente'}
               </span>
+              ${!c.usado && !expirou ? `
+                <button class="btn btn-ghost" style="font-size:11px;padding:5px 10px"
+                        onclick="PageDev._reenviarConvite('${c.id}','${c.email}','${c.token}')">📩 Reenviar</button>
+                <button class="btn btn-ghost" style="font-size:11px;padding:5px 10px;color:var(--red)"
+                        onclick="PageDev._revogarConvite('${c.id}')">✕ Revogar</button>` : ''}
             </div>
-          </div>`).join('')
-        :'<div style="padding:16px;text-align:center;color:var(--c-slate)">Nenhum usuário.</div>';
-    }catch(e){el.innerHTML='<div style="padding:16px;color:var(--c-slate)">Erro ao carregar.</div>';}
+          </div>`;
+      }).join('') || '<div style="padding:20px;text-align:center;color:var(--c-slate)">Nenhum convite ainda.</div>';
+    } catch(e) {
+      el.innerHTML = '<div style="color:var(--c-slate);padding:16px">Erro ao carregar.</div>';
+    }
+  },
+
+  novoConvite() {
+    const coordOpts = this._coords.map(c => `<option value="${c.id}">${c.nome} (${c.sigla})</option>`).join('');
+    abrirModal({ titulo:'📩 Enviar Convite', tipo:'info', corpo:`
+      <div class="form-group"><label class="form-label">E-mail *</label>
+        <input id="nc-email" type="email" class="form-input" placeholder="email@exemplo.com"></div>
+      <div class="form-group"><label class="form-label">Coordenadoria *</label>
+        <select id="nc-coord" class="form-select"><option value="">— Selecione —</option>${coordOpts}</select></div>
+      <div class="form-group"><label class="form-label">Role</label>
+        <select id="nc-role" class="form-select">
+          <option value="assessor">Assessor</option>
+          <option value="coordenador">Coordenador</option>
+          <option value="admin">Admin</option>
+        </select></div>
+      <div class="form-group"><label class="form-label">Cargo (texto livre)</label>
+        <input id="nc-cargo" class="form-input" placeholder="Ex: Vice Coordenador, Assessor de Projetos…"></div>`,
+    botoes:[
+      { texto:'Cancelar', classe:'btn-ghost', acao: fecharModal },
+      { texto:'Enviar convite 🚀', classe:'btn-primary', acao: () => this._criarConvite() }
+    ]});
+  },
+
+  async _criarConvite() {
+    const email = document.getElementById('nc-email')?.value.trim();
+    const coord = document.getElementById('nc-coord')?.value;
+    const role  = document.getElementById('nc-role')?.value;
+    const cargo = document.getElementById('nc-cargo')?.value.trim() || null;
+    if (!email || !coord) { mostrarToast('Preencha e-mail e coordenadoria.','error'); return; }
+    try {
+      const { data, error } = await _sb().from('convites').insert({
+        email, coordenadoria_id: coord, role, cargo,
+        criado_por: window._appProfile?.id
+      }).select().single();
+      if (error) throw error;
+      /* Envia e-mail de convite */
+      const coordInfo = this._coords.find(c => c.id === coord);
+      await window.EmailsModule?.enviarConvite({
+        email, coord: coordInfo?.nome, cargo, token: data.token,
+        criadoPor: window._appProfile?.apelido || window._appProfile?.nome || 'Equipe Nupi'
+      });
+      fecharModal();
+      mostrarToast('Convite enviado para ' + email + '!', 'success');
+      this._carregarConvites();
+    } catch(e) { mostrarToast('Erro: ' + e.message,'error'); }
+  },
+
+  _novoConviteRapido() { this._switchTab('convites'); this.novoConvite(); },
+
+  async _reenviarConvite(id, email, token) {
+    const convite = (await _sb().from('convites').select('*,coordenadorias(nome)').eq('id',id).single()).data;
+    if (!convite) return;
+    await window.EmailsModule?.enviarConvite({
+      email, coord: convite.coordenadorias?.nome, cargo: convite.cargo,
+      token, criadoPor: window._appProfile?.apelido || 'Equipe Nupi'
+    });
+    mostrarToast('Convite reenviado!','success');
+  },
+
+  async _revogarConvite(id) {
+    await _sb().from('convites').update({ expires_at: new Date().toISOString() }).eq('id', id);
+    mostrarToast('Convite revogado.','info');
+    this._carregarConvites();
+  },
+
+  /* ══════════════════════════
+     TAB: PERMISSÕES
+  ══════════════════════════ */
+  _tabPermissoes() {
+    const el = document.getElementById('devTabContent');
+    if (!el) return;
+    const P = window.Permissoes;
+    const roles = ['admin','coordenador_geral','coordenador','assessor','conselheiro','membro'];
+    const feats = [
+      ['podeGerenciarUsuarios','Gerenciar usuários'],
+      ['podeAlterarRoles','Alterar roles'],
+      ['podeCriarConvite','Criar convites'],
+      ['podeVerLogs','Ver logs'],
+      ['podeCriarEvento','Criar eventos'],
+      ['podeEditarDemanda','Editar demandas'],
+      ['podeAprovarRelatorio','Aprovar relatórios'],
+      ['podeVerFinanceiro','Ver financeiro'],
+      ['podeLancarlancamento','Lançar transações'],
+      ['bypassRegrasNegocio','Bypass de regras (testes)'],
+    ];
+    el.innerHTML = `
+      <div style="overflow-x:auto">
+        <table style="width:100%;border-collapse:collapse;font-size:12px">
+          <thead>
+            <tr>
+              <th style="text-align:left;padding:8px 12px;color:var(--c-slate);font-weight:700;border-bottom:1px solid var(--b-2)">
+                Funcionalidade
+              </th>
+              ${roles.map(r => {
+                const n = P?.NIVEL_LABEL[r] || { label: r, cor:'#666' };
+                return `<th style="text-align:center;padding:8px;color:${n.cor};font-weight:700;border-bottom:1px solid var(--b-2)">${n.label}</th>`;
+              }).join('')}
+            </tr>
+          </thead>
+          <tbody>
+            ${feats.map(([feat,label]) => `
+              <tr style="border-bottom:1px solid var(--b-1)">
+                <td style="padding:8px 12px;color:var(--c-white);font-weight:600">${label}</td>
+                ${roles.map(r => {
+                  const m   = P?.MATRIZ[r] || {};
+                  const val = m[feat];
+                  return `<td style="text-align:center;padding:8px">
+                    ${val ? '<span style="color:var(--green);font-size:16px">✓</span>'
+                          : '<span style="color:var(--red);font-size:16px;opacity:.4">✕</span>'}
+                  </td>`;
+                }).join('')}
+              </tr>`).join('')}
+          </tbody>
+        </table>
+      </div>
+      <div style="margin-top:20px">
+        ${_sc('Páginas por Coordenadoria','🗂️',
+          Object.entries(P?.PAGES_POR_COORD||{}).map(([coord, pages]) => `
+            <div style="margin-bottom:10px">
+              <div style="font-size:12px;font-weight:700;color:var(--c-accent);margin-bottom:6px">${coord}</div>
+              <div style="display:flex;flex-wrap:wrap;gap:6px">
+                ${pages.map(p => `<span style="font-size:10px;font-weight:700;padding:3px 8px;border-radius:99px;
+                  background:var(--b-2);color:var(--c-slate)">${p}</span>`).join('')}
+              </div>
+            </div>`).join('')
+        )}
+      </div>`;
+  },
+
+  /* ══════════════════════════
+     TAB: LOGS
+  ══════════════════════════ */
+  _tabLogs() {
+    const el = document.getElementById('devTabContent');
+    if (!el) return;
+    el.innerHTML = `
+      <div id="devLogs">
+        <div style="padding:20px;text-align:center;color:var(--c-slate)"><span class="spinner"></span></div>
+      </div>`;
+    this._carregarLogs();
+  },
+
+  async _carregarLogs() {
+    const el = document.getElementById('devLogs');
+    if (!el || !_sb()) return;
+    try {
+      const { data } = await _sb()
+        .from('historico_demandas')
+        .select('*,users!user_id(nome,apelido),demandas(titulo)')
+        .order('created_at', { ascending: false })
+        .limit(40);
+      el.innerHTML = (data||[]).length
+        ? (data||[]).map(log => {
+            const quem = log.users?.apelido || log.users?.nome || '?';
+            return `
+              <div style="display:flex;gap:12px;align-items:flex-start;padding:10px 0;border-bottom:1px solid var(--b-1)">
+                <div style="font-size:11px;color:var(--c-slate);white-space:nowrap;min-width:70px">${_fmt(log.created_at)}</div>
+                <div>
+                  <span style="font-size:12px;font-weight:700;color:var(--c-white)">${sanitize(quem)}</span>
+                  <span style="font-size:12px;color:var(--c-slate)"> ${sanitize(log.acao)}</span>
+                  ${log.demandas?.titulo ? `<span style="font-size:12px;color:var(--c-accent)"> · ${sanitize(log.demandas.titulo)}</span>` : ''}
+                  ${log.coluna_anterior && log.coluna_nova ? `<div style="font-size:11px;color:var(--c-slate)">${log.coluna_anterior} → ${log.coluna_nova}</div>` : ''}
+                  ${log.detalhes ? `<div style="font-size:11px;color:var(--c-slate)">${sanitize(log.detalhes)}</div>` : ''}
+                </div>
+              </div>`;
+          }).join('')
+        : '<div style="padding:20px;text-align:center;color:var(--c-slate)">Nenhum log registrado ainda.</div>';
+    } catch(e) {
+      el.innerHTML = '<div style="color:var(--c-slate);padding:16px">Erro ao carregar logs.</div>';
+    }
+  },
+
+  /* ══════════════════════════
+     TAB: SISTEMA
+  ══════════════════════════ */
+  _tabSistema() {
+    const el = document.getElementById('devTabContent');
+    if (!el) return;
+    const online = navigator.onLine;
+    const sb     = !!_sb();
+    el.innerHTML = `
+      ${_sc('Status do Sistema','🔖',`
+        <div style="display:flex;flex-direction:column;gap:8px;font-size:13px">
+          ${[
+            ['App Core',    'v9.0',  '#f75412'],
+            ['ABJ Module',  'v3.0',  '#f75412'],
+            ['Pages.js',    'v2.0',  '#f75412'],
+            ['Emails.js',   'v1.0',  '#f75412'],
+            ['Permissoes.js','v1.0', '#f75412'],
+            ['Supabase',    sb?'✅ Conectado':'❌ Offline', sb?'var(--green)':'var(--red)'],
+            ['Rede',        online?'✅ Online':'🔴 Offline', online?'var(--green)':'var(--red)'],
+            ['Service Worker', 'serviceWorker' in navigator ? '✅ Ativo':'❌ Não suportado', 'serviceWorker' in navigator?'var(--green)':'var(--red)'],
+          ].map(([k,v,c])=>`
+            <div style="display:flex;justify-content:space-between;padding:10px;background:var(--b-1);border-radius:8px">
+              <span style="color:var(--c-slate)">${k}</span>
+              <span style="color:${c};font-weight:600">${v}</span>
+            </div>`).join('')}
+        </div>`)}
+      ${_sc('Ações de Admin','⚡',`
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <button class="btn btn-ghost" style="font-size:12px"
+                  onclick="if(confirm('Limpar cache do SW?'))caches.keys().then(k=>k.forEach(n=>caches.delete(n))).then(()=>mostrarToast('Cache limpo!','success'))">
+            🗑️ Limpar Cache SW
+          </button>
+          <button class="btn btn-ghost" style="font-size:12px"
+                  onclick="mostrarToast('Checando aniversários…','info');window.PushModule?.checarPrazosABJ();window.EmailsModule?.checarAniversariosEmail()">
+            🎂 Forçar check aniversários
+          </button>
+          <button class="btn btn-ghost" style="font-size:12px"
+                  onclick="location.reload()">
+            🔄 Recarregar sistema
+          </button>
+          <button class="btn btn-ghost" style="font-size:12px"
+                  onclick="PageDev._testarRegras()">
+            🧪 Testar regras de negócio
+          </button>
+        </div>`)}
+      ${_sc('Regras de Negócio Ativas','📐',`
+        <div id="devRegras">Calculando…</div>`)}`;
+    this._renderRegras();
+  },
+
+  async _renderRegras() {
+    const el = document.getElementById('devRegras');
+    if (!el) return;
+    const R = window.Permissoes?.REGRAS;
+    if (!R) { el.innerHTML = '<span style="color:var(--c-slate)">permissoes.js não carregado.</span>'; return; }
+    const relatorio = R.relatorioABJBloqueado(false);
+    const extincao  = await R.alertaExtincao(_sb());
+    el.innerHTML = [
+      { label:'Relatório ABJ',         info: relatorio.noUltimoDia ? '⚠️ Último dia hoje!' : relatorio.desconto ? '🔴 Fora do prazo (-2pts)' : '✅ Dentro do prazo' },
+      { label:'Risco de extinção',      info: extincao?.risco ? `🚨 ${extincao.mensagem}` : `✅ ${extincao?.mesesSemAtividade||0} meses de atividade` },
+      { label:'Alerta 60 dias',         info: '✅ Ativo (validado na entrada do calendário financeiro)' },
+      { label:'Timer 24h financeiro',   info: '✅ Ativo (acionado ao registrar repasse transitório)' },
+      { label:'PCD / desempenho',       info: '✅ Alerta automático após 2 meses sem entrega' },
+    ].map(r => `
+      <div style="display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--b-1);font-size:12px">
+        <span style="color:var(--c-slate)">${r.label}</span>
+        <span style="color:var(--c-white);font-weight:600">${r.info}</span>
+      </div>`).join('');
+  },
+
+  _testarRegras() {
+    const R = window.Permissoes?.REGRAS;
+    if (!R) return;
+    const alertaCalendario = R.alertaCalendario60Dias(new Date(Date.now() + 20*86400000).toISOString(), false);
+    const alertaRepasse    = R.alertaRepasse24h(new Date(Date.now() - 2*3600000).toISOString());
+    mostrarToast(`Calendário 60d: ${alertaCalendario.mensagem}`, alertaCalendario.bloqueado ? 'error' : 'success');
+    setTimeout(() => mostrarToast(`Repasse 24h: ${alertaRepasse.mensagem}`, alertaRepasse.infracaoGravissima ? 'error' : 'warning'), 800);
   },
 };
 

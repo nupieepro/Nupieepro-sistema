@@ -123,11 +123,11 @@ const PushModule = (() => {
     try {
       const { data } = await window._supabase
         .from('users')
-        .select('nome, data_nascimento')
+        .select('nome, aniversario')
         .eq('ativo', true);
       data?.forEach(p => {
-        if (!p.data_nascimento) return;
-        const [, mes, dia] = p.data_nascimento.split('-').map(Number);
+        if (!p.aniversario) return;
+        const [, mes, dia] = p.aniversario.split('-').map(Number);
         if (dia === diaHoje && mes === mesHoje) {
           Notificacoes.aniversario(p.nome?.split(' ')[0] || 'alguém do time');
         }

@@ -96,9 +96,9 @@
             <button class="topbar-toggle" onclick="toggleSidebar()">☰</button>
             <img src="assets/icon-192.png" class="d-md-none" style="height:32px; object-fit:contain; filter: drop-shadow(0 0 5px var(--orange));" alt="Logo">
             <div>
-              <div class="topbar-title" id="topbarSaudacao">Dashboard</div>
-              <div class="topbar-sub" style="display:flex;align-items:center;gap:6px;">
-                Visão geral do núcleo 
+              <div class="topbar-title" id="greeting-title">Dashboard</div>
+              <div class="topbar-sub" id="greeting-sub" style="display:flex;align-items:center;gap:6px;">
+                Visão geral do núcleo
                 <span style="display:inline-flex;align-items:center;gap:4px;background:rgba(45,212,160,0.1);color:#2DD4A0;padding:2px 6px;border-radius:100px;font-size:9px;font-weight:800;border:1px solid rgba(45,212,160,0.2);">
                   <span class="pulse-dot" style="width:6px;height:6px;background:#2DD4A0;"></span> CYBERSEC ACTIVE
                 </span>
@@ -1449,16 +1449,53 @@
   <script src="js/pages.js?v=1"></script>
   <script src="js/relatorio.js?v=1"></script>
   <script src="js/push.js?v=1"></script>
+  <script src="js/permissoes.js?v=1"></script>
+  <script src="js/emails.js?v=1"></script>
   <script src="js/premium.js?v=1"></script>
   <script src="js/auth.js?v=14"></script>
   <script>
+    /* ── Saudação dinâmica ── */
+    function updateGreeting(profile) {
+      const titleEl = document.getElementById('greeting-title');
+      const subEl   = document.getElementById('greeting-sub');
+      if (!titleEl || !subEl) return;
+
+      const h    = new Date().getHours();
+      const part = h < 12 ? 'Bom dia' : h < 18 ? 'Boa tarde' : 'Boa noite';
+
+      const mode = localStorage.getItem('nupie_mode') || 'assessor';
+      const nome = mode === 'dev'
+        ? 'JR'
+        : (profile?.apelido || profile?.nome?.split(' ')[0] || 'você');
+
+      titleEl.textContent = `${part}, ${nome}!`;
+
+      if (mode === 'dev') {
+        // Briefing de dev: mostra modo + hora
+        const agora = new Date().toLocaleTimeString('pt-BR', { hour:'2-digit', minute:'2-digit' });
+        subEl.innerHTML = `
+          <span style="display:inline-flex;align-items:center;gap:4px;background:rgba(45,212,160,0.1);color:#2DD4A0;padding:2px 8px;border-radius:100px;font-size:9px;font-weight:800;border:1px solid rgba(45,212,160,0.2);">
+            <span class="pulse-dot" style="width:6px;height:6px;background:#2DD4A0;"></span> DEV ADMIN · ${agora}
+          </span>
+          <span style="font-size:10px;color:var(--c-slate);">v9 · MKT · ${profile?.email || ''}</span>`;
+      } else {
+        subEl.innerHTML = `Visão geral do núcleo
+          <span style="display:inline-flex;align-items:center;gap:4px;background:rgba(45,212,160,0.1);color:#2DD4A0;padding:2px 6px;border-radius:100px;font-size:9px;font-weight:800;border:1px solid rgba(45,212,160,0.2);">
+            <span class="pulse-dot" style="width:6px;height:6px;background:#2DD4A0;"></span> CYBERSEC ACTIVE
+          </span>`;
+      }
+    }
+
     (async () => {
       // Blindagem V6.5
       if (typeof window.Theme !== 'undefined') window.Theme.init();
-      
+
       const app = window.App;
       if (app && typeof app.initDashboard === 'function') {
         const profile = await app.initDashboard();
+        // Saudação dinâmica
+        updateGreeting(profile);
+        setInterval(() => updateGreeting(profile), 60000);
         if (profile && typeof window.Dashboard !== 'undefined') {
           window.Dashboard.render(profile);
         }
