@@ -527,6 +527,11 @@ const App = {
       updateNotifCount();
       await App.loadNotifCount().catch(e => console.warn('Notif check failed:', e));
 
+      // Saudação Dinâmica (V9.0)
+      const saudacao = App.getSaudacao();
+      const sEl = document.getElementById('topbarSaudacao');
+      if (sEl) sEl.textContent = `${saudacao}, ${profile.nome?.split(' ')[0] || 'Líder'}!`;
+
       return profile;
     } catch (err) {
       console.error('Critical Init Error:', err);
@@ -550,6 +555,20 @@ const App = {
       badge.textContent = count || 0;
       badge.classList.toggle('visible', count > 0);
     }
+  },
+  getSaudacao() {
+    const hora = new Date().getHours();
+    if (hora >= 5 && hora < 12) return "Bom dia";
+    if (hora >= 12 && hora < 18) return "Boa tarde";
+    return "Boa noite";
+  },
+  setFont(family) {
+    document.documentElement.setAttribute('data-font', family);
+    localStorage.setItem('nupie_font', family);
+    App.toast(`Fonte alterada para ${family}`, 'success');
+  },
+  showPage(id) {
+    if (typeof goTo === 'function') goTo(id);
   }
 };
 
@@ -559,7 +578,7 @@ const App = {
 const ALL_PAGES = [
   'dashboard','abj','tarefas','pessoas','projetos',
   'operacoes','marketing','financeiro','compartilhado',
-  'manu','notificacoes','configuracoes',
+  'manu','notificacoes','config','configuracoes',
   'geral_reunioes','geral_planejamento','geral_melhorias','geral_parcerias',
   'mkt_tracker','mkt_kanban',
   'fin_fluxo','fin_abepro','fin_comercial',

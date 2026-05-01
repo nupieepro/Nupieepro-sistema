@@ -65,7 +65,10 @@
             <div class="u-role" id="sideRole">—</div>
           </div>
         </div>
-        <button class="btn-logout" onclick="doLogout()">Sair</button>
+        <div style="display:flex;gap:8px;margin-top:12px">
+          <button class="btn btn-ghost" style="flex:1;font-size:11px" onclick="App.showPage('config')">⚙️ Configs</button>
+          <button class="btn btn-ghost" style="flex:1;font-size:11px;color:var(--red)" onclick="doLogout()">Sair</button>
+        </div>
       </div>
 
       <!-- V6.0 Enterprise Signature -->
@@ -90,7 +93,7 @@
             <button class="topbar-toggle" onclick="toggleSidebar()">☰</button>
             <img src="assets/icon-192.png" class="d-md-none" style="height:32px; object-fit:contain; filter: drop-shadow(0 0 5px var(--orange));" alt="Logo">
             <div>
-              <div class="topbar-title">Dashboard</div>
+              <div class="topbar-title" id="topbarSaudacao">Dashboard</div>
               <div class="topbar-sub" style="display:flex;align-items:center;gap:6px;">
                 Visão geral do núcleo 
                 <span style="display:inline-flex;align-items:center;gap:4px;background:rgba(45,212,160,0.1);color:#2DD4A0;padding:2px 6px;border-radius:100px;font-size:9px;font-weight:800;border:1px solid rgba(45,212,160,0.2);">
@@ -574,9 +577,55 @@
         </div>
       </div>
 
-      <!-- ══════════════════════════════════════════════
-           PAGE: GERAL (COORDENAÇÃO GERAL)
-      ══════════════════════════════════════════════ -->
+      </div>
+
+      <!-- PAGE: CONFIGURAÇÕES -->
+      <div class="page" id="page-config">
+        <div class="topbar">
+          <div class="topbar-title">Configurações</div>
+          <div class="topbar-sub">Personalize sua experiência no sistema</div>
+        </div>
+        <div class="content">
+          <div class="dash-two-col">
+            <div class="section-card">
+              <div class="section-title">🎨 Visual e Tema</div>
+              <div style="display:flex;flex-direction:column;gap:12px;margin-top:1rem">
+                <div class="form-group">
+                  <label class="form-label">Escolha o Tema</label>
+                  <select class="form-select" id="config-tema" onchange="Theme.set(this.value)">
+                    <option value="nucleo">Núcleo (Padrão)</option>
+                    <option value="dark-purple">Roxo Premium</option>
+                    <option value="default">Dark Clássico</option>
+                    <option value="dark-orange">Laranja Industrial</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Fonte do Sistema</label>
+                  <select class="form-select" id="config-fonte" onchange="App.setFont(this.value)">
+                    <option value="default">Padrão (DM Sans)</option>
+                    <option value="serif">Elegante (Serif)</option>
+                    <option value="mono">Técnica (Mono)</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <div class="section-card">
+              <div class="section-title">ℹ️ Sobre o Sistema</div>
+              <div style="margin-top:1rem;text-align:center;padding:1rem">
+                <img src="assets/logo.png" style="height:60px;margin-bottom:12px" alt="Logo">
+                <div style="font-weight:800;font-size:18px;color:var(--c-white)">NUPIEEPRO V9.0</div>
+                <div style="font-size:12px;color:var(--c-slate);margin-top:4px">Geração de Alta Performance Industrial</div>
+                
+                <div style="margin-top:2rem;padding-top:1rem;border-top:1px solid var(--b-1);font-size:11px;color:var(--c-slate)">
+                  Desenvolvido por <strong style="color:var(--c-accent)">JR</strong><br>
+                  © 2026 — Núcleo de Engenharia de Produção
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
       <div class="page" id="page-geral">
         <div class="topbar">
           <div style="display:flex;align-items:center;gap:12px;">
