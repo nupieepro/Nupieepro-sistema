@@ -240,11 +240,50 @@
           </div>
         </div>
       </div>
-      <div class="page" id="page-geral_parcerias"><div class="topbar"><div class="topbar-title">Parcerias Estratégicas</div></div><div class="content"><div class="section-card" style="text-align:center;padding:3rem;color:var(--t-3)"><div style="font-size:32px;margin-bottom:12px">🤝</div><div style="font-size:14px;font-weight:600">Em Desenvolvimento</div><div style="font-size:12px;margin-top:6px;opacity:0.6">Módulo disponível em breve</div></div></div></div>
+      <div class="page" id="page-geral_parcerias">
+        <div class="topbar"><div class="topbar-title">Parcerias Estratégicas</div></div>
+        <div class="content">
+          <div class="empty-state">
+            <div style="font-size:32px;margin-bottom:12px">🤝</div>
+            <div style="font-size:14px;font-weight:600">Nenhuma parceria registrada</div>
+            <div style="font-size:12px;margin-top:6px;opacity:0.6">Gerencie contatos e convênios com empresas e instituições.</div>
+            <button class="btn btn-primary" style="margin-top:16px" onclick="PageGeral.novaParceria()">+ Nova Parceria</button>
+          </div>
+          <div id="lista-parcerias"></div>
+        </div>
+      </div>
 
       <!-- MÓDULOS MARKETING -->
       <div class="page" id="page-mkt_tracker"><div class="topbar"><div class="topbar-title">Social Media Tracker</div></div><div class="content"><div class="section-card" style="text-align:center;padding:2rem;color:var(--t-3)">Carregando...</div></div></div>
-      <div class="page" id="page-mkt_kanban"><div class="topbar"><div class="topbar-title">Kanban da Lojinha</div></div><div class="content"><div class="section-card" style="text-align:center;padding:3rem;color:var(--t-3)"><div style="font-size:32px;margin-bottom:12px">🛍️</div><div style="font-size:14px;font-weight:600">Em Desenvolvimento</div><div style="font-size:12px;margin-top:6px;opacity:0.6">Módulo disponível em breve</div></div></div></div>
+      <div class="page" id="page-mkt_kanban">
+        <div class="topbar"><div class="topbar-title">Kanban da Lojinha</div></div>
+        <div class="content">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
+            <div class="section-title" style="margin:0">Gestão de Pedidos</div>
+            <button class="btn btn-primary" onclick="PageMarketing.novoPedido()">+ Novo Pedido</button>
+          </div>
+          <div class="kanban-scroll-wrap" id="lojinhaKanban">
+            <div class="kanban-col-wrap">
+              <div class="section-card" style="background:var(--p-1);height:100%">
+                <div class="section-title" style="padding:10px;margin:0">📥 A Fazer</div>
+                <div class="kanban-col-body" id="lojinha-afazer" style="padding:10px;min-height:200px"></div>
+              </div>
+            </div>
+            <div class="kanban-col-wrap">
+              <div class="section-card" style="background:var(--a-1);height:100%">
+                <div class="section-title" style="padding:10px;margin:0">⚙️ Produção</div>
+                <div class="kanban-col-body" id="lojinha-producao" style="padding:10px;min-height:200px"></div>
+              </div>
+            </div>
+            <div class="kanban-col-wrap">
+              <div class="section-card" style="background:var(--green-dim);height:100%">
+                <div class="section-title" style="padding:10px;margin:0">✅ Concluído</div>
+                <div class="kanban-col-body" id="lojinha-concluido" style="padding:10px;min-height:200px"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
 
       <!-- MÓDULOS FINANCEIROS -->
       <div class="page" id="page-fin_fluxo">
@@ -336,8 +375,30 @@
 
       <!-- MÓDULOS PROJETOS -->
       <div class="page" id="page-prj_eventos"><div class="topbar"><div class="topbar-title">Eventos Estaduais</div></div><div class="content"><div class="section-card" style="text-align:center;padding:2rem;color:var(--t-3)">Carregando...</div></div></div>
-      <div class="page" id="page-prj_enegep"><div class="topbar"><div class="topbar-title">Momento ENEGEP</div></div><div class="content"><div class="section-card" style="text-align:center;padding:3rem;color:var(--t-3)"><div style="font-size:32px;margin-bottom:12px">🎓</div><div style="font-size:14px;font-weight:600">Em Desenvolvimento</div><div style="font-size:12px;margin-top:6px;opacity:0.6">Módulo disponível em breve</div></div></div></div>
-      <div class="page" id="page-prj_treinamentos"><div class="topbar"><div class="topbar-title">Treinamentos Externos</div></div><div class="content"><div class="section-card" style="text-align:center;padding:3rem;color:var(--t-3)"><div style="font-size:32px;margin-bottom:12px">📚</div><div style="font-size:14px;font-weight:600">Em Desenvolvimento</div><div style="font-size:12px;margin-top:6px;opacity:0.6">Módulo disponível em breve</div></div></div></div>
+      <div class="page" id="page-prj_enegep">
+        <div class="topbar"><div class="topbar-title">Momento ENEGEP</div></div>
+        <div class="content">
+          <div class="empty-state">
+            <div style="font-size:32px;margin-bottom:12px">🎓</div>
+            <div style="font-size:14px;font-weight:600">Nenhuma atualização do ENEGEP</div>
+            <div style="font-size:12px;margin-top:6px;opacity:0.6">Acompanhe as notícias e prazos para o maior evento de Eng. de Produção.</div>
+            <button class="btn btn-primary" style="margin-top:16px" onclick="PageProjetos.novaNoticia()">+ Postar Atualização</button>
+          </div>
+          <div id="lista-enegep"></div>
+        </div>
+      </div>
+      <div class="page" id="page-prj_treinamentos">
+        <div class="topbar"><div class="topbar-title">Treinamentos Externos</div></div>
+        <div class="content">
+          <div class="empty-state">
+            <div style="font-size:32px;margin-bottom:12px">📚</div>
+            <div style="font-size:14px;font-weight:600">Nenhum treinamento registrado</div>
+            <div style="font-size:12px;margin-top:6px;opacity:0.6">Repositório de certificados e links de capacitação externa.</div>
+            <button class="btn btn-primary" style="margin-top:16px" onclick="PageProjetos.novoTreinamento()">+ Registrar Treinamento</button>
+          </div>
+          <div id="lista-treinamentos"></div>
+        </div>
+      </div>
       <div class="page" id="page-prj_nupicast">
         <div class="topbar"><div class="topbar-title">NUPICAST Tracker</div></div>
         <div class="content" id="content-nupicast">
@@ -351,9 +412,35 @@
       </div>
 
       <!-- MÓDULOS OPERAÇÕES -->
-      <div class="page" id="page-ops_relatorios"><div class="topbar"><div class="topbar-title">Relatórios ABJ</div></div><div class="content"><div class="section-card" style="text-align:center;padding:3rem;color:var(--t-3)"><div style="font-size:32px;margin-bottom:12px">📊</div><div style="font-size:14px;font-weight:600">Em Desenvolvimento</div><div style="font-size:12px;margin-top:6px;opacity:0.6">Módulo disponível em breve</div></div></div></div>
+      <div class="page" id="page-ops_relatorios">
+        <div class="topbar"><div class="topbar-title">Relatórios ABJ</div></div>
+        <div class="content">
+          <div class="section-card" style="padding:1.5rem">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">
+              <div class="section-title" style="margin:0">Histórico de Envios</div>
+              <button class="btn btn-primary" onclick="PageOperacoes.gerarRelatorio()">Gerar Relatório Atual</button>
+            </div>
+            <div id="lista-relatorios-abj">
+              <p class="text-muted text-sm" style="text-align:center;padding:2rem">Nenhum relatório arquivado ainda.</p>
+            </div>
+          </div>
+        </div>
+      </div>
       <div class="page" id="page-ops_pops"><div class="topbar"><div class="topbar-title">Cofre de POPs</div></div><div class="content"><div class="section-card" style="text-align:center;padding:2rem;color:var(--t-3)">Carregando...</div></div></div>
-      <div class="page" id="page-ops_arquivo"><div class="topbar"><div class="topbar-title">Arquivo Digital</div></div><div class="content"><div class="section-card" style="text-align:center;padding:3rem;color:var(--t-3)"><div style="font-size:32px;margin-bottom:12px">🗂️</div><div style="font-size:14px;font-weight:600">Em Desenvolvimento</div><div style="font-size:12px;margin-top:6px;opacity:0.6">Módulo disponível em breve</div></div></div></div>
+      <div class="page" id="page-ops_arquivo">
+        <div class="topbar"><div class="topbar-title">Arquivo Digital</div></div>
+        <div class="content">
+          <div class="section-card" style="padding:1.5rem">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">
+              <div class="section-title" style="margin:0">Documentos e Atas</div>
+              <button class="btn btn-primary" onclick="PageOperacoes.uploadDocumento()">+ Subir Arquivo</button>
+            </div>
+            <div id="lista-arquivo-digital">
+              <p class="text-muted text-sm" style="text-align:center;padding:2rem">Aguardando sincronização com o cofre digital.</p>
+            </div>
+          </div>
+        </div>
+      </div>
 
       <!-- MÓDULOS GESTÃO DE PESSOAS -->
       <div class="page" id="page-gp_talentos">
@@ -437,10 +524,55 @@
       </div>
 
       <!-- MÓDULOS GLOBAIS -->
-      <div class="page" id="page-global_visitas"><div class="topbar"><div class="topbar-title">Visitas Técnicas</div></div><div class="content"><div class="section-card" style="text-align:center;padding:3rem;color:var(--t-3)"><div style="font-size:32px;margin-bottom:12px">🏭</div><div style="font-size:14px;font-weight:600">Em Desenvolvimento</div><div style="font-size:12px;margin-top:6px;opacity:0.6">Módulo disponível em breve</div></div></div></div>
-      <div class="page" id="page-global_apresentacoes"><div class="topbar"><div class="topbar-title">Apresentações Institucionais</div></div><div class="content"><div class="section-card" style="text-align:center;padding:3rem;color:var(--t-3)"><div style="font-size:32px;margin-bottom:12px">🎤</div><div style="font-size:14px;font-weight:600">Em Desenvolvimento</div><div style="font-size:12px;margin-top:6px;opacity:0.6">Módulo disponível em breve</div></div></div></div>
-      <div class="page" id="page-global_producao"><div class="topbar"><div class="topbar-title">Produção Científica</div></div><div class="content"><div class="section-card" style="text-align:center;padding:3rem;color:var(--t-3)"><div style="font-size:32px;margin-bottom:12px">🔬</div><div style="font-size:14px;font-weight:600">Em Desenvolvimento</div><div style="font-size:12px;margin-top:6px;opacity:0.6">Módulo disponível em breve</div></div></div></div>
-      <div class="page" id="page-global_assembleia"><div class="topbar"><div class="topbar-title">Assembleia e Votações</div></div><div class="content"><div class="section-card" style="text-align:center;padding:3rem;color:var(--t-3)"><div style="font-size:32px;margin-bottom:12px">🗳️</div><div style="font-size:14px;font-weight:600">Em Desenvolvimento</div><div style="font-size:12px;margin-top:6px;opacity:0.6">Módulo disponível em breve</div></div></div></div>
+      <div class="page" id="page-global_visitas">
+        <div class="topbar"><div class="topbar-title">Visitas Técnicas</div></div>
+        <div class="content">
+          <div class="empty-state">
+            <div style="font-size:32px;margin-bottom:12px">🏭</div>
+            <div style="font-size:14px;font-weight:600">Nenhuma visita agendada</div>
+            <div style="font-size:12px;margin-top:6px;opacity:0.6">Registre e acompanhe as visitas técnicas industriais do Núcleo.</div>
+            <button class="btn btn-primary" style="margin-top:16px" onclick="PageGlobal.novaVisita()">+ Agendar Visita</button>
+          </div>
+        </div>
+      </div>
+      <div class="page" id="page-global_apresentacoes">
+        <div class="topbar"><div class="topbar-title">Apresentações</div></div>
+        <div class="content">
+          <div class="empty-state">
+            <div style="font-size:32px;margin-bottom:12px">🎤</div>
+            <div style="font-size:14px;font-weight:600">Nenhum pitch registrado</div>
+            <div style="font-size:12px;margin-top:6px;opacity:0.6">Repositório de apresentações institucionais e treinamentos.</div>
+            <button class="btn btn-primary" style="margin-top:16px" onclick="PageGlobal.novaApresentacao()">+ Registrar Pitch</button>
+          </div>
+        </div>
+      </div>
+      <div class="page" id="page-global_producao">
+        <div class="topbar"><div class="topbar-title">Produção Científica</div></div>
+        <div class="content">
+          <div class="empty-state">
+            <div style="font-size:32px;margin-bottom:12px">🔬</div>
+            <div style="font-size:14px;font-weight:600">Nenhum artigo publicado</div>
+            <div style="font-size:12px;margin-top:6px;opacity:0.6">Registre as publicações acadêmicas dos membros do Núcleo.</div>
+            <button class="btn btn-primary" style="margin-top:16px" onclick="PageGlobal.novaProducao()">+ Registrar Artigo</button>
+          </div>
+        </div>
+      </div>
+      <div class="page" id="page-global_assembleia">
+        <div class="topbar"><div class="topbar-title">Assembleia e Votações</div></div>
+        <div class="content">
+          <div class="section-card" style="padding:2rem;text-align:center">
+            <div style="font-size:42px;margin-bottom:1rem">🗳️</div>
+            <div class="section-title">Votações de Pauta</div>
+            <p class="text-muted" style="max-width:400px;margin:0 auto 1.5rem">Participe das decisões democráticas do Núcleo. Seu voto é secreto.</p>
+            <div id="votos-ativos">
+              <div style="background:var(--b-1);border:1px dashed var(--b-3);padding:20px;border-radius:12px">
+                Nenhuma pauta em votação no momento.
+              </div>
+            </div>
+            <button class="btn btn-ghost" style="margin-top:1rem" onclick="PageGlobal.novaPauta()">+ Criar Pauta (Admin)</button>
+          </div>
+        </div>
+      </div>
 
       <!-- ══════════════════════════════════════════════
            PAGE: GERAL (COORDENAÇÃO GERAL)
