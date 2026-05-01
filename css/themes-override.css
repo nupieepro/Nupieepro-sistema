@@ -1,54 +1,54 @@
 :root,
 [data-theme="nucleo"] {
-  --c-bg:        #f0f3f8;
-  --c-s1:        #29324f;   
-  --c-s2:        #1e2a42;   
+  --c-bg:        #F5F7FB;   /* Fundo da Lojinha */
+  --c-s1:        #0f0732;   /* Roxo Brand */
+  --c-s2:        #161042;   
   --c-s3:        #ffffff;   
-  --c-s4:        #e4eaf5;   
-  --c-s5:        #f75412;   
-  --c-white:     #1a1f35;
-  --c-slate:     #5a6480;
-  --text-primary: #1a1f35;
-  --text-secondary: #29324f;
-  --c-accent:    #f75412;
-  --c-accent2:   #ff7043;
-  --c-purple:    #29324f;
-  --c-purple-l:  #f75412;
-  --b-1:   rgba(41,50,79,0.09);
-  --b-2:   rgba(41,50,79,0.15);
-  --b-3:   rgba(41,50,79,0.24);
-  --b-a:   rgba(247,84,18,0.35);
-  --b-p:   rgba(41,50,79,0.25);
-  --border: rgba(41,50,79,0.10);
-  --a-1: rgba(247,84,18,0.06);
-  --a-2: rgba(247,84,18,0.12);
-  --a-3: rgba(247,84,18,0.22);
-  --p-1: rgba(41,50,79,0.08);
-  --p-2: rgba(41,50,79,0.15);
-  --sh-xs:     0 1px 3px  rgba(0,0,0,0.07);
-  --sh-sm:     0 4px 12px rgba(0,0,0,0.09);
-  --sh-md:     0 8px 28px rgba(0,0,0,0.11);
-  --sh-lg:     0 20px 60px rgba(0,0,0,0.14);
-  --sh-accent: 0 8px 32px rgba(247,84,18,0.22);
-  --black:          #f0f3f8;
-  --navy:           #29324f;
-  --navy-mid:       #1e2a42;
+  --c-s4:        #eef2f8;   
+  --c-s5:        #f85900;   /* Laranja Brand */
+  --c-white:     #0f0732;   /* Texto escuro */
+  --c-slate:     #5a5575;   /* Texto suave Lojinha */
+  --text-primary: #0f0732;
+  --text-secondary: #161042;
+  --c-accent:    #f85900;
+  --c-accent2:   #ff7d33;
+  --c-purple:    #0f0732;
+  --c-purple-l:  #f85900;
+  --b-1:   rgba(15, 7, 50, 0.15); /* Bordas mais escuras */
+  --b-2:   rgba(15, 7, 50, 0.22);
+  --b-3:   rgba(15, 7, 50, 0.35);
+  --b-a:   rgba(248, 89, 0, 0.40);
+  --b-p:   rgba(15, 7, 50, 0.25);
+  --border: rgba(15, 7, 50, 0.18);
+  --a-1: rgba(248, 89, 0, 0.08);
+  --a-2: rgba(248, 89, 0, 0.15);
+  --a-3: rgba(248, 89, 0, 0.28);
+  --p-1: rgba(15, 7, 50, 0.10);
+  --p-2: rgba(15, 7, 50, 0.20);
+  --sh-xs:     0 1px 3px  rgba(15, 7, 50, 0.05);
+  --sh-sm:     0 4px 12px rgba(15, 7, 50, 0.08);
+  --sh-md:     0 8px 28px rgba(15, 7, 50, 0.12);
+  --sh-lg:     0 20px 60px rgba(15, 7, 50, 0.16);
+  --sh-accent: 0 8px 32px rgba(248, 89, 0, 0.25);
+  --black:          #F5F7FB;
+  --navy:           #0f0732;
+  --navy-mid:       #161042;
   --navy-card:      #ffffff;
-  --slate:          #5a6480;
-  --orange:         #f75412;
-  --orange-light:   #ff7043;
-  --orange-dim:     rgba(247,84,18,0.10);
-  --orange-border:  rgba(247,84,18,0.30);
-  --white:          #1a1f35;
-  --w70:            #5a6480;
-  --w40:            rgba(41,50,79,0.45);
-  --w20:            rgba(41,50,79,0.22);
-  --w10:            rgba(41,50,79,0.10);
-  --w5:             rgba(41,50,79,0.05);
-  --tx-1: #1a1f35;
-  --tx-2: #29324f;
-  --tx-3: rgba(41,50,79,0.55);
-  --tx-4: rgba(41,50,79,0.35);
+  --slate:          #5a5575;
+  --orange:         #f85900;
+  --orange-light:   #ff7d33;
+  --orange-dim:     rgba(248, 89, 0, 0.12);
+  --orange-border:  rgba(248, 89, 0, 0.35);
+  --white:          #0f0732;
+  --w70:            #5a5575;
+  --w40:            rgba(15, 7, 50, 0.45);
+  --w20:            rgba(15, 7, 50, 0.25);
+  --w10:            rgba(15, 7, 50, 0.15);
+  --w5:             rgba(15, 7, 50, 0.08);
+  --tx-1: #0f0732;
+  --tx-2: #161042;
+  --tx-3: #5a5575;
+  --tx-4: rgba(90, 85, 117, 0.50);
   --dur-1: 120ms;
   --dur-2: 200ms;
   --dur-3: 350ms;
@@ -95,7 +95,7 @@
 :root .section-card,
 [data-theme="nucleo"] .section-card {
   background: #ffffff;
-  border-color: rgba(41,50,79,0.10);
+  border-color: rgba(15, 7, 50, 0.12); /* Bordas mais visíveis */
   box-shadow: var(--sh-sm);
 }
 :root .mobile-nav,
@@ -195,11 +195,11 @@
   --c-white: #212940;
   --c-accent: #f75412;
   --c-accent2: #ff7043;
-  --b-1: rgba(33,41,64,0.08);
-  --b-2: rgba(33,41,64,0.13);
-  --b-3: rgba(33,41,64,0.20);
-  --b-a: rgba(247,84,18,0.35);
-  --border: rgba(33,41,64,0.09);
+  --b-1: rgba(33,41,64,0.15); /* Bordas mais escuras */
+  --b-2: rgba(33,41,64,0.25);
+  --b-3: rgba(33,41,64,0.35);
+  --b-a: rgba(248,89,0,0.40);
+  --border: rgba(33,41,64,0.20);
   --a-1: rgba(247,84,18,0.06);
   --a-2: rgba(247,84,18,0.11);
   --a-3: rgba(247,84,18,0.20);
@@ -207,7 +207,7 @@
   --sh-md: 0 8px 28px rgba(0,0,0,0.09);
   --sh-accent: 0 8px 32px rgba(247,84,18,0.18);
   --white: #212940;
-  --orange: #f75412;
+  --orange: #f85900; /* Laranja Lojinha */
   --w70: #6b7599;
   --w40: rgba(33,41,64,0.42);
   --w10: rgba(33,41,64,0.08);
@@ -390,18 +390,18 @@
   --c-s2:    #ffede5;
   --c-s3:    #ffffff;
   --c-s4:    #ffe8df;
-  --c-s5:    #f75412;
+  --c-s5:    #f85900;
   --c-slate: #7a5948;
   --c-white: #1a0a00;
-  --c-accent:  #f75412;
-  --c-accent2: #ff6030;
-  --c-purple:   #f75412;
-  --c-purple-l: #ff8040;
-  --b-1: rgba(247,84,18,0.10);
-  --b-2: rgba(247,84,18,0.18);
-  --b-3: rgba(247,84,18,0.28);
-  --b-a: rgba(247,84,18,0.40);
-  --border: rgba(247,84,18,0.12);
+  --c-accent:  #f85900;
+  --c-accent2: #ff7d33;
+  --c-purple:   #f85900;
+  --c-purple-l: #ff8a40;
+  --b-1: rgba(15, 10, 0, 0.15);
+  --b-2: rgba(15, 10, 0, 0.25);
+  --b-3: rgba(15, 10, 0, 0.35);
+  --b-a: rgba(248, 89, 0, 0.45);
+  --border: rgba(15, 10, 0, 0.18);
   --a-1: rgba(247,84,18,0.06);
   --a-2: rgba(247,84,18,0.12);
   --a-3: rgba(247,84,18,0.22);
@@ -409,8 +409,8 @@
   --sh-sm: 0 4px 12px rgba(247,84,18,0.10);
   --sh-md: 0 8px 28px rgba(247,84,18,0.12);
   --white: #1a0a00;
-  --orange: #f75412;
-  --orange-light: #ff6030;
+  --orange: #f85900;
+  --orange-light: #ff7d33;
   --orange-dim: rgba(247,84,18,0.10);
   --orange-border: rgba(247,84,18,0.30);
   --w70: #7a5948;
