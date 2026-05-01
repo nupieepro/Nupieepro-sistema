@@ -291,6 +291,23 @@
       .login-section { padding: 30px 16px; }
       .logo-container { justify-content: center; }
     }
+    /* Mobile Login Fix (V9.0) */
+    @media (max-width: 768px) {
+      .app-main { flex-direction: column; }
+      .brand-hero { display: none; }
+      .login-section {
+        width: 100%;
+        padding: 30px 20px;
+        background: var(--c-bg);
+        border-left: none;
+        border-top: 1px solid var(--border);
+        box-shadow: none;
+      }
+      .logo-container { justify-content: center; }
+      .login-card { width: 100%; }
+      .shimmer-text { font-size: 40px; text-align: center; }
+      .custom-cursor { display: none; }
+    }
   </style>
 </head>
 <body>

@@ -247,6 +247,18 @@ body {
   padding-bottom: 4px;
 }
 .kanban-scroll-wrap::-webkit-scrollbar { display: none; }
+.dash-two-col {
+  display: grid;
+  gap: 14px;
+}
+@media (min-width: 992px) {
+  .dash-two-col { grid-template-columns: 2fr 1fr; }
+}
+@media (max-width: 768px) {
+  .topbar-title { font-size: 14px; }
+  .topbar-sub { display: none; }
+  #profile-badge { font-size: 9px; padding: 2px 8px; }
+}
 .kanban-col-wrap {
   min-width: 260px;
   flex-shrink: 0;
