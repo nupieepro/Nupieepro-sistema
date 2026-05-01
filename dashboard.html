@@ -1248,7 +1248,9 @@
       const part = h < 12 ? 'Bom dia' : h < 18 ? 'Boa tarde' : 'Boa noite';
 
       const mode = localStorage.getItem('nupie_mode') || 'assessor';
-      const nome = mode === 'dev' ? 'JR' : (profile?.nome?.split(' ')[0] || 'Rayan');
+      const nome = mode === 'dev'
+        ? 'JR'
+        : (profile?.apelido || profile?.nome?.split(' ')[0] || 'você');
 
       titleEl.textContent = `${part}, ${nome}!`;
 

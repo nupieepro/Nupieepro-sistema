@@ -15,6 +15,258 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=Plus+Jakarta+Sans:wght@700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/styles.css">
+  <link rel="stylesheet" href="css/themes-override.css">
+  <script>
+    /* Aplica tema salvo antes de renderizar — evita flash */
+    (function() {
+      var t = localStorage.getItem('nupie_theme') || 'dark-orange';
+      document.documentElement.setAttribute('data-theme', t === 'default' ? 'dark-orange' : t);
+    })();
+  </script>
+  <style>
+    /* ── Wizard progress bar ── */
+    .wiz-bar {
+      display: flex;
+      align-items: center;
+      gap: 0;
+      margin-bottom: 28px;
+    }
+    .wiz-dot {
+      width: 30px; height: 30px;
+      border-radius: 50%;
+      background: rgba(255,255,255,.06);
+      border: 2px solid rgba(255,255,255,.12);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px; font-weight: 800;
+      color: rgba(255,255,255,.35);
+      flex-shrink: 0;
+      transition: all .35s cubic-bezier(.175,.885,.32,1.275);
+      font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+    .wiz-dot.active {
+      background: var(--c-accent, #f75412);
+      border-color: var(--c-accent, #f75412);
+      color: #fff;
+      box-shadow: 0 0 14px rgba(247,84,18,.45);
+      transform: scale(1.1);
+    }
+    .wiz-dot.done {
+      background: rgba(45,212,160,.14);
+      border-color: #2DD4A0;
+      color: #2DD4A0;
+    }
+    .wiz-line {
+      flex: 1; height: 2px;
+      background: rgba(255,255,255,.08);
+      transition: background .4s;
+    }
+    .wiz-line.done { background: #2DD4A0; }
+
+    /* ── Step panels ── */
+    .wiz-step { display: none; }
+    .wiz-step.active {
+      display: block;
+      animation: stepIn .28s ease;
+    }
+    @keyframes stepIn {
+      from { opacity: 0; transform: translateX(14px); }
+      to   { opacity: 1; transform: translateX(0); }
+    }
+    .step-title {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 19px; font-weight: 800;
+      color: var(--c-white, #fff);
+      margin-bottom: 4px;
+    }
+    .step-sub {
+      font-size: 12px;
+      color: rgba(255,255,255,.42);
+      margin-bottom: 22px;
+      line-height: 1.5;
+    }
+
+    /* ── Convite info card ── */
+    .invite-card {
+      background: rgba(255,255,255,.03);
+      border: 1px solid rgba(255,255,255,.09);
+      border-radius: 14px;
+      overflow: hidden;
+      margin-bottom: 20px;
+    }
+    .invite-card-header {
+      display: flex; align-items: center; gap: 10px;
+      padding: 14px 16px;
+      background: var(--a-2, rgba(247,84,18,.1));
+      border-bottom: 1px solid rgba(255,255,255,.06);
+    }
+    .invite-card-icon { font-size: 22px; }
+    .invite-card-coord { font-size: 13px; font-weight: 800; color: var(--c-accent, #f75412); }
+    .invite-card-row {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 9px 16px;
+      font-size: 12px;
+      border-bottom: 1px solid rgba(255,255,255,.05);
+    }
+    .invite-card-row:last-child { border-bottom: none; }
+    .invite-card-label { color: rgba(255,255,255,.4); font-weight: 600; }
+    .invite-card-val   { color: var(--c-white, #fff); font-weight: 700; max-width: 60%; text-align: right; word-break: break-all; }
+
+    /* ── Campos ── */
+    .wiz-field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
+    .wiz-label {
+      font-size: 11px; font-weight: 700;
+      color: rgba(255,255,255,.55);
+      text-transform: uppercase; letter-spacing: .06em;
+    }
+    .wiz-label span { font-weight: 400; opacity: .6; text-transform: none; letter-spacing: 0; }
+    .wiz-input {
+      width: 100%; padding: 10px 13px;
+      background: rgba(255,255,255,.05);
+      border: 1px solid rgba(255,255,255,.1);
+      border-radius: 9px;
+      color: var(--c-white, #fff);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13px; outline: none;
+      transition: border-color .2s;
+      box-sizing: border-box;
+    }
+    .wiz-input::placeholder { color: rgba(255,255,255,.28); }
+    .wiz-input:focus { border-color: var(--c-accent, #f75412); }
+    .helper { font-size: 11px; color: rgba(255,255,255,.35); margin-top: -8px; line-height: 1.5; }
+
+    /* ── Botões ── */
+    .btn-row { display: flex; gap: 10px; margin-top: 6px; }
+    .btn-next {
+      flex: 1;
+      padding: 11px 18px;
+      background: var(--c-accent, #f75412);
+      color: #fff; border: none;
+      border-radius: 10px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13px; font-weight: 700;
+      cursor: pointer;
+      transition: all .2s;
+    }
+    .btn-next:hover { filter: brightness(1.1); transform: translateY(-1px); }
+    .btn-next:disabled { opacity: .5; cursor: not-allowed; transform: none; }
+    .btn-back {
+      padding: 11px 16px;
+      background: rgba(255,255,255,.06);
+      border: 1px solid rgba(255,255,255,.1);
+      border-radius: 10px;
+      color: rgba(255,255,255,.55);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13px; font-weight: 700;
+      cursor: pointer;
+      transition: all .2s;
+    }
+    .btn-back:hover { color: #fff; background: rgba(255,255,255,.1); }
+
+    /* ── Grade de temas ── */
+    .theme-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    .theme-swatch {
+      border-radius: 12px;
+      border: 2px solid transparent;
+      cursor: pointer;
+      overflow: hidden;
+      transition: all .22s;
+      aspect-ratio: 1.4;
+      position: relative;
+    }
+    .theme-swatch:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,.4); }
+    .theme-swatch.sel { border-color: #fff; }
+    .theme-swatch-body {
+      width: 100%; height: 100%;
+      display: flex; flex-direction: column;
+      justify-content: flex-end; padding: 8px;
+    }
+    .theme-accent-bar { width: 24px; height: 3px; border-radius: 2px; margin-bottom: 5px; }
+    .theme-name {
+      font-size: 9px; font-weight: 800;
+      color: #fff; text-transform: uppercase;
+      letter-spacing: .05em;
+      text-shadow: 0 1px 4px rgba(0,0,0,.7);
+    }
+    .theme-check {
+      position: absolute; top: 6px; right: 6px;
+      width: 18px; height: 18px; border-radius: 50%;
+      background: #fff; color: #000;
+      display: none; align-items: center; justify-content: center;
+      font-size: 11px; font-weight: 900;
+    }
+    .theme-swatch.sel .theme-check { display: flex; }
+
+    /* ── Feedback de erro ── */
+    .wiz-alert {
+      display: none;
+      background: rgba(239,68,68,.12);
+      border: 1px solid rgba(239,68,68,.3);
+      border-radius: 10px;
+      color: #fca5a5;
+      font-size: 12px;
+      padding: 10px 14px;
+      margin-top: 10px;
+    }
+    .wiz-alert.show { display: block; }
+
+    /* ── Tela de sucesso ── */
+    .success-wrap { text-align: center; padding: 12px 0 20px; }
+    .success-icon {
+      width: 68px; height: 68px; border-radius: 50%;
+      background: rgba(45,212,160,.12);
+      border: 2px solid #2DD4A0;
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 18px;
+      font-size: 30px;
+      animation: popIn .5s cubic-bezier(.175,.885,.32,1.275);
+    }
+    @keyframes popIn {
+      from { transform: scale(0) rotate(-20deg); opacity: 0; }
+      to   { transform: scale(1) rotate(0deg);   opacity: 1; }
+    }
+
+    /* ── Toast PWA ── */
+    .pwa-toast {
+      position: fixed;
+      bottom: env(safe-area-inset-bottom, 20px);
+      bottom: calc(env(safe-area-inset-bottom, 0px) + 20px);
+      left: 50%; transform: translateX(-50%) translateY(120px);
+      background: var(--c-s2, #111);
+      border: 1px solid rgba(255,255,255,.1);
+      border-radius: 16px; padding: 14px 16px;
+      display: flex; align-items: center; gap: 12px;
+      z-index: 9999;
+      box-shadow: 0 8px 40px rgba(0,0,0,.5);
+      transition: transform .45s cubic-bezier(.175,.885,.32,1.275);
+      min-width: 290px; max-width: 340px;
+    }
+    .pwa-toast.show { transform: translateX(-50%) translateY(0); }
+    .pwa-t-icon { font-size: 26px; flex-shrink: 0; }
+    .pwa-t-body { flex: 1; }
+    .pwa-t-title { font-size: 13px; font-weight: 700; color: var(--c-white, #fff); }
+    .pwa-t-sub   { font-size: 11px; color: rgba(255,255,255,.45); margin-top: 2px; }
+    .pwa-t-btn {
+      background: var(--c-accent, #f75412);
+      color: #fff; border: none; border-radius: 8px;
+      font-size: 12px; font-weight: 700;
+      padding: 8px 13px; cursor: pointer;
+      font-family: 'DM Sans', sans-serif;
+      white-space: nowrap; flex-shrink: 0;
+    }
+    .pwa-t-close {
+      color: rgba(255,255,255,.3); font-size: 18px;
+      cursor: pointer; border: none; background: none;
+      flex-shrink: 0; padding: 2px 4px;
+    }
+
+    /* ── Estado de loading/erro ── */
+    #conviteLoading { text-align: center; padding: 8px 0; }
+  </style>
 </head>
 <body>
   <div class="login-screen">
@@ -22,92 +274,465 @@
     <div class="login-container" style="justify-content:center;">
       <div class="form-panel">
         <div class="form-card">
-          <div>
-            <div class="logo-wordmark" style="font-size:20px;margin-bottom:8px;">
+
+          <!-- Logo -->
+          <div style="margin-bottom:4px;">
+            <div class="logo-wordmark" style="font-size:20px;margin-bottom:6px;">
               NUPIE<span class="pi">EPRO</span>
             </div>
-            <div class="form-title">Criar Conta</div>
-            <div class="form-subtitle">Registro via convite</div>
+            <div class="form-subtitle">Onboarding — Bem-vindo(a)!</div>
           </div>
 
           <div class="form-divider"></div>
 
-          <div id="conviteContent">
-            <div id="conviteInfo">
-              <p class="text-center text-muted"><span class="spinner"></span> Verificando convite...</p>
+          <!-- Loading -->
+          <div id="conviteLoading">
+            <p class="text-center text-muted"><span class="spinner"></span> Verificando convite…</p>
+          </div>
+
+          <!-- Erro -->
+          <div id="conviteError" style="display:none;">
+            <div class="alert-box" id="conviteErrorMsg" style="display:block;"></div>
+            <p class="footer-note" style="margin-top:16px;">
+              Já tem conta? <a href="index.html">Fazer login</a>
+            </p>
+          </div>
+
+          <!-- ═══ WIZARD ═══ -->
+          <div id="wizard" style="display:none;">
+
+            <!-- Barra de progresso -->
+            <div class="wiz-bar">
+              <div class="wiz-dot active" id="wd1">1</div>
+              <div class="wiz-line" id="wl1"></div>
+              <div class="wiz-dot" id="wd2">2</div>
+              <div class="wiz-line" id="wl2"></div>
+              <div class="wiz-dot" id="wd3">3</div>
+              <div class="wiz-line" id="wl3"></div>
+              <div class="wiz-dot" id="wd4">✦</div>
             </div>
 
-            <form id="conviteForm" class="field-group" onsubmit="return false;" style="margin-top:1rem;">
-              <div class="field">
-                <label for="conviteNome">Nome completo</label>
-                <input type="text" id="conviteNome" placeholder="Seu nome" required>
+            <!-- ── PASSO 1: Convite ── -->
+            <div class="wiz-step active" id="step1">
+              <div class="step-title">Você foi convidado! 🎉</div>
+              <div class="step-sub">Confirme os dados do seu convite antes de prosseguir.</div>
+              <div id="inviteCard" class="invite-card"></div>
+              <button class="btn-next" onclick="goStep(2)">Começar meu cadastro →</button>
+            </div>
+
+            <!-- ── PASSO 2: Identidade ── -->
+            <div class="wiz-step" id="step2">
+              <div class="step-title">Quem é você?</div>
+              <div class="step-sub">Seus dados de identificação dentro do núcleo.</div>
+
+              <div class="wiz-field">
+                <label class="wiz-label" for="fNome">Nome completo *</label>
+                <input class="wiz-input" type="text" id="fNome"
+                  placeholder="Ex: José Rayan Bezerra Nascimento"
+                  autocomplete="name" required>
               </div>
-              <div class="field">
-                <label for="convitePassword">Senha</label>
-                <input type="password" id="convitePassword" placeholder="Mínimo 6 caracteres" required minlength="6" autocomplete="new-password">
+
+              <div class="wiz-field">
+                <label class="wiz-label" for="fApelido">
+                  Apelido <span>(opcional)</span>
+                </label>
+                <input class="wiz-input" type="text" id="fApelido"
+                  placeholder="Ex: JR, Rayan, Bê, Lívia…"
+                  autocomplete="nickname">
+                <p class="helper">💬 Como o sistema vai te chamar no dashboard. Se vazio, usamos seu primeiro nome.</p>
               </div>
-              <div class="field">
-                <label for="conviteConfirm">Confirmar senha</label>
-                <input type="password" id="conviteConfirm" placeholder="Repita a senha" required minlength="6" autocomplete="new-password">
+
+              <div class="wiz-field">
+                <label class="wiz-label" for="fNasc">
+                  Data de nascimento <span>(opcional)</span>
+                </label>
+                <input class="wiz-input" type="date" id="fNasc" autocomplete="bday">
+                <p class="helper">🎂 Usada para o sistema te parabenizar no seu dia!</p>
               </div>
-              <div class="field">
-                <label for="conviteAniversario">Data de nascimento <span style="font-weight:400;opacity:.6;">(opcional)</span></label>
-                <input type="date" id="conviteAniversario" autocomplete="bday">
+
+              <div class="btn-row">
+                <button class="btn-back" onclick="goStep(1)">←</button>
+                <button class="btn-next" onclick="validStep2()">Continuar →</button>
               </div>
-              <button class="btn-login" id="btnConvite" onclick="doConviteRegister()">Criar Conta</button>
-            </form>
+            </div>
+
+            <!-- ── PASSO 3: Senha ── -->
+            <div class="wiz-step" id="step3">
+              <div class="step-title">Crie sua senha</div>
+              <div class="step-sub">Você usará seu e-mail + essa senha para entrar.</div>
+
+              <div class="wiz-field">
+                <label class="wiz-label" for="fPw">Senha *</label>
+                <input class="wiz-input" type="password" id="fPw"
+                  placeholder="Mínimo 6 caracteres"
+                  required minlength="6" autocomplete="new-password">
+              </div>
+
+              <div class="wiz-field">
+                <label class="wiz-label" for="fPwC">Confirmar senha *</label>
+                <input class="wiz-input" type="password" id="fPwC"
+                  placeholder="Repita a senha"
+                  required minlength="6" autocomplete="new-password">
+              </div>
+
+              <div class="btn-row">
+                <button class="btn-back" onclick="goStep(2)">←</button>
+                <button class="btn-next" onclick="validStep3()">Continuar →</button>
+              </div>
+            </div>
+
+            <!-- ── PASSO 4: Tema ── -->
+            <div class="wiz-step" id="step4">
+              <div class="step-title">Personalize ✨</div>
+              <div class="step-sub">Escolha o tema visual. Pode trocar depois nas configurações.</div>
+
+              <div class="theme-grid" id="themeGrid"></div>
+
+              <div class="btn-row">
+                <button class="btn-back" onclick="goStep(3)">←</button>
+                <button class="btn-next" id="btnCriar" onclick="doRegister()">
+                  Criar minha conta 🚀
+                </button>
+              </div>
+            </div>
+
+            <!-- Feedback de erro do wizard -->
+            <div class="wiz-alert" id="wizAlert"></div>
           </div>
 
-          <div class="alert-box" id="conviteAlert"></div>
+          <!-- ═══ SUCESSO ═══ -->
+          <div id="conviteSuccess" style="display:none;">
+            <div class="success-wrap">
+              <div class="success-icon">✅</div>
+              <div class="step-title" id="successTitle">Conta criada!</div>
+              <p class="step-sub" id="successSub">Bem-vindo(a) ao NUPIEEPRO Sistema.</p>
+              <p style="font-size:11px;color:rgba(255,255,255,.3);margin-top:18px;">
+                Redirecionando para o login em <span id="cd">3</span>s…
+              </p>
+            </div>
+          </div>
 
           <div class="form-divider"></div>
-
           <p class="footer-note">
             Já tem conta? <a href="index.html">Fazer login</a><br>
             <span>NUPIEEPRO</span> · Selo ABJ 2026
           </p>
+
         </div>
       </div>
     </div>
+  </div>
+
+  <!-- Toast PWA -->
+  <div class="pwa-toast" id="pwaToast">
+    <div class="pwa-t-icon">📲</div>
+    <div class="pwa-t-body">
+      <div class="pwa-t-title">Instale o app!</div>
+      <div class="pwa-t-sub">Acesse o NUPIEEPRO como app nativo</div>
+    </div>
+    <button class="pwa-t-btn" id="pwaBtn">Instalar</button>
+    <button class="pwa-t-close" onclick="hidePwaToast()">✕</button>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
   <script src="js/app.js?v=13"></script>
   <script src="js/auth.js?v=13"></script>
   <script>
-    // Patch: injeta aniversario nos metadados do cadastro por convite
-    // Sem modificar auth.js — sobrescreve apenas Auth.registerWithToken
-    const _origRegWithToken = Auth.registerWithToken.bind(Auth);
-    Auth.registerWithToken = async function(token, nome, password) {
-      const sb = this._db();
+    'use strict';
+
+    /* ══════════════════════════════════════════
+       Estado global
+    ══════════════════════════════════════════ */
+    var _step    = 1;
+    var _tema    = localStorage.getItem('nupie_theme') || 'dark-orange';
+    var _pwaEvt  = null;
+    var _convite = null;
+
+    /* ── Temas disponíveis (mapeados do themes-override.css) ── */
+    var TEMAS = [
+      { id: 'dark-orange', nome: 'Laranja',  bg: 'linear-gradient(135deg,#050505,#1a0a00)', acc: '#f75412' },
+      { id: 'dark-purple', nome: 'Roxo',     bg: 'linear-gradient(135deg,#050008,#1a0030)', acc: '#7c3aed' },
+      { id: 'dark',        nome: 'Galáxia',  bg: 'linear-gradient(135deg,#080618,#0d0b2b)', acc: '#f75412' },
+      { id: 'obsidian',    nome: 'Obsidian', bg: 'linear-gradient(135deg,#000,#0a0a0a)',    acc: '#f75412' },
+      { id: 'rose',        nome: 'Rosa',     bg: 'linear-gradient(135deg,#9a3d77,#b5548e)', acc: '#e91e8c' },
+      { id: 'luminous',    nome: 'Claro',    bg: 'linear-gradient(135deg,#1e2a42,#29324f)', acc: '#f75412' },
+    ];
+
+    /* ══════════════════════════════════════════
+       PWA install prompt
+    ══════════════════════════════════════════ */
+    window.addEventListener('beforeinstallprompt', function(e) {
+      e.preventDefault();
+      _pwaEvt = e;
+    });
+    document.getElementById('pwaBtn').onclick = async function() {
+      if (!_pwaEvt) return;
+      _pwaEvt.prompt();
+      await _pwaEvt.userChoice;
+      _pwaEvt = null;
+      hidePwaToast();
+    };
+    function hidePwaToast() {
+      document.getElementById('pwaToast').classList.remove('show');
+    }
+
+    /* ══════════════════════════════════════════
+       Grade de temas
+    ══════════════════════════════════════════ */
+    function renderThemeGrid() {
+      var grid = document.getElementById('themeGrid');
+      grid.innerHTML = TEMAS.map(function(t) {
+        return [
+          '<div class="theme-swatch ' + (_tema === t.id ? 'sel' : '') + '"',
+          '     style="background:' + t.bg + ';"',
+          '     onclick="selectTema(\'' + t.id + '\')" title="' + t.nome + '">',
+          '  <div class="theme-swatch-body">',
+          '    <div class="theme-accent-bar" style="background:' + t.acc + ';"></div>',
+          '    <div class="theme-name">' + t.nome + '</div>',
+          '  </div>',
+          '  <div class="theme-check">✓</div>',
+          '</div>'
+        ].join('');
+      }).join('');
+    }
+
+    function selectTema(id) {
+      _tema = id;
+      document.documentElement.setAttribute('data-theme', id);
+      document.querySelectorAll('.theme-swatch').forEach(function(el, i) {
+        el.classList.toggle('sel', TEMAS[i] && TEMAS[i].id === id);
+      });
+    }
+
+    /* ══════════════════════════════════════════
+       Navegação do wizard
+    ══════════════════════════════════════════ */
+    function goStep(n) {
+      document.getElementById('step' + _step).classList.remove('active');
+      _step = n;
+      document.getElementById('step' + n).classList.add('active');
+
+      /* atualiza dots e linhas */
+      for (var i = 1; i <= 4; i++) {
+        var dot = document.getElementById('wd' + i);
+        if (i < n)       { dot.className = 'wiz-dot done'; dot.textContent = '✓'; }
+        else if (i === n) { dot.className = 'wiz-dot active'; dot.textContent = i <= 3 ? i : '✦'; }
+        else              { dot.className = 'wiz-dot'; dot.textContent = i <= 3 ? i : '✦'; }
+      }
+      for (var j = 1; j <= 3; j++) {
+        document.getElementById('wl' + j).className = 'wiz-line' + (j < n ? ' done' : '');
+      }
+
+      clearAlert();
+      if (n === 4) renderThemeGrid();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    /* ══════════════════════════════════════════
+       Feedback de erro
+    ══════════════════════════════════════════ */
+    function showAlert(msg) {
+      var el = document.getElementById('wizAlert');
+      el.textContent = msg;
+      el.classList.add('show');
+    }
+    function clearAlert() {
+      var el = document.getElementById('wizAlert');
+      el.textContent = '';
+      el.classList.remove('show');
+    }
+
+    /* ══════════════════════════════════════════
+       Validações por passo
+    ══════════════════════════════════════════ */
+    function validStep2() {
+      var nome = document.getElementById('fNome').value.trim();
+      if (nome.split(' ').filter(Boolean).length < 2) {
+        showAlert('Informe seu nome completo (nome e sobrenome).');
+        return;
+      }
+      clearAlert();
+      goStep(3);
+    }
+
+    function validStep3() {
+      var pw  = document.getElementById('fPw').value;
+      var pwc = document.getElementById('fPwC').value;
+      if (pw.length < 6) { showAlert('A senha deve ter pelo menos 6 caracteres.'); return; }
+      if (pw !== pwc)    { showAlert('As senhas não coincidem. Verifique e tente novamente.'); return; }
+      clearAlert();
+      goStep(4);
+    }
+
+    /* ══════════════════════════════════════════
+       Override de Auth.registerWithToken
+       Injeta nome, apelido, aniversário e tema
+       sem modificar auth.js
+    ══════════════════════════════════════════ */
+    Auth.registerWithToken = async function(token, _ignored, password) {
+      var sb = this._db();
       if (!sb) throw new Error('Sistema offline. Verifique a conexão.');
-      const { data: convite, error: tokenErr } = await sb
+
+      var { data: convite, error: tokenErr } = await sb
         .from('convites')
         .select('*, coordenadorias(nome, sigla)')
         .eq('token', token)
         .eq('usado', false)
         .gt('expires_at', new Date().toISOString())
         .single();
+
       if (tokenErr || !convite) throw new Error('Convite inválido ou expirado.');
-      const iniciais = nome.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
-      const metadata = {
-        nome,
-        role:            convite.role,
-        cargo:           convite.cargo,
+
+      var nome       = document.getElementById('fNome').value.trim();
+      var apelido    = document.getElementById('fApelido').value.trim() || null;
+      var aniversario = document.getElementById('fNasc').value || null;
+      var iniciais   = nome.split(' ').map(function(w) { return w[0]; })
+                           .join('').toUpperCase().slice(0, 2);
+
+      var metadata = {
+        nome:             nome,
+        apelido:          apelido,
+        role:             convite.role,
+        cargo:            convite.cargo,
         coordenadoria_id: convite.coordenadoria_id,
-        iniciais
+        iniciais:         iniciais,
+        tema:             _tema,
       };
-      const aniversario = document.getElementById('conviteAniversario')?.value;
       if (aniversario) metadata.aniversario = aniversario;
-      const { data, error } = await sb.auth.signUp({
-        email: convite.email,
-        password,
-        options: { data: metadata }
+
+      var { data, error } = await sb.auth.signUp({
+        email:    convite.email,
+        password: password,
+        options:  { data: metadata }
       });
       if (error) throw error;
+
       await sb.from('convites').update({ usado: true }).eq('id', convite.id);
       return data;
     };
+
+    /* ══════════════════════════════════════════
+       Criar conta (passo 4)
+    ══════════════════════════════════════════ */
+    async function doRegister() {
+      var btn = document.getElementById('btnCriar');
+      btn.disabled = true;
+      btn.textContent = 'Criando conta…';
+      clearAlert();
+
+      try {
+        var token    = new URLSearchParams(location.search).get('token');
+        var password = document.getElementById('fPw').value;
+
+        await Auth.registerWithToken(token, '', password);
+
+        /* Salva tema escolhido */
+        localStorage.setItem('nupie_theme', _tema);
+        document.documentElement.setAttribute('data-theme', _tema);
+
+        /* Monta mensagem de boas-vindas */
+        var nome    = document.getElementById('fNome').value.trim();
+        var apelido = document.getElementById('fApelido').value.trim();
+        var exibir  = apelido || nome.split(' ')[0];
+
+        /* Exibe tela de sucesso */
+        document.getElementById('wizard').style.display          = 'none';
+        document.getElementById('conviteSuccess').style.display  = 'block';
+        document.getElementById('successTitle').textContent      = 'Conta criada! 🎉';
+        document.getElementById('successSub').textContent        =
+          'Bem-vindo(a), ' + exibir + '! Sua conta está pronta. Entrando no sistema…';
+
+        /* Countdown */
+        var n = 3;
+        var cdEl = document.getElementById('cd');
+        var iv = setInterval(function() {
+          cdEl.textContent = --n;
+          if (n <= 0) { clearInterval(iv); location.href = 'index.html'; }
+        }, 1000);
+
+        /* Toast PWA (aguarda 1 s para não competir com animação de sucesso) */
+        setTimeout(function() {
+          document.getElementById('pwaToast').classList.add('show');
+        }, 1000);
+
+      } catch(err) {
+        showAlert(err.message || 'Erro ao criar conta. Tente novamente.');
+        btn.disabled   = false;
+        btn.textContent = 'Criar minha conta 🚀';
+      }
+    }
+
+    /* ══════════════════════════════════════════
+       Init — valida token e monta card do convite
+    ══════════════════════════════════════════ */
+    async function initConvitePage() {
+      var token = new URLSearchParams(location.search).get('token');
+      if (!token) {
+        showPageError('Link de convite inválido. Solicite um novo convite ao seu coordenador.');
+        return;
+      }
+
+      try {
+        /* Aguarda Supabase inicializar (máx 4 s) */
+        var tries = 0;
+        while (!window._supabase && tries++ < 20) {
+          await new Promise(function(r) { setTimeout(r, 200); });
+        }
+        var sb = window._supabase;
+        if (!sb) throw new Error('Sistema offline. Tente novamente em instantes.');
+
+        var { data: convite, error } = await sb
+          .from('convites')
+          .select('*, coordenadorias(nome, sigla, icone, cor)')
+          .eq('token', token)
+          .eq('usado', false)
+          .gt('expires_at', new Date().toISOString())
+          .single();
+
+        if (error || !convite) throw new Error('Convite inválido ou já utilizado.');
+
+        _convite = convite;
+        var coord = convite.coordenadorias || {};
+        var expDate = new Date(convite.expires_at)
+          .toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' });
+
+        document.getElementById('inviteCard').innerHTML = [
+          '<div class="invite-card-header">',
+          '  <div class="invite-card-icon">' + (coord.icone || '🏛️') + '</div>',
+          '  <div>',
+          '    <div class="invite-card-coord">' + (coord.nome || 'NUPIEEPRO') + '</div>',
+          '    <div style="font-size:10px;color:rgba(255,255,255,.4);margin-top:2px;">Coordenadoria</div>',
+          '  </div>',
+          '</div>',
+          '<div class="invite-card-row">',
+          '  <span class="invite-card-label">E-mail</span>',
+          '  <span class="invite-card-val">' + convite.email + '</span>',
+          '</div>',
+          '<div class="invite-card-row">',
+          '  <span class="invite-card-label">Cargo</span>',
+          '  <span class="invite-card-val">' + (convite.cargo || convite.role) + '</span>',
+          '</div>',
+          '<div class="invite-card-row">',
+          '  <span class="invite-card-label">Válido até</span>',
+          '  <span class="invite-card-val">' + expDate + '</span>',
+          '</div>',
+        ].join('');
+
+        /* Exibe wizard */
+        document.getElementById('conviteLoading').style.display = 'none';
+        document.getElementById('wizard').style.display         = 'block';
+
+      } catch(err) {
+        showPageError(err.message || 'Não foi possível verificar o convite.');
+      }
+    }
+
+    function showPageError(msg) {
+      document.getElementById('conviteLoading').style.display   = 'none';
+      document.getElementById('conviteError').style.display     = 'block';
+      document.getElementById('conviteErrorMsg').textContent    = msg;
+    }
+
     initConvitePage();
   </script>
 </body>
