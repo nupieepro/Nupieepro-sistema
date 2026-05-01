@@ -689,7 +689,11 @@ function goTo(id) {
   const pg = document.getElementById('page-' + id);
   if (pg) {
     pg.classList.add('active');
-    // MASTER RESET: Garante que a página comece do topo ao navegar
+    // Forçar reflow para animação de fade
+    pg.style.display = 'none';
+    pg.offsetHeight; 
+    pg.style.display = 'flex';
+    
     const content = pg.querySelector('.content') || pg;
     content.scrollTop = 0;
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -725,8 +729,14 @@ function toggleSidebar() {
    ============================================================ */
 const Dashboard = {
   async render(profile) {
+    const cards = document.querySelectorAll('.sum-card');
+    cards.forEach(c => c.classList.add('loading'));
+
     if (!_sb) {
-      Dashboard.renderDemo(profile);
+      setTimeout(() => {
+        Dashboard.renderDemo(profile);
+        cards.forEach(c => c.classList.remove('loading'));
+      }, 800);
       return;
     }
 
@@ -739,6 +749,8 @@ const Dashboard = {
         _sb.from('vendas').select('valor'),
         _sb.from('despesas').select('valor'),
       ]);
+      
+      cards.forEach(c => c.classList.remove('loading'));
 
       const totalPts = (abjRes.data || []).reduce((s, r) => s + (r.pontos || 0), 0);
       const activeTasks = (tasksRes.data || []).length;
