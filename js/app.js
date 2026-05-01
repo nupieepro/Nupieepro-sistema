@@ -43,30 +43,8 @@ const COORDENADORIAS = [
 ];
 
 function getIcon(name) {
-  const icons = {
-    'layout-dashboard': '<rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="14" y="3" rx="1"/><rect width="7" height="7" x="14" y="14" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/>',
-    cpu: '<rect width="16" height="16" x="4" y="4" rx="2"/><rect width="6" height="6" x="9" y="9" rx="1"/><path d="M15 2v2"/><path d="M15 20v2"/><path d="M2 15h2"/><path d="M2 9h2"/><path d="M20 15h2"/><path d="M20 9h2"/><path d="M9 2v2"/><path d="M9 20v2"/>',
-    'user-cog': '<circle cx="18" cy="15" r="3"/><circle cx="9" cy="7" r="4"/><path d="M10 15H6a4 4 0 0 0-4 4v2"/><path d="m21.7 16.4-.9-.3"/><path d="m15.2 13.9-.9-.3"/><path d="m16.6 18.7.3-.9"/><path d="m19.1 12.2.3-.9"/><path d="m19.6 18.7-.4-1"/><path d="m16.8 12.3-.4-1"/><path d="m14.3 16.6 1-.4"/><path d="m20.7 14.3 1-.4"/>',
-    layers: '<path d="m12.83 2.18a2 2 0 0 0-1.66 0L2.1 6.27a2 2 0 0 0 0 3.46l9.07 4.09a2 2 0 0 0 1.66 0l9.07-4.09a2 2 0 0 0 0-3.46z"/><path d="m2.1 14.73 9.07 4.09a2 2 0 0 0 1.66 0l9.07-4.09"/><path d="m2.1 10.58 9.07 4.09a2 2 0 0 0 1.66 0l9.07-4.09"/>',
-    component: '<path d="M5.5 8.5 2 12l3.5 3.5L9 12Z"/><path d="m15 5 3.5 3.5L22 12l-3.5 3.5L15 19l-3.5-3.5L8 12l3.5-3.5Z"/><path d="m11.5 15.5 3.5 3.5 3.5-3.5L15 12Z"/><path d="m11.5 8.5 3.5-3.5 3.5 3.5L15 12Z"/>',
-    'trending-up': '<polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/>',
-    crown: '<path d="m2 4 3 12h14l3-12-6 7-4-7-4 7-6-7z"/><path d="M12 17H2l.5 2h19l.5-2H12z"/>',
-    zap: '<polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>',
-    users: '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>',
-    rocket: '<path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2.01c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/><path d="M9 12H4s.55-3.03 2-5c1.62-2.2 5-2.5 5-2.5"/><path d="M12 15v5s3.03-.55 5-2c2.2-1.62 2.5-5 2.5-5"/>',
-    layout: '<rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/>',
-    gem: '<path d="M6 3h12l4 6-10 12L2 9z"/><path d="M11 3 8 9l4 12 4-12-3-6"/><path d="M2 9h20"/>',
-    grid: '<rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="14" y="3" rx="1"/><rect width="7" height="7" x="14" y="14" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/>',
-    star: '<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>',
-    list: '<path d="M8 6h13"/><path d="M8 12h13"/><path d="M8 18h13"/><path d="M3 6h.01"/><path d="M3 12h.01"/><path d="M3 18h.01"/>',
-    folder: '<path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93l-1-2H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2z"/>',
-    settings: '<path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.1a2 2 0 0 1-1-1.72v-.51a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/>',
-    megaphone: '<path d="m3 11 18-5v12L3 14v-3z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/>',
-    banknote: '<rect width="20" height="12" x="2" y="6" rx="2"/><circle cx="12" cy="12" r="2"/><path d="M6 12h.01M18 12h.01"/>',
-    file: '<path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/>',
-    shield: '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>'
-  };
-  return `<svg data-lucide="${name}" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-${name}">${icons[name] || ''}</svg>`;
+  // Retorna um placeholder que o Lucide irá transformar em SVG real
+  return `<i data-lucide="${name}" class="nav-icon-i" style="width:18px; height:18px; stroke-width:1.8px;"></i>`;
 }
 
 // Pages each coord can access
@@ -77,6 +55,8 @@ const ROLE_PAGES = {
     { id: 'geral_planejamento', icon: 'layout', label: 'Planejamento Sem.' },
     { id: 'geral_melhorias', icon: 'star', label: 'Caixa de Melhorias' },
     { id: 'geral_parcerias', icon: 'gem', label: 'Parcerias Estratégicas' },
+    { id: 'pessoas', icon: 'users', label: 'Gestão de Membros' },
+    { id: 'tarefas', icon: 'list', label: 'Kanban Geral' },
   ],
   'Operações':  [
     { id: 'dashboard', icon: 'grid', label: 'Painel Central' },
@@ -89,6 +69,7 @@ const ROLE_PAGES = {
     { id: 'gp_talentos', icon: 'users', label: 'Banco de Talentos' },
     { id: 'gp_clima', icon: 'star', label: 'Pesquisa de Clima' },
     { id: 'gp_tap', icon: 'layout', label: 'Módulo TAP (Inovação)' },
+    { id: 'pessoas', icon: 'users', label: 'Gestão de Membros' },
   ],
   'Marketing':  [
     { id: 'dashboard', icon: 'grid', label: 'Painel Central' },
@@ -461,6 +442,7 @@ const App = {
     </div>`;
 
     nav.innerHTML = html;
+    if (typeof lucide !== 'undefined') lucide.createIcons();
   },
 
   /** Build mobile bottom nav */
@@ -475,6 +457,7 @@ const App = {
         <span>${p.label}</span>
       </div>`
     ).join('');
+    if (typeof lucide !== 'undefined') lucide.createIcons();
   },
 
   /** Toggle sidebar on mobile */
@@ -1293,12 +1276,12 @@ const DashboardExtra = {
       return;
     }
 
-    if (mural) mural.style.display = 'block';
+      if (mural) mural.style.display = 'block';
     listEl.innerHTML = bdays.map(u => {
       const d = new Date(u.nascimento + 'T12:00:00').getDate();
       return `
         <div style="flex:0 0 140px; background:var(--s1); border:1px solid var(--b-1); border-radius:12px; padding:12px; display:flex; flex-direction:column; align-items:center; gap:8px;">
-          <div class="side-avatar" style="width:40px;height:40px;font-size:14px;margin:0;">${u.iniciais}</div>
+          <div class="side-avatar" style="width:40px;height:40px;font-size:14px;margin:0;"><i data-lucide="cake" style="stroke-width:1.5px;"></i></div>
           <div style="text-align:center;">
             <div style="font-weight:700;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;width:110px;">${u.nome}</div>
             <div style="font-size:10px;color:var(--orange);font-weight:800;margin-top:2px;">DIA ${d}</div>
