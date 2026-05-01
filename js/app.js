@@ -730,7 +730,7 @@ const Dashboard = {
    ============================================================ */
 const Theme = {
   apply(name) {
-    if (name === 'default') name = 'dark-orange';
+    if (name === 'default') name = 'nucleo';
     document.documentElement.setAttribute('data-theme', name);
     localStorage.setItem('nupie_theme', name);
     

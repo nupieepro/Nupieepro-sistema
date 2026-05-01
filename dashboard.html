@@ -32,9 +32,9 @@
   
   <script>
     // Injeção Crítica: Impede a tela branca de "Blink"
-    const _t = localStorage.getItem('nupie_theme') || 'dark-orange';
+    const _t = localStorage.getItem('nupie_theme') || 'nucleo';
     const _f = localStorage.getItem('nupie_font') || 'default';
-    document.documentElement.setAttribute('data-theme', _t === 'default' ? 'dark-orange' : _t);
+    document.documentElement.setAttribute('data-theme', _t === 'default' ? 'nucleo' : _t);
     if (_f !== 'default') document.documentElement.setAttribute('data-font', _f);
   </script>
 </head>
@@ -105,7 +105,7 @@
                 <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><circle cx="12" cy="12" r="10"/><path d="M12 2a10 10 0 0 0 0 20"/></svg>
               </button>
               <div id="themeMenu" class="dropdown-content">
-                <div onclick="Theme.set('dark-orange')">Laranja (Padrão)</div>
+                <div onclick="Theme.set('nucleo')">Núcleo (Padrão)</div>
                 <div onclick="Theme.set('dark-purple')">Roxo Premium</div>
                 <div onclick="Theme.set('default')">Tema Dark</div>
               </div>
