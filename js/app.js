@@ -532,6 +532,15 @@ const App = {
       const sEl = document.getElementById('topbarSaudacao');
       if (sEl) sEl.textContent = `${saudacao}, ${profile.nome?.split(' ')[0] || 'Líder'}!`;
 
+      // [V9.0] Role Switcher p/ JR (Dev Admin + MKT)
+      const isJR = profile.email?.includes('jjose') || profile.nome?.includes('Rayan');
+      const btnSwitch = document.getElementById('btnSwitchRole');
+      if (isJR && btnSwitch) btnSwitch.style.display = 'block';
+
+      // [V9.0] Countdown ABJ
+      App.updateABJCountdown();
+      setInterval(() => App.updateABJCountdown(), 60000);
+
       return profile;
     } catch (err) {
       console.error('Critical Init Error:', err);
@@ -569,6 +578,56 @@ const App = {
   },
   showPage(id) {
     if (typeof goTo === 'function') goTo(id);
+  },
+  toggleRole() {
+    const p = window._appProfile;
+    if (!p) return;
+    
+    // Efeito Flip 3D (V9.0)
+    document.body.classList.add('profile-switching');
+    
+    setTimeout(() => {
+      // Toggle logic
+      const current = window._activeRole || p.role;
+      window._activeRole = (current === 'admin') ? 'assessor' : 'admin';
+      
+      const newCoord = (window._activeRole === 'admin') ? 'Geral' : 'Marketing';
+      
+      // Re-build UI
+      App.buildSidebar(newCoord);
+      document.getElementById('sideRole').textContent = `${window._activeRole.toUpperCase()} · ${newCoord}`;
+      
+      const badge = document.getElementById('profile-badge');
+      if (badge) {
+        badge.classList.toggle('dev-mode', window._activeRole === 'admin');
+        badge.innerHTML = `<div style="width:8px;height:8px;border-radius:50%;background:${window._activeRole==='admin'?'#2DD4A0':'var(--green)'}"></div> ${window._activeRole.toUpperCase()}`;
+      }
+
+      document.body.classList.remove('profile-switching');
+      document.body.classList.add('profile-switching-in');
+      setTimeout(() => document.body.classList.remove('profile-switching-in'), 400);
+
+      App.toast(`Perfil alterado para: ${window._activeRole.toUpperCase()}`, 'success');
+    }, 300);
+  },
+  updateABJCountdown() {
+    const el = document.getElementById('abj-countdown');
+    if (!el) return;
+
+    const agora = new Date();
+    const fimMes = new Date(agora.getFullYear(), agora.getMonth() + 1, 0, 23, 59, 59);
+    const diff = fimMes - agora;
+
+    if (diff <= 0) {
+      el.textContent = "Prazo encerrado!";
+      return;
+    }
+
+    const d = Math.floor(diff / (1000 * 60 * 60 * 24));
+    const h = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+
+    el.textContent = `${d}d ${h}h ${m}m`;
   }
 };
 

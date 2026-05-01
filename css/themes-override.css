@@ -674,3 +674,26 @@ body.profile-switching-in .sidebar-logo {
 [data-theme="branco-laranja"] ::-webkit-scrollbar-thumb {
   background: rgba(41,50,79,0.18);
 }
+
+/* [V9.0] HUD Scanlines p/ Temas Dark */
+[data-theme="dark"]::after,
+[data-theme="obsidian"]::after,
+[data-theme="dark-orange"]::after,
+[data-theme="badboy"]::after,
+[data-theme="dark-purple"]::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%), 
+              linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
+  background-size: 100% 4px, 4px 100%;
+  z-index: 9999;
+  opacity: 0.3;
+  mix-blend-mode: overlay;
+  animation: scanlineMove 8s linear infinite;
+}
+@keyframes scanlineMove {
+  0% { background-position: 0 0; }
+  100% { background-position: 0 100%; }
+}
