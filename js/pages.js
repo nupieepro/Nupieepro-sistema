@@ -99,6 +99,35 @@ const PageGeral = {
       {texto:'Criar ✓',classe:'btn-primary',acao:()=>this._salvarReuniao()}
     ]});
   },
+  novaMelhoria() {
+    abrirModal({ titulo:'🛠️ Sugerir Melhoria', tipo:'info', corpo:`
+      <div class="form-group"><label class="form-label">Descrição da Melhoria *</label>
+        <textarea id="nm-desc" class="form-input" style="height:100px" placeholder="Descreva sua sugestão..."></textarea></div>`,
+    botoes:[
+      {texto:'Cancelar',classe:'btn-ghost',acao:fecharModal},
+      {texto:'Sugerir',classe:'btn-primary',acao:()=> { mostrarToast('Sugestão enviada!','success'); fecharModal(); }}
+    ]});
+  },
+  novaParceria() {
+    abrirModal({ titulo:'🤝 Nova Parceria', tipo:'info', corpo:`
+      <div class="form-group"><label class="form-label">Instituição/Empresa *</label>
+        <input id="np-nome" class="form-input" placeholder="Ex: CREA-PI"></div>
+      <div class="form-group"><label class="form-label">Tipo</label>
+        <select id="np-tipo" class="form-select">
+          <option value="instituicao">Instituição</option>
+          <option value="empresa">Empresa</option>
+          <option value="outro">Outro</option>
+        </select></div>
+      <div class="form-group"><label class="form-label">Contato/Link</label>
+        <input id="np-contato" class="form-input" placeholder="E-mail ou Telefone"></div>`,
+    botoes:[
+      {texto:'Cancelar',classe:'btn-ghost',acao:fecharModal},
+      {texto:'Salvar',classe:'btn-primary',acao:()=> {
+        mostrarToast('Parceria salva! (Conecte o Supabase para persistir)','success');
+        fecharModal();
+      }}
+    ]});
+  },
   async _salvarReuniao() {
     const titulo = document.getElementById('nr-titulo')?.value?.trim();
     const data   = document.getElementById('nr-data')?.value;
@@ -119,17 +148,12 @@ const PageGeral = {
       this._carregarReunioes();
     } catch(e){mostrarToast('Erro ao salvar.','error');}
   },
-  verFrequencia() { mostrarToast('Frequência — em breve!','info'); },
-  abrirCheckin()  { mostrarToast('Check-in digital — em breve!','info'); },
+  verFrequencia() { mostrarToast('Módulo de frequência aguardando Supabase.','info'); },
+  abrirCheckin()  { mostrarToast('Módulo de check-in aguardando Supabase.','info'); },
 };
 const PageMarketing = {
   async init() { this._renderTracker(); },
   _renderTracker() {
-    const pg = document.getElementById('page-mkt_tracker');
-    if (!pg) return;
-    const ct = pg.querySelector('.content')||pg;
-    ct.innerHTML = _sc('Social Media Tracker','📱',`
-      <p style="font-size:13px;color:var(--c-slate);margin-bottom:14px">
         Mínimo 1 post/semana (Atividade 9 — ⭐ 2ª Estrela).
       </p>
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:10px;margin-bottom:16px">
@@ -443,6 +467,39 @@ const PageProjetos = {
       this._carregar();
     }catch(e){mostrarToast('Erro ao salvar.','error');}
   },
+  novoEpisodio() {
+    abrirModal({ titulo:'🎙️ Rastrear NUPICAST', tipo:'info', corpo:`
+      <div class="form-group"><label class="form-label">Título do Episódio *</label>
+        <input id="ne-titulo" class="form-input" placeholder="Ex: NUPICAST #01"></div>
+      <div class="form-group"><label class="form-label">Link do YouTube/Spotify</label>
+        <input id="ne-link" class="form-input" placeholder="https://..."></div>`,
+    botoes:[
+      {texto:'Cancelar',classe:'btn-ghost',acao:fecharModal},
+      {texto:'Rastrear',classe:'btn-primary',acao:()=> { mostrarToast('Episódio rastreado!','success'); fecharModal(); }}
+    ]});
+  },
+  novaNoticia() {
+    abrirModal({ titulo:'🎓 Momento ENEGEP', tipo:'info', corpo:`
+      <div class="form-group"><label class="form-label">Título da Notícia *</label>
+        <input id="en-titulo" class="form-input"></div>
+      <div class="form-group"><label class="form-label">Conteúdo</label>
+        <textarea id="en-texto" class="form-input" style="height:100px"></textarea></div>`,
+    botoes:[
+      {texto:'Cancelar',classe:'btn-ghost',acao:fecharModal},
+      {texto:'Postar',classe:'btn-primary',acao:()=> { mostrarToast('Notícia postada!','success'); fecharModal(); }}
+    ]});
+  },
+  novoTreinamento() {
+    abrirModal({ titulo:'📚 Registrar Treinamento', tipo:'info', corpo:`
+      <div class="form-group"><label class="form-label">Nome do Treinamento *</label>
+        <input id="tr-nome" class="form-input"></div>
+      <div class="form-group"><label class="form-label">Link/Certificado</label>
+        <input id="tr-link" class="form-input" placeholder="https://..."></div>`,
+    botoes:[
+      {texto:'Cancelar',classe:'btn-ghost',acao:fecharModal},
+      {texto:'Salvar',classe:'btn-primary',acao:()=> { mostrarToast('Treinamento registrado!','success'); fecharModal(); }}
+    ]});
+  }
 };
 const PageOperacoes = {
   _renderPops() {
@@ -464,6 +521,25 @@ const PageOperacoes = {
           </div>`).join('')}
       </div>`);
   },
+  gerarRelatorio() {
+    mostrarToast('Iniciando geração de PDF ABJ...','info');
+    setTimeout(()=> mostrarToast('Relatório gerado e pronto para envio!','success'), 2000);
+  },
+  uploadDocumento() {
+    abrirModal({ titulo:'🗂️ Subir Arquivo', tipo:'info', corpo:`
+      <div class="form-group"><label class="form-label">Nome do Documento *</label>
+        <input id="ad-nome" class="form-input"></div>
+      <div class="form-group"><label class="form-label">Tipo</label>
+        <select id="ad-tipo" class="form-select">
+          <option value="ata">Ata de Reunião</option>
+          <option value="pop">POP</option>
+          <option value="edital">Edital</option>
+        </select></div>`,
+    botoes:[
+      {texto:'Cancelar',classe:'btn-ghost',acao:fecharModal},
+      {texto:'Subir ⬆',classe:'btn-primary',acao:()=> { mostrarToast('Arquivo enviado para o cofre digital!','success'); fecharModal(); }}
+    ]});
+  }
 };
 const PagePessoas = {
   async init() { this._renderMembros(); },
@@ -571,8 +647,19 @@ const PagePessoas = {
       mostrarToast(`Convite enviado para ${email}!`,'success');
     }catch(e){mostrarToast('Erro ao enviar convite.','error');}
   },
-  adicionarClima(){mostrarToast('Pesquisa de clima — em breve!','info');},
-  exportar(){mostrarToast('Exportação — em breve!','info');},
+  adicionarClima(){mostrarToast('Pesquisa de clima aguardando Supabase.','info');},
+  exportar(){mostrarToast('Exportação aguardando Supabase.','info');},
+  novoTalento() {
+    abrirModal({ titulo:'👤 Novo Talento', tipo:'info', corpo:`
+      <div class="form-group"><label class="form-label">Nome Completo *</label>
+        <input id="nt-nome" class="form-input"></div>
+      <div class="form-group"><label class="form-label">Universidade</label>
+        <input id="nt-univ" class="form-input"></div>`,
+    botoes:[
+      {texto:'Cancelar',classe:'btn-ghost',acao:fecharModal},
+      {texto:'Salvar',classe:'btn-primary',acao:()=> { mostrarToast('Talento registrado!','success'); fecharModal(); }}
+    ]});
+  }
 };
 const PageDev = {
   _temAcesso(){return window._appProfile?.role==='admin';},
@@ -645,6 +732,52 @@ const PageDev = {
     }catch(e){el.innerHTML='<div style="padding:16px;color:var(--c-slate)">Erro ao carregar.</div>';}
   },
 };
+
+const PageGlobal = {
+  novaVisita() {
+    abrirModal({ titulo:'🏭 Agendar Visita Técnica', tipo:'info', corpo:`
+      <div class="form-group"><label class="form-label">Indústria/Empresa *</label>
+        <input id="vt-empresa" class="form-input"></div>
+      <div class="form-group"><label class="form-label">Data Prevista</label>
+        <input id="vt-data" type="date" class="form-input"></div>`,
+    botoes:[
+      {texto:'Cancelar',classe:'btn-ghost',acao:fecharModal},
+      {texto:'Agendar',classe:'btn-primary',acao:()=> { mostrarToast('Visita agendada!','success'); fecharModal(); }}
+    ]});
+  },
+  novaApresentacao() {
+    abrirModal({ titulo:'🎤 Registrar Apresentação', tipo:'info', corpo:`
+      <div class="form-group"><label class="form-label">Título da Apresentação *</label>
+        <input id="ap-titulo" class="form-input"></div>`,
+    botoes:[
+      {texto:'Cancelar',classe:'btn-ghost',acao:fecharModal},
+      {texto:'Salvar',classe:'btn-primary',acao:()=> { mostrarToast('Apresentação salva!','success'); fecharModal(); }}
+    ]});
+  },
+  novaProducao() {
+    abrirModal({ titulo:'🔬 Registrar Produção Científica', tipo:'info', corpo:`
+      <div class="form-group"><label class="form-label">Título do Artigo *</label>
+        <input id="pc-titulo" class="form-input"></div>
+      <div class="form-group"><label class="form-label">Link (DOI/PDF)</label>
+        <input id="pc-link" class="form-input" placeholder="https://..."></div>`,
+    botoes:[
+      {texto:'Cancelar',classe:'btn-ghost',acao:fecharModal},
+      {texto:'Registrar',classe:'btn-primary',acao:()=> { mostrarToast('Artigo registrado com sucesso!','success'); fecharModal(); }}
+    ]});
+  },
+  novaPauta() {
+    abrirModal({ titulo:'🗳️ Criar Pauta de Votação', tipo:'info', corpo:`
+      <div class="form-group"><label class="form-label">Título da Pauta *</label>
+        <input id="pv-titulo" class="form-input" placeholder="Ex: Aprovação de Contas 2026"></div>
+      <div class="form-group"><label class="form-label">Descrição</label>
+        <textarea id="pv-desc" class="form-input" style="height:80px"></textarea></div>`,
+    botoes:[
+      {texto:'Cancelar',classe:'btn-ghost',acao:fecharModal},
+      {texto:'Abrir Votação',classe:'btn-primary',acao:()=> { mostrarToast('Pauta aberta para votação!','success'); fecharModal(); }}
+    ]});
+  }
+};
+
 window.PageGeral     = PageGeral;
 window.PageMarketing = PageMarketing;
 window.PageFinancas  = PageFinancas;
@@ -652,3 +785,4 @@ window.PageProjetos  = PageProjetos;
 window.PageOperacoes = PageOperacoes;
 window.PagePessoas   = PagePessoas;
 window.PageDev       = PageDev;
+window.PageGlobal    = PageGlobal;

@@ -43,30 +43,8 @@ const COORDENADORIAS = [
 ];
 
 function getIcon(name) {
-  const icons = {
-    'layout-dashboard': '<rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="14" y="3" rx="1"/><rect width="7" height="7" x="14" y="14" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/>',
-    cpu: '<rect width="16" height="16" x="4" y="4" rx="2"/><rect width="6" height="6" x="9" y="9" rx="1"/><path d="M15 2v2"/><path d="M15 20v2"/><path d="M2 15h2"/><path d="M2 9h2"/><path d="M20 15h2"/><path d="M20 9h2"/><path d="M9 2v2"/><path d="M9 20v2"/>',
-    'user-cog': '<circle cx="18" cy="15" r="3"/><circle cx="9" cy="7" r="4"/><path d="M10 15H6a4 4 0 0 0-4 4v2"/><path d="m21.7 16.4-.9-.3"/><path d="m15.2 13.9-.9-.3"/><path d="m16.6 18.7.3-.9"/><path d="m19.1 12.2.3-.9"/><path d="m19.6 18.7-.4-1"/><path d="m16.8 12.3-.4-1"/><path d="m14.3 16.6 1-.4"/><path d="m20.7 14.3 1-.4"/>',
-    layers: '<path d="m12.83 2.18a2 2 0 0 0-1.66 0L2.1 6.27a2 2 0 0 0 0 3.46l9.07 4.09a2 2 0 0 0 1.66 0l9.07-4.09a2 2 0 0 0 0-3.46z"/><path d="m2.1 14.73 9.07 4.09a2 2 0 0 0 1.66 0l9.07-4.09"/><path d="m2.1 10.58 9.07 4.09a2 2 0 0 0 1.66 0l9.07-4.09"/>',
-    component: '<path d="M5.5 8.5 2 12l3.5 3.5L9 12Z"/><path d="m15 5 3.5 3.5L22 12l-3.5 3.5L15 19l-3.5-3.5L8 12l3.5-3.5Z"/><path d="m11.5 15.5 3.5 3.5 3.5-3.5L15 12Z"/><path d="m11.5 8.5 3.5-3.5 3.5 3.5L15 12Z"/>',
-    'trending-up': '<polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/>',
-    crown: '<path d="m2 4 3 12h14l3-12-6 7-4-7-4 7-6-7z"/><path d="M12 17H2l.5 2h19l.5-2H12z"/>',
-    zap: '<polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>',
-    users: '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>',
-    rocket: '<path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2.01c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/><path d="M9 12H4s.55-3.03 2-5c1.62-2.2 5-2.5 5-2.5"/><path d="M12 15v5s3.03-.55 5-2c2.2-1.62 2.5-5 2.5-5"/>',
-    layout: '<rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/>',
-    gem: '<path d="M6 3h12l4 6-10 12L2 9z"/><path d="M11 3 8 9l4 12 4-12-3-6"/><path d="M2 9h20"/>',
-    grid: '<rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="14" y="3" rx="1"/><rect width="7" height="7" x="14" y="14" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/>',
-    star: '<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>',
-    list: '<path d="M8 6h13"/><path d="M8 12h13"/><path d="M8 18h13"/><path d="M3 6h.01"/><path d="M3 12h.01"/><path d="M3 18h.01"/>',
-    folder: '<path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93l-1-2H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2z"/>',
-    settings: '<path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.1a2 2 0 0 1-1-1.72v-.51a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/>',
-    megaphone: '<path d="m3 11 18-5v12L3 14v-3z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/>',
-    banknote: '<rect width="20" height="12" x="2" y="6" rx="2"/><circle cx="12" cy="12" r="2"/><path d="M6 12h.01M18 12h.01"/>',
-    file: '<path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/>',
-    shield: '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>'
-  };
-  return `<svg data-lucide="${name}" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-${name}">${icons[name] || ''}</svg>`;
+  // Retorna um placeholder que o Lucide irá transformar em SVG real
+  return `<i data-lucide="${name}" class="nav-icon-i" style="width:18px; height:18px; stroke-width:1.8px;"></i>`;
 }
 
 // Pages each coord can access
@@ -77,6 +55,8 @@ const ROLE_PAGES = {
     { id: 'geral_planejamento', icon: 'layout', label: 'Planejamento Sem.' },
     { id: 'geral_melhorias', icon: 'star', label: 'Caixa de Melhorias' },
     { id: 'geral_parcerias', icon: 'gem', label: 'Parcerias Estratégicas' },
+    { id: 'pessoas', icon: 'users', label: 'Gestão de Membros' },
+    { id: 'tarefas', icon: 'list', label: 'Kanban Geral' },
   ],
   'Operações':  [
     { id: 'dashboard', icon: 'grid', label: 'Painel Central' },
@@ -89,6 +69,7 @@ const ROLE_PAGES = {
     { id: 'gp_talentos', icon: 'users', label: 'Banco de Talentos' },
     { id: 'gp_clima', icon: 'star', label: 'Pesquisa de Clima' },
     { id: 'gp_tap', icon: 'layout', label: 'Módulo TAP (Inovação)' },
+    { id: 'pessoas', icon: 'users', label: 'Gestão de Membros' },
   ],
   'Marketing':  [
     { id: 'dashboard', icon: 'grid', label: 'Painel Central' },
@@ -461,6 +442,7 @@ const App = {
     </div>`;
 
     nav.innerHTML = html;
+    if (typeof lucide !== 'undefined') lucide.createIcons();
   },
 
   /** Build mobile bottom nav */
@@ -475,6 +457,7 @@ const App = {
         <span>${p.label}</span>
       </div>`
     ).join('');
+    if (typeof lucide !== 'undefined') lucide.createIcons();
   },
 
   /** Toggle sidebar on mobile */
@@ -527,6 +510,19 @@ const App = {
       updateNotifCount();
       await App.loadNotifCount().catch(e => console.warn('Notif check failed:', e));
 
+      // Saudação Dinâmica (V9.0)
+      const saudacao = App.getSaudacao();
+      const sEl = document.getElementById('topbarSaudacao');
+      if (sEl) sEl.textContent = `${saudacao}, ${profile.nome || 'Líder'}!`;
+
+      // [V9.0] Role Switcher p/ JR (Dev Admin + MKT)
+      const isJR = profile.email?.includes('jjose') || profile.nome?.includes('Rayan');
+      const btnSwitch = document.getElementById('btnSwitchRole');
+      if (isJR && btnSwitch) btnSwitch.style.display = 'block';
+
+      // [V9.0] Sync Settings inputs
+      App.syncSettingsInputs(profile);
+
       return profile;
     } catch (err) {
       console.error('Critical Init Error:', err);
@@ -550,6 +546,121 @@ const App = {
       badge.textContent = count || 0;
       badge.classList.toggle('visible', count > 0);
     }
+  },
+  getSaudacao() {
+    const hora = new Date().getHours();
+    if (hora >= 5 && hora < 12) return "Bom dia";
+    if (hora >= 12 && hora < 18) return "Boa tarde";
+    return "Boa noite";
+  },
+  setFont(family) {
+    document.documentElement.setAttribute('data-font', family);
+    localStorage.setItem('nupie_font', family);
+    App.toast(`Fonte alterada para ${family}`, 'success');
+  },
+  
+  syncSettingsInputs(p) {
+    if (!p) return;
+    const elNome = document.getElementById('myProfileNome');
+    const elInit = document.getElementById('myProfileIniciais');
+    const elCargo = document.getElementById('myProfileCargo');
+    const elAvatar = document.getElementById('myProfileAvatar');
+    
+    if (elNome) elNome.value = p.nome || '';
+    if (elInit) elInit.value = p.iniciais || '';
+    if (elCargo) elCargo.value = p.cargo || '';
+    if (elAvatar) elAvatar.textContent = p.iniciais || p.nome?.[0] || '?';
+  },
+
+  async updateMyProfile() {
+    const nome = document.getElementById('myProfileNome')?.value?.trim();
+    const iniciais = document.getElementById('myProfileIniciais')?.value?.trim()?.toUpperCase();
+    const cargo = document.getElementById('myProfileCargo')?.value?.trim();
+    
+    if (!nome) return App.toast('Nome é obrigatório', 'warning');
+    
+    App.loading(true);
+    try {
+      const p = window._appProfile;
+      if (!p) throw new Error('Sessão expirada');
+      
+      if (_sb) {
+        const { error } = await _sb.from('users').update({
+          nome, iniciais, cargo
+        }).eq('id', p.id);
+        if (error) throw error;
+      }
+      
+      // Update local object
+      p.nome = nome;
+      p.iniciais = iniciais;
+      p.cargo = cargo;
+      
+      // Update UI
+      document.getElementById('sideName').textContent = nome;
+      document.getElementById('sideAvatar').textContent = iniciais;
+      document.getElementById('sideRole').textContent = `${cargo} · ${p.coordenadorias?.nome || 'Geral'}`;
+      App.syncSettingsInputs(p);
+      
+      App.toast('Perfil atualizado com sucesso!', 'success');
+    } catch (e) {
+      App.toast('Erro ao atualizar: ' + e.message, 'error');
+    } finally {
+      App.loading(false);
+    }
+  },
+  showPage(id) {
+    if (typeof goTo === 'function') goTo(id);
+  },
+  toggleRole() {
+    const p = window._appProfile;
+    if (!p) return;
+    
+    // Efeito Flip 3D (V9.0)
+    document.body.classList.add('profile-switching');
+    
+    setTimeout(() => {
+      // Toggle logic
+      const current = window._activeRole || p.role;
+      window._activeRole = (current === 'admin') ? 'assessor' : 'admin';
+      
+      const newCoord = (window._activeRole === 'admin') ? 'Geral' : 'Marketing';
+      
+      // Re-build UI
+      App.buildSidebar(newCoord);
+      document.getElementById('sideRole').textContent = `${window._activeRole.toUpperCase()} · ${newCoord}`;
+      
+      const badge = document.getElementById('profile-badge');
+      if (badge) {
+        badge.classList.toggle('dev-mode', window._activeRole === 'admin');
+        badge.innerHTML = `<div style="width:8px;height:8px;border-radius:50%;background:${window._activeRole==='admin'?'#2DD4A0':'var(--green)'}"></div> ${window._activeRole.toUpperCase()}`;
+      }
+
+      document.body.classList.remove('profile-switching');
+      document.body.classList.add('profile-switching-in');
+      setTimeout(() => document.body.classList.remove('profile-switching-in'), 400);
+
+      App.toast(`Perfil alterado para: ${window._activeRole.toUpperCase()}`, 'success');
+    }, 300);
+  },
+  updateABJCountdown() {
+    const el = document.getElementById('abj-countdown');
+    if (!el) return;
+
+    const agora = new Date();
+    const fimMes = new Date(agora.getFullYear(), agora.getMonth() + 1, 0, 23, 59, 59);
+    const diff = fimMes - agora;
+
+    if (diff <= 0) {
+      el.textContent = "Prazo encerrado!";
+      return;
+    }
+
+    const d = Math.floor(diff / (1000 * 60 * 60 * 24));
+    const h = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+
+    el.textContent = `${d}d ${h}h ${m}m`;
   }
 };
 
@@ -559,7 +670,7 @@ const App = {
 const ALL_PAGES = [
   'dashboard','abj','tarefas','pessoas','projetos',
   'operacoes','marketing','financeiro','compartilhado',
-  'manu','notificacoes','configuracoes',
+  'manu','notificacoes','config','configuracoes',
   'geral_reunioes','geral_planejamento','geral_melhorias','geral_parcerias',
   'mkt_tracker','mkt_kanban',
   'fin_fluxo','fin_abepro','fin_comercial',
@@ -578,7 +689,11 @@ function goTo(id) {
   const pg = document.getElementById('page-' + id);
   if (pg) {
     pg.classList.add('active');
-    // MASTER RESET: Garante que a página comece do topo ao navegar
+    // Forçar reflow para animação de fade
+    pg.style.display = 'none';
+    pg.offsetHeight; 
+    pg.style.display = 'flex';
+    
     const content = pg.querySelector('.content') || pg;
     content.scrollTop = 0;
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -594,9 +709,15 @@ function goTo(id) {
   if (overlay) overlay.classList.remove('visible');
 
   // Lazy-load de páginas com dados
-  if (id === 'pessoas') Pessoas.loadMembers();
-  if (id === 'tarefas') Kanban.load();
-  if (id === 'abj')     ABJ.init();
+  if (id === 'pessoas')         Pessoas.loadMembers();
+  if (id === 'tarefas')         Kanban.load();
+  if (id === 'abj')             ABJ.init();
+  if (id === 'geral_reunioes')    typeof PageGeral     !== 'undefined' && PageGeral.init();
+  if (id === 'geral_planejamento') typeof PageGeral    !== 'undefined' && PageGeral._renderPlanejamento();
+  if (id === 'mkt_tracker')       typeof PageMarketing !== 'undefined' && PageMarketing.init();
+  if (id === 'fin_fluxo')         typeof PageFinancas  !== 'undefined' && PageFinancas.init();
+  if (id === 'prj_eventos')       typeof PageProjetos  !== 'undefined' && PageProjetos.init();
+  if (id === 'ops_pops')          typeof PageOperacoes !== 'undefined' && PageOperacoes._renderPops();
 }
 
 function toggleSidebar() {
@@ -608,8 +729,14 @@ function toggleSidebar() {
    ============================================================ */
 const Dashboard = {
   async render(profile) {
+    const cards = document.querySelectorAll('.sum-card');
+    cards.forEach(c => c.classList.add('loading'));
+
     if (!_sb) {
-      Dashboard.renderDemo(profile);
+      setTimeout(() => {
+        Dashboard.renderDemo(profile);
+        cards.forEach(c => c.classList.remove('loading'));
+      }, 800);
       return;
     }
 
@@ -617,11 +744,13 @@ const Dashboard = {
       // Fetch KPIs in parallel
       const [abjRes, tasksRes, membersRes, vendasRes, despesasRes] = await Promise.all([
         _sb.from('progresso_abj').select('pontos'),
-        _sb.from('demandas').select('status').neq('status', 'auditada'),
+        _sb.from('demandas').select('coluna').neq('coluna', 'concluida'),
         _sb.from('users').select('id', { count: 'exact', head: true }).eq('ativo', true),
         _sb.from('vendas').select('valor'),
         _sb.from('despesas').select('valor'),
       ]);
+      
+      cards.forEach(c => c.classList.remove('loading'));
 
       const totalPts = (abjRes.data || []).reduce((s, r) => s + (r.pontos || 0), 0);
       const activeTasks = (tasksRes.data || []).length;
@@ -724,7 +853,7 @@ const Dashboard = {
    ============================================================ */
 const Theme = {
   apply(name) {
-    if (name === 'default') name = 'dark-orange';
+    if (name === 'default') name = 'nucleo';
     document.documentElement.setAttribute('data-theme', name);
     localStorage.setItem('nupie_theme', name);
     
@@ -1114,30 +1243,48 @@ const Pessoas = {
   /* ============================================================
      Admin / Dev Decision Console (V6.0)
      ============================================================ */
-  async deleteMember(id, email) {
-    if (!confirm(`TEM CERTEZA? O membro ${email} será APAGADO permanentemente do banco.`)) return;
-    App.loading(true);
-    try {
-      if (_sb) {
-        const { error } = await _sb.from('users').delete().eq('id', id);
-        if (error) throw error;
-        // E-mail de Despedida Profissional V6.8
-        await window.EmailService?.notifyGoodbye?.({ nome: email, email });
-      }
-      App.toast('Membro removido do núcleo.', 'success');
-      this.loadMembers();
-    } catch (e) {
-      App.toast('Erro ao remover: ' + e.message, 'error');
-    } finally { App.loading(false); }
+  deleteMember(id, email) {
+    abrirModal({
+      titulo: 'Confirmar Exclusão',
+      corpo: `TEM CERTEZA? O membro ${email} será APAGADO permanentemente do banco.`,
+      botoes: [
+        { texto: 'Cancelar', classe: 'btn-ghost' },
+        { texto: 'Apagar', classe: 'btn-primary', acao: async () => {
+          fecharModal();
+          App.loading(true);
+          try {
+            if (_sb) {
+              const { error } = await _sb.from('users').delete().eq('id', id);
+              if (error) throw error;
+              // E-mail de Despedida Profissional V6.8
+              await window.EmailService?.notifyGoodbye?.({ nome: email, email });
+            }
+            App.toast('Membro removido do núcleo.', 'success');
+            this.loadMembers();
+          } catch (e) {
+            App.toast('Erro ao remover: ' + e.message, 'error');
+          } finally { App.loading(false); }
+        }}
+      ]
+    });
   },
 
-  async resetPassword(email) {
-    if (!confirm(`Enviar redefinição de senha para ${email}?`)) return;
-    if (_sb) {
-      const { error } = await _sb.auth.resetPasswordForEmail(email);
-      if (error) App.toast(error.message, 'error');
-      else App.toast('E-mail de redefinição enviado!', 'success');
-    }
+  resetPassword(email) {
+    abrirModal({
+      titulo: 'Redefinir Senha',
+      corpo: `Enviar redefinição de senha para ${email}?`,
+      botoes: [
+        { texto: 'Cancelar', classe: 'btn-ghost' },
+        { texto: 'Enviar', classe: 'btn-primary', acao: async () => {
+          fecharModal();
+          if (_sb) {
+            const { error } = await _sb.auth.resetPasswordForEmail(email);
+            if (error) App.toast(error.message, 'error');
+            else App.toast('E-mail de redefinição enviado!', 'success');
+          }
+        }}
+      ]
+    });
   },
 
   async sendMagicLink(email) {
@@ -1191,12 +1338,12 @@ const DashboardExtra = {
       return;
     }
 
-    if (mural) mural.style.display = 'block';
+      if (mural) mural.style.display = 'block';
     listEl.innerHTML = bdays.map(u => {
       const d = new Date(u.nascimento + 'T12:00:00').getDate();
       return `
         <div style="flex:0 0 140px; background:var(--s1); border:1px solid var(--b-1); border-radius:12px; padding:12px; display:flex; flex-direction:column; align-items:center; gap:8px;">
-          <div class="side-avatar" style="width:40px;height:40px;font-size:14px;margin:0;">${u.iniciais}</div>
+          <div class="side-avatar" style="width:40px;height:40px;font-size:14px;margin:0;"><i data-lucide="cake" style="stroke-width:1.5px;"></i></div>
           <div style="text-align:center;">
             <div style="font-weight:700;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;width:110px;">${u.nome}</div>
             <div style="font-size:10px;color:var(--orange);font-weight:800;margin-top:2px;">DIA ${d}</div>
@@ -1306,8 +1453,18 @@ const Projetos = {
 
 const Assembleia = {
   novaVotacao() {
-    const titulo = prompt('Título da Votação:');
-    if (titulo) App.toast('Votação criada com sucesso!', 'success');
+    abrirModal({
+      titulo: 'Nova Votação',
+      corpo: '<div class="form-group"><label class="form-label">Título da Votação</label><input id="av-titulo" class="form-input" placeholder="Ex: Uniforme Oficial"></div>',
+      botoes: [
+        { texto: 'Cancelar', classe: 'btn-ghost', acao: fecharModal },
+        { texto: 'Criar', classe: 'btn-primary', acao: () => {
+          const titulo = document.getElementById('av-titulo')?.value?.trim();
+          fecharModal();
+          if (titulo) App.toast('Votação criada com sucesso!', 'success');
+        }}
+      ]
+    });
   },
   votar(opcao) {
     App.toast(`Voto secreto em "${opcao}" computado!`, 'success');
@@ -1395,7 +1552,7 @@ const Financeiro = {
     }
   },
   novoLancamento() {
-    App.toast('Formulário de lançamento em desenvolvimento.', 'info');
+    App.toast('Módulo financeiro aguardando Supabase.', 'info');
   }
 };
 
@@ -1643,10 +1800,10 @@ function _buildNav(role) {
    ═══════════════════════════════════════════════════════════════ */
 const Kanban = (() => {
   const COLS = [
-    { id: 'afazer',    label: 'A Fazer',       status: 'pendente' },
-    { id: 'producao',  label: 'Em Produção',    status: 'em_producao' },
-    { id: 'evidencia', label: 'Evidência',      status: 'evidencia' },
-    { id: 'concluida', label: 'Concluídas',     status: 'concluida' },
+    { id: 'afazer',    label: 'A Fazer',       coluna: 'pendente' },
+    { id: 'producao',  label: 'Em Produção',    coluna: 'em_producao' },
+    { id: 'evidencia', label: 'Evidência',      coluna: 'evidencia' },
+    { id: 'concluida', label: 'Concluídas',     coluna: 'concluida' },
   ];
 
   let _demands = [];
@@ -1673,7 +1830,7 @@ const Kanban = (() => {
     COLS.forEach(col => {
       const el = document.getElementById('kanban-' + col.id);
       if (!el) return;
-      const items = list.filter(d => d.status === col.status);
+      const items = list.filter(d => d.coluna === col.coluna);
       if (items.length === 0) {
         el.innerHTML = '<div class="kanban-empty">Vazio.</div>';
         return;
@@ -1725,10 +1882,10 @@ const Kanban = (() => {
     const coord  = document.getElementById('ndCoord')?.value || 'GER';
     const prazo  = document.getElementById('ndPrazo')?.value || null;
     const desc   = document.getElementById('ndDesc')?.value?.trim() || '';
-    if (!titulo) { alert('Insira um título para a demanda.'); return; }
+    if (!titulo) { App.toast('Insira um título para a demanda.', 'warning'); return; }
 
     const now = new Date().toISOString();
-    const demand = { id: 'loc-' + Date.now(), titulo, coordenadoria: coord, prazo, descricao: desc, status: 'pendente', created_at: now };
+    const demand = { id: 'loc-' + Date.now(), titulo, coordenadoria: coord, prazo, descricao: desc, coluna: 'pendente', created_at: now };
 
     if (window._supabase) {
       try {
@@ -1742,7 +1899,7 @@ const Kanban = (() => {
             coordenadoria: coord, 
             prazo, 
             descricao: desc, 
-            status: 'pendente',
+            coluna: 'pendente',
             criado_por: creator,
             coord_remetente: remCoord
           }])
@@ -1776,8 +1933,8 @@ const Kanban = (() => {
     const d = _demands.find(x => x.id == id || x.id == id);
     if (!d) return;
     // Abre modal de detalhes simples — futuramente expandir
-    const info = `Título: ${d.titulo}\nCoord: ${(d.coordenadoria||'').toUpperCase()}\nStatus: ${d.status}\nPrazo: ${d.prazo || '—'}\n\n${d.descricao || ''}`;
-    alert(info);
+    const info = `Título: ${d.titulo}\nCoord: ${(d.coordenadoria||'').toUpperCase()}\nColuna: ${d.coluna}\nPrazo: ${d.prazo || '—'}\n\n${d.descricao || ''}`;
+    abrirModal({ titulo: 'Detalhes da Demanda', corpo: `<div style="white-space:pre-wrap;">${info}</div>`, botoes: [{ texto: 'Fechar', classe: 'btn-ghost' }] });
   }
 
   function _saveLocal() {

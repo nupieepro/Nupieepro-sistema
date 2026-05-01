@@ -1,6 +1,6 @@
 'use strict';
 const PushModule = (() => {
-  const VAPID_PUBLIC_KEY = 'BEl62iUYgUivxIkv69yViEuiBIa40DXRkFfVY4-GFf_VGZ4tTBHSvxJ_D3nw8Ga_hCHLpkRm6bJ0tLRRn8Ai4w';
+  const VAPID_PUBLIC_KEY = 'BHS7GQfFygFJuBMs-BsjE9V7TfacKGf8W1wi6JWmsehDzu81nVQcFYpsjCtDILQl3NE4uWN0LUZ7UtpKFfBsj-o';
   function _urlBase64ToUint8Array(base64String) {
     const padding = '='.repeat((4 - base64String.length % 4) % 4);
     const base64  = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
