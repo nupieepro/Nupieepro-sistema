@@ -24,6 +24,9 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Plus+Jakarta+Sans:wght@700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   
+  <!-- [V9.0] Design System Centralizado -->
+  <link rel="stylesheet" href="css/themes-override.css">
+  
   <!-- EmailJS SDK -->
   <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
   
@@ -34,11 +37,11 @@
   
   <style>
     :root {
-      --black:   #000000;
-      --orange:  #f75412;
-      --orange-dim: rgba(247, 84, 18, 0.15);
-      --white:   #ffffff;
-      --border:  rgba(255, 255, 255, 0.08);
+      --black:   var(--c-bg, #000000);
+      --orange:  var(--c-accent, #f75412);
+      --orange-dim: var(--a-2, rgba(247, 84, 18, 0.15));
+      --white:   var(--c-white, #ffffff);
+      --border:  var(--border, rgba(255, 255, 255, 0.08));
       --font-body: 'DM Sans', sans-serif;
       --font-head: 'Plus Jakarta Sans', sans-serif;
       --font-mono: 'JetBrains Mono', monospace;
@@ -150,7 +153,7 @@
     .login-section {
       width: 460px;
       height: 100%;
-      background: rgba(5, 5, 5, 0.6);
+      background: var(--c-s2, rgba(5, 5, 5, 0.6));
       backdrop-filter: blur(30px) saturate(150%);
       border-left: 1px solid var(--border);
       display: flex;
@@ -166,9 +169,9 @@
     .logo-container { display: flex; align-items: center; gap: 12px; margin-bottom: 2rem; }
     .logo-icon { width: 44px; height: 44px; object-fit: contain; object-position: center; animation: breathe 3s ease-in-out infinite alternate; }
     .logo-text { font-family: var(--font-head); font-size: 26px; font-weight: 800; }
-    .logo-text span { color: var(--orange); }
+    .logo-text span { color: var(--c-accent, var(--orange)); }
 
-    @keyframes breathe { 0% { transform: scale(1); filter: brightness(1); } 100% { transform: scale(1.08); filter: brightness(1.3) drop-shadow(0 0 10px var(--orange)); } }
+    @keyframes breathe { 0% { transform: scale(1); filter: brightness(1); } 100% { transform: scale(1.08); filter: brightness(1.3) drop-shadow(0 0 10px var(--c-accent, var(--orange))); } }
 
     /* ─── Identidade Visual V6.0 Omni-Connect ─── */
     .shimmer-text {
@@ -180,16 +183,16 @@
       margin-bottom: 2rem;
       /* Gradiente Enterprise Multicolorido */
       background: linear-gradient(91deg, 
-        #ffffff 0%, 
-        #f75412 25%, 
-        #2f1d70 50%, 
-        #29324f 75%, 
-        #ffffff 100%);
+        var(--c-white, #ffffff) 0%, 
+        var(--c-accent, #f75412) 25%, 
+        var(--c-s1, #2f1d70) 50%, 
+        var(--c-s2, #29324f) 75%, 
+        var(--c-white, #ffffff) 100%);
       background-size: 300% auto;
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       animation: shimmerElite 8s ease-in-out infinite;
-      filter: drop-shadow(0 0 15px rgba(247, 84, 18, 0.2));
+      filter: drop-shadow(0 0 15px var(--a-3, rgba(247, 84, 18, 0.2)));
     }
     @keyframes shimmerElite {
       0% { background-position: 0% center; }
