@@ -148,8 +148,8 @@ const PageGeral = {
       this._carregarReunioes();
     } catch(e){mostrarToast('Erro ao salvar.','error');}
   },
-  verFrequencia() { mostrarToast('Frequência — em breve!','info'); },
-  abrirCheckin()  { mostrarToast('Check-in digital — em breve!','info'); },
+  verFrequencia() { mostrarToast('Módulo de frequência aguardando Supabase.','info'); },
+  abrirCheckin()  { mostrarToast('Módulo de check-in aguardando Supabase.','info'); },
 };
 const PageMarketing = {
   async init() { this._renderTracker(); },
@@ -647,8 +647,19 @@ const PagePessoas = {
       mostrarToast(`Convite enviado para ${email}!`,'success');
     }catch(e){mostrarToast('Erro ao enviar convite.','error');}
   },
-  adicionarClima(){mostrarToast('Pesquisa de clima — em breve!','info');},
-  exportar(){mostrarToast('Exportação — em breve!','info');},
+  adicionarClima(){mostrarToast('Pesquisa de clima aguardando Supabase.','info');},
+  exportar(){mostrarToast('Exportação aguardando Supabase.','info');},
+  novoTalento() {
+    abrirModal({ titulo:'👤 Novo Talento', tipo:'info', corpo:`
+      <div class="form-group"><label class="form-label">Nome Completo *</label>
+        <input id="nt-nome" class="form-input"></div>
+      <div class="form-group"><label class="form-label">Universidade</label>
+        <input id="nt-univ" class="form-input"></div>`,
+    botoes:[
+      {texto:'Cancelar',classe:'btn-ghost',acao:fecharModal},
+      {texto:'Salvar',classe:'btn-primary',acao:()=> { mostrarToast('Talento registrado!','success'); fecharModal(); }}
+    ]});
+  }
 };
 const PageDev = {
   _temAcesso(){return window._appProfile?.role==='admin';},

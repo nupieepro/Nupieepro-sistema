@@ -1429,7 +1429,7 @@ const Financeiro = {
     }
   },
   novoLancamento() {
-    App.toast('Formulário de lançamento em desenvolvimento.', 'info');
+    App.toast('Módulo financeiro aguardando Supabase.', 'info');
   }
 };
 
