@@ -520,9 +520,8 @@ const App = {
       const btnSwitch = document.getElementById('btnSwitchRole');
       if (isJR && btnSwitch) btnSwitch.style.display = 'block';
 
-      // [V9.0] Countdown ABJ
-      App.updateABJCountdown();
-      setInterval(() => App.updateABJCountdown(), 60000);
+      // [V9.0] Sync Settings inputs
+      App.syncSettingsInputs(profile);
 
       return profile;
     } catch (err) {
@@ -558,6 +557,57 @@ const App = {
     document.documentElement.setAttribute('data-font', family);
     localStorage.setItem('nupie_font', family);
     App.toast(`Fonte alterada para ${family}`, 'success');
+  },
+  
+  syncSettingsInputs(p) {
+    if (!p) return;
+    const elNome = document.getElementById('myProfileNome');
+    const elInit = document.getElementById('myProfileIniciais');
+    const elCargo = document.getElementById('myProfileCargo');
+    const elAvatar = document.getElementById('myProfileAvatar');
+    
+    if (elNome) elNome.value = p.nome || '';
+    if (elInit) elInit.value = p.iniciais || '';
+    if (elCargo) elCargo.value = p.cargo || '';
+    if (elAvatar) elAvatar.textContent = p.iniciais || p.nome?.[0] || '?';
+  },
+
+  async updateMyProfile() {
+    const nome = document.getElementById('myProfileNome')?.value?.trim();
+    const iniciais = document.getElementById('myProfileIniciais')?.value?.trim()?.toUpperCase();
+    const cargo = document.getElementById('myProfileCargo')?.value?.trim();
+    
+    if (!nome) return App.toast('Nome é obrigatório', 'warning');
+    
+    App.loading(true);
+    try {
+      const p = window._appProfile;
+      if (!p) throw new Error('Sessão expirada');
+      
+      if (_sb) {
+        const { error } = await _sb.from('users').update({
+          nome, iniciais, cargo
+        }).eq('id', p.id);
+        if (error) throw error;
+      }
+      
+      // Update local object
+      p.nome = nome;
+      p.iniciais = iniciais;
+      p.cargo = cargo;
+      
+      // Update UI
+      document.getElementById('sideName').textContent = nome;
+      document.getElementById('sideAvatar').textContent = iniciais;
+      document.getElementById('sideRole').textContent = `${cargo} · ${p.coordenadorias?.nome || 'Geral'}`;
+      App.syncSettingsInputs(p);
+      
+      App.toast('Perfil atualizado com sucesso!', 'success');
+    } catch (e) {
+      App.toast('Erro ao atualizar: ' + e.message, 'error');
+    } finally {
+      App.loading(false);
+    }
   },
   showPage(id) {
     if (typeof goTo === 'function') goTo(id);
