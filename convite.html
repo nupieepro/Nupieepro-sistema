@@ -17,11 +17,8 @@
   <link rel="stylesheet" href="css/styles.css">
   <link rel="stylesheet" href="css/themes-override.css">
   <script>
-    /* Aplica tema salvo antes de renderizar — evita flash */
-    (function() {
-      var t = localStorage.getItem('nupie_theme') || 'dark-orange';
-      document.documentElement.setAttribute('data-theme', t === 'default' ? 'dark-orange' : t);
-    })();
+    /* Convite sempre no tema padrão — garante legibilidade independente da preferência salva */
+    document.documentElement.setAttribute('data-theme', 'dark-orange');
   </script>
   <style>
     /* ── Wizard progress bar ── */
@@ -343,11 +340,9 @@
               </div>
 
               <div class="wiz-field">
-                <label class="wiz-label" for="fNasc">
-                  Data de nascimento <span>(opcional)</span>
-                </label>
-                <input class="wiz-input" type="date" id="fNasc" autocomplete="bday">
-                <p class="helper">🎂 Usada para o sistema te parabenizar no seu dia!</p>
+                <label class="wiz-label" for="fNasc">Data de nascimento *</label>
+                <input class="wiz-input" type="date" id="fNasc" autocomplete="bday" required>
+                <p class="helper">🎂 O Nupi vai te parabenizar no seu dia. Obrigatório para o sistema de aniversários.</p>
               </div>
 
               <div class="btn-row">
@@ -547,8 +542,20 @@
     ══════════════════════════════════════════ */
     function validStep2() {
       var nome = document.getElementById('fNome').value.trim();
+      var nasc = document.getElementById('fNasc').value;
       if (nome.split(' ').filter(Boolean).length < 2) {
         showAlert('Informe seu nome completo (nome e sobrenome).');
+        return;
+      }
+      if (!nasc) {
+        showAlert('A data de nascimento é obrigatória. O Nupi quer te parabenizar! 🎂');
+        return;
+      }
+      /* Validação básica: não pode ser no futuro nem ano < 1950 */
+      var nascDate = new Date(nasc);
+      var hoje     = new Date();
+      if (nascDate >= hoje) {
+        showAlert('Data de nascimento inválida.');
         return;
       }
       clearAlert();
@@ -585,7 +592,7 @@
 
       var nome       = document.getElementById('fNome').value.trim();
       var apelido    = document.getElementById('fApelido').value.trim() || null;
-      var aniversario = document.getElementById('fNasc').value || null;
+      var aniversario = document.getElementById('fNasc').value; /* obrigatório */
       var iniciais   = nome.split(' ').map(function(w) { return w[0]; })
                            .join('').toUpperCase().slice(0, 2);
 
@@ -598,7 +605,7 @@
         iniciais:         iniciais,
         tema:             _tema,
       };
-      if (aniversario) metadata.aniversario = aniversario;
+      metadata.aniversario = aniversario; /* sempre presente */
 
       var { data, error } = await sb.auth.signUp({
         email:    convite.email,
