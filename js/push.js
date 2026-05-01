@@ -122,12 +122,12 @@ const PushModule = (() => {
     const mesHoje = hoje.getMonth() + 1;
     try {
       const { data } = await window._supabase
-        .from('profiles')
-        .select('nome, data_nascimento')
+        .from('users')
+        .select('nome, aniversario')
         .eq('ativo', true);
       data?.forEach(p => {
-        if (!p.data_nascimento) return;
-        const [, mes, dia] = p.data_nascimento.split('-').map(Number);
+        if (!p.aniversario) return;
+        const [, mes, dia] = p.aniversario.split('-').map(Number);
         if (dia === diaHoje && mes === mesHoje) {
           Notificacoes.aniversario(p.nome?.split(' ')[0] || 'alguém do time');
         }

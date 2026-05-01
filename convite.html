@@ -50,6 +50,10 @@
                 <label for="conviteConfirm">Confirmar senha</label>
                 <input type="password" id="conviteConfirm" placeholder="Repita a senha" required minlength="6" autocomplete="new-password">
               </div>
+              <div class="field">
+                <label for="conviteAniversario">Data de nascimento <span style="font-weight:400;opacity:.6;">(opcional)</span></label>
+                <input type="date" id="conviteAniversario" autocomplete="bday">
+              </div>
               <button class="btn-login" id="btnConvite" onclick="doConviteRegister()">Criar Conta</button>
             </form>
           </div>
@@ -70,6 +74,41 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
   <script src="js/app.js?v=13"></script>
   <script src="js/auth.js?v=13"></script>
-  <script>initConvitePage();</script>
+  <script>
+    // Patch: injeta aniversario nos metadados do cadastro por convite
+    // Sem modificar auth.js — sobrescreve apenas Auth.registerWithToken
+    const _origRegWithToken = Auth.registerWithToken.bind(Auth);
+    Auth.registerWithToken = async function(token, nome, password) {
+      const sb = this._db();
+      if (!sb) throw new Error('Sistema offline. Verifique a conexão.');
+      const { data: convite, error: tokenErr } = await sb
+        .from('convites')
+        .select('*, coordenadorias(nome, sigla)')
+        .eq('token', token)
+        .eq('usado', false)
+        .gt('expires_at', new Date().toISOString())
+        .single();
+      if (tokenErr || !convite) throw new Error('Convite inválido ou expirado.');
+      const iniciais = nome.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
+      const metadata = {
+        nome,
+        role:            convite.role,
+        cargo:           convite.cargo,
+        coordenadoria_id: convite.coordenadoria_id,
+        iniciais
+      };
+      const aniversario = document.getElementById('conviteAniversario')?.value;
+      if (aniversario) metadata.aniversario = aniversario;
+      const { data, error } = await sb.auth.signUp({
+        email: convite.email,
+        password,
+        options: { data: metadata }
+      });
+      if (error) throw error;
+      await sb.from('convites').update({ usado: true }).eq('id', convite.id);
+      return data;
+    };
+    initConvitePage();
+  </script>
 </body>
 </html>
