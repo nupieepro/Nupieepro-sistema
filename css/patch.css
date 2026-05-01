@@ -113,15 +113,29 @@
   font-weight: 500;
   transition: all .18s;
   list-style: none;
+  /* Fix: garante que inline styles injetados pelo app.js não fiquem
+     permanentemente visíveis (emilhando abas) */
+  border-left: 2px solid transparent !important;
 }
 .nav-item:hover {
   background: rgba(255,255,255,.08);
-  color: #fff;
+  color: #fff !important;
 }
 .nav-item.active {
   background: var(--c-accent);
-  color: #fff;
+  color: #fff !important;
   font-weight: 700;
+  border-left-color: var(--c-accent) !important;
+}
+/* nav-items com window.open (Terminal do Dev, links externos) —
+   nunca devem parecer selecionados permanentemente */
+.nav-item[onclick*="window.open"] {
+  color: rgba(255,255,255,.5) !important;
+  border-left-color: transparent !important;
+}
+.nav-item[onclick*="window.open"]:hover {
+  color: #fff !important;
+  background: rgba(255,255,255,.08);
 }
 .nav-icon {
   display: flex;
@@ -132,6 +146,63 @@
   opacity: .8;
 }
 .nav-item.active .nav-icon { opacity: 1; }
+
+/* ── Config page: layout centralizado e legível ── */
+.settings-section {
+  max-width: 860px !important;
+  margin: 0 auto !important;
+  width: 100%;
+}
+.setting-card {
+  background: var(--c-s3) !important;
+  border: 1px solid var(--b-2) !important;
+  border-radius: 16px !important;
+  padding: 24px !important;
+}
+.setting-card-title {
+  color: var(--c-white) !important;
+  font-size: 13px !important;
+  margin-bottom: 16px !important;
+}
+/* opções de tema em grade responsiva */
+.option-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--b-2);
+  background: var(--c-s2);
+  cursor: pointer;
+  color: var(--c-white);
+  font-size: 13px;
+  transition: all .2s;
+  width: 100%;
+  text-align: left;
+}
+.option-btn:hover   { border-color: var(--c-accent); }
+.option-btn.active  { border-color: var(--c-accent); background: var(--a-2); }
+.option-btn .check  { margin-left: auto; color: var(--c-accent); display: none; }
+.option-btn.active .check { display: block; }
+.color-dot {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+/* Fonte do Sistema — barra de preview legível */
+.font-preview-bar {
+  height: 40px;
+  background: var(--c-s1);
+  border: 1px solid var(--b-1);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+  font-size: 14px;
+  color: var(--c-white);
+  margin-top: 12px;
+}
 .sum-card {
   background: var(--c-s3);
   border: 1px solid var(--b-1);
