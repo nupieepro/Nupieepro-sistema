@@ -594,9 +594,15 @@ function goTo(id) {
   if (overlay) overlay.classList.remove('visible');
 
   // Lazy-load de páginas com dados
-  if (id === 'pessoas') Pessoas.loadMembers();
-  if (id === 'tarefas') Kanban.load();
-  if (id === 'abj')     ABJ.init();
+  if (id === 'pessoas')         Pessoas.loadMembers();
+  if (id === 'tarefas')         Kanban.load();
+  if (id === 'abj')             ABJ.init();
+  if (id === 'geral_reunioes')    typeof PageGeral     !== 'undefined' && PageGeral.init();
+  if (id === 'geral_planejamento') typeof PageGeral    !== 'undefined' && PageGeral._renderPlanejamento();
+  if (id === 'mkt_tracker')       typeof PageMarketing !== 'undefined' && PageMarketing.init();
+  if (id === 'fin_fluxo')         typeof PageFinancas  !== 'undefined' && PageFinancas.init();
+  if (id === 'prj_eventos')       typeof PageProjetos  !== 'undefined' && PageProjetos.init();
+  if (id === 'ops_pops')          typeof PageOperacoes !== 'undefined' && PageOperacoes._renderPops();
 }
 
 function toggleSidebar() {
@@ -617,7 +623,7 @@ const Dashboard = {
       // Fetch KPIs in parallel
       const [abjRes, tasksRes, membersRes, vendasRes, despesasRes] = await Promise.all([
         _sb.from('progresso_abj').select('pontos'),
-        _sb.from('demandas').select('status').neq('status', 'auditada'),
+        _sb.from('demandas').select('coluna').neq('coluna', 'concluida'),
         _sb.from('users').select('id', { count: 'exact', head: true }).eq('ativo', true),
         _sb.from('vendas').select('valor'),
         _sb.from('despesas').select('valor'),
