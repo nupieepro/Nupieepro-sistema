@@ -1120,30 +1120,48 @@ const Pessoas = {
   /* ============================================================
      Admin / Dev Decision Console (V6.0)
      ============================================================ */
-  async deleteMember(id, email) {
-    if (!confirm(`TEM CERTEZA? O membro ${email} será APAGADO permanentemente do banco.`)) return;
-    App.loading(true);
-    try {
-      if (_sb) {
-        const { error } = await _sb.from('users').delete().eq('id', id);
-        if (error) throw error;
-        // E-mail de Despedida Profissional V6.8
-        await window.EmailService?.notifyGoodbye?.({ nome: email, email });
-      }
-      App.toast('Membro removido do núcleo.', 'success');
-      this.loadMembers();
-    } catch (e) {
-      App.toast('Erro ao remover: ' + e.message, 'error');
-    } finally { App.loading(false); }
+  deleteMember(id, email) {
+    abrirModal({
+      titulo: 'Confirmar Exclusão',
+      corpo: `TEM CERTEZA? O membro ${email} será APAGADO permanentemente do banco.`,
+      botoes: [
+        { texto: 'Cancelar', classe: 'btn-ghost' },
+        { texto: 'Apagar', classe: 'btn-primary', acao: async () => {
+          fecharModal();
+          App.loading(true);
+          try {
+            if (_sb) {
+              const { error } = await _sb.from('users').delete().eq('id', id);
+              if (error) throw error;
+              // E-mail de Despedida Profissional V6.8
+              await window.EmailService?.notifyGoodbye?.({ nome: email, email });
+            }
+            App.toast('Membro removido do núcleo.', 'success');
+            this.loadMembers();
+          } catch (e) {
+            App.toast('Erro ao remover: ' + e.message, 'error');
+          } finally { App.loading(false); }
+        }}
+      ]
+    });
   },
 
-  async resetPassword(email) {
-    if (!confirm(`Enviar redefinição de senha para ${email}?`)) return;
-    if (_sb) {
-      const { error } = await _sb.auth.resetPasswordForEmail(email);
-      if (error) App.toast(error.message, 'error');
-      else App.toast('E-mail de redefinição enviado!', 'success');
-    }
+  resetPassword(email) {
+    abrirModal({
+      titulo: 'Redefinir Senha',
+      corpo: `Enviar redefinição de senha para ${email}?`,
+      botoes: [
+        { texto: 'Cancelar', classe: 'btn-ghost' },
+        { texto: 'Enviar', classe: 'btn-primary', acao: async () => {
+          fecharModal();
+          if (_sb) {
+            const { error } = await _sb.auth.resetPasswordForEmail(email);
+            if (error) App.toast(error.message, 'error');
+            else App.toast('E-mail de redefinição enviado!', 'success');
+          }
+        }}
+      ]
+    });
   },
 
   async sendMagicLink(email) {
@@ -1312,8 +1330,18 @@ const Projetos = {
 
 const Assembleia = {
   novaVotacao() {
-    const titulo = prompt('Título da Votação:');
-    if (titulo) App.toast('Votação criada com sucesso!', 'success');
+    abrirModal({
+      titulo: 'Nova Votação',
+      corpo: '<div class="form-group"><label class="form-label">Título da Votação</label><input id="av-titulo" class="form-input" placeholder="Ex: Uniforme Oficial"></div>',
+      botoes: [
+        { texto: 'Cancelar', classe: 'btn-ghost', acao: fecharModal },
+        { texto: 'Criar', classe: 'btn-primary', acao: () => {
+          const titulo = document.getElementById('av-titulo')?.value?.trim();
+          fecharModal();
+          if (titulo) App.toast('Votação criada com sucesso!', 'success');
+        }}
+      ]
+    });
   },
   votar(opcao) {
     App.toast(`Voto secreto em "${opcao}" computado!`, 'success');
@@ -1649,10 +1677,10 @@ function _buildNav(role) {
    ═══════════════════════════════════════════════════════════════ */
 const Kanban = (() => {
   const COLS = [
-    { id: 'afazer',    label: 'A Fazer',       status: 'pendente' },
-    { id: 'producao',  label: 'Em Produção',    status: 'em_producao' },
-    { id: 'evidencia', label: 'Evidência',      status: 'evidencia' },
-    { id: 'concluida', label: 'Concluídas',     status: 'concluida' },
+    { id: 'afazer',    label: 'A Fazer',       coluna: 'pendente' },
+    { id: 'producao',  label: 'Em Produção',    coluna: 'em_producao' },
+    { id: 'evidencia', label: 'Evidência',      coluna: 'evidencia' },
+    { id: 'concluida', label: 'Concluídas',     coluna: 'concluida' },
   ];
 
   let _demands = [];
@@ -1679,7 +1707,7 @@ const Kanban = (() => {
     COLS.forEach(col => {
       const el = document.getElementById('kanban-' + col.id);
       if (!el) return;
-      const items = list.filter(d => d.status === col.status);
+      const items = list.filter(d => d.coluna === col.coluna);
       if (items.length === 0) {
         el.innerHTML = '<div class="kanban-empty">Vazio.</div>';
         return;
@@ -1731,10 +1759,10 @@ const Kanban = (() => {
     const coord  = document.getElementById('ndCoord')?.value || 'GER';
     const prazo  = document.getElementById('ndPrazo')?.value || null;
     const desc   = document.getElementById('ndDesc')?.value?.trim() || '';
-    if (!titulo) { alert('Insira um título para a demanda.'); return; }
+    if (!titulo) { App.toast('Insira um título para a demanda.', 'warning'); return; }
 
     const now = new Date().toISOString();
-    const demand = { id: 'loc-' + Date.now(), titulo, coordenadoria: coord, prazo, descricao: desc, status: 'pendente', created_at: now };
+    const demand = { id: 'loc-' + Date.now(), titulo, coordenadoria: coord, prazo, descricao: desc, coluna: 'pendente', created_at: now };
 
     if (window._supabase) {
       try {
@@ -1748,7 +1776,7 @@ const Kanban = (() => {
             coordenadoria: coord, 
             prazo, 
             descricao: desc, 
-            status: 'pendente',
+            coluna: 'pendente',
             criado_por: creator,
             coord_remetente: remCoord
           }])
@@ -1782,8 +1810,8 @@ const Kanban = (() => {
     const d = _demands.find(x => x.id == id || x.id == id);
     if (!d) return;
     // Abre modal de detalhes simples — futuramente expandir
-    const info = `Título: ${d.titulo}\nCoord: ${(d.coordenadoria||'').toUpperCase()}\nStatus: ${d.status}\nPrazo: ${d.prazo || '—'}\n\n${d.descricao || ''}`;
-    alert(info);
+    const info = `Título: ${d.titulo}\nCoord: ${(d.coordenadoria||'').toUpperCase()}\nColuna: ${d.coluna}\nPrazo: ${d.prazo || '—'}\n\n${d.descricao || ''}`;
+    abrirModal({ titulo: 'Detalhes da Demanda', corpo: `<div style="white-space:pre-wrap;">${info}</div>`, botoes: [{ texto: 'Fechar', classe: 'btn-ghost' }] });
   }
 
   function _saveLocal() {
