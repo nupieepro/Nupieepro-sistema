@@ -530,7 +530,7 @@ const App = {
       // Saudação Dinâmica (V9.0)
       const saudacao = App.getSaudacao();
       const sEl = document.getElementById('topbarSaudacao');
-      if (sEl) sEl.textContent = `${saudacao}, ${profile.nome?.split(' ')[0] || 'Líder'}!`;
+      if (sEl) sEl.textContent = `${saudacao}, ${profile.nome || 'Líder'}!`;
 
       // [V9.0] Role Switcher p/ JR (Dev Admin + MKT)
       const isJR = profile.email?.includes('jjose') || profile.nome?.includes('Rayan');
