@@ -430,7 +430,17 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-  <script src="js/app.js?v=13"></script>
+  <!-- Mini-init Supabase sem carregar app.js inteiro -->
+  <script>
+    (function() {
+      var SUPA_URL = 'https://quwpyrdxyibcbyzwfilb.supabase.co';
+      var SUPA_KEY = 'sb_publishable_VmEMT07DiE1f5DtxzgZomA_-F0gZIpM';
+      if (window.supabase && !window._supabase) {
+        window._supabase = window.supabase.createClient(SUPA_URL, SUPA_KEY);
+        window._sb       = window._supabase;
+      }
+    })();
+  </script>
   <script src="js/auth.js?v=13"></script>
   <script>
     'use strict';

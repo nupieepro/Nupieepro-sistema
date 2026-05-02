@@ -2237,30 +2237,34 @@ window.PageGlobal         = PageGlobal;
 window.PageNotificacoes   = PageNotificacoes;
 window.PageCompartilhado  = PageCompartilhado;
 
-/* ── Estende goTo() do app.js sem sobrescrever (aguarda boot) ── */
+/* ── Estende goTo() do app.js sem sobrescrever (aguarda boot) ──
+   ATENÇÃO: NÃO duplicar páginas já tratadas pelo app.js original:
+   geral_reunioes (PageGeral.init), geral_planejamento, mkt_tracker
+   (PageMarketing.init), fin_fluxo (PageFinancas.init), prj_eventos
+   (PageProjetos.init), ops_pops (PageOperacoes._renderPops)
+   ─────────────────────────────────────────────────────────────── */
 document.addEventListener('nupi:booted', () => {
   const _goToOriginal = window.goTo;
   window.goTo = function(id) {
     _goToOriginal(id);
-    /* Roteador de páginas extras */
+    /* Apenas páginas que app.js NÃO trata */
     const mapa = {
-      'notificacoes':      () => PageNotificacoes.init(),
-      'compartilhado':     () => PageCompartilhado.init(),
-      'geral_melhorias':   () => PageGeral._renderMelhorias(),
-      'geral_parcerias':   () => PageGeral._renderParcerias(),
-      'mkt_kanban':        () => PageMarketing._renderKanban(),
-      'fin_calendario':    () => PageFinancas._renderCalendario(),
-      'fin_fluxo':         () => PageFinancas._renderFluxo(),
-      'fin_abj':           () => PageFinancas._renderABJFin(),
-      'ops_relatorios':    () => PageOperacoes._renderRelatorios(),
-      'ops_pops':          () => PageOperacoes._renderPops(),
-      'gp_clima':          () => PagePessoas._renderClima(),
-      'gp_tap':            () => PagePessoas._renderTAP(),
-      'gp_crm':            () => PagePessoas._renderMembros(),
-      'dev_usuarios':      () => PageDev.init(),
-      'prj_enegep':        () => PageProjetos._renderEventos(),
-      'prj_treinamentos':  () => PageProjetos._renderEventos(),
-      'prj_nupicast':      () => PageProjetos._renderEventos(),
+      'notificacoes':     () => PageNotificacoes.init(),
+      'compartilhado':    () => PageCompartilhado.init(),
+      'geral_melhorias':  () => PageGeral._renderMelhorias(),
+      'geral_parcerias':  () => PageGeral._renderParcerias(),
+      'mkt_kanban':       () => PageMarketing._renderKanban(),
+      'fin_calendario':   () => PageFinancas._renderCalendario(),
+      'fin_abj':          () => PageFinancas._renderABJFin(),
+      'ops_relatorios':   () => PageOperacoes._renderRelatorios(),
+      'ops_arquivo':      () => PageOperacoes._renderPops(),
+      'gp_clima':         () => PagePessoas._renderClima(),
+      'gp_tap':           () => PagePessoas._renderTAP(),
+      'gp_crm':           () => PagePessoas._renderMembros(),
+      'dev_usuarios':     () => PageDev.init(),
+      'prj_enegep':       () => PageProjetos._renderEventos(),
+      'prj_treinamentos': () => PageProjetos._renderEventos(),
+      'prj_nupicast':     () => PageProjetos._renderEventos(),
     };
     if (mapa[id]) try { mapa[id](); } catch(e) { console.warn('[pages goTo]', id, e); }
   };

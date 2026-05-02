@@ -1,4 +1,8 @@
-:root,
+/* ──────────────────────────────────────────────────────────────
+   IMPORTANTE: :root NÃO deve definir um tema — isso sobrescreveria
+   o dark padrão do styles.css em TODAS as páginas.
+   O tema "nucleo" (Lojinha) só é ativado quando data-theme="nucleo".
+   ────────────────────────────────────────────────────────────── */
 [data-theme="nucleo"] {
   --c-bg:        #F5F7FB;   /* Fundo da Lojinha */
   --c-s1:        #0f0732;   /* Roxo Brand */
@@ -53,15 +57,12 @@
   --dur-2: 200ms;
   --dur-3: 350ms;
 }
-:root ::-webkit-scrollbar-thumb,
 [data-theme="nucleo"] ::-webkit-scrollbar-thumb {
   background: rgba(41,50,79,0.20);
 }
-:root ::-webkit-scrollbar-track,
 [data-theme="nucleo"] ::-webkit-scrollbar-track {
   background: rgba(41,50,79,0.04);
 }
-:root .sidebar,
 [data-theme="nucleo"] .sidebar {
   --c-white:  #ffffff;
   --c-slate:  rgba(255,255,255,0.72);
@@ -77,37 +78,28 @@
   --tx-2:     rgba(255,255,255,0.72);
   color:      rgba(255,255,255,0.85);
 }
-:root .topbar,
 [data-theme="nucleo"] .topbar {
   background: var(--c-s2) !important;
   border-bottom-color: rgba(255,255,255,0.08) !important;
   color: #ffffff;
 }
-:root .topbar-title,
-:root .topbar-sub,
 [data-theme="nucleo"] .topbar-title,
 [data-theme="nucleo"] .topbar-sub {
   color: #ffffff !important;
 }
-.greeting-text { color: #ffffff; }
-:root .greeting-text,
 [data-theme="nucleo"] .greeting-text { color: #ffffff; }
-:root .section-card,
 [data-theme="nucleo"] .section-card {
   background: #ffffff;
   border-color: rgba(15, 7, 50, 0.12); /* Bordas mais visíveis */
   box-shadow: var(--sh-sm);
 }
-:root .mobile-nav,
 [data-theme="nucleo"] .mobile-nav {
   background: #29324f;
   border-top-color: rgba(255,255,255,0.10);
 }
-:root .mobile-nav-item,
 [data-theme="nucleo"] .mobile-nav-item {
   color: rgba(255,255,255,0.65);
 }
-:root .mobile-nav-item.active,
 [data-theme="nucleo"] .mobile-nav-item.active {
   color: #f75412;
 }
