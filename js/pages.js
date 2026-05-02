@@ -9,6 +9,18 @@ const _sc = (titulo,icone,html) => `
   </div>`;
 const _btn = (l,fn,cls='btn-primary')=>`<button class="btn ${cls}" onclick="${fn}" style="font-size:13px">${l}</button>`;
 const _fmt = d => d ? new Date(d).toLocaleDateString('pt-BR') : '—';
+
+/* ── Helper global: busca coordenadorias com cache ── */
+let _coordsCache = null;
+async function getCoords() {
+  if (_coordsCache) return _coordsCache;
+  if (!_sb()) return [];
+  try {
+    const { data } = await _sb().from('coordenadorias').select('id,nome,sigla,cor,icone').order('nome');
+    _coordsCache = data || [];
+    return _coordsCache;
+  } catch(e) { console.warn('[pages] getCoords:', e); return []; }
+}
 const PageGeral = {
   async init() { this._renderReuniao(); },
   _renderReuniao() {
@@ -154,6 +166,11 @@ const PageGeral = {
 const PageMarketing = {
   async init() { this._renderTracker(); },
   _renderTracker() {
+    const pg = document.getElementById('page-mkt_tracker');
+    if (!pg) return;
+    const ct = pg.querySelector('.content') || pg;
+    ct.innerHTML = _sc('Tracker de Posts','📱',`
+      <p style="font-size:13px;color:var(--c-slate);margin-bottom:14px">
         Mínimo 1 post/semana (Atividade 9 — ⭐ 2ª Estrela).
       </p>
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:10px;margin-bottom:16px">
@@ -502,6 +519,55 @@ const PageProjetos = {
   }
 };
 const PageOperacoes = {
+  async init() { this._renderPops(); this._renderRelatorios(); },
+  _renderRelatorios() {
+    const pg=document.getElementById('page-ops_relatorios');
+    if(!pg)return;
+    const ct=pg.querySelector('.content')||pg;
+    ct.innerHTML=_sc('Relatórios Mensais ABJ','📊',`
+      <p style="font-size:13px;color:var(--c-slate);margin-bottom:14px">
+        Prazo: último dia de cada mês. Envio fora do prazo resulta em desconto de pontos (Regimento Art. 20º).
+      </p>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px">
+        ${_btn('Gerar relatório PDF',"PageOperacoes.gerarRelatorio()")}
+        ${_btn('Histórico',"PageOperacoes.verHistorico()",'btn-ghost')}
+      </div>
+      <div id="ops-relatorios-lista" style="display:flex;flex-direction:column;gap:8px">
+        <div style="padding:20px;text-align:center;color:var(--c-slate);font-size:13px">Carregando...</div>
+      </div>`) +
+    _sc('Arquivo Digital','🗂️',`
+      <p style="font-size:13px;color:var(--c-slate);margin-bottom:14px">
+        Atas de reunião, documentos e evidências ficam aqui.
+      </p>
+      ${_btn('+ Subir documento',"PageOperacoes.uploadDocumento()")}`);
+    this._carregarRelatorios();
+  },
+  async _carregarRelatorios() {
+    const el=document.getElementById('ops-relatorios-lista');
+    if(!el||!_sb())return;
+    try {
+      const {data}=await _sb().from('relatorios_mensais').select('*').order('mes_referencia',{ascending:false}).limit(12);
+      el.innerHTML=data?.length
+        ?data.map(r=>`
+          <div style="background:var(--b-1);border:1px solid var(--b-2);border-radius:10px;
+                      padding:12px 16px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+            <div>
+              <div style="font-weight:700;font-size:13px;color:var(--c-white)">${sanitize(r.mes_referencia||'—')}</div>
+              <div style="font-size:12px;color:var(--c-slate)">
+                Enviado: ${_fmt(r.enviado_em)} · Pontos: ${r.pontos||'—'}
+              </div>
+            </div>
+            <span style="font-size:11px;font-weight:700;padding:3px 9px;border-radius:99px;
+                         background:${r.aprovado?'var(--green)22':'var(--yellow)22'};
+                         color:${r.aprovado?'var(--green)':'var(--yellow)'};
+                         border:1px solid ${r.aprovado?'var(--green)44':'var(--yellow)44'}">
+              ${r.aprovado?'✓ Aprovado':'⏳ Pendente'}
+            </span>
+          </div>`).join('')
+        :'<div style="padding:16px;text-align:center;color:var(--c-slate);font-size:13px">Nenhum relatório enviado ainda.</div>';
+    }catch(e){el.innerHTML='<div style="padding:16px;color:var(--c-slate)">Erro ao carregar.</div>';}
+  },
+  verHistorico(){mostrarToast('Histórico completo aguardando módulo de relatório.','info');},
   _renderPops() {
     const pg=document.getElementById('page-ops_pops');
     if(!pg)return;
