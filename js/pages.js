@@ -10,6 +10,38 @@ const _sc = (titulo,icone,html) => `
 const _btn = (l,fn,cls='btn-primary')=>`<button class="btn ${cls}" onclick="${fn}" style="font-size:13px">${l}</button>`;
 const _fmt = d => d ? new Date(d).toLocaleDateString('pt-BR') : '—';
 
+/* ── Dias úteis: soma n dias úteis a partir de hoje ── */
+function _addDiasUteis(n) {
+  const d = new Date(); let count = 0;
+  while (count < n) {
+    d.setDate(d.getDate() + 1);
+    const wd = d.getDay();
+    if (wd !== 0 && wd !== 6) count++;
+  }
+  return d.toISOString().split('T')[0];
+}
+
+/* ── Notificação: grava na tabela notificacoes de um usuário ── */
+async function _notificar(userId, titulo, mensagem, tipo = 'sistema') {
+  if (!_sb() || !userId) return;
+  try {
+    await _sb().from('notificacoes').insert([{ user_id: userId, titulo, mensagem, tipo, lida: false }]);
+  } catch(e) { console.warn('[notif]', e); }
+}
+
+/* ── Notificação em broadcast: dispara para todos de uma coord ── */
+async function _notificarCoord(sigla, titulo, mensagem, tipo = 'sistema') {
+  if (!_sb()) return;
+  try {
+    const coords = await getCoords();
+    const coord  = coords.find(c => c.sigla === sigla);
+    if (!coord) return;
+    const { data } = await _sb().from('users').select('id').eq('coordenadoria_id', coord.id).eq('ativo', true);
+    if (!data?.length) return;
+    await _sb().from('notificacoes').insert(data.map(u => ({ user_id: u.id, titulo, mensagem, tipo, lida: false })));
+  } catch(e) { console.warn('[notif coord]', e); }
+}
+
 /* ── Helper global: busca coordenadorias com cache ── */
 let _coordsCache = null;
 async function getCoords() {
@@ -391,12 +423,14 @@ const PageGeral = {
     if (!eventoId) { mostrarToast('Selecione um evento!','warning'); return; }
     fecharModal();
     try {
+      const uid = window._appProfile?.id;
       await _sb().from('frequencia').upsert([{
-        evento_id: eventoId,
-        user_id:   window._appProfile?.id,
-        presente:  true,
+        evento_id: eventoId, user_id: uid, presente: true,
       }], { onConflict: 'evento_id,user_id' });
-      mostrarToast('Check-in realizado com sucesso! ✅','success');
+      mostrarToast('Check-in realizado! ✅','success');
+      /* Notifica o próprio usuário */
+      _notificar(uid, 'Check-in confirmado ✅',
+        'Sua presença foi registrada.', 'reuniao');
     } catch(e) { mostrarToast('Erro ao registrar check-in.','error'); }
   },
 };
@@ -449,33 +483,62 @@ const PageMarketing = {
         if (cnt) cnt.textContent = cards.length;
         if (!el) return;
         el.innerHTML = cards.length
-          ? cards.map(d=>`
-              <div style="background:var(--b-2);border-radius:8px;padding:10px 12px;cursor:pointer"
-                   onclick="PageMarketing.editarDemanda('${d.id}')">
-                <div style="font-size:12px;font-weight:700;color:var(--c-white);margin-bottom:4px">${sanitize(d.titulo)}</div>
-                ${d.users?.nome?`<div style="font-size:10px;color:var(--c-slate)">👤 ${sanitize(d.users.nome)}</div>`:''}
-                <div style="font-size:10px;color:var(--c-slate)">${_fmt(d.prazo||d.created_at)}</div>
-              </div>`).join('')
+          ? cards.map(d => {
+              const diasRestantes = d.prazo
+                ? Math.ceil((new Date(d.prazo) - new Date()) / 86400000)
+                : null;
+              const isLojinha = d.tipo === 'lojinha';
+              const timerCor  = diasRestantes === null ? 'var(--c-slate)'
+                              : diasRestantes <= 2 ? 'var(--red)'
+                              : diasRestantes <= 5 ? 'var(--yellow)'
+                              : 'var(--green)';
+              const timerLabel = diasRestantes === null ? ''
+                               : diasRestantes < 0 ? '⚠️ Vencido'
+                               : diasRestantes === 0 ? '🔴 Vence hoje'
+                               : `${diasRestantes}d restantes`;
+              return `
+                <div style="background:var(--b-2);border-radius:8px;padding:10px 12px;cursor:pointer;
+                            ${isLojinha && diasRestantes !== null && diasRestantes <= 3 ? 'border:1px solid var(--red)44;' : ''}"
+                     onclick="PageMarketing.editarDemanda('${d.id}')">
+                  ${isLojinha ? `<div style="font-size:9px;font-weight:800;color:var(--c-accent);text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px">🛍️ LOJINHA</div>` : ''}
+                  <div style="font-size:12px;font-weight:700;color:var(--c-white);margin-bottom:4px">${sanitize(d.titulo)}</div>
+                  ${d.users?.nome ? `<div style="font-size:10px;color:var(--c-slate)">👤 ${sanitize(d.users.nome)}</div>` : ''}
+                  ${timerLabel ? `<div style="font-size:10px;font-weight:700;color:${timerCor};margin-top:4px">⏱ ${timerLabel}</div>` : ''}
+                </div>`;
+            }).join('')
           : `<div style="font-size:11px;color:var(--c-slate);text-align:center;padding:10px 0">Vazio</div>`;
       });
     } catch(e) { console.warn('[MKT Kanban]', e); }
   },
   editarDemanda(id) { mostrarToast(`Demanda ${id.slice(0,8)}… — edição em breve.`,'info'); },
   novaDemanda() {
+    /* Prazo padrão: 10 dias úteis (regra da Lojinha ABJ) */
+    const prazo10du = _addDiasUteis(10);
     abrirModal({ titulo:'📋 Nova Demanda de Conteúdo', tipo:'info', corpo:`
       <div class="form-group"><label class="form-label">Título *</label>
         <input id="nd-titulo" class="form-input" placeholder="Ex: Post Semana do MEJ"></div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-        <div class="form-group"><label class="form-label">Coluna inicial</label>
-          <select id="nd-col" class="form-select">
-            <option value="backlog">Backlog</option>
-            <option value="andamento">Em andamento</option>
+        <div class="form-group"><label class="form-label">Tipo</label>
+          <select id="nd-tipo" class="form-select">
+            <option value="conteudo">Conteúdo / Post</option>
+            <option value="lojinha">🛍️ Lojinha (10 dias úteis)</option>
+            <option value="divulgacao">Divulgação</option>
           </select></div>
-        <div class="form-group"><label class="form-label">Prazo</label>
-          <input id="nd-prazo" type="date" class="form-input"></div>
+        <div class="form-group"><label class="form-label">Prazo <span id="nd-prazo-hint" style="font-size:10px;color:var(--c-accent)"></span></label>
+          <input id="nd-prazo" type="date" class="form-input" value="${prazo10du}"></div>
       </div>
       <div class="form-group"><label class="form-label">Descrição</label>
-        <textarea id="nd-desc" class="form-input" style="height:70px" placeholder="Detalhes do conteúdo a criar..."></textarea></div>`,
+        <textarea id="nd-desc" class="form-input" style="height:70px" placeholder="Detalhes do conteúdo a criar..."></textarea></div>
+      <script>
+        document.getElementById('nd-tipo').onchange=function(){
+          if(this.value==='lojinha'){
+            document.getElementById('nd-prazo').value='${prazo10du}';
+            document.getElementById('nd-prazo-hint').textContent='(máx. 10 dias úteis)';
+          } else {
+            document.getElementById('nd-prazo-hint').textContent='';
+          }
+        };
+      </script>`,
     botoes:[
       {texto:'Cancelar',classe:'btn-ghost',acao:fecharModal},
       {texto:'Criar ✓',classe:'btn-primary',acao:()=>this._salvarDemanda()}
@@ -483,21 +546,26 @@ const PageMarketing = {
   },
   async _salvarDemanda() {
     const titulo = document.getElementById('nd-titulo')?.value?.trim();
-    const coluna = document.getElementById('nd-col')?.value||'backlog';
-    const prazo  = document.getElementById('nd-prazo')?.value||null;
+    const coluna = 'backlog';
+    const prazo  = document.getElementById('nd-prazo')?.value || null;
     const desc   = document.getElementById('nd-desc')?.value?.trim();
+    const tipo   = document.getElementById('nd-tipo')?.value || 'conteudo';
     if (!titulo) { mostrarToast('Coloca um título!','warning'); return; }
     fecharModal();
     try {
       const coords = await getCoords();
-      const mkt = coords.find(c=>c.sigla==='MKT');
+      const mkt = coords.find(c => c.sigla === 'MKT');
       await _sb().from('demandas').insert([{
-        titulo, coluna, descricao:desc||null, prazo:prazo||null,
-        coordenadoria_id:mkt?.id||null,
-        responsavel_id: window._appProfile?.id,
-        criado_por: window._appProfile?.id,
+        titulo, coluna, descricao: desc || null,
+        prazo: prazo || null, tipo,
+        coordenadoria_id: mkt?.id || null,
+        responsavel_id:   window._appProfile?.id,
+        criado_por:       window._appProfile?.id,
       }]);
       mostrarToast('Demanda criada!','success');
+      /* Notifica coordenadores de Marketing */
+      _notificarCoord('MKT', `Nova demanda: ${titulo}`,
+        `Uma nova demanda de ${tipo} foi aberta${prazo ? ` com prazo em ${_fmt(prazo)}.` : '.'}`, 'demanda');
       this._carregarKanban();
     } catch(e) { mostrarToast('Erro ao criar demanda.','error'); }
   },
@@ -537,19 +605,40 @@ const PageMarketing = {
     this._carregarPosts();
   },
   async _carregarPosts() {
-    const el  = document.getElementById('mkt-lista');
-    const cnt = document.getElementById('mkt-mes');
-    if (!el||!_sb()) return;
+    const el      = document.getElementById('mkt-lista');
+    const cnt     = document.getElementById('mkt-mes');
+    const semEl   = document.getElementById('mkt-semana');
+    if (!el || !_sb()) return;
     try {
       const mesIni = new Date(); mesIni.setDate(1);
+      /* Início da semana atual (domingo) */
+      const semIni = new Date();
+      semIni.setDate(semIni.getDate() - semIni.getDay());
+      semIni.setHours(0, 0, 0, 0);
       const { data } = await _sb()
         .from('calendario')
         .select('*')
-        .order('data_inicio',{ascending:false})
-        .limit(10);
-      const posts = data||[];
-      const doMes = posts.filter(p=>new Date(p.data_inicio)>=mesIni).length;
-      if(cnt) cnt.textContent=doMes;
+        .order('data_inicio', { ascending: false })
+        .limit(20);
+      const posts  = data || [];
+      const doMes  = posts.filter(p => new Date(p.data_inicio) >= mesIni).length;
+      const doSem  = posts.filter(p => new Date(p.data_inicio) >= semIni).length;
+      if (cnt) cnt.textContent = doMes;
+      /* Alerta semanal */
+      if (semEl) {
+        if (doSem === 0) {
+          semEl.style.color = 'var(--red)';
+          semEl.textContent = '⚠️ 0';
+          /* Avisa somente uma vez por sessão */
+          if (!sessionStorage.getItem('nupi_aviso_post_sem')) {
+            sessionStorage.setItem('nupi_aviso_post_sem', '1');
+            mostrarToast('⚠️ Nenhum post esta semana! Meta: 1 post/semana (Atividade 9).', 'warning');
+          }
+        } else {
+          semEl.style.color = 'var(--green)';
+          semEl.textContent = `✓ ${doSem}`;
+        }
+      }
       el.innerHTML = posts.length
         ? posts.map(p=>`
           <div style="background:var(--b-1);border:1px solid var(--b-2);border-radius:10px;
@@ -593,8 +682,10 @@ const PageMarketing = {
         criado_por: window._appProfile?.id
       }]);
       mostrarToast('Publicação registrada!','success');
+      /* Reseta alerta semanal após registrar post */
+      sessionStorage.removeItem('nupi_aviso_post_sem');
       this._carregarPosts();
-    } catch(e){mostrarToast('Erro ao salvar.','error');}
+    } catch(e) { mostrarToast('Erro ao salvar.','error'); }
   },
 };
 const PageFinancas = {
@@ -606,7 +697,7 @@ const PageFinancas = {
   },
   async init() { this._renderFluxo(); this._renderCalendario(); this._renderABJFin(); },
   _renderCalendario() {
-    const pg=document.getElementById('page-fin_calendario');
+    const pg=document.getElementById('page-fin_comercial');
     if(!pg)return;
     const ct=pg.querySelector('.content')||pg;
     ct.innerHTML=_sc('Calendário Comercial','🗓️',`
@@ -753,47 +844,124 @@ const PageFinancas = {
     }catch(e){mostrarToast('Erro ao registrar repasse.','error');}
   },
   _renderABJFin() {
-    const pg=document.getElementById('page-fin_abj');
-    if(!pg)return;
-    const ct=pg.querySelector('.content')||pg;
-    ct.innerHTML=_sc('ABJ Financeiro','💳',`
-      <p style="font-size:13px;color:var(--c-slate);margin-bottom:16px">
-        Registre as atividades ABJ da Coordenadoria Financeira.
-        Mínimo exigido para ⭐ Estrelas 1–4.
+    /* Atividade 10 — Associações ABEPRO Jovem */
+    const pg = document.getElementById('page-fin_abepro');
+    if (!pg) return;
+    const ct = pg.querySelector('.content') || pg;
+    const ano = new Date().getFullYear();
+    ct.innerHTML = _sc('Associações ABEPRO Jovem','🏅',`
+      <p style="font-size:13px;color:var(--c-slate);margin-bottom:14px">
+        Registro de filiação dos membros à ABEPRO Jovem — <strong style="color:var(--c-accent)">Atividade 10</strong>.
+        Exige comprovante de pagamento do sistema oficial da ABEPRO. Prazo: 30/09/${ano}.
       </p>
-      <div id="abj-fin-lista" style="display:flex;flex-direction:column;gap:8px">
-        <div style="padding:20px;text-align:center;color:var(--c-slate);font-size:13px">Carregando atividades...</div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px">
+        ${_btn('+ Registrar associado',"PageFinancas.novaAssociacao()")}
+      </div>
+      <div id="abepro-lista" style="display:flex;flex-direction:column;gap:8px">
+        <div style="padding:20px;text-align:center;color:var(--c-slate);font-size:13px">Carregando...</div>
+      </div>`) +
+    _sc('Resumo de Inscrições','📊',`
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:10px">
+        <div class="sum-card" style="padding:14px;text-align:center">
+          <div id="abepro-total" style="font-size:26px;font-weight:900;color:var(--c-accent)">0</div>
+          <div style="font-size:11px;color:var(--c-slate)">Inscritos</div>
+        </div>
+        <div class="sum-card" style="padding:14px;text-align:center">
+          <div id="abepro-pago" style="font-size:26px;font-weight:900;color:var(--green)">0</div>
+          <div style="font-size:11px;color:var(--c-slate)">Com comprovante</div>
+        </div>
+        <div class="sum-card" style="padding:14px;text-align:center">
+          <div id="abepro-pendente" style="font-size:26px;font-weight:900;color:var(--yellow)">0</div>
+          <div style="font-size:11px;color:var(--c-slate)">Pendentes</div>
+        </div>
       </div>`);
-    this._carregarABJFin();
+    this._carregarABEPRO();
   },
-  async _carregarABJFin() {
-    const el=document.getElementById('abj-fin-lista');
-    if(!el||!_sb())return;
+  async _carregarABEPRO() {
+    const el  = document.getElementById('abepro-lista');
+    const tot = document.getElementById('abepro-total');
+    const pag = document.getElementById('abepro-pago');
+    const pen = document.getElementById('abepro-pendente');
+    if (!el || !_sb()) return;
     try {
-      const {data}=await _sb()
-        .from('progresso_abj')
-        .select('*, atividades_abj(numero,nome)')
-        .eq('registrado_por', window._appProfile?.id)
-        .order('created_at',{ascending:false})
-        .limit(18);
-      el.innerHTML=(data||[]).length
-        ?(data||[]).map(p=>`
+      const { data } = await _sb()
+        .from('demandas')
+        .select('*, users!responsavel_id(nome)')
+        .eq('tipo','abepro')
+        .order('created_at', { ascending: false });
+      const lista = data || [];
+      const comComp = lista.filter(d => d.coluna === 'concluido').length;
+      if (tot) tot.textContent = lista.length;
+      if (pag) pag.textContent = comComp;
+      if (pen) pen.textContent = lista.length - comComp;
+      el.innerHTML = lista.length
+        ? lista.map(d => `
           <div style="background:var(--b-1);border:1px solid var(--b-2);border-radius:10px;
-                      padding:12px 16px;display:flex;justify-content:space-between;align-items:center;gap:8px">
+                      padding:12px 16px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
             <div>
-              <div style="font-size:11px;font-weight:700;color:var(--c-accent)">Atividade ${p.atividades_abj?.numero||'—'}</div>
-              <div style="font-weight:600;font-size:13px;color:var(--c-white)">${sanitize(p.atividades_abj?.nome||'—')}</div>
-              <div style="font-size:11px;color:var(--c-slate)">${_fmt(p.created_at)}</div>
+              <div style="font-weight:700;font-size:13px;color:var(--c-white)">${sanitize(d.titulo)}</div>
+              <div style="font-size:12px;color:var(--c-slate)">
+                👤 ${sanitize(d.users?.nome || 'Sem responsável')} · 📅 ${_fmt(d.created_at)}
+              </div>
             </div>
-            <span style="font-size:11px;font-weight:700;padding:3px 9px;border-radius:99px;
-                         background:${p.aprovado?'var(--green)22':'var(--yellow)22'};
-                         color:${p.aprovado?'var(--green)':'var(--yellow)'};
-                         border:1px solid ${p.aprovado?'var(--green)44':'var(--yellow)44'}">
-              ${p.aprovado?'✓ Aprovado':'⏳ Pendente'}
-            </span>
+            <div style="display:flex;align-items:center;gap:8px">
+              <span style="font-size:11px;font-weight:700;padding:3px 9px;border-radius:99px;
+                           background:${d.coluna==='concluido'?'var(--green)22':'var(--yellow)22'};
+                           color:${d.coluna==='concluido'?'var(--green)':'var(--yellow)'};
+                           border:1px solid ${d.coluna==='concluido'?'var(--green)44':'var(--yellow)44'}">
+                ${d.coluna==='concluido'?'✓ Comprovante OK':'⏳ Pendente'}
+              </span>
+              ${d.coluna!=='concluido'
+                ? `<button class="btn btn-ghost" style="font-size:11px;padding:4px 10px"
+                           onclick="PageFinancas._confirmarComp('${d.id}')">Confirmar ✓</button>`
+                : ''}
+            </div>
           </div>`).join('')
-        :'<div style="padding:16px;text-align:center;color:var(--c-slate)">Nenhum progresso ABJ registrado. Acesse a aba ABJ!</div>';
-    }catch(e){el.innerHTML='<div style="padding:16px;color:var(--c-slate)">Erro ao carregar.</div>';}
+        : '<div style="padding:16px;text-align:center;color:var(--c-slate);font-size:13px">Nenhum membro inscrito ainda.</div>';
+    } catch(e) { el.innerHTML = '<div style="padding:16px;color:var(--c-slate)">Erro ao carregar.</div>'; }
+  },
+  novaAssociacao() {
+    abrirModal({ titulo:'🏅 Registrar Associado ABEPRO', tipo:'info', corpo:`
+      <p style="font-size:12px;color:var(--c-slate);margin-bottom:14px">
+        Insira o nome completo do membro. O comprovante de pagamento deve ser gerado
+        no sistema oficial da ABEPRO Jovem.
+      </p>
+      <div class="form-group"><label class="form-label">Nome completo do membro *</label>
+        <input id="ab-nome" class="form-input" placeholder="Ex: Maria Silva Santos"></div>
+      <div class="form-group"><label class="form-label">E-mail do membro</label>
+        <input id="ab-email" type="email" class="form-input" placeholder="membro@email.com"></div>
+      <div class="form-group"><label class="form-label">Responsável pela inscrição</label>
+        <input id="ab-resp" class="form-input" value="${window._appProfile?.nome||''}"></div>`,
+    botoes:[
+      { texto:'Cancelar', classe:'btn-ghost', acao: fecharModal },
+      { texto:'Registrar ✓', classe:'btn-primary', acao: () => this._salvarAssociacao() }
+    ]});
+  },
+  async _salvarAssociacao() {
+    const nome = document.getElementById('ab-nome')?.value?.trim();
+    const email = document.getElementById('ab-email')?.value?.trim();
+    if (!nome) { mostrarToast('Informe o nome do membro!','warning'); return; }
+    fecharModal();
+    try {
+      const coords = await getCoords();
+      const fin = coords.find(c => c.sigla === 'FIN');
+      await _sb().from('demandas').insert([{
+        titulo: nome, descricao: email || null,
+        coluna: 'backlog', tipo: 'abepro',
+        coordenadoria_id: fin?.id || null,
+        criado_por: window._appProfile?.id,
+        responsavel_id: window._appProfile?.id,
+      }]);
+      mostrarToast(`${nome} registrado! Pendente comprovante ABEPRO.`, 'success');
+      this._carregarABEPRO();
+    } catch(e) { mostrarToast('Erro ao registrar.','error'); }
+  },
+  async _confirmarComp(id) {
+    try {
+      await _sb().from('demandas').update({ coluna: 'concluido' }).eq('id', id);
+      mostrarToast('Comprovante confirmado!','success');
+      this._carregarABEPRO();
+    } catch(e) { mostrarToast('Erro ao confirmar.','error'); }
   },
   _renderFluxo() {
     const pg=document.getElementById('page-fin_fluxo');
@@ -924,7 +1092,7 @@ const PageFinancas = {
   },
 };
 const PageProjetos = {
-  async init() { this._renderEventos(); },
+  async init() { this._renderEventos(); this._renderENEGEP(); },
   _renderEventos() {
     const pg=document.getElementById('page-prj_eventos');
     if(!pg)return;
@@ -1021,16 +1189,121 @@ const PageProjetos = {
       {texto:'Rastrear',classe:'btn-primary',acao:()=> { mostrarToast('Episódio rastreado!','success'); fecharModal(); }}
     ]});
   },
-  novaNoticia() {
-    abrirModal({ titulo:'🎓 Momento ENEGEP', tipo:'info', corpo:`
-      <div class="form-group"><label class="form-label">Título da Notícia *</label>
-        <input id="en-titulo" class="form-input"></div>
-      <div class="form-group"><label class="form-label">Conteúdo</label>
-        <textarea id="en-texto" class="form-input" style="height:100px"></textarea></div>`,
+  /* ── ENEGEP — Atividade 14 (Momento ENEGEP) ──
+     Exige: fotos, lista de presença, link de inscrição/certificado.
+  ── */
+  _renderENEGEP() {
+    const pg = document.getElementById('page-prj_enegep');
+    if (!pg) return;
+    const ct = pg.querySelector('.content') || pg;
+    const anoAtual = new Date().getFullYear();
+    ct.innerHTML = _sc('Momento ENEGEP — Atividade 14','🎓',`
+      <p style="font-size:13px;color:var(--c-slate);margin-bottom:14px">
+        Registro da participação do Núcleo no ENEGEP ${anoAtual}.
+        <strong style="color:var(--c-accent)">Evidências obrigatórias:</strong>
+        fotos do evento, lista de presença e link de inscrição/certificados.
+      </p>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px">
+        ${_btn('+ Registrar participação ENEGEP',"PageProjetos.novoENEGEP()")}
+      </div>
+      <div id="enegep-lista" style="display:flex;flex-direction:column;gap:8px">
+        <div style="padding:20px;text-align:center;color:var(--c-slate);font-size:13px">Carregando...</div>
+      </div>`) +
+    _sc('Produção Científica vinculada','🔬',`
+      <p style="font-size:13px;color:var(--c-slate);margin-bottom:10px">
+        Artigos aprovados e apresentados no ENEGEP ${anoAtual} recebem <strong style="color:var(--green)">+25 pts bônus</strong>.
+      </p>
+      ${_btn('+ Registrar artigo no ENEGEP',"PageGlobal.novaProducao()",'btn-ghost')}`);
+    this._carregarENEGEP();
+  },
+
+  async _carregarENEGEP() {
+    const el = document.getElementById('enegep-lista');
+    if (!el || !_sb()) return;
+    try {
+      const { data } = await _sb()
+        .from('eventos')
+        .select('*')
+        .eq('tipo', 'enegep')
+        .order('created_at', { ascending: false });
+      el.innerHTML = data?.length
+        ? data.map(e => {
+            let extra = {};
+            try { extra = JSON.parse(e.descricao || '{}'); } catch(_){}
+            return `
+              <div style="background:var(--b-1);border:1px solid var(--b-2);border-radius:12px;padding:16px">
+                <div style="font-weight:700;font-size:14px;color:var(--c-white);margin-bottom:8px">${sanitize(e.titulo)}</div>
+                <div style="display:flex;flex-direction:column;gap:6px;font-size:12px">
+                  ${extra.fotos    ? `<div>📸 <a href="${sanitize(extra.fotos)}"    target="_blank" style="color:var(--c-accent)">Ver fotos ↗</a></div>` : '<div style="color:var(--red)">📸 Fotos: não enviado</div>'}
+                  ${extra.presenca ? `<div>📋 <a href="${sanitize(extra.presenca)}" target="_blank" style="color:var(--c-accent)">Lista de presença ↗</a></div>` : '<div style="color:var(--red)">📋 Lista de presença: não enviado</div>'}
+                  ${extra.link_insc? `<div>🔗 <a href="${sanitize(extra.link_insc)}" target="_blank" style="color:var(--c-accent)">Inscrição/Certificado ↗</a></div>` : '<div style="color:var(--red)">🔗 Link de inscrição: não enviado</div>'}
+                </div>
+                <div style="font-size:11px;color:var(--c-slate);margin-top:8px">📅 ${_fmt(e.data_inicio)}</div>
+              </div>`;
+          }).join('')
+        : `<div style="padding:30px;text-align:center">
+             <div style="font-size:36px;margin-bottom:12px">🎓</div>
+             <div style="font-size:14px;font-weight:700;color:var(--c-white)">Nenhum registro do ENEGEP</div>
+             <div style="font-size:13px;color:var(--c-slate);margin-top:6px">
+               Registre a participação do Núcleo no ENEGEP ${new Date().getFullYear()} com todas as evidências.
+             </div>
+           </div>`;
+    } catch(e) { el.innerHTML='<div style="padding:16px;color:var(--c-slate)">Erro ao carregar.</div>'; }
+  },
+
+  novoENEGEP() {
+    const hoje = new Date().toISOString().split('T')[0];
+    abrirModal({ titulo:'🎓 Registrar Participação no ENEGEP', tipo:'info', corpo:`
+      <div style="background:var(--green)18;border:1px solid var(--green)33;border-radius:8px;
+                  padding:10px;margin-bottom:14px;font-size:12px;color:var(--green);font-weight:600">
+        ⭐ Atividade 14 — As 3 evidências abaixo são obrigatórias para pontuação ABJ.
+      </div>
+      <div class="form-group"><label class="form-label">Descrição da participação *</label>
+        <input id="en-titulo" class="form-input" placeholder="Ex: Participação no ENEGEP 2026 — Teresina-PI"></div>
+      <div class="form-group"><label class="form-label">Data do evento *</label>
+        <input id="en-data" type="date" class="form-input" value="${hoje}"></div>
+      <hr style="border:none;border-top:1px solid var(--b-2);margin:12px 0">
+      <div style="font-size:12px;font-weight:700;color:var(--c-white);margin-bottom:10px">Evidências Obrigatórias</div>
+      <div class="form-group"><label class="form-label">📸 Link das fotos do evento *</label>
+        <input id="en-fotos" class="form-input" placeholder="https://drive.google.com/...">
+        <span style="font-size:11px;color:var(--c-slate)">JPEG ou PNG no Google Drive/OneDrive</span></div>
+      <div class="form-group"><label class="form-label">📋 Link da lista de presença *</label>
+        <input id="en-presenca" class="form-input" placeholder="https://drive.google.com/..."></div>
+      <div class="form-group"><label class="form-label">🔗 Link de inscrição ou certificado *</label>
+        <input id="en-link" class="form-input" placeholder="https://enegep.abepro.org.br/..."></div>`,
     botoes:[
-      {texto:'Cancelar',classe:'btn-ghost',acao:fecharModal},
-      {texto:'Postar',classe:'btn-primary',acao:()=> { mostrarToast('Notícia postada!','success'); fecharModal(); }}
+      { texto:'Cancelar', classe:'btn-ghost', acao: fecharModal },
+      { texto:'Registrar ✓', classe:'btn-primary', acao: () => this._salvarENEGEP() }
     ]});
+  },
+
+  async _salvarENEGEP() {
+    const titulo  = document.getElementById('en-titulo')?.value?.trim();
+    const data    = document.getElementById('en-data')?.value;
+    const fotos   = document.getElementById('en-fotos')?.value?.trim();
+    const presenca= document.getElementById('en-presenca')?.value?.trim();
+    const link    = document.getElementById('en-link')?.value?.trim();
+    if (!titulo || !data) { mostrarToast('Preencha descrição e data!','warning'); return; }
+    if (!fotos || !presenca || !link) { mostrarToast('As 3 evidências (fotos, presença, inscrição) são obrigatórias!','warning'); return; }
+    fecharModal();
+    try {
+      const coords = await getCoords();
+      const prj = coords.find(c => c.sigla === 'PRJ');
+      await _sb().from('eventos').insert([{
+        titulo, tipo: 'enegep',
+        data_inicio: data + 'T08:00:00', ativo: true,
+        descricao: JSON.stringify({ fotos, presenca, link_insc: link }),
+        coordenadoria_id: prj?.id || null,
+        criado_por: window._appProfile?.id,
+      }]);
+      mostrarToast('Participação no ENEGEP registrada com todas as evidências! 🎓','success');
+      this._carregarENEGEP();
+    } catch(e) { mostrarToast('Erro ao registrar.','error'); }
+  },
+
+  novaNoticia() {
+    /* Fallback simples para notícias de atualização */
+    mostrarToast('Use o botão "Registrar participação ENEGEP" para registrar evidências.','info');
   },
   novoTreinamento() {
     abrirModal({ titulo:'📚 Registrar Treinamento', tipo:'info', corpo:`
@@ -1249,28 +1522,184 @@ const PagePessoas = {
     } catch(e) { el.innerHTML='<div style="padding:16px;color:var(--c-slate)">Erro ao carregar.</div>'; }
   },
   historicoPesquisas() { mostrarToast('Histórico completo em breve.','info'); },
+  _tapStep: 0,
+  _tapData: {},
+  _TAP_SECOES: [
+    { id:'identificacao',  titulo:'Identificação do Projeto',    placeholder:'Nome do projeto, responsável principal, data de início prevista…'   },
+    { id:'justificativa',  titulo:'Justificativa',               placeholder:'Por que este projeto é necessário e inovador para o Núcleo?…'        },
+    { id:'objetivo',       titulo:'Objetivo Principal',          placeholder:'O que o projeto deve entregar ao final? Descreva o resultado…'        },
+    { id:'escopo',         titulo:'Escopo',                      placeholder:'O que ESTÁ e o que NÃO ESTÁ incluído no projeto?…'                   },
+    { id:'limitadores',    titulo:'Limitadores e Restrições',    placeholder:'Quais são os limites de orçamento, tempo, equipe, tecnologia?…'       },
+    { id:'riscos',         titulo:'Riscos Principais',           placeholder:'Liste os 3–5 principais riscos e as ações de mitigação…'              },
+    { id:'cronograma',     titulo:'Marcos e Cronograma',         placeholder:'Liste as fases com datas previstas. Ex: Levantamento: Mai/26…'        },
+    { id:'recursos',       titulo:'Recursos Necessários',        placeholder:'Pessoas, equipamentos, software, orçamento estimado…'                 },
+    { id:'stakeholders',   titulo:'Partes Interessadas',         placeholder:'Quem é impactado? Coordenação Geral, empresas parceiras, ABEPRO…'     },
+    { id:'metricas',       titulo:'Métricas de Sucesso',         placeholder:'Como saberemos que o projeto foi bem-sucedido? Números, indicadores…' },
+    { id:'aprovacao',      titulo:'Validação e Aprovação',       placeholder:'Quem deve aprovar este TAP? Coordenação Geral + GP + Coordenador…'    },
+  ],
+
   _renderTAP() {
-    const pg=document.getElementById('page-gp_tap');
-    if(!pg)return;
-    const ct=pg.querySelector('.content')||pg;
-    ct.innerHTML=_sc('TAP — Trilha de Aperfeiçoamento Profissional','🎓',`
-      <p style="font-size:13px;color:var(--c-slate);margin-bottom:16px">
-        Treinamentos, capacitações e desenvolvimento dos membros.
-        Mínimo de 1 treinamento/membro por semestre (Regimento Art. 12º III).
-      </p>
-      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px">
-        ${_btn('+ Registrar capacitação',"PagePessoas.novoTreinamento()")}
-        ${_btn('Ver membros',"PagePessoas.relatorioTAP()",'btn-ghost')}
-      </div>
-      <div id="tap-lista" style="display:flex;flex-direction:column;gap:8px">
-        <div style="padding:20px;text-align:center;color:var(--c-slate);font-size:13px">Carregando...</div>
-      </div>`) +
-    _sc('CRM de Talentos','🏅',`
-      <p style="font-size:13px;color:var(--c-slate);margin-bottom:14px">
-        Mapeie habilidades e potenciais de cada membro para vagas de liderança.
-      </p>
-      ${_btn('+ Registrar talento',"PagePessoas.novoTalento()")}`);
+    /* Recupera rascunho salvo */
+    try {
+      const r = localStorage.getItem('nupi_tap_rascunho');
+      if (r && !Object.keys(this._tapData).length) {
+        this._tapData = JSON.parse(r);
+        /* Avança para a última seção preenchida */
+        const preenchidas = this._TAP_SECOES.filter(s => this._tapData[s.id]);
+        if (preenchidas.length) this._tapStep = Math.min(preenchidas.length, this._TAP_SECOES.length - 1);
+      }
+    } catch(_) {}
+    const pg = document.getElementById('page-gp_tap');
+    if (!pg) return;
+    const ct = pg.querySelector('.content') || pg;
+    /* Alertas de prazo TAP */
+    const hoje    = new Date();
+    const dMaio   = new Date(hoje.getFullYear(), 4, 31);  /* 31/05 */
+    const dAgosto = new Date(hoje.getFullYear(), 7, 31);  /* 31/08 */
+    const diasMaio   = Math.ceil((dMaio   - hoje) / 86400000);
+    const diasAgosto = Math.ceil((dAgosto - hoje) / 86400000);
+    const alertaMaio   = diasMaio   >= 0 && diasMaio   <= 60;
+    const alertaAgosto = diasAgosto >= 0 && diasAgosto <= 30;
+
+    ct.innerHTML =
+      (alertaMaio || alertaAgosto ? `
+        <div style="background:var(--red)18;border:1px solid var(--red)44;border-radius:10px;
+                    padding:12px 16px;margin-bottom:16px;font-size:13px;color:var(--red);font-weight:600">
+          ${alertaMaio   ? `📅 Prazo de envio da proposta TAP: <strong>31/05/${hoje.getFullYear()}</strong> — ${diasMaio}d restantes. ` : ''}
+          ${alertaAgosto ? `📅 Prazo de apresentação de resultados: <strong>31/08/${hoje.getFullYear()}</strong> — ${diasAgosto}d restantes.` : ''}
+        </div>` : '') +
+      _sc('Atividade Inovadora — TAP (Atividade 16)','💡',`
+        <p style="font-size:13px;color:var(--c-slate);margin-bottom:16px">
+          Formulário de Termo de Abertura de Projeto em <strong style="color:var(--c-white)">11 seções obrigatórias</strong>.
+          Prazo de envio da proposta: <strong style="color:var(--c-accent)">31/mai/${hoje.getFullYear()}</strong>.
+          Prazo de apresentação: <strong style="color:var(--c-accent)">31/ago/${hoje.getFullYear()}</strong>.
+        </p>
+        <div id="tap-wizard-shell"></div>`) +
+      _sc('Capacitações Registradas','🎓',`
+        <p style="font-size:13px;color:var(--c-slate);margin-bottom:14px">
+          Treinamentos e capacitações da equipe (Atividade 11 — mín. 1/semestre/membro).
+        </p>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px">
+          ${_btn('+ Registrar capacitação',"PagePessoas.novoTreinamento()")}
+        </div>
+        <div id="tap-lista" style="display:flex;flex-direction:column;gap:8px">
+          <div style="padding:20px;text-align:center;color:var(--c-slate);font-size:13px">Carregando...</div>
+        </div>`);
+    this._renderTAPWizard();
     this._carregarTAP();
+  },
+
+  _renderTAPWizard() {
+    const shell = document.getElementById('tap-wizard-shell');
+    if (!shell) return;
+    const step  = this._tapStep;
+    const secao = this._TAP_SECOES[step];
+    const total = this._TAP_SECOES.length;
+    const pct   = Math.round(((step + 1) / total) * 100);
+
+    /* Barra de progresso */
+    const barras = this._TAP_SECOES.map((s, i) => `
+      <div style="flex:1;height:4px;border-radius:2px;
+                  background:${i < step ? 'var(--green)' : i === step ? 'var(--c-accent)' : 'var(--b-2)'};"
+           title="${s.titulo}"></div>`).join('');
+
+    shell.innerHTML = `
+      <div style="margin-bottom:16px">
+        <div style="display:flex;gap:3px;margin-bottom:8px">${barras}</div>
+        <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--c-slate)">
+          <span>Seção ${step + 1} de ${total}</span>
+          <span style="font-weight:700;color:var(--c-accent)">${pct}% concluído</span>
+        </div>
+      </div>
+      <div style="margin-bottom:14px">
+        <div style="font-size:12px;font-weight:800;color:var(--c-accent);text-transform:uppercase;
+                    letter-spacing:.06em;margin-bottom:8px">${step + 1}. ${secao.titulo}</div>
+        <textarea id="tap-input-${secao.id}" class="form-input" rows="5"
+                  placeholder="${secao.placeholder}"
+                  style="min-height:100px;resize:vertical">${this._tapData[secao.id] || ''}</textarea>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+        <div style="display:flex;gap:8px">
+          ${step > 0 ? `<button class="btn btn-ghost" style="font-size:12px" onclick="PagePessoas._tapNav(-1)">← Anterior</button>` : ''}
+          <button class="btn btn-ghost" style="font-size:12px" onclick="PagePessoas._tapRascunho()">💾 Salvar rascunho</button>
+        </div>
+        ${step < total - 1
+          ? `<button class="btn btn-primary" style="font-size:13px" onclick="PagePessoas._tapNav(1)">Próxima seção →</button>`
+          : `<button class="btn btn-primary" style="font-size:13px;background:var(--green)" onclick="PagePessoas._tapSubmeter()">✓ Submeter TAP</button>`}
+      </div>
+      <div style="margin-top:12px">
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          ${this._TAP_SECOES.map((s, i) => `
+            <button onclick="PagePessoas._tapIr(${i})"
+                    style="font-size:10px;padding:3px 8px;border-radius:6px;border:1px solid var(--b-2);
+                           cursor:pointer;font-family:var(--f-body);
+                           background:${i===step?'var(--c-accent)':this._tapData[s.id]?'var(--green)22':'var(--b-1)'};
+                           color:${i===step?'#fff':this._tapData[s.id]?'var(--green)':'var(--c-slate)'}">
+              ${i+1}
+            </button>`).join('')}
+        </div>
+      </div>`;
+  },
+
+  _tapNav(delta) {
+    /* Salva o valor da seção atual antes de navegar */
+    const secao = this._TAP_SECOES[this._tapStep];
+    const val = document.getElementById(`tap-input-${secao.id}`)?.value?.trim();
+    if (!val && delta > 0) { mostrarToast('Preencha esta seção antes de avançar.','warning'); return; }
+    if (val) this._tapData[secao.id] = val;
+    this._tapStep = Math.max(0, Math.min(this._TAP_SECOES.length - 1, this._tapStep + delta));
+    this._renderTAPWizard();
+  },
+
+  _tapIr(i) {
+    const secao = this._TAP_SECOES[this._tapStep];
+    const val = document.getElementById(`tap-input-${secao.id}`)?.value?.trim();
+    if (val) this._tapData[secao.id] = val;
+    this._tapStep = i;
+    this._renderTAPWizard();
+  },
+
+  _tapRascunho() {
+    const secao = this._TAP_SECOES[this._tapStep];
+    const val = document.getElementById(`tap-input-${secao.id}`)?.value?.trim();
+    if (val) this._tapData[secao.id] = val;
+    localStorage.setItem('nupi_tap_rascunho', JSON.stringify(this._tapData));
+    mostrarToast('Rascunho salvo localmente.','success');
+  },
+
+  async _tapSubmeter() {
+    /* Salva a última seção */
+    const secao = this._TAP_SECOES[this._tapStep];
+    const val = document.getElementById(`tap-input-${secao.id}`)?.value?.trim();
+    if (val) this._tapData[secao.id] = val;
+    /* Valida que todas as seções foram preenchidas */
+    const vazias = this._TAP_SECOES.filter(s => !this._tapData[s.id]);
+    if (vazias.length) {
+      mostrarToast(`Preencha todas as ${this._TAP_SECOES.length} seções! Faltam: ${vazias.map(s=>s.titulo).slice(0,2).join(', ')}…`, 'warning');
+      return;
+    }
+    if (!_sb()) { mostrarToast('Supabase não conectado.','error'); return; }
+    try {
+      const coords = await getCoords();
+      const gp = coords.find(c => c.sigla === 'GP');
+      /* Salva como evento do tipo 'tap' com o JSON das seções no descricao */
+      await _sb().from('eventos').insert([{
+        titulo: `TAP Inovador ${new Date().getFullYear()} — ${window._appProfile?.nome || 'NUPIEEPRO'}`,
+        tipo: 'tap', ativo: true,
+        data_inicio: new Date().toISOString().split('T')[0],
+        descricao: JSON.stringify(this._tapData),
+        coordenadoria_id: gp?.id || null,
+        criado_por: window._appProfile?.id,
+      }]);
+      localStorage.removeItem('nupi_tap_rascunho');
+      this._tapData = {}; this._tapStep = 0;
+      mostrarToast('TAP submetido com sucesso! 🎉','success');
+      /* Notifica Coord Geral */
+      _notificarCoord('GER', '💡 Novo TAP submetido',
+        `O Termo de Abertura de Projeto foi submetido por ${window._appProfile?.nome || 'um membro'} para avaliação.`,
+        'abj');
+      this._renderTAPWizard();
+    } catch(e) { mostrarToast('Erro ao submeter TAP.','error'); console.warn(e); }
   },
   async _carregarTAP() {
     const el=document.getElementById('tap-lista');
@@ -1380,10 +1809,13 @@ const PagePessoas = {
     fecharModal();
     try {
       await _sb().from('convites').insert([{
-        email,coordenadoria_id:coord,cargo,role,
-        criado_por:window._appProfile?.id
+        email, coordenadoria_id: coord, cargo, role,
+        criado_por: window._appProfile?.id,
       }]);
-      mostrarToast(`Convite enviado para ${email}!`,'success');
+      mostrarToast(`Convite enviado para ${email}!`, 'success');
+      /* Notifica admins */
+      _notificar(window._appProfile?.id,
+        'Convite enviado 📩', `Convite gerado para ${email} (${cargo}).`, 'sistema');
     }catch(e){mostrarToast('Erro ao enviar convite.','error');}
   },
   adicionarClima() {
@@ -1416,7 +1848,14 @@ const PagePessoas = {
         coordenadoria_id: gp?.id||null,
         criado_por: window._appProfile?.id,
       }]);
-      mostrarToast('Pesquisa publicada! Membros serão notificados.','success');
+      mostrarToast('Pesquisa publicada!','success');
+      /* Notifica toda a equipe sobre a pesquisa */
+      const coordsAll = await getCoords();
+      for (const c of coordsAll) {
+        await _notificarCoord(c.sigla, '🌡️ Nova pesquisa de clima',
+          `Uma nova pesquisa de clima organizacional foi aberta. Responda até ${data ? _fmt(data) : 'em breve'}.`,
+          'sistema');
+      }
       this._carregarClima();
     } catch(e) { mostrarToast('Erro ao publicar pesquisa.','error'); }
   },
@@ -1976,37 +2415,391 @@ const PageDev = {
 };
 
 const PageGlobal = {
+  /* ── Visitas Técnicas — Atividade 12 (2 visitas/semestre) ──
+     Validações obrigatórias: fotos + doc. solicitação + confirmação empresa
+     + tabela de participantes (nome, e-mail, telefone)
+  ── */
   novaVisita() {
-    abrirModal({ titulo:'🏭 Agendar Visita Técnica', tipo:'info', corpo:`
-      <div class="form-group"><label class="form-label">Indústria/Empresa *</label>
-        <input id="vt-empresa" class="form-input"></div>
-      <div class="form-group"><label class="form-label">Data Prevista</label>
-        <input id="vt-data" type="date" class="form-input"></div>`,
+    const hoje = new Date().toISOString().split('T')[0];
+    abrirModal({ titulo:'🏭 Registrar Visita Técnica', tipo:'info', corpo:`
+      <div style="background:var(--c-accent)18;border:1px solid var(--c-accent)33;border-radius:8px;
+                  padding:10px 14px;margin-bottom:14px;font-size:12px;color:var(--c-accent)">
+        ⭐ Atividade 12 — Mínimo 2 visitas/semestre. Todos os campos marcados com * são obrigatórios para pontuação ABJ.
+      </div>
+      <div class="form-group"><label class="form-label">Empresa / Indústria *</label>
+        <input id="vt-empresa" class="form-input" placeholder="Ex: Unimed Teresina, Vale S.A."></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div class="form-group"><label class="form-label">Responsável na empresa *</label>
+          <input id="vt-responsavel" class="form-input" placeholder="Nome do contato"></div>
+        <div class="form-group"><label class="form-label">Data da visita *</label>
+          <input id="vt-data" type="date" class="form-input" value="${hoje}"></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div class="form-group"><label class="form-label">E-mail da empresa</label>
+          <input id="vt-email" type="email" class="form-input" placeholder="contato@empresa.com"></div>
+        <div class="form-group"><label class="form-label">Telefone da empresa</label>
+          <input id="vt-fone" class="form-input" placeholder="(86) 9xxxx-xxxx"></div>
+      </div>
+      <hr style="border:none;border-top:1px solid var(--b-2);margin:12px 0">
+      <div style="font-size:12px;font-weight:700;color:var(--c-white);margin-bottom:10px">
+        Participantes da Visita *
+      </div>
+      <div id="vt-participantes-lista" style="display:flex;flex-direction:column;gap:6px;margin-bottom:10px"></div>
+      <button class="btn btn-ghost" style="font-size:12px;width:100%" onclick="PageGlobal._addParticipante()">
+        + Adicionar participante
+      </button>
+      <hr style="border:none;border-top:1px solid var(--b-2);margin:12px 0">
+      <div style="font-size:12px;font-weight:700;color:var(--c-white);margin-bottom:8px">
+        Documentos Obrigatórios
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div style="background:var(--b-1);border:1px solid var(--b-2);border-radius:8px;padding:10px 14px;font-size:12px">
+          <div style="font-weight:700;color:var(--c-white);margin-bottom:4px">📸 Fotografias da visita *</div>
+          <div style="color:var(--c-slate)">Envie ao menos 1 foto para o Google Drive e cole o link abaixo.</div>
+          <input id="vt-fotos" class="form-input" style="margin-top:6px" placeholder="https://drive.google.com/...">
+        </div>
+        <div style="background:var(--b-1);border:1px solid var(--b-2);border-radius:8px;padding:10px 14px;font-size:12px">
+          <div style="font-weight:700;color:var(--c-white);margin-bottom:4px">📄 Doc. de Solicitação de Participação *</div>
+          <div style="color:var(--c-slate)">Link do documento de solicitação enviado à empresa.</div>
+          <input id="vt-solicita" class="form-input" style="margin-top:6px" placeholder="https://drive.google.com/...">
+        </div>
+        <div style="background:var(--b-1);border:1px solid var(--b-2);border-radius:8px;padding:10px 14px;font-size:12px">
+          <div style="font-weight:700;color:var(--c-white);margin-bottom:4px">✉️ Confirmação da Empresa *</div>
+          <div style="color:var(--c-slate)">Link do e-mail ou documento de confirmação da empresa.</div>
+          <input id="vt-confirm" class="form-input" style="margin-top:6px" placeholder="https://drive.google.com/...">
+        </div>
+      </div>`,
     botoes:[
-      {texto:'Cancelar',classe:'btn-ghost',acao:fecharModal},
-      {texto:'Agendar',classe:'btn-primary',acao:()=> { mostrarToast('Visita agendada!','success'); fecharModal(); }}
+      { texto:'Cancelar', classe:'btn-ghost', acao: fecharModal },
+      { texto:'Registrar Visita ✓', classe:'btn-primary', acao: () => this._salvarVisita() }
     ]});
+    /* Adiciona 1 participante por padrão */
+    this._addParticipante();
   },
+
+  _addParticipante() {
+    const lista = document.getElementById('vt-participantes-lista');
+    if (!lista) return;
+    const idx = lista.children.length;
+    const div = document.createElement('div');
+    div.style.cssText = 'display:grid;grid-template-columns:2fr 2fr 1fr;gap:6px;align-items:center';
+    div.innerHTML = `
+      <input class="form-input vt-p-nome" style="font-size:12px" placeholder="Nome completo *">
+      <input class="form-input vt-p-email" type="email" style="font-size:12px" placeholder="E-mail *">
+      <input class="form-input vt-p-fone" style="font-size:12px" placeholder="Telefone">`;
+    lista.appendChild(div);
+  },
+
+  async _salvarVisita() {
+    const empresa  = document.getElementById('vt-empresa')?.value?.trim();
+    const resp     = document.getElementById('vt-responsavel')?.value?.trim();
+    const data     = document.getElementById('vt-data')?.value;
+    const fotos    = document.getElementById('vt-fotos')?.value?.trim();
+    const solicita = document.getElementById('vt-solicita')?.value?.trim();
+    const confirm  = document.getElementById('vt-confirm')?.value?.trim();
+    if (!empresa || !resp || !data) { mostrarToast('Preencha empresa, responsável e data!','warning'); return; }
+    if (!fotos || !solicita || !confirm) { mostrarToast('Todos os 3 links de documentos são obrigatórios para pontuação ABJ!','warning'); return; }
+    /* Coleta participantes */
+    const participantes = [];
+    document.querySelectorAll('#vt-participantes-lista > div').forEach(row => {
+      const nome  = row.querySelector('.vt-p-nome')?.value?.trim();
+      const email = row.querySelector('.vt-p-email')?.value?.trim();
+      const fone  = row.querySelector('.vt-p-fone')?.value?.trim();
+      if (nome && email) participantes.push({ nome, email, fone: fone || null });
+    });
+    if (!participantes.length) { mostrarToast('Adicione ao menos 1 participante com nome e e-mail!','warning'); return; }
+    fecharModal();
+    try {
+      const desc = JSON.stringify({
+        responsavel_empresa: resp,
+        email_empresa: document.getElementById('vt-email')?.value?.trim() || null,
+        fone_empresa:  document.getElementById('vt-fone')?.value?.trim()  || null,
+        fotos, solicita, confirm,
+        participantes,
+      });
+      await _sb().from('eventos').insert([{
+        titulo: `Visita Técnica — ${empresa}`,
+        tipo: 'visita', data_inicio: data + 'T08:00:00',
+        local: empresa, vagas: participantes.length,
+        descricao: desc, ativo: true,
+        criado_por: window._appProfile?.id,
+        coordenadoria_id: window._appProfile?.coordenadoria_id || null,
+      }]);
+      mostrarToast('Visita técnica registrada com todos os documentos!','success');
+    } catch(e) { mostrarToast('Erro ao registrar visita.','error'); console.warn(e); }
+  },
+
+  /* ── Apresentações Institucionais — Atividade 05 (3/semestre) ── */
   novaApresentacao() {
-    abrirModal({ titulo:'🎤 Registrar Apresentação', tipo:'info', corpo:`
+    const hoje = new Date().toISOString().split('T')[0];
+    abrirModal({ titulo:'🎤 Registrar Apresentação Institucional', tipo:'info', corpo:`
+      <div style="background:var(--c-accent)18;border:1px solid var(--c-accent)33;border-radius:8px;
+                  padding:10px;margin-bottom:14px;font-size:12px;color:var(--c-accent)">
+        ⭐ Atividade 5 — 3 apresentações/semestre para empresas ou escolas.
+        Exige comprovação fotográfica (presencial ou online).
+      </div>
       <div class="form-group"><label class="form-label">Título da Apresentação *</label>
-        <input id="ap-titulo" class="form-input"></div>`,
+        <input id="ap-titulo" class="form-input" placeholder="Ex: Apresentação NUPIEEPRO na Empresa XYZ"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div class="form-group"><label class="form-label">Local / Empresa *</label>
+          <input id="ap-local" class="form-input" placeholder="Empresa ABC / Online"></div>
+        <div class="form-group"><label class="form-label">Data *</label>
+          <input id="ap-data" type="date" class="form-input" value="${hoje}"></div>
+      </div>
+      <div class="form-group"><label class="form-label">Modalidade</label>
+        <select id="ap-modal" class="form-select">
+          <option value="presencial">Presencial</option>
+          <option value="online">Online</option>
+        </select></div>
+      <div class="form-group"><label class="form-label">Link das fotos (JPEG/PNG) *</label>
+        <input id="ap-fotos" class="form-input" placeholder="https://drive.google.com/...">
+        <span style="font-size:11px;color:var(--c-slate)">Obrigatório — evidência fotográfica da apresentação.</span></div>`,
     botoes:[
-      {texto:'Cancelar',classe:'btn-ghost',acao:fecharModal},
-      {texto:'Salvar',classe:'btn-primary',acao:()=> { mostrarToast('Apresentação salva!','success'); fecharModal(); }}
+      { texto:'Cancelar', classe:'btn-ghost', acao: fecharModal },
+      { texto:'Registrar ✓', classe:'btn-primary', acao: () => this._salvarApresentacao() }
     ]});
   },
+
+  async _salvarApresentacao() {
+    const titulo = document.getElementById('ap-titulo')?.value?.trim();
+    const local  = document.getElementById('ap-local')?.value?.trim();
+    const data   = document.getElementById('ap-data')?.value;
+    const fotos  = document.getElementById('ap-fotos')?.value?.trim();
+    const modal  = document.getElementById('ap-modal')?.value || 'presencial';
+    if (!titulo || !local || !data) { mostrarToast('Preencha título, local e data!','warning'); return; }
+    if (!fotos) { mostrarToast('O link das fotos é obrigatório para comprovar a apresentação!','warning'); return; }
+    fecharModal();
+    try {
+      await _sb().from('eventos').insert([{
+        titulo, tipo: 'apresentacao',
+        data_inicio: data + 'T08:00:00', local,
+        descricao: JSON.stringify({ fotos, modalidade: modal }), ativo: true,
+        criado_por: window._appProfile?.id,
+        coordenadoria_id: window._appProfile?.coordenadoria_id || null,
+      }]);
+      mostrarToast('Apresentação registrada com evidência!','success');
+    } catch(e) { mostrarToast('Erro ao registrar.','error'); }
+  },
+
+  /* ── Produção Científica — Atividade 17 ──
+     Pontuação contabilizada em setembro.
+     +25 pts bônus se aprovado no ENEGEP 2026.
+  ── */
   novaProducao() {
+    const mesAtual = new Date().getMonth(); /* 0=jan … 8=set */
+    const alertaSet = mesAtual >= 7 && mesAtual <= 9;
     abrirModal({ titulo:'🔬 Registrar Produção Científica', tipo:'info', corpo:`
-      <div class="form-group"><label class="form-label">Título do Artigo *</label>
-        <input id="pc-titulo" class="form-input"></div>
-      <div class="form-group"><label class="form-label">Link (DOI/PDF)</label>
-        <input id="pc-link" class="form-input" placeholder="https://..."></div>`,
+      ${alertaSet ? `<div style="background:var(--c-accent)18;border:1px solid var(--c-accent)33;border-radius:8px;padding:10px;margin-bottom:14px;font-size:12px;color:var(--c-accent);font-weight:600">
+        📅 Período de contabilização: a pontuação da Atividade 17 é registrada em setembro.
+      </div>` : `<div style="background:var(--b-1);border:1px solid var(--b-2);border-radius:8px;padding:10px;margin-bottom:14px;font-size:12px;color:var(--c-slate)">
+        ⭐ Atividade 17 — Produção Científica. Pontuação contabilizada em setembro.
+        Bônus de +25 pts para artigos aprovados e apresentados no ENEGEP 2026.
+      </div>`}
+      <div class="form-group"><label class="form-label">Título do Trabalho *</label>
+        <input id="pc-titulo" class="form-input" placeholder="Ex: Aplicação de Lean em Microempresas do Piauí"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div class="form-group"><label class="form-label">Tipo</label>
+          <select id="pc-tipo" class="form-select">
+            <option value="artigo">Artigo científico</option>
+            <option value="tcc">TCC</option>
+            <option value="pesquisa">Relatório de pesquisa/extensão</option>
+          </select></div>
+        <div class="form-group"><label class="form-label">Autores</label>
+          <input id="pc-autores" class="form-input" placeholder="Nome(s) dos autores"></div>
+      </div>
+      <div class="form-group"><label class="form-label">Link DOI / PDF *</label>
+        <input id="pc-link" type="url" class="form-input" placeholder="https://doi.org/..."></div>
+      <div class="form-group"><label class="form-label">Comprovante de aceitação/publicação</label>
+        <input id="pc-comp" type="url" class="form-input" placeholder="Link do certificado ou e-mail de aceite"></div>
+      <div style="background:var(--green)18;border:1px solid var(--green)33;border-radius:8px;padding:12px;margin-top:4px">
+        <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;font-size:13px;color:var(--c-white)">
+          <input id="pc-enegep" type="checkbox" style="margin-top:2px;accent-color:var(--green);width:16px;height:16px;flex-shrink:0">
+          <span>
+            <strong style="color:var(--green)">+25 pts bônus:</strong>
+            Este artigo foi aprovado e será apresentado no <strong>ENEGEP 2026</strong>.
+            <span style="color:var(--c-slate);font-size:11px;display:block;margin-top:2px">
+              Marque apenas se tiver o comprovante de aceitação do ENEGEP.
+            </span>
+          </span>
+        </label>
+      </div>`,
     botoes:[
-      {texto:'Cancelar',classe:'btn-ghost',acao:fecharModal},
-      {texto:'Registrar',classe:'btn-primary',acao:()=> { mostrarToast('Artigo registrado com sucesso!','success'); fecharModal(); }}
+      { texto:'Cancelar', classe:'btn-ghost', acao: fecharModal },
+      { texto:'Registrar ✓', classe:'btn-primary', acao: () => this._salvarProducao() }
     ]});
   },
+
+  async _salvarProducao() {
+    const titulo   = document.getElementById('pc-titulo')?.value?.trim();
+    const tipo     = document.getElementById('pc-tipo')?.value || 'artigo';
+    const autores  = document.getElementById('pc-autores')?.value?.trim();
+    const link     = document.getElementById('pc-link')?.value?.trim();
+    const comp     = document.getElementById('pc-comp')?.value?.trim();
+    const enegep   = document.getElementById('pc-enegep')?.checked || false;
+    if (!titulo) { mostrarToast('Preencha o título!','warning'); return; }
+    if (!link)   { mostrarToast('O link DOI/PDF é obrigatório!','warning'); return; }
+    fecharModal();
+    try {
+      await _sb().from('eventos').insert([{
+        titulo, tipo: 'producao_cientifica',
+        data_inicio: new Date().toISOString().split('T')[0],
+        descricao: JSON.stringify({ tipo_trabalho: tipo, autores, link, comprovante: comp, bonus_enegep: enegep }),
+        ativo: true,
+        criado_por: window._appProfile?.id,
+        coordenadoria_id: window._appProfile?.coordenadoria_id || null,
+      }]);
+      const msg = enegep
+        ? 'Trabalho registrado com bônus ENEGEP +25 pts! 🏆'
+        : 'Produção científica registrada! Pontuação em setembro. 📅';
+      mostrarToast(msg, 'success');
+    } catch(e) { mostrarToast('Erro ao registrar.','error'); }
+  },
+
+  /* ── Renders das páginas globais ── */
+  _renderVisitas() {
+    const pg = document.getElementById('page-global_visitas');
+    if (!pg) return;
+    const ct = pg.querySelector('.content') || pg;
+    ct.innerHTML = _sc('Visitas Técnicas','🏭',`
+      <p style="font-size:13px;color:var(--c-slate);margin-bottom:14px">
+        Mínimo 2 visitas por semestre — <strong style="color:var(--c-accent)">Atividade 12</strong>.
+        Exige fotos + doc. de solicitação + confirmação da empresa + lista de participantes.
+      </p>
+      ${_btn('+ Registrar visita técnica',"PageGlobal.novaVisita()")}
+      <div id="visitas-lista" style="margin-top:14px;display:flex;flex-direction:column;gap:8px">
+        <div style="padding:20px;text-align:center;color:var(--c-slate);font-size:13px">Carregando...</div>
+      </div>`);
+    this._carregarVisitas();
+  },
+  async _carregarVisitas() {
+    const el = document.getElementById('visitas-lista');
+    if (!el || !_sb()) return;
+    try {
+      const { data } = await _sb().from('eventos')
+        .select('*').eq('tipo','visita')
+        .order('data_inicio',{ascending:false}).limit(10);
+      el.innerHTML = data?.length
+        ? data.map(e => {
+            let extra = {}; try { extra = JSON.parse(e.descricao||'{}'); } catch(_){}
+            const ok = extra.fotos && extra.solicita && extra.confirm;
+            return `
+              <div style="background:var(--b-1);border:1px solid ${ok?'var(--green)44':'var(--yellow)44'};border-radius:10px;padding:14px 16px">
+                <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:6px">
+                  <div style="font-weight:700;font-size:13px;color:var(--c-white)">${sanitize(e.titulo)}</div>
+                  <span style="font-size:10px;font-weight:700;padding:3px 9px;border-radius:99px;white-space:nowrap;
+                               background:${ok?'var(--green)22':'var(--yellow)22'};color:${ok?'var(--green)':'var(--yellow)'};
+                               border:1px solid ${ok?'var(--green)44':'var(--yellow)44'}">
+                    ${ok?'✓ Completa':'⏳ Pendente'}
+                  </span>
+                </div>
+                <div style="font-size:12px;color:var(--c-slate)">
+                  📅 ${_fmt(e.data_inicio)} · 👥 ${e.vagas||0} participantes
+                  ${extra.responsavel_empresa?` · 👤 ${sanitize(extra.responsavel_empresa)}`:''}
+                </div>
+              </div>`;
+          }).join('')
+        : '<div style="padding:16px;text-align:center;color:var(--c-slate);font-size:13px">Nenhuma visita técnica registrada ainda.</div>';
+    } catch(e) { el.innerHTML='<div style="padding:16px;color:var(--c-slate)">Erro ao carregar.</div>'; }
+  },
+
+  _renderApresentacoes() {
+    const pg = document.getElementById('page-global_apresentacoes');
+    if (!pg) return;
+    const ct = pg.querySelector('.content') || pg;
+    ct.innerHTML = _sc('Apresentações Institucionais','🎤',`
+      <p style="font-size:13px;color:var(--c-slate);margin-bottom:14px">
+        Mínimo 3 apresentações por semestre — <strong style="color:var(--c-accent)">Atividade 5</strong>.
+        Exige evidência fotográfica (presencial ou online, JPEG/PNG).
+      </p>
+      ${_btn('+ Registrar apresentação',"PageGlobal.novaApresentacao()")}
+      <div id="apres-lista" style="margin-top:14px;display:flex;flex-direction:column;gap:8px">
+        <div style="padding:20px;text-align:center;color:var(--c-slate);font-size:13px">Carregando...</div>
+      </div>`);
+    this._carregarApresentacoes();
+  },
+  async _carregarApresentacoes() {
+    const el = document.getElementById('apres-lista');
+    if (!el || !_sb()) return;
+    try {
+      const mesIni = new Date(); mesIni.setMonth(mesIni.getMonth() - 6);
+      const { data } = await _sb().from('eventos')
+        .select('*').eq('tipo','apresentacao')
+        .order('data_inicio',{ascending:false}).limit(10);
+      const semestre = (data||[]).filter(e => new Date(e.data_inicio) >= mesIni).length;
+      const ok = semestre >= 3;
+      el.innerHTML = `
+        <div style="background:${ok?'var(--green)':'var(--yellow)'}18;border:1px solid ${ok?'var(--green)':'var(--yellow)'}44;
+                    border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:13px">
+          ${ok?'✅':'⚠️'} <strong>${semestre}/3</strong> apresentações neste semestre.
+        </div>` +
+        ((data||[]).length
+          ? (data||[]).map(e => {
+              let extra = {}; try { extra = JSON.parse(e.descricao||'{}'); } catch(_){}
+              return `
+                <div style="background:var(--b-1);border:1px solid var(--b-2);border-radius:10px;padding:12px 16px">
+                  <div style="font-weight:700;font-size:13px;color:var(--c-white);margin-bottom:4px">${sanitize(e.titulo)}</div>
+                  <div style="font-size:12px;color:var(--c-slate)">
+                    📅 ${_fmt(e.data_inicio)} · 📍 ${sanitize(e.local||'—')} · ${extra.modalidade||'presencial'}
+                    ${extra.fotos?` · <a href="${sanitize(extra.fotos)}" target="_blank" style="color:var(--c-accent)">Fotos ↗</a>`:''}
+                  </div>
+                </div>`;
+            }).join('')
+          : '<div style="padding:16px;text-align:center;color:var(--c-slate);font-size:13px">Nenhuma apresentação registrada.</div>');
+    } catch(e) { el.innerHTML='<div style="padding:16px;color:var(--c-slate)">Erro ao carregar.</div>'; }
+  },
+
+  _renderProducao() {
+    const pg = document.getElementById('page-global_producao');
+    if (!pg) return;
+    const ct = pg.querySelector('.content') || pg;
+    const mesAtual = new Date().getMonth();
+    const alertaSet = mesAtual >= 7 && mesAtual <= 9;
+    ct.innerHTML =
+      (alertaSet ? `<div style="background:var(--c-accent)18;border:1px solid var(--c-accent)33;border-radius:10px;padding:12px 16px;margin-bottom:16px;font-size:13px;color:var(--c-accent);font-weight:600">
+        📅 Período de contabilização da Atividade 17 — pontuação registrada agora em setembro!
+      </div>` : '') +
+      _sc('Produção Científica','🔬',`
+        <p style="font-size:13px;color:var(--c-slate);margin-bottom:14px">
+          <strong style="color:var(--c-accent)">Atividade 17</strong> — TCCs, artigos e relatórios de pesquisa/extensão vinculados ao Núcleo.
+          Pontuação contabilizada em setembro. <strong style="color:var(--green)">+25 pts bônus</strong> para artigos no ENEGEP.
+        </p>
+        ${_btn('+ Registrar trabalho',"PageGlobal.novaProducao()")}
+        <div id="prod-lista" style="margin-top:14px;display:flex;flex-direction:column;gap:8px">
+          <div style="padding:20px;text-align:center;color:var(--c-slate);font-size:13px">Carregando...</div>
+        </div>`);
+    this._carregarProducao();
+  },
+  async _carregarProducao() {
+    const el = document.getElementById('prod-lista');
+    if (!el || !_sb()) return;
+    try {
+      const { data } = await _sb().from('eventos')
+        .select('*').in('tipo',['producao_cientifica'])
+        .order('data_inicio',{ascending:false}).limit(12);
+      el.innerHTML = (data||[]).length
+        ? data.map(e => {
+            let extra = {}; try { extra = JSON.parse(e.descricao||'{}'); } catch(_){}
+            return `
+              <div style="background:var(--b-1);border:1px solid var(--b-2);border-radius:10px;padding:14px 16px">
+                <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:6px">
+                  <div>
+                    <div style="font-size:10px;font-weight:700;color:var(--c-accent);text-transform:uppercase;letter-spacing:.06em">${extra.tipo_trabalho||'artigo'}</div>
+                    <div style="font-weight:700;font-size:13px;color:var(--c-white)">${sanitize(e.titulo)}</div>
+                    ${extra.autores?`<div style="font-size:12px;color:var(--c-slate)">👤 ${sanitize(extra.autores)}</div>`:''}
+                  </div>
+                  ${extra.bonus_enegep ? `<span style="font-size:11px;font-weight:800;padding:3px 9px;border-radius:99px;
+                    background:var(--green)22;color:var(--green);border:1px solid var(--green)44;white-space:nowrap">+25 pts ENEGEP</span>` : ''}
+                </div>
+                <div style="font-size:12px;color:var(--c-slate)">
+                  📅 ${_fmt(e.data_inicio)}
+                  ${extra.link?` · <a href="${sanitize(extra.link)}" target="_blank" style="color:var(--c-accent)">DOI/PDF ↗</a>`:''}
+                </div>
+              </div>`;
+          }).join('')
+        : '<div style="padding:16px;text-align:center;color:var(--c-slate);font-size:13px">Nenhum trabalho científico registrado ainda.</div>';
+    } catch(e) { el.innerHTML='<div style="padding:16px;color:var(--c-slate)">Erro ao carregar.</div>'; }
+  },
+
   novaPauta() {
     abrirModal({ titulo:'🗳️ Criar Pauta de Votação', tipo:'info', corpo:`
       <div class="form-group"><label class="form-label">Título da Pauta *</label>
@@ -2249,22 +3042,33 @@ document.addEventListener('nupi:booted', () => {
     _goToOriginal(id);
     /* Apenas páginas que app.js NÃO trata */
     const mapa = {
-      'notificacoes':     () => PageNotificacoes.init(),
-      'compartilhado':    () => PageCompartilhado.init(),
-      'geral_melhorias':  () => PageGeral._renderMelhorias(),
-      'geral_parcerias':  () => PageGeral._renderParcerias(),
-      'mkt_kanban':       () => PageMarketing._renderKanban(),
-      'fin_calendario':   () => PageFinancas._renderCalendario(),
-      'fin_abj':          () => PageFinancas._renderABJFin(),
-      'ops_relatorios':   () => PageOperacoes._renderRelatorios(),
-      'ops_arquivo':      () => PageOperacoes._renderPops(),
-      'gp_clima':         () => PagePessoas._renderClima(),
-      'gp_tap':           () => PagePessoas._renderTAP(),
-      'gp_crm':           () => PagePessoas._renderMembros(),
-      'dev_usuarios':     () => PageDev.init(),
-      'prj_enegep':       () => PageProjetos._renderEventos(),
-      'prj_treinamentos': () => PageProjetos._renderEventos(),
-      'prj_nupicast':     () => PageProjetos._renderEventos(),
+      /* Gerais */
+      'notificacoes':      () => PageNotificacoes.init(),
+      'compartilhado':     () => PageCompartilhado.init(),
+      'geral_melhorias':   () => PageGeral._renderMelhorias(),
+      'geral_parcerias':   () => PageGeral._renderParcerias(),
+      /* Marketing */
+      'mkt_kanban':        () => PageMarketing._renderKanban(),
+      /* Financeiro — IDs corretos conforme HTML */
+      'fin_abepro':        () => PageFinancas._renderABJFin(),
+      'fin_comercial':     () => PageFinancas._renderCalendario(),
+      /* Operações */
+      'ops_relatorios':    () => PageOperacoes._renderRelatorios(),
+      'ops_arquivo':       () => PageOperacoes._renderPops(),
+      /* Gestão de Pessoas */
+      'gp_clima':          () => PagePessoas._renderClima(),
+      'gp_tap':            () => PagePessoas._renderTAP(),
+      'gp_crm':            () => PagePessoas._renderMembros(),
+      /* Dev / Admin */
+      'dev_usuarios':      () => PageDev.init(),
+      /* Projetos */
+      'prj_enegep':        () => PageProjetos._renderENEGEP(),
+      'prj_treinamentos':  () => PageProjetos._renderEventos(),
+      'prj_nupicast':      () => PageProjetos._renderEventos(),
+      /* Globais */
+      'global_visitas':    () => PageGlobal._renderVisitas(),
+      'global_apresentacoes': () => PageGlobal._renderApresentacoes(),
+      'global_producao':   () => PageGlobal._renderProducao(),
     };
     if (mapa[id]) try { mapa[id](); } catch(e) { console.warn('[pages goTo]', id, e); }
   };
