@@ -22,7 +22,12 @@ async function getCoords() {
   } catch(e) { console.warn('[pages] getCoords:', e); return []; }
 }
 const PageGeral = {
-  async init() { this._renderReuniao(); },
+  async init() {
+    this._renderReuniao();
+    this._renderPlanejamento();
+    this._renderMelhorias();
+    this._renderParcerias();
+  },
   _renderReuniao() {
     const pg = document.getElementById('page-geral_reunioes');
     if (!pg) return;
@@ -76,22 +81,153 @@ const PageGeral = {
     const pg = document.getElementById('page-geral_planejamento');
     if (!pg) return;
     const ct = pg.querySelector('.content')||pg;
+    const ano = new Date().getFullYear();
     ct.innerHTML = _sc('Planejamento Semestral','📅',`
+      <p style="font-size:13px;color:var(--c-slate);margin-bottom:16px">
+        Dois planos por ano: 1º semestre (prazo 31/03) e 2º semestre (prazo 31/07).
+        Cada plano aprovado vale 1 estrela ABJ (Atividades 1 e 7).
+      </p>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
-        <div style="background:var(--a-1);border:1px solid var(--b-a);border-radius:10px;padding:16px">
-          <div style="font-size:11px;font-weight:700;color:var(--c-accent);text-transform:uppercase;margin-bottom:8px">1º Semestre</div>
-          <div style="font-size:12px;color:var(--c-slate);margin-bottom:12px">Prazo: 31/03/2026 (⭐ 1ª Estrela)</div>
-          ${_btn('Ver plano',"mostrarToast('Em breve!','info')",'btn-ghost')}
+        <div style="background:var(--a-1);border:1px solid var(--b-a);border-radius:12px;padding:18px">
+          <div style="font-size:11px;font-weight:700;color:var(--c-accent);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">⭐ 1º Semestre ${ano}</div>
+          <div style="font-size:13px;font-weight:700;color:var(--c-white);margin-bottom:4px">Jan → Jun</div>
+          <div style="font-size:12px;color:var(--c-slate);margin-bottom:14px">Prazo de submissão: <strong style="color:var(--c-accent)">31/03/${ano}</strong></div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            ${_btn('+ Criar plano',"PageGeral.novoPlano(1)")}
+            ${_btn('Ver atividades',"PageGeral.verAtividades(1)",'btn-ghost')}
+          </div>
         </div>
-        <div style="background:var(--b-1);border:1px solid var(--b-2);border-radius:10px;padding:16px">
-          <div style="font-size:11px;font-weight:700;color:var(--c-slate);text-transform:uppercase;margin-bottom:8px">2º Semestre</div>
-          <div style="font-size:12px;color:var(--c-slate);margin-bottom:12px">Prazo: 31/07/2026 (⭐ 3ª Estrela)</div>
-          ${_btn('Ver plano',"mostrarToast('Em breve!','info')",'btn-ghost')}
+        <div style="background:var(--b-1);border:1px solid var(--b-2);border-radius:12px;padding:18px">
+          <div style="font-size:11px;font-weight:700;color:var(--c-slate);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">⭐ 2º Semestre ${ano}</div>
+          <div style="font-size:13px;font-weight:700;color:var(--c-white);margin-bottom:4px">Jul → Dez</div>
+          <div style="font-size:12px;color:var(--c-slate);margin-bottom:14px">Prazo de submissão: <strong style="color:var(--c-slate)">31/07/${ano}</strong></div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            ${_btn('+ Criar plano',"PageGeral.novoPlano(2)")}
+            ${_btn('Ver atividades',"PageGeral.verAtividades(2)",'btn-ghost')}
+          </div>
         </div>
       </div>
-      <div style="background:var(--b-1);border-radius:10px;padding:14px;font-size:12px;color:var(--c-slate)">
-        ⚠️ O planejamento deve incluir ações conjuntas com o Representante Estadual da ABJ.
+      <div style="background:var(--b-1);border:1px solid var(--b-2);border-radius:10px;padding:14px;font-size:12px;color:var(--c-slate)">
+        📌 O planejamento deve incluir ações conjuntas com o Representante Estadual da ABJ (Art. 5º Regimento).
+      </div>`) +
+    _sc('Marcos do Ano ABJ','🏆',`
+      <div style="display:flex;flex-direction:column;gap:8px">
+        ${[
+          { data:'31/03', label:'1ª Estrela — Planejamento 1º Sem.', cor:'var(--c-accent)' },
+          { data:'30/06', label:'2ª Estrela — Marketing + Presença 80%', cor:'var(--c-accent)' },
+          { data:'31/07', label:'3ª Estrela — Planejamento 2º Sem. + Evento Estadual', cor:'var(--c-accent)' },
+          { data:'31/10', label:'4ª Estrela — ABJ completo 18 atividades', cor:'var(--green)' },
+          { data:'30/11', label:'5ª Estrela — Evento Regional (opcional)', cor:'var(--c-slate)' },
+        ].map(m=>`
+          <div style="display:flex;align-items:center;gap:12px;background:var(--b-1);border:1px solid var(--b-2);border-radius:8px;padding:10px 14px">
+            <div style="font-size:11px;font-weight:700;color:${m.cor};min-width:42px">${m.data}</div>
+            <div style="font-size:13px;color:var(--c-white)">${m.label}</div>
+          </div>`).join('')}
       </div>`);
+  },
+  novoPlano(semestre) {
+    const ano = new Date().getFullYear();
+    abrirModal({ titulo:`📅 Plano ${semestre}º Semestre ${ano}`, tipo:'info', corpo:`
+      <div class="form-group"><label class="form-label">Título do Plano *</label>
+        <input id="pl-titulo" class="form-input" value="Plano de Ação ${semestre}º Semestre ${ano}"></div>
+      <div class="form-group"><label class="form-label">Objetivos Principais *</label>
+        <textarea id="pl-obj" class="form-input" style="height:90px" placeholder="Ex: Realizar evento estadual, aumentar engajamento 20%..."></textarea></div>
+      <div class="form-group"><label class="form-label">Ações Conjuntas com ABJ</label>
+        <textarea id="pl-abj" class="form-input" style="height:70px" placeholder="Ações planejadas com o Representante Estadual..."></textarea></div>`,
+    botoes:[
+      {texto:'Cancelar',classe:'btn-ghost',acao:fecharModal},
+      {texto:'Salvar ✓',classe:'btn-primary',acao:()=>{mostrarToast(`Plano ${semestre}º Semestre salvo!`,'success');fecharModal();}}
+    ]});
+  },
+  verAtividades(semestre) {
+    mostrarToast(`Atividades do ${semestre}º semestre — integrado com ABJ em breve.`,'info');
+  },
+  _renderMelhorias() {
+    const pg = document.getElementById('page-geral_melhorias');
+    if (!pg) return;
+    const ct = pg.querySelector('.content')||pg;
+    ct.innerHTML = _sc('Sugestões de Melhoria','🛠️',`
+      <p style="font-size:13px;color:var(--c-slate);margin-bottom:16px">
+        Qualquer membro pode sugerir melhorias. A Coordenação Geral avalia e responde.
+      </p>
+      ${_btn('+ Nova sugestão',"PageGeral.novaMelhoria()")}
+      <div id="melhorias-lista" style="margin-top:16px;display:flex;flex-direction:column;gap:8px">
+        <div style="padding:20px;text-align:center;color:var(--c-slate);font-size:13px">Carregando...</div>
+      </div>`);
+    this._carregarMelhorias();
+  },
+  async _carregarMelhorias() {
+    const el = document.getElementById('melhorias-lista');
+    if (!el||!_sb()) return;
+    try {
+      const { data } = await _sb()
+        .from('demandas')
+        .select('*,users!responsavel_id(nome)')
+        .eq('tipo','melhoria')
+        .order('created_at',{ascending:false})
+        .limit(10);
+      const STATUS_COR = { aberto:'var(--c-accent)', andamento:'var(--yellow)', concluido:'var(--green)', cancelado:'var(--c-slate)' };
+      el.innerHTML = data?.length
+        ? data.map(d=>`
+          <div style="background:var(--b-1);border:1px solid var(--b-2);border-radius:10px;padding:14px 16px">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:6px">
+              <div style="font-weight:700;font-size:13px;color:var(--c-white)">${sanitize(d.titulo)}</div>
+              <span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:99px;white-space:nowrap;
+                           background:${STATUS_COR[d.coluna]||'var(--c-slate)'}22;
+                           color:${STATUS_COR[d.coluna]||'var(--c-slate)'};
+                           border:1px solid ${STATUS_COR[d.coluna]||'var(--c-slate)'}44">
+                ${d.coluna||'aberto'}
+              </span>
+            </div>
+            <div style="font-size:12px;color:var(--c-slate)">${sanitize(d.descricao||'—')}</div>
+            <div style="font-size:11px;color:var(--c-slate);margin-top:6px">
+              👤 ${sanitize(d.users?.nome||'Anônimo')} · 📅 ${_fmt(d.created_at)}
+            </div>
+          </div>`).join('')
+        : '<div style="padding:16px;text-align:center;color:var(--c-slate);font-size:13px">Nenhuma sugestão ainda. Seja o primeiro!</div>';
+    } catch(e) { el.innerHTML='<div style="padding:16px;color:var(--c-slate)">Erro ao carregar.</div>'; }
+  },
+  _renderParcerias() {
+    const pg = document.getElementById('page-geral_parcerias');
+    if (!pg) return;
+    const ct = pg.querySelector('.content')||pg;
+    ct.innerHTML = _sc('Parcerias Institucionais','🤝',`
+      <p style="font-size:13px;color:var(--c-slate);margin-bottom:16px">
+        Registro de parcerias ativas com instituições, empresas e entidades.
+        Mínimo 1 parceria por semestre para pontuação ABJ.
+      </p>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px">
+        ${_btn('+ Nova parceria',"PageGeral.novaParceria()")}
+      </div>
+      <div id="parcerias-lista" style="display:flex;flex-direction:column;gap:8px">
+        <div style="padding:20px;text-align:center;color:var(--c-slate);font-size:13px">Carregando...</div>
+      </div>`);
+    this._carregarParcerias();
+  },
+  async _carregarParcerias() {
+    const el = document.getElementById('parcerias-lista');
+    if (!el||!_sb()) return;
+    try {
+      const { data } = await _sb()
+        .from('demandas')
+        .select('*')
+        .eq('tipo','parceria')
+        .order('created_at',{ascending:false});
+      el.innerHTML = data?.length
+        ? data.map(d=>`
+          <div style="background:var(--b-1);border:1px solid var(--b-2);border-radius:10px;
+                      padding:14px 16px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+            <div>
+              <div style="font-weight:700;font-size:13px;color:var(--c-white)">${sanitize(d.titulo)}</div>
+              <div style="font-size:12px;color:var(--c-slate)">${sanitize(d.descricao||'—')} · ${_fmt(d.created_at)}</div>
+            </div>
+            <span style="font-size:11px;font-weight:700;padding:3px 9px;border-radius:99px;
+                         background:var(--green)22;color:var(--green);border:1px solid var(--green)44">
+              ${d.coluna==='concluido'?'✓ Ativa':'Pendente'}
+            </span>
+          </div>`).join('')
+        : '<div style="padding:16px;text-align:center;color:var(--c-slate);font-size:13px">Nenhuma parceria registrada ainda.</div>';
+    } catch(e) { el.innerHTML='<div style="padding:16px;color:var(--c-slate)">Erro ao carregar.</div>'; }
   },
   novaReuniao() {
     const hoje = new Date().toISOString().slice(0,16);
@@ -113,32 +249,75 @@ const PageGeral = {
   },
   novaMelhoria() {
     abrirModal({ titulo:'🛠️ Sugerir Melhoria', tipo:'info', corpo:`
-      <div class="form-group"><label class="form-label">Descrição da Melhoria *</label>
-        <textarea id="nm-desc" class="form-input" style="height:100px" placeholder="Descreva sua sugestão..."></textarea></div>`,
+      <div class="form-group"><label class="form-label">Título *</label>
+        <input id="nm-titulo" class="form-input" placeholder="Ex: Automatizar envio do relatório ABJ"></div>
+      <div class="form-group"><label class="form-label">Descrição detalhada</label>
+        <textarea id="nm-desc" class="form-input" style="height:90px" placeholder="Explique a melhoria e o impacto esperado..."></textarea></div>`,
     botoes:[
       {texto:'Cancelar',classe:'btn-ghost',acao:fecharModal},
-      {texto:'Sugerir',classe:'btn-primary',acao:()=> { mostrarToast('Sugestão enviada!','success'); fecharModal(); }}
+      {texto:'Enviar ✓',classe:'btn-primary',acao:()=>this._salvarMelhoria()}
     ]});
+  },
+  async _salvarMelhoria() {
+    const titulo = document.getElementById('nm-titulo')?.value?.trim();
+    const desc   = document.getElementById('nm-desc')?.value?.trim();
+    if (!titulo) { mostrarToast('Preencha o título!','warning'); return; }
+    fecharModal();
+    try {
+      const coords = await getCoords();
+      const ger = coords.find(c=>c.sigla==='GER');
+      await _sb().from('demandas').insert([{
+        titulo, descricao:desc||null, coluna:'aberto', tipo:'melhoria',
+        coordenadoria_id:ger?.id||null,
+        responsavel_id: window._appProfile?.id,
+        criado_por: window._appProfile?.id,
+      }]);
+      mostrarToast('Sugestão enviada com sucesso!','success');
+      this._carregarMelhorias();
+    } catch(e) { mostrarToast('Erro ao enviar sugestão.','error'); }
   },
   novaParceria() {
     abrirModal({ titulo:'🤝 Nova Parceria', tipo:'info', corpo:`
-      <div class="form-group"><label class="form-label">Instituição/Empresa *</label>
-        <input id="np-nome" class="form-input" placeholder="Ex: CREA-PI"></div>
-      <div class="form-group"><label class="form-label">Tipo</label>
-        <select id="np-tipo" class="form-select">
-          <option value="instituicao">Instituição</option>
-          <option value="empresa">Empresa</option>
-          <option value="outro">Outro</option>
-        </select></div>
-      <div class="form-group"><label class="form-label">Contato/Link</label>
-        <input id="np-contato" class="form-input" placeholder="E-mail ou Telefone"></div>`,
+      <div class="form-group"><label class="form-label">Nome da Instituição/Empresa *</label>
+        <input id="np-nome" class="form-input" placeholder="Ex: CREA-PI, Empresa XYZ"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div class="form-group"><label class="form-label">Tipo</label>
+          <select id="np-tipo" class="form-select">
+            <option value="instituicao">Instituição</option>
+            <option value="empresa">Empresa</option>
+            <option value="universidade">Universidade</option>
+            <option value="outro">Outro</option>
+          </select></div>
+        <div class="form-group"><label class="form-label">Contato</label>
+          <input id="np-contato" class="form-input" placeholder="E-mail ou Telefone"></div>
+      </div>
+      <div class="form-group"><label class="form-label">Objetivo da parceria</label>
+        <textarea id="np-obj" class="form-input" style="height:70px" placeholder="Ex: Visitas técnicas, patrocínio..."></textarea></div>`,
     botoes:[
       {texto:'Cancelar',classe:'btn-ghost',acao:fecharModal},
-      {texto:'Salvar',classe:'btn-primary',acao:()=> {
-        mostrarToast('Parceria salva! (Conecte o Supabase para persistir)','success');
-        fecharModal();
-      }}
+      {texto:'Salvar ✓',classe:'btn-primary',acao:()=>this._salvarParceria()}
     ]});
+  },
+  async _salvarParceria() {
+    const nome    = document.getElementById('np-nome')?.value?.trim();
+    const tipo    = document.getElementById('np-tipo')?.value;
+    const contato = document.getElementById('np-contato')?.value?.trim();
+    const obj     = document.getElementById('np-obj')?.value?.trim();
+    if (!nome) { mostrarToast('Informe o nome!','warning'); return; }
+    fecharModal();
+    try {
+      const coords = await getCoords();
+      const ger = coords.find(c=>c.sigla==='GER');
+      await _sb().from('demandas').insert([{
+        titulo: nome,
+        descricao: [tipo, contato, obj].filter(Boolean).join(' · ') || null,
+        coluna:'aberto', tipo:'parceria',
+        coordenadoria_id: ger?.id||null,
+        criado_por: window._appProfile?.id,
+      }]);
+      mostrarToast('Parceria registrada!','success');
+      this._carregarParcerias();
+    } catch(e) { mostrarToast('Erro ao salvar parceria.','error'); }
   },
   async _salvarReuniao() {
     const titulo = document.getElementById('nr-titulo')?.value?.trim();
@@ -160,11 +339,168 @@ const PageGeral = {
       this._carregarReunioes();
     } catch(e){mostrarToast('Erro ao salvar.','error');}
   },
-  verFrequencia() { mostrarToast('Módulo de frequência aguardando Supabase.','info'); },
-  abrirCheckin()  { mostrarToast('Módulo de check-in aguardando Supabase.','info'); },
+  async verFrequencia() {
+    if (!_sb()) { mostrarToast('Supabase não conectado.','warning'); return; }
+    try {
+      const { data } = await _sb()
+        .from('frequencia')
+        .select('*, users(nome,iniciais), eventos(titulo,data_inicio)')
+        .order('created_at',{ascending:false})
+        .limit(30);
+      const rows = (data||[]).map(f=>`
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;
+                    background:var(--b-1);border:1px solid var(--b-2);border-radius:8px">
+          <div>
+            <div style="font-size:13px;font-weight:600;color:var(--c-white)">${sanitize(f.users?.nome||'—')}</div>
+            <div style="font-size:11px;color:var(--c-slate)">${sanitize(f.eventos?.titulo||'Evento')} · ${_fmt(f.eventos?.data_inicio)}</div>
+          </div>
+          <span style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:99px;
+                       background:${f.presente?'var(--green)22':'var(--red)22'};
+                       color:${f.presente?'var(--green)':'var(--red)'};
+                       border:1px solid ${f.presente?'var(--green)44':'var(--red)44'}">
+            ${f.presente?'✓ Presente':'✗ Falta'}
+          </span>
+        </div>`).join('');
+      abrirModal({ titulo:'📊 Frequência dos Membros', tipo:'info', corpo:`
+        <div style="display:flex;flex-direction:column;gap:6px;max-height:400px;overflow-y:auto">
+          ${rows||'<div style="padding:20px;text-align:center;color:var(--c-slate)">Nenhum registro ainda.</div>'}
+        </div>`,
+      botoes:[{texto:'Fechar',classe:'btn-ghost',acao:fecharModal}]});
+    } catch(e) { mostrarToast('Erro ao carregar frequência.','error'); }
+  },
+  async abrirCheckin() {
+    if (!_sb()) { mostrarToast('Supabase não conectado.','warning'); return; }
+    try {
+      const { data: eventos } = await _sb()
+        .from('eventos').select('id,titulo,data_inicio').eq('ativo',true)
+        .order('data_inicio',{ascending:false}).limit(10);
+      const opts = (eventos||[]).map(e=>`<option value="${e.id}">${sanitize(e.titulo)} (${_fmt(e.data_inicio)})</option>`).join('');
+      abrirModal({ titulo:'✅ Check-in Digital', tipo:'info', corpo:`
+        <div class="form-group"><label class="form-label">Evento *</label>
+          <select id="ci-evento" class="form-select">${opts||'<option>Nenhum evento ativo</option>'}</select></div>
+        <div class="form-group"><label class="form-label">Membro</label>
+          <input id="ci-nome" class="form-input" placeholder="Nome completo (ou vazio = você mesmo)" value="${window._appProfile?.nome||''}"></div>`,
+      botoes:[
+        {texto:'Cancelar',classe:'btn-ghost',acao:fecharModal},
+        {texto:'Registrar ✓',classe:'btn-primary',acao:()=>this._salvarCheckin()}
+      ]});
+    } catch(e) { mostrarToast('Erro ao abrir check-in.','error'); }
+  },
+  async _salvarCheckin() {
+    const eventoId = document.getElementById('ci-evento')?.value;
+    if (!eventoId) { mostrarToast('Selecione um evento!','warning'); return; }
+    fecharModal();
+    try {
+      await _sb().from('frequencia').upsert([{
+        evento_id: eventoId,
+        user_id:   window._appProfile?.id,
+        presente:  true,
+      }], { onConflict: 'evento_id,user_id' });
+      mostrarToast('Check-in realizado com sucesso! ✅','success');
+    } catch(e) { mostrarToast('Erro ao registrar check-in.','error'); }
+  },
 };
 const PageMarketing = {
-  async init() { this._renderTracker(); },
+  async init() { this._renderTracker(); this._renderKanban(); },
+  _renderKanban() {
+    const pg = document.getElementById('page-mkt_kanban');
+    if (!pg) return;
+    const ct = pg.querySelector('.content')||pg;
+    const colunas = [
+      { id:'backlog',    label:'🗂️ Backlog',    cor:'var(--c-slate)' },
+      { id:'andamento',  label:'⚡ Em andamento', cor:'var(--yellow)'  },
+      { id:'revisao',    label:'👁️ Revisão',     cor:'var(--c-accent)' },
+      { id:'concluido',  label:'✅ Publicado',    cor:'var(--green)'   },
+    ];
+    ct.innerHTML = _sc('Kanban de Conteúdo','📋',`
+      <p style="font-size:13px;color:var(--c-slate);margin-bottom:16px">
+        Gerencie a produção de conteúdo da coordenadoria. Arraste os cards entre colunas.
+      </p>
+      ${_btn('+ Nova demanda',"PageMarketing.novaDemanda()")}
+      <div id="mkt-kanban-board" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin-top:16px">
+        ${colunas.map(c=>`
+          <div style="background:var(--b-1);border:1px solid var(--b-2);border-radius:12px;padding:12px;min-height:120px">
+            <div style="font-size:11px;font-weight:700;color:${c.cor};text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px;display:flex;justify-content:space-between">
+              <span>${c.label}</span>
+              <span id="mkt-count-${c.id}" style="background:var(--b-2);border-radius:99px;padding:1px 7px;font-size:10px">0</span>
+            </div>
+            <div id="mkt-col-${c.id}" style="display:flex;flex-direction:column;gap:6px">
+              <div style="font-size:12px;color:var(--c-slate);text-align:center;padding:12px 0">Carregando...</div>
+            </div>
+          </div>`).join('')}
+      </div>`);
+    this._carregarKanban();
+  },
+  async _carregarKanban() {
+    if (!_sb()) return;
+    try {
+      const coords = await getCoords();
+      const mkt = coords.find(c=>c.sigla==='MKT');
+      const { data } = await _sb()
+        .from('demandas')
+        .select('*,users!responsavel_id(nome,iniciais)')
+        .eq('coordenadoria_id', mkt?.id||'')
+        .order('created_at',{ascending:false});
+      const cols = { backlog:[], andamento:[], revisao:[], concluido:[] };
+      (data||[]).forEach(d => { if (cols[d.coluna]) cols[d.coluna].push(d); });
+      Object.entries(cols).forEach(([colId, cards]) => {
+        const el = document.getElementById(`mkt-col-${colId}`);
+        const cnt= document.getElementById(`mkt-count-${colId}`);
+        if (cnt) cnt.textContent = cards.length;
+        if (!el) return;
+        el.innerHTML = cards.length
+          ? cards.map(d=>`
+              <div style="background:var(--b-2);border-radius:8px;padding:10px 12px;cursor:pointer"
+                   onclick="PageMarketing.editarDemanda('${d.id}')">
+                <div style="font-size:12px;font-weight:700;color:var(--c-white);margin-bottom:4px">${sanitize(d.titulo)}</div>
+                ${d.users?.nome?`<div style="font-size:10px;color:var(--c-slate)">👤 ${sanitize(d.users.nome)}</div>`:''}
+                <div style="font-size:10px;color:var(--c-slate)">${_fmt(d.prazo||d.created_at)}</div>
+              </div>`).join('')
+          : `<div style="font-size:11px;color:var(--c-slate);text-align:center;padding:10px 0">Vazio</div>`;
+      });
+    } catch(e) { console.warn('[MKT Kanban]', e); }
+  },
+  editarDemanda(id) { mostrarToast(`Demanda ${id.slice(0,8)}… — edição em breve.`,'info'); },
+  novaDemanda() {
+    abrirModal({ titulo:'📋 Nova Demanda de Conteúdo', tipo:'info', corpo:`
+      <div class="form-group"><label class="form-label">Título *</label>
+        <input id="nd-titulo" class="form-input" placeholder="Ex: Post Semana do MEJ"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div class="form-group"><label class="form-label">Coluna inicial</label>
+          <select id="nd-col" class="form-select">
+            <option value="backlog">Backlog</option>
+            <option value="andamento">Em andamento</option>
+          </select></div>
+        <div class="form-group"><label class="form-label">Prazo</label>
+          <input id="nd-prazo" type="date" class="form-input"></div>
+      </div>
+      <div class="form-group"><label class="form-label">Descrição</label>
+        <textarea id="nd-desc" class="form-input" style="height:70px" placeholder="Detalhes do conteúdo a criar..."></textarea></div>`,
+    botoes:[
+      {texto:'Cancelar',classe:'btn-ghost',acao:fecharModal},
+      {texto:'Criar ✓',classe:'btn-primary',acao:()=>this._salvarDemanda()}
+    ]});
+  },
+  async _salvarDemanda() {
+    const titulo = document.getElementById('nd-titulo')?.value?.trim();
+    const coluna = document.getElementById('nd-col')?.value||'backlog';
+    const prazo  = document.getElementById('nd-prazo')?.value||null;
+    const desc   = document.getElementById('nd-desc')?.value?.trim();
+    if (!titulo) { mostrarToast('Coloca um título!','warning'); return; }
+    fecharModal();
+    try {
+      const coords = await getCoords();
+      const mkt = coords.find(c=>c.sigla==='MKT');
+      await _sb().from('demandas').insert([{
+        titulo, coluna, descricao:desc||null, prazo:prazo||null,
+        coordenadoria_id:mkt?.id||null,
+        responsavel_id: window._appProfile?.id,
+        criado_por: window._appProfile?.id,
+      }]);
+      mostrarToast('Demanda criada!','success');
+      this._carregarKanban();
+    } catch(e) { mostrarToast('Erro ao criar demanda.','error'); }
+  },
   _renderTracker() {
     const pg = document.getElementById('page-mkt_tracker');
     if (!pg) return;
@@ -268,7 +604,197 @@ const PageFinancas = {
     const coord=p?.coordenadorias?.sigla;
     return p?.role==='admin'||coord==='FIN';
   },
-  async init() { this._renderFluxo(); },
+  async init() { this._renderFluxo(); this._renderCalendario(); this._renderABJFin(); },
+  _renderCalendario() {
+    const pg=document.getElementById('page-fin_calendario');
+    if(!pg)return;
+    const ct=pg.querySelector('.content')||pg;
+    ct.innerHTML=_sc('Calendário Comercial','🗓️',`
+      <p style="font-size:13px;color:var(--c-slate);margin-bottom:16px">
+        Planos de ação de eventos comerciais devem ser submetidos com
+        <strong style="color:var(--c-accent)">60 dias de antecedência</strong> (Regimento Art. 26º).
+      </p>
+      <div id="fin-alerta-60d"></div>
+      ${_btn('+ Novo evento comercial',"PageFinancas.novoEventoComercial()")}
+      <div id="fin-cal-lista" style="margin-top:16px;display:flex;flex-direction:column;gap:8px">
+        <div style="padding:20px;text-align:center;color:var(--c-slate);font-size:13px">Carregando...</div>
+      </div>`) +
+    _sc('Repasse Transitório — Timer 24h','⏱️',`
+      <p style="font-size:13px;color:var(--c-slate);margin-bottom:14px">
+        Recursos não podem permanecer em conta pessoal por mais de 24h (Art. 26º IV).
+        Ao registrar um repasse, o timer inicia automaticamente.
+      </p>
+      <div id="fin-timer-repasse">
+        <div style="font-size:12px;color:var(--c-slate)">Nenhum repasse transitório ativo.</div>
+      </div>
+      <div style="margin-top:12px">
+        ${_btn('Registrar repasse',"PageFinancas.novoRepasse()")}
+      </div>`);
+    this._carregarCalendario();
+  },
+  async _carregarCalendario() {
+    const el   = document.getElementById('fin-cal-lista');
+    const alEl = document.getElementById('fin-alerta-60d');
+    if(!el||!_sb())return;
+    try {
+      const { data } = await _sb()
+        .from('eventos')
+        .select('*')
+        .eq('tipo','evento')
+        .order('data_inicio',{ascending:true})
+        .limit(8);
+      /* Alerta 60 dias no próximo evento */
+      const prox = data?.find(e=>new Date(e.data_inicio)>new Date());
+      if (prox && alEl && window.Permissoes) {
+        const alerta = Permissoes.REGRAS.alertaCalendario60Dias(prox.data_inicio, Permissoes.isAdmin());
+        if (alerta.bloqueado) {
+          alEl.innerHTML=`<div style="background:var(--red)22;border:1px solid var(--red)44;border-radius:10px;padding:12px;margin-bottom:14px;font-size:13px;color:var(--red)">
+            ⛔ ${alerta.mensagem}
+          </div>`;
+        } else {
+          alEl.innerHTML=`<div style="background:var(--green)22;border:1px solid var(--green)44;border-radius:10px;padding:12px;margin-bottom:14px;font-size:13px;color:var(--green)">
+            ✅ ${alerta.mensagem}
+          </div>`;
+        }
+      }
+      el.innerHTML=data?.length
+        ?data.map(e=>{
+          const dias=Math.ceil((new Date(e.data_inicio)-new Date())/86400000);
+          const cor=dias<60?'var(--red)':dias<90?'var(--yellow)':'var(--green)';
+          return `<div style="background:var(--b-1);border:1px solid var(--b-2);border-radius:10px;
+                      padding:14px 16px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+            <div>
+              <div style="font-weight:700;font-size:13px;color:var(--c-white)">${sanitize(e.titulo)}</div>
+              <div style="font-size:12px;color:var(--c-slate)">📅 ${_fmt(e.data_inicio)} · ${sanitize(e.local||'A definir')}</div>
+            </div>
+            <span style="font-size:12px;font-weight:800;color:${cor}">
+              ${dias>0?`${dias}d`:'Hoje'}
+            </span>
+          </div>`;
+        }).join('')
+        :'<div style="padding:16px;text-align:center;color:var(--c-slate);font-size:13px">Nenhum evento cadastrado.</div>';
+    }catch(e){el.innerHTML='<div style="padding:16px;color:var(--c-slate)">Erro ao carregar.</div>';}
+  },
+  novoEventoComercial() {
+    const hoje=new Date().toISOString().split('T')[0];
+    abrirModal({titulo:'🗓️ Novo Evento Comercial',tipo:'info',corpo:`
+      <div class="form-group"><label class="form-label">Nome do Evento *</label>
+        <input id="ec-titulo" class="form-input" placeholder="Ex: Festa Junina UFPI"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div class="form-group"><label class="form-label">Data do evento *</label>
+          <input id="ec-data" type="date" class="form-input" value="${hoje}"></div>
+        <div class="form-group"><label class="form-label">Meta de receita (R$)</label>
+          <input id="ec-meta" type="number" class="form-input" placeholder="500"></div>
+      </div>
+      <div class="form-group"><label class="form-label">Local</label>
+        <input id="ec-local" class="form-input" placeholder="UFPI – Bloco A"></div>`,
+    botoes:[
+      {texto:'Cancelar',classe:'btn-ghost',acao:fecharModal},
+      {texto:'Cadastrar ✓',classe:'btn-primary',acao:()=>this._salvarEventoComercial()}
+    ]});
+  },
+  async _salvarEventoComercial() {
+    const titulo=document.getElementById('ec-titulo')?.value?.trim();
+    const data  =document.getElementById('ec-data')?.value;
+    const local =document.getElementById('ec-local')?.value?.trim();
+    if(!titulo||!data){mostrarToast('Preencha nome e data!','warning');return;}
+    /* Verifica regra 60 dias */
+    if (window.Permissoes) {
+      const alerta=Permissoes.REGRAS.alertaCalendario60Dias(data+'T12:00:00', Permissoes.isAdmin());
+      if (alerta.bloqueado) { mostrarToast(alerta.mensagem,'warning'); return; }
+    }
+    fecharModal();
+    try {
+      const coords=await getCoords();
+      const fin=coords.find(c=>c.sigla==='FIN');
+      await _sb().from('eventos').insert([{
+        titulo, tipo:'evento', data_inicio:data+'T12:00:00',
+        local:local||null, ativo:true,
+        coordenadoria_id:fin?.id||null,
+        criado_por:window._appProfile?.id
+      }]);
+      mostrarToast('Evento comercial cadastrado!','success');
+      this._carregarCalendario();
+    }catch(e){mostrarToast('Erro ao cadastrar.','error');}
+  },
+  novoRepasse() {
+    abrirModal({titulo:'⏱️ Registrar Repasse Transitório',tipo:'warning',corpo:`
+      <div style="background:var(--yellow)22;border:1px solid var(--yellow)44;border-radius:8px;padding:12px;margin-bottom:14px;font-size:13px;color:var(--yellow);font-weight:600">
+        ⚠️ O timer de 24h inicia agora. Recursos devem ser transferidos à conta oficial em até 24h.
+        Ultrapassar este prazo é infração gravíssima (Art. 26º IV).
+      </div>
+      <div class="form-group"><label class="form-label">Valor (R$) *</label>
+        <input id="rp-valor" type="number" step="0.01" class="form-input" placeholder="0,00"></div>
+      <div class="form-group"><label class="form-label">Descrição *</label>
+        <input id="rp-desc" class="form-input" placeholder="Ex: Arrecadação da rifa de abril"></div>`,
+    botoes:[
+      {texto:'Cancelar',classe:'btn-ghost',acao:fecharModal},
+      {texto:'Iniciar timer ✓',classe:'btn-primary',acao:()=>this._salvarRepasse()}
+    ]});
+  },
+  async _salvarRepasse() {
+    const valor=parseFloat(document.getElementById('rp-valor')?.value);
+    const desc =document.getElementById('rp-desc')?.value?.trim();
+    if(isNaN(valor)||!desc){mostrarToast('Preencha todos os campos!','warning');return;}
+    fecharModal();
+    try {
+      const coords=await getCoords();
+      const fin=coords.find(c=>c.sigla==='FIN');
+      const agora=new Date().toISOString();
+      await _sb().from('vendas').insert([{
+        descricao:`[REPASSE] ${desc}`, valor,
+        data_venda:agora.split('T')[0],
+        produto:'repasse_transitorio',
+        coordenadoria_id:fin?.id||null,
+        registrado_por:window._appProfile?.id
+      }]);
+      localStorage.setItem('nupi_repasse_ativo', JSON.stringify({desc,valor,inicio:agora}));
+      mostrarToast(`⏱️ Timer 24h iniciado! Transferir R$ ${valor.toFixed(2)} até ${new Date(Date.now()+86400000).toLocaleString('pt-BR')}`,'warning');
+    }catch(e){mostrarToast('Erro ao registrar repasse.','error');}
+  },
+  _renderABJFin() {
+    const pg=document.getElementById('page-fin_abj');
+    if(!pg)return;
+    const ct=pg.querySelector('.content')||pg;
+    ct.innerHTML=_sc('ABJ Financeiro','💳',`
+      <p style="font-size:13px;color:var(--c-slate);margin-bottom:16px">
+        Registre as atividades ABJ da Coordenadoria Financeira.
+        Mínimo exigido para ⭐ Estrelas 1–4.
+      </p>
+      <div id="abj-fin-lista" style="display:flex;flex-direction:column;gap:8px">
+        <div style="padding:20px;text-align:center;color:var(--c-slate);font-size:13px">Carregando atividades...</div>
+      </div>`);
+    this._carregarABJFin();
+  },
+  async _carregarABJFin() {
+    const el=document.getElementById('abj-fin-lista');
+    if(!el||!_sb())return;
+    try {
+      const {data}=await _sb()
+        .from('progresso_abj')
+        .select('*, atividades_abj(numero,nome)')
+        .eq('registrado_por', window._appProfile?.id)
+        .order('created_at',{ascending:false})
+        .limit(18);
+      el.innerHTML=(data||[]).length
+        ?(data||[]).map(p=>`
+          <div style="background:var(--b-1);border:1px solid var(--b-2);border-radius:10px;
+                      padding:12px 16px;display:flex;justify-content:space-between;align-items:center;gap:8px">
+            <div>
+              <div style="font-size:11px;font-weight:700;color:var(--c-accent)">Atividade ${p.atividades_abj?.numero||'—'}</div>
+              <div style="font-weight:600;font-size:13px;color:var(--c-white)">${sanitize(p.atividades_abj?.nome||'—')}</div>
+              <div style="font-size:11px;color:var(--c-slate)">${_fmt(p.created_at)}</div>
+            </div>
+            <span style="font-size:11px;font-weight:700;padding:3px 9px;border-radius:99px;
+                         background:${p.aprovado?'var(--green)22':'var(--yellow)22'};
+                         color:${p.aprovado?'var(--green)':'var(--yellow)'};
+                         border:1px solid ${p.aprovado?'var(--green)44':'var(--yellow)44'}">
+              ${p.aprovado?'✓ Aprovado':'⏳ Pendente'}
+            </span>
+          </div>`).join('')
+        :'<div style="padding:16px;text-align:center;color:var(--c-slate)">Nenhum progresso ABJ registrado. Acesse a aba ABJ!</div>';
+    }catch(e){el.innerHTML='<div style="padding:16px;color:var(--c-slate)">Erro ao carregar.</div>';}
+  },
   _renderFluxo() {
     const pg=document.getElementById('page-fin_fluxo');
     if(!pg)return;
@@ -608,7 +1134,7 @@ const PageOperacoes = {
   }
 };
 const PagePessoas = {
-  async init() { this._renderMembros(); },
+  async init() { this._renderMembros(); this._renderClima(); this._renderTAP(); },
   _renderMembros() {
     const pg=document.getElementById('page-membros');
     if(!pg)return;
@@ -661,11 +1187,158 @@ const PagePessoas = {
     const pg=document.getElementById('page-gp_clima');
     if(!pg)return;
     const ct=pg.querySelector('.content')||pg;
-    ct.innerHTML=_sc('Pesquisa de Clima','🌡️',`
-      <p style="font-size:13px;color:var(--c-slate);margin-bottom:14px">
-        Bimestral (Regimento Art. 12º VI). Adicione o link do formulário — todos os membros recebem notificação.
+    ct.innerHTML=_sc('Pesquisa de Clima Organizacional','🌡️',`
+      <p style="font-size:13px;color:var(--c-slate);margin-bottom:16px">
+        Bimestral, obrigatória (Regimento Art. 12º VI). Mín. 70% de resposta para pontuação ABJ.
+        Resultados ficam visíveis apenas para Coord. Geral e GP.
       </p>
-      ${_btn('+ Adicionar pesquisa',"PagePessoas.adicionarClima()")}`);
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px">
+        ${_btn('+ Nova pesquisa',"PagePessoas.adicionarClima()")}
+        ${_btn('Ver histórico',"PagePessoas.historicoPesquisas()",'btn-ghost')}
+      </div>
+      <div id="clima-lista" style="display:flex;flex-direction:column;gap:8px">
+        <div style="padding:20px;text-align:center;color:var(--c-slate);font-size:13px">Carregando...</div>
+      </div>`) +
+    _sc('Indicadores Bimestrais','📊',`
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px">
+        <div class="sum-card" style="padding:14px;text-align:center">
+          <div id="clima-nps" style="font-size:26px;font-weight:900;color:var(--green)">—</div>
+          <div style="font-size:11px;color:var(--c-slate)">NPS interno</div>
+        </div>
+        <div class="sum-card" style="padding:14px;text-align:center">
+          <div id="clima-participacao" style="font-size:26px;font-weight:900;color:var(--c-accent)">—%</div>
+          <div style="font-size:11px;color:var(--c-slate)">Participação</div>
+        </div>
+        <div class="sum-card" style="padding:14px;text-align:center">
+          <div id="clima-total" style="font-size:26px;font-weight:900;color:var(--c-white)">0</div>
+          <div style="font-size:11px;color:var(--c-slate)">Pesquisas</div>
+        </div>
+      </div>`);
+    this._carregarClima();
+  },
+  async _carregarClima() {
+    const el  = document.getElementById('clima-lista');
+    const tot = document.getElementById('clima-total');
+    if (!el||!_sb()) return;
+    try {
+      const { data } = await _sb()
+        .from('eventos')
+        .select('*')
+        .eq('tipo','pesquisa_clima')
+        .order('data_inicio',{ascending:false})
+        .limit(8);
+      if (tot) tot.textContent = data?.length||0;
+      el.innerHTML = data?.length
+        ? data.map(p=>`
+          <div style="background:var(--b-1);border:1px solid var(--b-2);border-radius:10px;
+                      padding:14px 16px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+            <div>
+              <div style="font-weight:700;font-size:13px;color:var(--c-white)">${sanitize(p.titulo)}</div>
+              <div style="font-size:12px;color:var(--c-slate)">📅 ${_fmt(p.data_inicio)}
+                ${p.descricao?` · <a href="${sanitize(p.descricao)}" target="_blank" style="color:var(--c-accent)">Link ↗</a>`:''}
+              </div>
+            </div>
+            <span style="font-size:11px;font-weight:700;padding:3px 9px;border-radius:99px;
+                         background:${p.ativo?'var(--c-accent)22':'var(--green)22'};
+                         color:${p.ativo?'var(--c-accent)':'var(--green)'};
+                         border:1px solid ${p.ativo?'var(--c-accent)44':'var(--green)44'}">
+              ${p.ativo?'🟠 Aberta':'✓ Encerrada'}
+            </span>
+          </div>`).join('')
+        : '<div style="padding:16px;text-align:center;color:var(--c-slate);font-size:13px">Nenhuma pesquisa registrada ainda.</div>';
+    } catch(e) { el.innerHTML='<div style="padding:16px;color:var(--c-slate)">Erro ao carregar.</div>'; }
+  },
+  historicoPesquisas() { mostrarToast('Histórico completo em breve.','info'); },
+  _renderTAP() {
+    const pg=document.getElementById('page-gp_tap');
+    if(!pg)return;
+    const ct=pg.querySelector('.content')||pg;
+    ct.innerHTML=_sc('TAP — Trilha de Aperfeiçoamento Profissional','🎓',`
+      <p style="font-size:13px;color:var(--c-slate);margin-bottom:16px">
+        Treinamentos, capacitações e desenvolvimento dos membros.
+        Mínimo de 1 treinamento/membro por semestre (Regimento Art. 12º III).
+      </p>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px">
+        ${_btn('+ Registrar capacitação',"PagePessoas.novoTreinamento()")}
+        ${_btn('Ver membros',"PagePessoas.relatorioTAP()",'btn-ghost')}
+      </div>
+      <div id="tap-lista" style="display:flex;flex-direction:column;gap:8px">
+        <div style="padding:20px;text-align:center;color:var(--c-slate);font-size:13px">Carregando...</div>
+      </div>`) +
+    _sc('CRM de Talentos','🏅',`
+      <p style="font-size:13px;color:var(--c-slate);margin-bottom:14px">
+        Mapeie habilidades e potenciais de cada membro para vagas de liderança.
+      </p>
+      ${_btn('+ Registrar talento',"PagePessoas.novoTalento()")}`);
+    this._carregarTAP();
+  },
+  async _carregarTAP() {
+    const el=document.getElementById('tap-lista');
+    if(!el||!_sb())return;
+    try {
+      const { data } = await _sb()
+        .from('eventos')
+        .select('*, users!criado_por(nome)')
+        .eq('tipo','treinamento')
+        .order('data_inicio',{ascending:false})
+        .limit(10);
+      el.innerHTML = data?.length
+        ? data.map(t=>`
+          <div style="background:var(--b-1);border:1px solid var(--b-2);border-radius:10px;
+                      padding:12px 16px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+            <div>
+              <div style="font-weight:700;font-size:13px;color:var(--c-white)">${sanitize(t.titulo)}</div>
+              <div style="font-size:12px;color:var(--c-slate)">
+                📅 ${_fmt(t.data_inicio)} · 👥 ${t.vagas||'—'} participantes
+                ${t.local?` · 📍 ${sanitize(t.local)}`:''}
+              </div>
+            </div>
+            <span style="font-size:11px;font-weight:700;padding:3px 9px;border-radius:99px;
+                         background:var(--c-accent)22;color:var(--c-accent);border:1px solid var(--c-accent)44">
+              Treinamento
+            </span>
+          </div>`).join('')
+        : '<div style="padding:16px;text-align:center;color:var(--c-slate);font-size:13px">Nenhum treinamento registrado.</div>';
+    } catch(e) { el.innerHTML='<div style="padding:16px;color:var(--c-slate)">Erro ao carregar.</div>'; }
+  },
+  relatorioTAP() { mostrarToast('Relatório de participação TAP em breve.','info'); },
+  novoTreinamento() {
+    const hoje=new Date().toISOString().slice(0,16);
+    abrirModal({ titulo:'🎓 Registrar Capacitação', tipo:'info', corpo:`
+      <div class="form-group"><label class="form-label">Nome do Treinamento *</label>
+        <input id="tr-nome" class="form-input" placeholder="Ex: Fundamentos de Gestão de Projetos"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div class="form-group"><label class="form-label">Data</label>
+          <input id="tr-data" type="datetime-local" class="form-input" value="${hoje}"></div>
+        <div class="form-group"><label class="form-label">Vagas</label>
+          <input id="tr-vagas" type="number" class="form-input" placeholder="20"></div>
+      </div>
+      <div class="form-group"><label class="form-label">Local / Link</label>
+        <input id="tr-local" class="form-input" placeholder="UFPI / https://meet.google.com/..."></div>`,
+    botoes:[
+      {texto:'Cancelar',classe:'btn-ghost',acao:fecharModal},
+      {texto:'Registrar ✓',classe:'btn-primary',acao:()=>this._salvarTreinamento()}
+    ]});
+  },
+  async _salvarTreinamento() {
+    const titulo = document.getElementById('tr-nome')?.value?.trim();
+    const data   = document.getElementById('tr-data')?.value;
+    const vagas  = parseInt(document.getElementById('tr-vagas')?.value)||null;
+    const local  = document.getElementById('tr-local')?.value?.trim();
+    if (!titulo||!data) { mostrarToast('Preencha nome e data!','warning'); return; }
+    fecharModal();
+    try {
+      const coords = await getCoords();
+      const gp = coords.find(c=>c.sigla==='GP');
+      await _sb().from('eventos').insert([{
+        titulo, tipo:'treinamento', data_inicio:data,
+        vagas:vagas||null, local:local||null, ativo:true,
+        coordenadoria_id:gp?.id||null,
+        criado_por: window._appProfile?.id,
+      }]);
+      mostrarToast('Treinamento registrado!','success');
+      this._carregarTAP();
+    } catch(e) { mostrarToast('Erro ao registrar.','error'); }
   },
   convidar() {
     getCoords().then(coords=>{
@@ -713,7 +1386,40 @@ const PagePessoas = {
       mostrarToast(`Convite enviado para ${email}!`,'success');
     }catch(e){mostrarToast('Erro ao enviar convite.','error');}
   },
-  adicionarClima(){mostrarToast('Pesquisa de clima aguardando Supabase.','info');},
+  adicionarClima() {
+    const hoje = new Date().toISOString().split('T')[0];
+    abrirModal({ titulo:'🌡️ Nova Pesquisa de Clima', tipo:'info', corpo:`
+      <div class="form-group"><label class="form-label">Título *</label>
+        <input id="cl-titulo" class="form-input" value="Pesquisa de Clima — ${new Date().toLocaleDateString('pt-BR',{month:'long',year:'numeric'})}"></div>
+      <div class="form-group"><label class="form-label">Link do formulário (Google Forms etc.)</label>
+        <input id="cl-link" type="url" class="form-input" placeholder="https://forms.gle/..."></div>
+      <div class="form-group"><label class="form-label">Data de encerramento</label>
+        <input id="cl-data" type="date" class="form-input" value="${hoje}"></div>`,
+    botoes:[
+      {texto:'Cancelar',classe:'btn-ghost',acao:fecharModal},
+      {texto:'Publicar ✓',classe:'btn-primary',acao:()=>this._publicarClima()}
+    ]});
+  },
+  async _publicarClima() {
+    const titulo = document.getElementById('cl-titulo')?.value?.trim();
+    const link   = document.getElementById('cl-link')?.value?.trim();
+    const data   = document.getElementById('cl-data')?.value;
+    if (!titulo) { mostrarToast('Preencha o título!','warning'); return; }
+    fecharModal();
+    try {
+      const coords = await getCoords();
+      const gp = coords.find(c=>c.sigla==='GP');
+      await _sb().from('eventos').insert([{
+        titulo, tipo:'pesquisa_clima',
+        data_inicio: data+'T08:00:00',
+        descricao: link||null, ativo:true,
+        coordenadoria_id: gp?.id||null,
+        criado_por: window._appProfile?.id,
+      }]);
+      mostrarToast('Pesquisa publicada! Membros serão notificados.','success');
+      this._carregarClima();
+    } catch(e) { mostrarToast('Erro ao publicar pesquisa.','error'); }
+  },
   exportar(){mostrarToast('Exportação aguardando Supabase.','info');},
   novoTalento() {
     abrirModal({ titulo:'👤 Novo Talento', tipo:'info', corpo:`
