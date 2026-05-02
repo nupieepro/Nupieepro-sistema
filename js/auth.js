@@ -26,7 +26,7 @@ const Auth = {
     return data;
   },
 
-  async registerWithToken(token, nome, password) {
+  async registerWithToken(token, nome, password, extraMetadata = {}) {
     const sb = this._db();
     if (!sb) throw new Error('Sistema offline. Verifique a conexão.');
 
@@ -41,13 +41,22 @@ const Auth = {
     if (tokenErr || !convite) throw new Error('Convite inválido ou expirado.');
 
     const iniciais = nome.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
+    const metadataCompleto = {
+      nome,
+      role: convite.role,
+      cargo: convite.cargo,
+      coordenadoria_id: convite.coordenadoria_id,
+      iniciais,
+      apelido: extraMetadata.apelido || nome.split(' ')[0],
+      data_nascimento: extraMetadata.data_nascimento || null,
+      nome_primeiro: extraMetadata.nome_primeiro || nome.split(' ')[0],
+      nome_sobrenome: extraMetadata.nome_sobrenome || nome.split(' ').slice(1).join(' ')
+    };
+
     const { data, error } = await sb.auth.signUp({
       email: convite.email,
       password,
-      options: {
-        data: { nome, role: convite.role, cargo: convite.cargo,
-                coordenadoria_id: convite.coordenadoria_id, iniciais }
-      }
+      options: { data: metadataCompleto }
     });
 
     if (error) throw error;
@@ -313,26 +322,38 @@ async function loadConviteInfo(token) {
 async function doConviteRegister() {
   const token = (window.App ? window.App.param('token') : new URLSearchParams(window.location.search).get('token'));
   const nome = document.getElementById('conviteNome').value.trim();
+  const sobrenome = document.getElementById('conviteSobrenome').value.trim();
+  const apelido = document.getElementById('conviteApelido').value.trim();
+  const nascimento = document.getElementById('conviteNascimento').value;
   const password = document.getElementById('convitePassword').value;
   const confirm = document.getElementById('conviteConfirm').value;
 
   if (!nome) { showAlert('Insira seu nome.', 'error', 'conviteAlert'); return; }
+  if (!sobrenome) { showAlert('Insira seu sobrenome.', 'error', 'conviteAlert'); return; }
+  if (!apelido) { showAlert('Insira seu apelido.', 'error', 'conviteAlert'); return; }
+  if (!nascimento) { showAlert('Insira sua data de aniversário.', 'error', 'conviteAlert'); return; }
   if (password.length < 6) { showAlert('Senha deve ter pelo menos 6 caracteres.', 'error', 'conviteAlert'); return; }
   if (password !== confirm) { showAlert('As senhas não coincidem.', 'error', 'conviteAlert'); return; }
 
   const btn = document.getElementById('btnConvite');
   btn.classList.add('loading');
-  btn.textContent = 'Criando conta...';
+  btn.textContent = 'Criando sua conta...';
 
   try {
-    await Auth.registerWithToken(token, nome, password);
-    showAlert('Conta criada com sucesso!', 'success', 'conviteAlert');
-    if (window.App) window.App.toast('Bem-vindo ao NUPIEEPRO!', 'success');
-    setTimeout(() => { window.location.href = 'dashboard.html'; }, 1000);
+    const nomeCompleto = `${nome} ${sobrenome}`;
+    await Auth.registerWithToken(token, nomeCompleto, password, {
+      apelido: apelido,
+      data_nascimento: nascimento,
+      nome_primeiro: nome,
+      nome_sobrenome: sobrenome
+    });
+    showAlert('Conta criada com sucesso! Bem-vindo(a), ' + apelido + '!', 'success', 'conviteAlert');
+    if (window.App) window.App.toast('🎉 Bem-vindo ao NUPIEEPRO, ' + apelido + '!', 'success');
+    setTimeout(() => { window.location.href = 'dashboard.html'; }, 1500);
   } catch (err) {
     showAlert(err.message || 'Erro ao criar conta.', 'error', 'conviteAlert');
   } finally {
     btn.classList.remove('loading');
-    btn.textContent = 'Criar Conta';
+    btn.textContent = 'Criar Minha Conta';
   }
 }

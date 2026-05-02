@@ -518,6 +518,17 @@ const App = {
     document.getElementById('sideAvatar').textContent = profile.iniciais || profile.nome?.[0] || '?';
     document.getElementById('sideName').textContent   = profile.nome || 'Usuário';
     document.getElementById('sideRole').textContent   = userRoleLabel + ' · ' + coordName;
+    
+    // Saudação dinâmica com horário
+    const hour = new Date().getHours();
+    let greeting = 'Boa noite';
+    if (hour >= 5 && hour < 12) greeting = 'Bom dia';
+    else if (hour >= 12 && hour < 18) greeting = 'Boa tarde';
+    
+    const topbarTitle = document.querySelector('.topbar-title');
+    if (topbarTitle && topbarTitle.textContent === 'Dashboard') {
+      topbarTitle.textContent = `${greeting}, ${profile.nome || 'você'}!`;
+    }
 
     App.buildSidebar(coordName);
     App.buildMobileNav(coordName);
@@ -739,36 +750,42 @@ const Dashboard = {
    ============================================================ */
 const Theme = {
   apply(name) {
-    if (name === 'default') name = 'dark-orange'; // Novo fallback dark
+    if (name === 'default') name = 'dark-orange';
     document.documentElement.setAttribute('data-theme', name);
     localStorage.setItem('nupie_theme', name);
+    localStorage.setItem('nupie_theme_updated', new Date().toISOString());
     
     // Update active button
     document.querySelectorAll('[id^="themeBtn-"]').forEach(b => b.classList.remove('active'));
     const btn = document.getElementById('themeBtn-' + name);
     if (btn) btn.classList.add('active');
+    
+    // Update sistema label
+    const themeLabel = {
+      'dark-orange': 'Fusion Elite',
+      'luminous': 'Claro Premium',
+      'obsidian': 'Obsidian Dark'
+    };
+    const label = document.getElementById('systemThemeLabel');
+    if (label) label.textContent = themeLabel[name] || 'Customizado';
 
-    // Mudar cor da logo de acordo com o tema (usando CSS filter para evitar falta de imagem)
-    const logo = document.getElementById('sideLogoImg');
-    if (logo) {
-      if (name === 'dark-purple') {
-        logo.style.filter = 'hue-rotate(240deg) brightness(1.2)';
-      } else {
-        logo.style.filter = 'none';
-      }
-    }
+    haptic();
+    App.toast('Tema alterado com sucesso!', 'success', 2000);
   },
 
   applyFont(name) {
     document.documentElement.setAttribute('data-font', name === 'default' ? '' : name);
     localStorage.setItem('nupie_font', name);
+    localStorage.setItem('nupie_font_updated', new Date().toISOString());
     document.querySelectorAll('[id^="fontBtn-"]').forEach(b => b.classList.remove('active'));
     const btn = document.getElementById('fontBtn-' + name);
     if (btn) btn.classList.add('active');
+    haptic();
+    App.toast('Fonte alterada com sucesso!', 'success', 2000);
   },
 
   init() {
-    const theme = localStorage.getItem('nupie_theme') || 'default';
+    const theme = localStorage.getItem('nupie_theme') || 'dark-orange';
     const font  = localStorage.getItem('nupie_font')  || 'default';
     Theme.apply(theme);
     Theme.applyFont(font);

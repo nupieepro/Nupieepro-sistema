@@ -15,6 +15,21 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=Plus+Jakarta+Sans:wght@700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/styles.css">
+  <style>
+    .invite-wizard { display: flex; flex-direction: column; gap: 1.2rem; }
+    .form-section-header { font-size: 0.85rem; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px; margin-top: 1rem; margin-bottom: 0.5rem; }
+    .two-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    @media (max-width: 480px) { .two-cols { grid-template-columns: 1fr; } }
+    .theme-selector { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 0.8rem; }
+    .theme-option { padding: 10px; border: 2px solid transparent; border-radius: 8px; background: rgba(255,255,255,0.05); cursor: pointer; transition: all 200ms; text-align: center; font-size: 12px; }
+    .theme-option:hover { background: rgba(255,255,255,0.08); }
+    .theme-option.active { border-color: var(--orange); background: rgba(247,84,18,0.15); }
+    .theme-dot { width: 24px; height: 24px; border-radius: 6px; margin: 0 auto 6px; }
+    .pwn-toast { position: fixed; bottom: 24px; right: 24px; background: linear-gradient(135deg, #f75412, #ff7043); color: #fff; padding: 16px 20px; border-radius: 12px; box-shadow: 0 8px 32px rgba(247,84,18,0.3); font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 12px; animation: slideInUp 400ms ease-out; z-index: 10000; }
+    @keyframes slideInUp { from { transform: translateY(120%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+    .pwn-btn { background: rgba(255,255,255,0.2); border: none; color: #fff; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 12px; }
+    .pwn-btn:hover { background: rgba(255,255,255,0.3); }
+  </style>
 </head>
 <body>
   <div class="login-screen">
@@ -26,8 +41,8 @@
             <div class="logo-wordmark" style="font-size:20px;margin-bottom:8px;">
               NUPIE<span class="pi">EPRO</span>
             </div>
-            <div class="form-title">Criar Conta</div>
-            <div class="form-subtitle">Registro via convite</div>
+            <div class="form-title">Bem-vindo(a)!</div>
+            <div class="form-subtitle">Complete seu perfil para acessar o sistema</div>
           </div>
 
           <div class="form-divider"></div>
@@ -37,20 +52,62 @@
               <p class="text-center text-muted"><span class="spinner"></span> Verificando convite...</p>
             </div>
 
-            <form id="conviteForm" class="field-group" onsubmit="return false;" style="margin-top:1rem;">
-              <div class="field">
-                <label for="conviteNome">Nome completo</label>
-                <input type="text" id="conviteNome" placeholder="Seu nome" required>
+            <form id="conviteForm" class="invite-wizard" onsubmit="return false;" style="margin-top:1rem;">
+              
+              <!-- Informações Pessoais -->
+              <div class="form-section-header">👤 Informações Pessoais</div>
+              <div class="two-cols">
+                <div class="field">
+                  <label for="conviteNome">Nome</label>
+                  <input type="text" id="conviteNome" placeholder="Seu nome" required>
+                </div>
+                <div class="field">
+                  <label for="conviteSobrenome">Sobrenome</label>
+                  <input type="text" id="conviteSobrenome" placeholder="Seu sobrenome" required>
+                </div>
               </div>
+
               <div class="field">
-                <label for="convitePassword">Senha</label>
+                <label for="conviteApelido">Apelido (como quer ser chamado no sistema)</label>
+                <input type="text" id="conviteApelido" placeholder="Ex: 'JR', 'Lilian', 'Edgar'" required>
+                <small style="color: var(--text-secondary); margin-top: 4px; display: block;">O apelido é como o sistema e seus colegas o(a) chamarão no painel.</small>
+              </div>
+
+              <div class="field">
+                <label for="conviteNascimento">Data de Aniversário</label>
+                <input type="date" id="conviteNascimento" required>
+              </div>
+
+              <!-- Acesso ao Sistema -->
+              <div class="form-section-header">🔐 Acesso ao Sistema</div>
+              <div class="field">
+                <label for="convitePassword">Criar Senha</label>
                 <input type="password" id="convitePassword" placeholder="Mínimo 6 caracteres" required minlength="6" autocomplete="new-password">
               </div>
               <div class="field">
-                <label for="conviteConfirm">Confirmar senha</label>
+                <label for="conviteConfirm">Confirmar Senha</label>
                 <input type="password" id="conviteConfirm" placeholder="Repita a senha" required minlength="6" autocomplete="new-password">
               </div>
-              <button class="btn-login" id="btnConvite" onclick="doConviteRegister()">Criar Conta</button>
+
+              <!-- Preferências -->
+              <div class="form-section-header">🎨 Preferências de Tema</div>
+              <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 0.8rem;">Escolha o tema que você prefere. Pode alterar depois nas configurações.</p>
+              <div class="theme-selector">
+                <div class="theme-option active" id="themeOpt-orange" onclick="selectTheme('dark-orange', this)">
+                  <div class="theme-dot" style="background: #f75412;"></div>
+                  <div>Fusion</div>
+                </div>
+                <div class="theme-option" id="themeOpt-light" onclick="selectTheme('luminous', this)">
+                  <div class="theme-dot" style="background: #fff;"></div>
+                  <div>Claro</div>
+                </div>
+                <div class="theme-option" id="themeOpt-dark" onclick="selectTheme('dark-orange', this)">
+                  <div class="theme-dot" style="background: #0a0e1a;"></div>
+                  <div>Escuro</div>
+                </div>
+              </div>
+
+              <button class="btn-login" id="btnConvite" onclick="doConviteRegister()" style="margin-top: 1.5rem;">Criar Minha Conta</button>
             </form>
           </div>
 
@@ -67,9 +124,57 @@
     </div>
   </div>
 
+  <!-- Toast PWA Install Prompt -->
+  <div id="pwaToast" class="pwn-toast" style="display: none;">
+    <div>📲 Instale o app para acesso rápido!</div>
+    <button class="pwn-btn" onclick="installPWA()">Instalar</button>
+    <button class="pwn-btn" onclick="dismissPWA()" style="background: rgba(255,255,255,0.1);">✕</button>
+  </div>
+
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-  <script src="js/app.js?v=13"></script>
-  <script src="js/auth.js?v=13"></script>
-  <script>initConvitePage();</script>
+  <script src="js/app.js?v=14"></script>
+  <script src="js/auth.js?v=14"></script>
+  <script>
+    let selectedTheme = 'dark-orange';
+    
+    function selectTheme(theme, el) {
+      selectedTheme = theme;
+      document.querySelectorAll('.theme-option').forEach(t => t.classList.remove('active'));
+      el.classList.add('active');
+    }
+
+    let deferredPrompt;
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      document.getElementById('pwaToast').style.display = 'flex';
+    });
+
+    function installPWA() {
+      if (deferredPrompt) {
+        deferredPrompt.prompt();
+        deferredPrompt.userChoice.then(choiceResult => {
+          if (choiceResult.outcome === 'accepted') {
+            console.log('PWA instalado');
+          }
+          deferredPrompt = null;
+          dismissPWA();
+        });
+      }
+    }
+
+    function dismissPWA() {
+      document.getElementById('pwaToast').style.display = 'none';
+    }
+
+    // Salvar tema selecionado após registro
+    const originalRegister = window.doConviteRegister;
+    window.doConviteRegister = async function() {
+      localStorage.setItem('nupie_theme', selectedTheme);
+      if (originalRegister) await originalRegister();
+    };
+
+    initConvitePage();
+  </script>
 </body>
 </html>
