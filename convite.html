@@ -9,8 +9,8 @@
   <meta name="apple-mobile-web-app-title" content="NUPIEEPRO">
   <title>NUPIEEPRO — Criar Conta</title>
   <link rel="manifest" href="manifest.json">
-  <link rel="apple-touch-icon" href="assets/icon.svg">
-  <link rel="icon" href="assets/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="assets/icon.png">
+  <link rel="icon" href="assets/icon.png" type="image/png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=Plus+Jakarta+Sans:wght@700;800;900&display=swap" rel="stylesheet">
@@ -37,8 +37,10 @@
     <div class="login-container" style="justify-content:center;">
       <div class="form-panel">
         <div class="form-card">
-          <div>
-            <div class="logo-wordmark" style="font-size:20px;margin-bottom:8px;">
+
+          <!-- Logo -->
+          <div style="margin-bottom:4px;">
+            <div class="logo-wordmark" style="font-size:20px;margin-bottom:6px;">
               NUPIE<span class="pi">EPRO</span>
             </div>
             <div class="form-title">Bem-vindo(a)!</div>
@@ -47,9 +49,31 @@
 
           <div class="form-divider"></div>
 
-          <div id="conviteContent">
-            <div id="conviteInfo">
-              <p class="text-center text-muted"><span class="spinner"></span> Verificando convite...</p>
+          <!-- Loading -->
+          <div id="conviteLoading">
+            <p class="text-center text-muted"><span class="spinner"></span> Verificando convite…</p>
+          </div>
+
+          <!-- Erro -->
+          <div id="conviteError" style="display:none;">
+            <div class="alert-box" id="conviteErrorMsg" style="display:block;"></div>
+            <p class="footer-note" style="margin-top:16px;">
+              Já tem conta? <a href="index.html">Fazer login</a>
+            </p>
+          </div>
+
+          <!-- ═══ WIZARD ═══ -->
+          <div id="wizard" style="display:none;">
+
+            <!-- Barra de progresso -->
+            <div class="wiz-bar">
+              <div class="wiz-dot active" id="wd1">1</div>
+              <div class="wiz-line" id="wl1"></div>
+              <div class="wiz-dot" id="wd2">2</div>
+              <div class="wiz-line" id="wl2"></div>
+              <div class="wiz-dot" id="wd3">3</div>
+              <div class="wiz-line" id="wl3"></div>
+              <div class="wiz-dot" id="wd4">✦</div>
             </div>
 
             <form id="conviteForm" class="invite-wizard" onsubmit="return false;" style="margin-top:1rem;">
@@ -111,14 +135,24 @@
             </form>
           </div>
 
-          <div class="alert-box" id="conviteAlert"></div>
+          <!-- ═══ SUCESSO ═══ -->
+          <div id="conviteSuccess" style="display:none;">
+            <div class="success-wrap">
+              <div class="success-icon">✅</div>
+              <div class="step-title" id="successTitle">Conta criada!</div>
+              <p class="step-sub" id="successSub">Bem-vindo(a) ao NUPIEEPRO Sistema.</p>
+              <p style="font-size:11px;color:rgba(255,255,255,.3);margin-top:18px;">
+                Redirecionando para o login em <span id="cd">3</span>s…
+              </p>
+            </div>
+          </div>
 
           <div class="form-divider"></div>
-
           <p class="footer-note">
             Já tem conta? <a href="index.html">Fazer login</a><br>
             <span>NUPIEEPRO</span> · Selo ABJ 2026
           </p>
+
         </div>
       </div>
     </div>

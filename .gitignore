@@ -1,37 +1,5 @@
-# ─── Credenciais — NUNCA commitar ───────────────────────────────
-js/config.js
-
-# ─── Ambiente local ──────────────────────────────────────────────
-.env
-.env.*
-*.local
-
-# ─── Arquivos stray / duplicatas (já estão em assets/) ──────────
-Cópia de Arte_20260419_225925_0000.png
-Manual de Núcleos Estaduais 2026.pdf
-Regimento Interno NUPIEEPRO*.pdf
-assets/1000279363.png
-
-# ─── Backups e temporários ───────────────────────────────────────
-*.bak
-*.backup
-*.tmp
-*.swp
-*.swo
-*~
+.claude/
 .DS_Store
-Thumbs.db
-
-# ─── IDEs ────────────────────────────────────────────────────────
-.vscode/settings.json
-.idea/
-*.code-workspace
-
-# ─── Logs ────────────────────────────────────────────────────────
-*.log
-npm-debug.log*
-
-# ─── Dependências (caso um package.json seja adicionado) ─────────
 node_modules/
 dist/
-.cache/
+*.log

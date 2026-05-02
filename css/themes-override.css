@@ -1,8 +1,8 @@
 :root,
 [data-theme="nucleo"] {
-  --c-bg:        #f0f3f8;
-  --c-s1:        #29324f;   
-  --c-s2:        #1e2a42;   
+  --c-bg:        #F5F7FB;   /* Fundo da Lojinha */
+  --c-s1:        #0f0732;   /* Roxo Brand */
+  --c-s2:        #161042;   
   --c-s3:        #ffffff;   
   --c-s4:        #e4eaf5;   
   --c-s5:        #f75412;   
@@ -95,7 +95,7 @@
 :root .section-card,
 [data-theme="nucleo"] .section-card {
   background: #ffffff;
-  border-color: rgba(41,50,79,0.10);
+  border-color: rgba(15, 7, 50, 0.12); /* Bordas mais visíveis */
   box-shadow: var(--sh-sm);
 }
 :root .mobile-nav,
@@ -159,29 +159,29 @@
   --c-s3:       #0a0a0a;
   --c-s4:       #111111;
   --c-s5:       #f75412;
-  --c-slate:    #999999;
+  --c-slate:    #ffffff; /* White text on black for MAX readability */
   --c-white:    #ffffff;
   --c-accent:   #f75412;
   --c-accent2:  #ff6030;
-  --b-1: rgba(255,255,255,0.08);
-  --b-2: rgba(255,255,255,0.14);
-  --b-3: rgba(255,255,255,0.22);
-  --b-a: rgba(247,84,18,0.50);
-  --border: rgba(255,255,255,0.10);
-  --a-1: rgba(247,84,18,0.08);
-  --a-2: rgba(247,84,18,0.16);
-  --a-3: rgba(247,84,18,0.30);
-  --sh-accent: 0 8px 32px rgba(247,84,18,0.45);
+  --b-1: rgba(255,255,255,0.25);
+  --b-2: rgba(255,255,255,0.40);
+  --b-3: rgba(255,255,255,0.60);
+  --b-a: rgba(247,84,18,0.70);
+  --border: rgba(255,255,255,0.30);
+  --a-1: rgba(247,84,18,0.15);
+  --a-2: rgba(247,84,18,0.25);
+  --a-3: rgba(247,84,18,0.40);
+  --sh-accent: 0 0 40px rgba(247,84,18,0.6);
   --white: #ffffff;
   --orange: #f75412;
-  --w70: #bbbbbb;
-  --w40: rgba(255,255,255,0.40);
-  --w10: rgba(255,255,255,0.08);
-  --w5:  rgba(255,255,255,0.04);
+  --w70: #ffffff;
+  --w40: #ffffff;
+  --w10: rgba(255,255,255,0.2);
+  --w5:  rgba(255,255,255,0.1);
   --tx-1: #ffffff;
-  --tx-2: #cccccc;
-  --tx-3: rgba(255,255,255,0.55);
-  --tx-4: rgba(255,255,255,0.30);
+  --tx-2: #ffffff;
+  --tx-3: #ffffff;
+  --tx-4: #ffffff;
 }
 [data-theme="luminous"],
 [data-theme="claro-suave"] {
@@ -195,11 +195,11 @@
   --c-white: #212940;
   --c-accent: #f75412;
   --c-accent2: #ff7043;
-  --b-1: rgba(33,41,64,0.08);
-  --b-2: rgba(33,41,64,0.13);
-  --b-3: rgba(33,41,64,0.20);
-  --b-a: rgba(247,84,18,0.35);
-  --border: rgba(33,41,64,0.09);
+  --b-1: rgba(33,41,64,0.15); /* Bordas mais escuras */
+  --b-2: rgba(33,41,64,0.25);
+  --b-3: rgba(33,41,64,0.35);
+  --b-a: rgba(248,89,0,0.40);
+  --border: rgba(33,41,64,0.20);
   --a-1: rgba(247,84,18,0.06);
   --a-2: rgba(247,84,18,0.11);
   --a-3: rgba(247,84,18,0.20);
@@ -207,7 +207,7 @@
   --sh-md: 0 8px 28px rgba(0,0,0,0.09);
   --sh-accent: 0 8px 32px rgba(247,84,18,0.18);
   --white: #212940;
-  --orange: #f75412;
+  --orange: #f85900; /* Laranja Lojinha */
   --w70: #6b7599;
   --w40: rgba(33,41,64,0.42);
   --w10: rgba(33,41,64,0.08);
@@ -390,18 +390,18 @@
   --c-s2:    #ffede5;
   --c-s3:    #ffffff;
   --c-s4:    #ffe8df;
-  --c-s5:    #f75412;
+  --c-s5:    #f85900;
   --c-slate: #7a5948;
   --c-white: #1a0a00;
-  --c-accent:  #f75412;
-  --c-accent2: #ff6030;
-  --c-purple:   #f75412;
-  --c-purple-l: #ff8040;
-  --b-1: rgba(247,84,18,0.10);
-  --b-2: rgba(247,84,18,0.18);
-  --b-3: rgba(247,84,18,0.28);
-  --b-a: rgba(247,84,18,0.40);
-  --border: rgba(247,84,18,0.12);
+  --c-accent:  #f85900;
+  --c-accent2: #ff7d33;
+  --c-purple:   #f85900;
+  --c-purple-l: #ff8a40;
+  --b-1: rgba(15, 10, 0, 0.15);
+  --b-2: rgba(15, 10, 0, 0.25);
+  --b-3: rgba(15, 10, 0, 0.35);
+  --b-a: rgba(248, 89, 0, 0.45);
+  --border: rgba(15, 10, 0, 0.18);
   --a-1: rgba(247,84,18,0.06);
   --a-2: rgba(247,84,18,0.12);
   --a-3: rgba(247,84,18,0.22);
@@ -409,8 +409,8 @@
   --sh-sm: 0 4px 12px rgba(247,84,18,0.10);
   --sh-md: 0 8px 28px rgba(247,84,18,0.12);
   --white: #1a0a00;
-  --orange: #f75412;
-  --orange-light: #ff6030;
+  --orange: #f85900;
+  --orange-light: #ff7d33;
   --orange-dim: rgba(247,84,18,0.10);
   --orange-border: rgba(247,84,18,0.30);
   --w70: #7a5948;
@@ -673,4 +673,27 @@ body.profile-switching-in .sidebar-logo {
 [data-theme="white-orange"] ::-webkit-scrollbar-thumb,
 [data-theme="branco-laranja"] ::-webkit-scrollbar-thumb {
   background: rgba(41,50,79,0.18);
+}
+
+/* [V9.0] HUD Scanlines p/ Temas Dark */
+[data-theme="dark"]::after,
+[data-theme="obsidian"]::after,
+[data-theme="dark-orange"]::after,
+[data-theme="badboy"]::after,
+[data-theme="dark-purple"]::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%), 
+              linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
+  background-size: 100% 4px, 4px 100%;
+  z-index: 9999;
+  opacity: 0.3;
+  mix-blend-mode: overlay;
+  animation: scanlineMove 8s linear infinite;
+}
+@keyframes scanlineMove {
+  0% { background-position: 0 0; }
+  100% { background-position: 0 100%; }
 }

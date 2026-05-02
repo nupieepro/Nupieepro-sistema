@@ -14,15 +14,19 @@
   <meta name="apple-mobile-web-app-title" content="NUPIEEPRO">
   <title>NUPIEEPRO — Dashboard</title>
   <link rel="manifest" href="manifest.json">
-  <link rel="apple-touch-icon" href="assets/icon.svg">
-  <link rel="icon" href="assets/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="assets/icon-192.png">
+  <link rel="icon" href="assets/icon-192.png" type="image/png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Plus+Jakarta+Sans:wght@600;700;800;900&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
   
   <!-- EmailJS SDK -->
-  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
-
+  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+  <!-- jsPDF — geração de PDF no browser -->
+  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+  <!-- Iconografia Premium: Lucide -->
+  <script src="https://cdn.jsdelivr.net/npm/lucide@latest/dist/umd/lucide.js"></script>
+  
   <link rel="stylesheet" href="css/styles.css">
   <link rel="stylesheet" href="css/patch.css">
   <link rel="stylesheet" href="css/themes-override.css">
@@ -32,9 +36,9 @@
   
   <script>
     // Injeção Crítica: Impede a tela branca de "Blink"
-    const _t = localStorage.getItem('nupie_theme') || 'dark-orange';
+    const _t = localStorage.getItem('nupie_theme') || 'nucleo';
     const _f = localStorage.getItem('nupie_font') || 'default';
-    document.documentElement.setAttribute('data-theme', _t === 'default' ? 'dark-orange' : _t);
+    document.documentElement.setAttribute('data-theme', _t === 'default' ? 'nucleo' : _t);
     if (_f !== 'default') document.documentElement.setAttribute('data-font', _f);
   </script>
 </head>
@@ -43,23 +47,15 @@
 
     <!-- ═══ SIDEBAR ═══ -->
     <aside class="sidebar" id="sidebar">
-      <div class="sidebar-logo" style="background:#000; padding:1.5rem; display:flex; flex-direction:column; align-items:center; border-bottom:1px solid var(--b-1);">
-        <img src="assets/icon.svg" id="sideLogoImg" style="height:60px; width:auto; max-width:100%; object-fit:contain;" alt="NUPIEEPRO">
-        <div style="text-align:center; margin-top:10px;">
-          <div class="sidebar-logo-text" style="font-size:1.2rem;">NUPIE<span>EPRO</span></div>
-          <div class="sidebar-logo-sub">Sistema de Gestão</div>
+      <div class="sidebar-logo" style="background:#000; padding:2rem 1.5rem; display:flex; flex-direction:column; align-items:center; border-bottom:1px solid var(--b-1);">
+        <img src="assets/logo.png" id="sideLogoImg" style="height:85px; width:auto; max-width:100%; object-fit:contain; margin-bottom:12px;" alt="NUPIEEPRO">
+        <div style="text-align:center;">
+          <div class="sidebar-logo-text" style="font-size:1.4rem; letter-spacing:0.05em;">NUPIE<span>EPRO</span></div>
+          <div class="sidebar-logo-sub" style="font-size:10px; opacity:0.6; margin-top:4px;">PLATAFORMA DE GESTÃO INDUSTRIAL</div>
         </div>
       </div>
 
-      <!-- Role switcher — só aparece para admin/dev -->
-      <div class="role-switcher d-none" id="roleSwitcher" style="flex-wrap:wrap;gap:2px;">
-        <div class="role-tab active" id="roleTab-ger" onclick="switchRole('ger')" title="Coord. Geral">⬡ GER</div>
-        <div class="role-tab" id="roleTab-ops" onclick="switchRole('ops')" title="Operações">⚙ OPS</div>
-        <div class="role-tab" id="roleTab-gp"  onclick="switchRole('gp')"  title="G. Pessoas">◒ G.P</div>
-        <div class="role-tab" id="roleTab-mkt" onclick="switchRole('mkt')" title="Assessor MKT">◬ MKT</div>
-        <div class="role-tab" id="roleTab-prj" onclick="switchRole('prj')" title="Projetos">◫ PRJ</div>
-        <div class="role-tab" id="roleTab-fin" onclick="switchRole('fin')" title="Finanças">◎ FIN</div>
-      </div>
+
 
       <nav id="sideNav">
         <!-- Populated by JS based on user role/coord -->
@@ -73,7 +69,11 @@
             <div class="u-role" id="sideRole">—</div>
           </div>
         </div>
-        <button class="btn-logout" onclick="doLogout()">Sair</button>
+        <div style="display:flex;gap:8px;margin-top:12px">
+          <button class="btn btn-ghost" style="flex:1;font-size:11px" onclick="App.showPage('config')">⚙️ Configs</button>
+          <button class="btn btn-ghost" id="btnSwitchRole" style="flex:1;font-size:11px;display:none" onclick="App.toggleRole()">🔄 Trocar</button>
+          <button class="btn btn-ghost" style="flex:1;font-size:11px;color:var(--red)" onclick="doLogout()">Sair</button>
+        </div>
       </div>
 
       <!-- V6.0 Enterprise Signature -->
@@ -85,9 +85,7 @@
     </aside>
 
     <!-- ═══ MAIN AREA ═══ -->
-    <div id="devBanner" style="display:none; background:var(--orange-dim); border-bottom:1px solid var(--orange-border); padding:6px 12px; font-size:10px; font-weight:800; text-transform:uppercase; letter-spacing:1px; color:var(--orange); align-items:center; gap:8px;">
-      <span class="pulse-dot"></span> DEV MODE ACTIVE — BYPASS ENABLED
-    </div>
+
 
     <div class="main-area">
 
@@ -98,25 +96,32 @@
         <div class="topbar">
           <div style="display:flex;align-items:center;gap:12px;">
             <button class="topbar-toggle" onclick="toggleSidebar()">☰</button>
-            <img src="assets/icon.svg" class="d-md-none" style="height:32px; object-fit:contain; filter: drop-shadow(0 0 5px var(--orange));" alt="Logo">
+            <img src="assets/icon-192.png" class="d-md-none" style="height:32px; object-fit:contain; filter: drop-shadow(0 0 5px var(--orange));" alt="Logo">
             <div>
-              <div class="topbar-title">Dashboard</div>
-              <div class="topbar-sub" style="display:flex;align-items:center;gap:6px;">
-                Visão geral do núcleo 
+              <div class="topbar-title" id="greeting-title">Dashboard</div>
+              <div class="topbar-sub" id="greeting-sub" style="display:flex;align-items:center;gap:6px;">
+                Visão geral do núcleo
                 <span style="display:inline-flex;align-items:center;gap:4px;background:rgba(45,212,160,0.1);color:#2DD4A0;padding:2px 6px;border-radius:100px;font-size:9px;font-weight:800;border:1px solid rgba(45,212,160,0.2);">
                   <span class="pulse-dot" style="width:6px;height:6px;background:#2DD4A0;"></span> CYBERSEC ACTIVE
                 </span>
               </div>
             </div>
           </div>
-          <div style="display:flex;gap:8px;">
-            <div class="theme-pills">
-              <button class="theme-pill theme-orange" onclick="Theme.apply('dark-orange')" title="Tema Laranja"></button>
-              <button class="theme-pill theme-purple" onclick="Theme.apply('dark-purple')" title="Tema Roxo"></button>
+          <div style="display:flex;gap:12px;align-items:center;">
+            <div id="profile-badge" class="profile-badge" onclick="App.toggleRole()">
+              <div style="width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0-8px var(--green)"></div>
+              ONLINE
             </div>
-            <button class="btn btn-icon" onclick="App.toggleTVMode()" title="Modo TV / Kiosk">
-              <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
-            </button>
+            <div class="dropdown">
+              <button class="btn btn-icon" title="Temas" onclick="document.getElementById('themeMenu').classList.toggle('show')">
+                <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><circle cx="12" cy="12" r="10"/><path d="M12 2a10 10 0 0 0 0 20"/></svg>
+              </button>
+              <div id="themeMenu" class="dropdown-content">
+                <div onclick="Theme.set('nucleo')">Núcleo (Padrão)</div>
+                <div onclick="Theme.set('dark-purple')">Roxo Premium</div>
+                <div onclick="Theme.set('default')">Tema Dark</div>
+              </div>
+            </div>
             <button class="btn btn-icon" onclick="App.loadNotifCount()" title="Atualizar">
               <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><path d="M23 4v6h-6M1 20v-6h6M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
             </button>
@@ -157,6 +162,15 @@
               <div id="audit-bar" style="height:100%; width:0%; background:linear-gradient(90deg, #f75412, #ff8c00); box-shadow:0 0 15px var(--orange-dim); transition:width 1.5s cubic-bezier(0.34, 1.56, 0.64, 1);"></div>
             </div>
             <p style="font-size:11px; color:var(--t-3); margin-top:10px;">Status: <span id="audit-status">Sincronizando com a base ABJ...</span></p>
+            
+            <!-- [V9.0] Countdown para próxima estrela -->
+            <div style="margin-top:20px; padding:12px; background:var(--b-1); border-radius:10px; border:1px dashed var(--orange-dim); display:flex; align-items:center; gap:12px">
+              <div style="font-size:24px">⭐</div>
+              <div style="flex:1">
+                <div style="font-size:10px; color:var(--t-3); text-transform:uppercase; letter-spacing:0.05em">Próxima Estrela em:</div>
+                <div id="abj-countdown" style="font-weight:800; color:var(--orange); font-size:14px">--d --h --m</div>
+              </div>
+            </div>
           </section>
 
           <!-- [2] GAMIFICAÇÃO: ESPECIALISTA DE ELITE -->
@@ -233,15 +247,64 @@
         </div>
       </div>
 
-      <!-- MÓDULOS GERAIS (PLACEHOLDERS) -->
-      <div class="page" id="page-geral_reunioes"><div class="topbar"><div class="topbar-title">Reuniões e Check-in</div></div><div class="content"><div class="section-card">Carregando módulo...</div></div></div>
-      <div class="page" id="page-geral_planejamento"><div class="topbar"><div class="topbar-title">Planejamento Semestral</div></div><div class="content"><div class="section-card">Carregando módulo...</div></div></div>
-      <div class="page" id="page-geral_melhorias"><div class="topbar"><div class="topbar-title">Caixa de Melhorias</div></div><div class="content"><div class="section-card">Carregando módulo...</div></div></div>
-      <div class="page" id="page-geral_parcerias"><div class="topbar"><div class="topbar-title">Parcerias Estratégicas</div></div><div class="content"><div class="section-card">Carregando módulo...</div></div></div>
+      <!-- MÓDULOS GERAIS -->
+      <div class="page" id="page-geral_reunioes"><div class="topbar"><div class="topbar-title">Reuniões e Check-in</div></div><div class="content"><div class="section-card" style="text-align:center;padding:2rem;color:var(--t-3)">Carregando...</div></div></div>
+      <div class="page" id="page-geral_planejamento"><div class="topbar"><div class="topbar-title">Planejamento Semestral</div></div><div class="content"><div class="section-card" style="text-align:center;padding:2rem;color:var(--t-3)">Carregando...</div></div></div>
+      <div class="page" id="page-geral_melhorias">
+        <div class="topbar"><div class="topbar-title">Caixa de Melhorias</div></div>
+        <div class="content" id="content-melhorias">
+          <div class="empty-state">
+            <div style="font-size:32px;margin-bottom:12px">🛠️</div>
+            <div style="font-size:14px;font-weight:600">Nenhuma melhoria sugerida</div>
+            <div style="font-size:12px;margin-top:6px;opacity:0.6">Seja o primeiro a sugerir uma evolução para o núcleo.</div>
+            <button class="btn btn-primary" style="margin-top:16px" onclick="PageGeral.novaMelhoria()">+ Sugerir Melhoria</button>
+          </div>
+        </div>
+      </div>
+      <div class="page" id="page-geral_parcerias">
+        <div class="topbar"><div class="topbar-title">Parcerias Estratégicas</div></div>
+        <div class="content">
+          <div class="empty-state">
+            <div style="font-size:32px;margin-bottom:12px">🤝</div>
+            <div style="font-size:14px;font-weight:600">Nenhuma parceria registrada</div>
+            <div style="font-size:12px;margin-top:6px;opacity:0.6">Gerencie contatos e convênios com empresas e instituições.</div>
+            <button class="btn btn-primary" style="margin-top:16px" onclick="PageGeral.novaParceria()">+ Nova Parceria</button>
+          </div>
+          <div id="lista-parcerias"></div>
+        </div>
+      </div>
 
       <!-- MÓDULOS MARKETING -->
-      <div class="page" id="page-mkt_tracker"><div class="topbar"><div class="topbar-title">Social Media Tracker</div></div><div class="content"><div class="section-card">Carregando módulo...</div></div></div>
-      <div class="page" id="page-mkt_kanban"><div class="topbar"><div class="topbar-title">Kanban da Lojinha</div></div><div class="content"><div class="section-card">Carregando módulo...</div></div></div>
+      <div class="page" id="page-mkt_tracker"><div class="topbar"><div class="topbar-title">Social Media Tracker</div></div><div class="content"><div class="section-card" style="text-align:center;padding:2rem;color:var(--t-3)">Carregando...</div></div></div>
+      <div class="page" id="page-mkt_kanban">
+        <div class="topbar"><div class="topbar-title">Kanban da Lojinha</div></div>
+        <div class="content">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
+            <div class="section-title" style="margin:0">Gestão de Pedidos</div>
+            <button class="btn btn-primary" onclick="PageMarketing.novoPedido()">+ Novo Pedido</button>
+          </div>
+          <div class="kanban-scroll-wrap" id="lojinhaKanban">
+            <div class="kanban-col-wrap">
+              <div class="section-card" style="background:var(--p-1);height:100%">
+                <div class="section-title" style="padding:10px;margin:0">📥 A Fazer</div>
+                <div class="kanban-col-body" id="lojinha-afazer" style="padding:10px;min-height:200px"></div>
+              </div>
+            </div>
+            <div class="kanban-col-wrap">
+              <div class="section-card" style="background:var(--a-1);height:100%">
+                <div class="section-title" style="padding:10px;margin:0">⚙️ Produção</div>
+                <div class="kanban-col-body" id="lojinha-producao" style="padding:10px;min-height:200px"></div>
+              </div>
+            </div>
+            <div class="kanban-col-wrap">
+              <div class="section-card" style="background:var(--green-dim);height:100%">
+                <div class="section-title" style="padding:10px;margin:0">✅ Concluído</div>
+                <div class="kanban-col-body" id="lojinha-concluido" style="padding:10px;min-height:200px"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
 
       <!-- MÓDULOS FINANCEIROS -->
       <div class="page" id="page-fin_fluxo">
@@ -332,15 +395,73 @@
       </div>
 
       <!-- MÓDULOS PROJETOS -->
-      <div class="page" id="page-prj_eventos"><div class="topbar"><div class="topbar-title">Eventos Estaduais</div></div><div class="content"><div class="section-card">Carregando módulo...</div></div></div>
-      <div class="page" id="page-prj_enegep"><div class="topbar"><div class="topbar-title">Momento ENEGEP</div></div><div class="content"><div class="section-card">Carregando módulo...</div></div></div>
-      <div class="page" id="page-prj_treinamentos"><div class="topbar"><div class="topbar-title">Treinamentos Externos</div></div><div class="content"><div class="section-card">Carregando módulo...</div></div></div>
-      <div class="page" id="page-prj_nupicast"><div class="topbar"><div class="topbar-title">NUPICAST Tracker</div></div><div class="content"><div class="section-card">Carregando módulo...</div></div></div>
+      <div class="page" id="page-prj_eventos"><div class="topbar"><div class="topbar-title">Eventos Estaduais</div></div><div class="content"><div class="section-card" style="text-align:center;padding:2rem;color:var(--t-3)">Carregando...</div></div></div>
+      <div class="page" id="page-prj_enegep">
+        <div class="topbar"><div class="topbar-title">Momento ENEGEP</div></div>
+        <div class="content">
+          <div class="empty-state">
+            <div style="font-size:32px;margin-bottom:12px">🎓</div>
+            <div style="font-size:14px;font-weight:600">Nenhuma atualização do ENEGEP</div>
+            <div style="font-size:12px;margin-top:6px;opacity:0.6">Acompanhe as notícias e prazos para o maior evento de Eng. de Produção.</div>
+            <button class="btn btn-primary" style="margin-top:16px" onclick="PageProjetos.novaNoticia()">+ Postar Atualização</button>
+          </div>
+          <div id="lista-enegep"></div>
+        </div>
+      </div>
+      <div class="page" id="page-prj_treinamentos">
+        <div class="topbar"><div class="topbar-title">Treinamentos Externos</div></div>
+        <div class="content">
+          <div class="empty-state">
+            <div style="font-size:32px;margin-bottom:12px">📚</div>
+            <div style="font-size:14px;font-weight:600">Nenhum treinamento registrado</div>
+            <div style="font-size:12px;margin-top:6px;opacity:0.6">Repositório de certificados e links de capacitação externa.</div>
+            <button class="btn btn-primary" style="margin-top:16px" onclick="PageProjetos.novoTreinamento()">+ Registrar Treinamento</button>
+          </div>
+          <div id="lista-treinamentos"></div>
+        </div>
+      </div>
+      <div class="page" id="page-prj_nupicast">
+        <div class="topbar"><div class="topbar-title">NUPICAST Tracker</div></div>
+        <div class="content" id="content-nupicast">
+          <div class="empty-state">
+            <div style="font-size:32px;margin-bottom:12px">🎙️</div>
+            <div style="font-size:14px;font-weight:600">Nenhum episódio rastreado</div>
+            <div style="font-size:12px;margin-top:6px;opacity:0.6">Acompanhe a produção dos episódios do NUPICAST.</div>
+            <button class="btn btn-primary" style="margin-top:16px" onclick="PageProjetos.novoEpisodio()">+ Rastrear Episódio</button>
+          </div>
+        </div>
+      </div>
 
       <!-- MÓDULOS OPERAÇÕES -->
-      <div class="page" id="page-ops_relatorios"><div class="topbar"><div class="topbar-title">Relatórios ABJ</div></div><div class="content"><div class="section-card">Carregando módulo...</div></div></div>
-      <div class="page" id="page-ops_pops"><div class="topbar"><div class="topbar-title">Cofre de POPs</div></div><div class="content"><div class="section-card">Carregando módulo...</div></div></div>
-      <div class="page" id="page-ops_arquivo"><div class="topbar"><div class="topbar-title">Arquivo Digital</div></div><div class="content"><div class="section-card">Carregando módulo...</div></div></div>
+      <div class="page" id="page-ops_relatorios">
+        <div class="topbar"><div class="topbar-title">Relatórios ABJ</div></div>
+        <div class="content">
+          <div class="section-card" style="padding:1.5rem">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">
+              <div class="section-title" style="margin:0">Histórico de Envios</div>
+              <button class="btn btn-primary" onclick="PageOperacoes.gerarRelatorio()">Gerar Relatório Atual</button>
+            </div>
+            <div id="lista-relatorios-abj">
+              <p class="text-muted text-sm" style="text-align:center;padding:2rem">Nenhum relatório arquivado ainda.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="page" id="page-ops_pops"><div class="topbar"><div class="topbar-title">Cofre de POPs</div></div><div class="content"><div class="section-card" style="text-align:center;padding:2rem;color:var(--t-3)">Carregando...</div></div></div>
+      <div class="page" id="page-ops_arquivo">
+        <div class="topbar"><div class="topbar-title">Arquivo Digital</div></div>
+        <div class="content">
+          <div class="section-card" style="padding:1.5rem">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">
+              <div class="section-title" style="margin:0">Documentos e Atas</div>
+              <button class="btn btn-primary" onclick="PageOperacoes.uploadDocumento()">+ Subir Arquivo</button>
+            </div>
+            <div id="lista-arquivo-digital">
+              <p class="text-muted text-sm" style="text-align:center;padding:2rem">Aguardando sincronização com o cofre digital.</p>
+            </div>
+          </div>
+        </div>
+      </div>
 
       <!-- MÓDULOS GESTÃO DE PESSOAS -->
       <div class="page" id="page-gp_talentos">
@@ -352,7 +473,7 @@
           <div class="section-card">
             <div style="display:flex;justify-content:space-between;margin-bottom:1rem;">
               <div class="section-title">Candidatos e Talentos</div>
-              <button class="btn btn-primary" onclick="App.toast('Módulo de Importação em breve','info')">+ Novo Talento</button>
+              <button class="btn btn-primary" onclick="PagePessoas.novoTalento()">+ Novo Talento</button>
             </div>
             <div class="table-responsive">
               <table style="width:100%;text-align:left;">
@@ -424,14 +545,105 @@
       </div>
 
       <!-- MÓDULOS GLOBAIS -->
-      <div class="page" id="page-global_visitas"><div class="topbar"><div class="topbar-title">Visitas Técnicas</div></div><div class="content"><div class="section-card">Carregando módulo...</div></div></div>
-      <div class="page" id="page-global_apresentacoes"><div class="topbar"><div class="topbar-title">Apresentações Institucionais</div></div><div class="content"><div class="section-card">Carregando módulo...</div></div></div>
-      <div class="page" id="page-global_producao"><div class="topbar"><div class="topbar-title">Produção Científica</div></div><div class="content"><div class="section-card">Carregando módulo...</div></div></div>
-      <div class="page" id="page-global_assembleia"><div class="topbar"><div class="topbar-title">Assembleia e Votações</div></div><div class="content"><div class="section-card">Carregando módulo...</div></div></div>
+      <div class="page" id="page-global_visitas">
+        <div class="topbar"><div class="topbar-title">Visitas Técnicas</div></div>
+        <div class="content">
+          <div class="empty-state">
+            <div style="font-size:32px;margin-bottom:12px">🏭</div>
+            <div style="font-size:14px;font-weight:600">Nenhuma visita agendada</div>
+            <div style="font-size:12px;margin-top:6px;opacity:0.6">Registre e acompanhe as visitas técnicas industriais do Núcleo.</div>
+            <button class="btn btn-primary" style="margin-top:16px" onclick="PageGlobal.novaVisita()">+ Agendar Visita</button>
+          </div>
+        </div>
+      </div>
+      <div class="page" id="page-global_apresentacoes">
+        <div class="topbar"><div class="topbar-title">Apresentações</div></div>
+        <div class="content">
+          <div class="empty-state">
+            <div style="font-size:32px;margin-bottom:12px">🎤</div>
+            <div style="font-size:14px;font-weight:600">Nenhum pitch registrado</div>
+            <div style="font-size:12px;margin-top:6px;opacity:0.6">Repositório de apresentações institucionais e treinamentos.</div>
+            <button class="btn btn-primary" style="margin-top:16px" onclick="PageGlobal.novaApresentacao()">+ Registrar Pitch</button>
+          </div>
+        </div>
+      </div>
+      <div class="page" id="page-global_producao">
+        <div class="topbar"><div class="topbar-title">Produção Científica</div></div>
+        <div class="content">
+          <div class="empty-state">
+            <div style="font-size:32px;margin-bottom:12px">🔬</div>
+            <div style="font-size:14px;font-weight:600">Nenhum artigo publicado</div>
+            <div style="font-size:12px;margin-top:6px;opacity:0.6">Registre as publicações acadêmicas dos membros do Núcleo.</div>
+            <button class="btn btn-primary" style="margin-top:16px" onclick="PageGlobal.novaProducao()">+ Registrar Artigo</button>
+          </div>
+        </div>
+      </div>
+      <div class="page" id="page-global_assembleia">
+        <div class="topbar"><div class="topbar-title">Assembleia e Votações</div></div>
+        <div class="content">
+          <div class="section-card" style="padding:2rem;text-align:center">
+            <div style="font-size:42px;margin-bottom:1rem">🗳️</div>
+            <div class="section-title">Votações de Pauta</div>
+            <p class="text-muted" style="max-width:400px;margin:0 auto 1.5rem">Participe das decisões democráticas do Núcleo. Seu voto é secreto.</p>
+            <div id="votos-ativos">
+              <div style="background:var(--b-1);border:1px dashed var(--b-3);padding:20px;border-radius:12px">
+                Nenhuma pauta em votação no momento.
+              </div>
+            </div>
+            <button class="btn btn-ghost" style="margin-top:1rem" onclick="PageGlobal.novaPauta()">+ Criar Pauta (Admin)</button>
+          </div>
+        </div>
+      </div>
 
-      <!-- ══════════════════════════════════════════════
-           PAGE: GERAL (COORDENAÇÃO GERAL)
-      ══════════════════════════════════════════════ -->
+      </div>
+
+      <!-- PAGE: CONFIGURAÇÕES -->
+      <div class="page" id="page-config">
+        <div class="topbar">
+          <div class="topbar-title">Configurações</div>
+          <div class="topbar-sub">Personalize sua experiência no sistema</div>
+        </div>
+        <div class="content">
+          <div class="dash-two-col">
+            <div class="section-card">
+              <div class="section-title">🎨 Visual e Tema</div>
+              <div style="display:flex;flex-direction:column;gap:12px;margin-top:1rem">
+                <div class="form-group">
+                  <label class="form-label">Escolha o Tema</label>
+                  <select class="form-select" id="config-tema" onchange="Theme.set(this.value)">
+                    <option value="nucleo">Núcleo (Padrão)</option>
+                    <option value="dark-purple">Roxo Premium</option>
+                    <option value="default">Dark Clássico</option>
+                    <option value="dark-orange">Laranja Industrial</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Fonte do Sistema</label>
+                  <select class="form-select" id="config-fonte" onchange="App.setFont(this.value)">
+                    <option value="default">Padrão (DM Sans)</option>
+                    <option value="serif">Elegante (Serif)</option>
+                    <option value="mono">Técnica (Mono)</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <div class="section-card">
+              <div class="section-title">ℹ️ Sobre o Sistema</div>
+              <div style="margin-top:1rem;text-align:center;padding:1rem">
+                <img src="assets/logo.png" style="height:60px;margin-bottom:12px" alt="Logo">
+                <div style="font-weight:800;font-size:18px;color:var(--c-white)">NUPIEEPRO V9.0</div>
+                <div style="font-size:12px;color:var(--c-slate);margin-top:4px">Geração de Alta Performance Industrial</div>
+                
+                <div style="margin-top:2rem;padding-top:1rem;border-top:1px solid var(--b-1);font-size:11px;color:var(--c-slate)">
+                  Desenvolvido por <strong style="color:var(--c-accent)">JR</strong><br>
+                  © 2026 — Núcleo de Engenharia de Produção
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
       <div class="page" id="page-geral">
         <div class="topbar">
           <div style="display:flex;align-items:center;gap:12px;">
@@ -749,7 +961,7 @@
                 <div style="position:absolute; top:-10px; right:-10px; font-size:60px; opacity:0.05; pointer-events:none;">⚙️</div>
                 <div style="font-size:32px; margin-bottom:16px;">📘</div>
                 <div style="font-weight:800; color:var(--orange); font-size:15px; margin-bottom:8px; font-family:var(--f-head);">Manual de Núcleos 2026</div>
-                <p style="font-size:12px; color:var(--t-3); margin-bottom:24px; line-height:1.5;">Guia técnico operacional dos núcleos estaduais da ABJ para o ciclo 2026.</p>
+                <p class="subtitle">Guia técnico operacional dos núcleos estaduais da ABJ para o ciclo 2026.</p>
                 <a href="assets/Manual de Núcleos Estaduais 2026.pdf" target="_blank" class="btn btn-primary" style="width:100%; display:block; text-align:center; text-decoration:none; font-weight:700;">VISUALIZAR DOCUMENTO</a>
               </div>
 
@@ -917,35 +1129,6 @@
       </div>
 
       <!-- ══════════════════════════════════════════════
-           PAGE: MARKETING
-      ══════════════════════════════════════════════ -->
-      <div class="page" id="page-marketing">
-        <div class="topbar">
-          <div style="display:flex;align-items:center;gap:12px;">
-            <button class="topbar-toggle" onclick="toggleSidebar()">☰</button>
-            <div>
-              <div class="topbar-title">Agência MKT</div>
-              <div class="topbar-sub">Social Media Tracker e Lojinha</div>
-            </div>
-          </div>
-        </div>
-        <div class="content">
-           <div class="section-card">
-              <div class="section-title">📱 Social Media Tracker</div>
-              <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap:12px;">
-                <div class="stat-mini"><span>Insta Follows</span><strong>1.2k</strong></div>
-                <div class="stat-mini"><span>Post Status</span><strong>3 Agendados</strong></div>
-                <div class="stat-mini"><span>Lojinha Timer</span><strong style="color:var(--orange)">7d restantes</strong></div>
-              </div>
-           </div>
-           <div class="section-card">
-              <div class="section-title">🛍️ Kanban Lojinha [Fila de Produção]</div>
-              <div id="marketingKanban" style="display:flex; gap:16px; overflow-x:auto;"></div>
-           </div>
-        </div>
-      </div>
-
-      <!-- ══════════════════════════════════════════════
            PAGE: GP (GESTÃO DE PESSOAS)
       ══════════════════════════════════════════════ -->
       <div class="page" id="page-gp">
@@ -1106,6 +1289,32 @@
         </div>
         <div class="content" style="max-width:1000px;margin:0 auto;">
           <div class="settings-section" style="padding:2rem 0;">
+
+            <!-- Meu Perfil -->
+            <div class="setting-card" style="margin-bottom: 2rem;">
+              <div class="setting-card-title">👤 Meu Perfil Specialist</div>
+              <div style="display:flex; gap:1.5rem; flex-wrap:wrap;">
+                <div style="flex:1; min-width:240px;">
+                  <div class="field">
+                    <label>Nome Completo</label>
+                    <input type="text" id="myProfileNome" placeholder="Seu Nome">
+                  </div>
+                  <div class="field" style="margin-top:1rem;">
+                    <label>Iniciais</label>
+                    <input type="text" id="myProfileIniciais" placeholder="JR" maxlength="3" style="width:80px;">
+                  </div>
+                  <div class="field" style="margin-top:1rem;">
+                    <label>Função / Especialidade</label>
+                    <input type="text" id="myProfileCargo" placeholder="Ex: Assessor de MKT">
+                  </div>
+                  <button class="btn btn-primary" style="margin-top:1.5rem;" onclick="App.updateMyProfile()">Salvar Alterações</button>
+                </div>
+                <div style="width:140px; display:flex; flex-direction:column; align-items:center; gap:1rem; padding:1rem; background:var(--w5); border-radius:12px; border:1px solid var(--b-1);">
+                   <div id="myProfileAvatar" class="u-avatar" style="width:80px; height:80px; font-size:24px;">JR</div>
+                   <div style="text-align:center; font-size:11px; color:var(--t-3);">Sua identidade visual no núcleo.</div>
+                </div>
+              </div>
+            </div>
 
             <!-- Temas -->
             <div class="section-card" style="margin-bottom:2.5rem;padding:2rem;">
@@ -1268,15 +1477,51 @@
               </div>
             </div>
 
-            <!-- Info -->
+            <!-- Info do Sistema -->
             <div class="setting-card">
               <div class="setting-card-title">ℹ️ Sistema</div>
               <div style="display:flex;flex-direction:column;gap:10px;font-size:13px;color:var(--w70);">
-                <div style="display:flex;justify-content:space-between;padding:10px;background:var(--w5);border-radius:8px;">
-                  <span>Versão</span><span style="color:var(--white);font-weight:600;">NUPIEEPRO 2026</span>
+                <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:var(--w5);border-radius:10px;">
+                  <span>Versão</span>
+                  <span style="color:var(--c-accent);font-weight:700;font-family:var(--f-head)">v2.0 — Gestão 2026</span>
                 </div>
-                <div style="display:flex;justify-content:space-between;padding:10px;background:var(--w5);border-radius:8px;">
-                  <span>Plataforma</span><span style="color:var(--white);font-weight:600;">Web App (PWA)</span>
+                <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:var(--w5);border-radius:10px;">
+                  <span>Plataforma</span>
+                  <span style="color:var(--white);font-weight:600;">Web App (PWA)</span>
+                </div>
+                <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:var(--w5);border-radius:10px;">
+                  <span>Backend</span>
+                  <span style="color:var(--white);font-weight:600;">Supabase + GitHub Pages</span>
+                </div>
+                <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:var(--w5);border-radius:10px;">
+                  <span>Organização</span>
+                  <span style="color:var(--white);font-weight:600;">NUPIEEPRO · ABEPRO Jovem · UFPI</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Sobre -->
+            <div class="setting-card">
+              <div class="setting-card-title">👤 Sobre</div>
+              <div style="display:flex;flex-direction:column;gap:14px">
+                <div style="display:flex;align-items:center;gap:16px;padding:16px;background:var(--a-1);border:1px solid var(--b-a);border-radius:14px;">
+                  <div style="width:52px;height:52px;border-radius:50%;background:var(--c-accent);display:flex;align-items:center;justify-content:center;font-family:var(--f-head);font-weight:900;font-size:18px;color:#000;flex-shrink:0">JR</div>
+                  <div>
+                    <div style="font-weight:800;font-size:14px;color:var(--c-white);margin-bottom:3px">JR</div>
+                    <div style="font-size:12px;color:var(--c-accent);font-weight:600;margin-bottom:3px">Desenvolvedor · Assessor de Marketing</div>
+                    <div style="font-size:11px;color:var(--c-slate)">NUPIEEPRO · DAX Visual Agency</div>
+                  </div>
+                </div>
+                <div style="font-size:12px;color:var(--c-slate);line-height:1.7;padding:14px;background:var(--w5);border-radius:10px">
+                  O NUPIEEPRO Sistema é a plataforma oficial de gestão do Núcleo Piauiense de Estudantes de Engenharia de Produção da UFPI, desenvolvida para centralizar atividades, controle do Selo ABEPRO Jovem, kanban, finanças e comunicação interna da gestão 2026.
+                </div>
+                <div style="display:flex;gap:10px;flex-wrap:wrap">
+                  <a href="https://www.instagram.com/nupieepro" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;padding:8px 14px;background:var(--w5);border-radius:99px;font-size:12px;font-weight:600;color:var(--c-white);text-decoration:none">
+                    📸 Instagram
+                  </a>
+                  <a href="https://www.abeprojovem.org.br" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;padding:8px 14px;background:var(--w5);border-radius:99px;font-size:12px;font-weight:600;color:var(--c-white);text-decoration:none">
+                    🏆 ABEPRO Jovem
+                  </a>
                 </div>
               </div>
             </div>
@@ -1299,26 +1544,59 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
   <script src="js/app.js?v=14"></script>
-  <script src="js/auth.js?v=14"></script>
   <script src="js/abj.js?v=15"></script>
   <script src="js/pages.js?v=1"></script>
   <script src="js/relatorio.js?v=1"></script>
   <script src="js/push.js?v=1"></script>
+  <script src="js/permissoes.js?v=1"></script>
+  <script src="js/emails.js?v=1"></script>
   <script src="js/premium.js?v=1"></script>
+  <script src="js/auth.js?v=14"></script>
   <script>
+    /* ── Saudação dinâmica ── */
+    function updateGreeting(profile) {
+      const titleEl = document.getElementById('greeting-title');
+      const subEl   = document.getElementById('greeting-sub');
+      if (!titleEl || !subEl) return;
+
+      const h    = new Date().getHours();
+      const part = h < 12 ? 'Bom dia' : h < 18 ? 'Boa tarde' : 'Boa noite';
+
+      const mode = localStorage.getItem('nupie_mode') || 'assessor';
+      const nome = mode === 'dev'
+        ? 'JR'
+        : (profile?.apelido || profile?.nome?.split(' ')[0] || 'você');
+
+      titleEl.textContent = `${part}, ${nome}!`;
+
+      if (mode === 'dev') {
+        // Briefing de dev: mostra modo + hora
+        const agora = new Date().toLocaleTimeString('pt-BR', { hour:'2-digit', minute:'2-digit' });
+        subEl.innerHTML = `
+          <span style="display:inline-flex;align-items:center;gap:4px;background:rgba(45,212,160,0.1);color:#2DD4A0;padding:2px 8px;border-radius:100px;font-size:9px;font-weight:800;border:1px solid rgba(45,212,160,0.2);">
+            <span class="pulse-dot" style="width:6px;height:6px;background:#2DD4A0;"></span> DEV ADMIN · ${agora}
+          </span>
+          <span style="font-size:10px;color:var(--c-slate);">v9 · MKT · ${profile?.email || ''}</span>`;
+      } else {
+        subEl.innerHTML = `Visão geral do núcleo
+          <span style="display:inline-flex;align-items:center;gap:4px;background:rgba(45,212,160,0.1);color:#2DD4A0;padding:2px 6px;border-radius:100px;font-size:9px;font-weight:800;border:1px solid rgba(45,212,160,0.2);">
+            <span class="pulse-dot" style="width:6px;height:6px;background:#2DD4A0;"></span> CYBERSEC ACTIVE
+          </span>`;
+      }
+    }
+
     (async () => {
       // Blindagem V6.5
       if (typeof window.Theme !== 'undefined') window.Theme.init();
-      
+
       const app = window.App;
       if (app && typeof app.initDashboard === 'function') {
         const profile = await app.initDashboard();
+        // Saudação dinâmica
+        updateGreeting(profile);
+        setInterval(() => updateGreeting(profile), 60000);
         if (profile && typeof window.Dashboard !== 'undefined') {
           window.Dashboard.render(profile);
-          if (profile.role === 'admin') {
-            const banner = document.getElementById('devBanner');
-            if (banner) banner.style.display = 'flex';
-          }
         }
       }
     })();

@@ -1,0 +1,28 @@
+.content {
+    overflow: auto;
+    max-height: 100vh;
+}
+
+.page {
+    overflow-y: scroll;
+}
+
+.topbar {
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+}
+
+.sidebar {
+    overflow-y: auto;
+    z-index: 999;
+}
+
+/* Mobile responsiveness fix */
+@media (max-width: 768px) {
+    .content,
+    .page {
+        overflow: hidden;
+        max-height: 100vh;
+    }
+}
