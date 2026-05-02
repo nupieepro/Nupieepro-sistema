@@ -2020,11 +2020,248 @@ const PageGlobal = {
   }
 };
 
-window.PageGeral     = PageGeral;
-window.PageMarketing = PageMarketing;
-window.PageFinancas  = PageFinancas;
-window.PageProjetos  = PageProjetos;
-window.PageOperacoes = PageOperacoes;
-window.PagePessoas   = PagePessoas;
-window.PageDev       = PageDev;
-window.PageGlobal    = PageGlobal;
+/* ══════════════════════════════════════════════════════════════
+   PageNotificacoes — Central de alertas com dados reais
+   ══════════════════════════════════════════════════════════════ */
+const PageNotificacoes = {
+  async init() {
+    await this._carregar();
+  },
+  async _carregar() {
+    const lista = document.getElementById('notifList');
+    const cnt   = document.getElementById('notifCount');
+    if (!lista || !_sb()) return;
+    try {
+      const p = window._appProfile;
+      if (!p) return;
+      const { data } = await _sb()
+        .from('notificacoes')
+        .select('*')
+        .eq('user_id', p.id)
+        .order('created_at', { ascending: false })
+        .limit(30);
+      const notifs = data || [];
+      const naoLidas = notifs.filter(n => !n.lida).length;
+      if (cnt) cnt.textContent = `${naoLidas} não lida${naoLidas !== 1 ? 's' : ''}`;
+      if (!notifs.length) {
+        lista.innerHTML = `
+          <div style="padding:40px;text-align:center;color:var(--c-slate)">
+            <div style="font-size:36px;margin-bottom:12px">🔔</div>
+            <div style="font-size:14px;font-weight:700;color:var(--c-white)">Tudo em dia!</div>
+            <div style="font-size:13px;margin-top:4px">Você não tem notificações pendentes.</div>
+          </div>`;
+        return;
+      }
+      const ICON = { sistema:'⚙️', abj:'⭐', demanda:'◬', reuniao:'🤝', financeiro:'◎', padrao:'🔔' };
+      lista.innerHTML = notifs.map(n => `
+        <div class="notif-item${n.lida?'':' unread'}" onclick="PageNotificacoes._marcarLida('${n.id}', this)">
+          <div class="notif-dot${n.lida?' read':''}"></div>
+          <div class="notif-body-text">
+            <div class="notif-title">${sanitize(n.titulo||'Notificação')}</div>
+            <div class="notif-desc">${sanitize(n.mensagem||'')}</div>
+            <div class="notif-time">${_fmt(n.created_at)}</div>
+          </div>
+          <span class="notif-tag">${ICON[n.tipo||'padrao']} ${sanitize(n.tipo||'Sistema')}</span>
+        </div>`).join('');
+    } catch(e) { console.warn('[Notif]', e); }
+  },
+  async _marcarLida(id, el) {
+    el?.classList.remove('unread');
+    el?.querySelector('.notif-dot')?.classList.add('read');
+    if (!_sb()) return;
+    try {
+      await _sb().from('notificacoes').update({ lida: true }).eq('id', id);
+      /* Atualiza badge no nav */
+      const cnt = document.getElementById('notifCount');
+      if (cnt) {
+        const atual = parseInt(cnt.textContent)||0;
+        if (atual > 0) cnt.textContent = `${atual-1} não lida${atual-1!==1?'s':''}`;
+      }
+    } catch(e) {}
+  },
+};
+
+/* Sobrescreve markAllNotifRead() já declarado no HTML */
+window.markAllNotifRead = async function() {
+  const p = window._appProfile;
+  if (!_sb()||!p) return;
+  try {
+    await _sb().from('notificacoes').update({ lida:true }).eq('user_id', p.id).eq('lida', false);
+    document.querySelectorAll('.notif-item.unread').forEach(el => el.classList.remove('unread'));
+    document.querySelectorAll('.notif-dot:not(.read)').forEach(el => el.classList.add('read'));
+    const cnt = document.getElementById('notifCount');
+    if (cnt) cnt.textContent = '0 não lidas';
+    mostrarToast('Todas as notificações marcadas como lidas.','success');
+  } catch(e) { mostrarToast('Erro ao atualizar notificações.','error'); }
+};
+
+/* ══════════════════════════════════════════════════════════════
+   PageCompartilhado — complementa o calendário do app.js com
+   lista de próximos eventos de TODAS as coordenadorias
+   ══════════════════════════════════════════════════════════════ */
+const PageCompartilhado = {
+  async init() {
+    await this._carregarProximos();
+    /* Injeta botão "Publicar Data" real */
+    const btn = document.querySelector('#page-compartilhado .topbar-right button');
+    if (btn) {
+      btn.onclick = () => this.publicarData();
+    }
+  },
+  async _carregarProximos() {
+    /* Injeta section-card abaixo do calendário com lista de próximos eventos */
+    const pg = document.getElementById('page-compartilhado');
+    if (!pg||!_sb()) return;
+    /* Remove lista antiga se já existir */
+    document.getElementById('shared-proximos')?.remove();
+    const container = pg.querySelector('.content');
+    if (!container) return;
+    const div = document.createElement('div');
+    div.id = 'shared-proximos';
+    div.innerHTML = `
+      <div class="section-card" style="padding:20px 24px;margin-top:16px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+          <div style="display:flex;align-items:center;gap:10px">
+            <span style="font-size:22px">🗓️</span>
+            <h3 style="font-family:var(--f-head);font-size:15px;font-weight:700;color:var(--c-white)">Próximos Eventos</h3>
+          </div>
+        </div>
+        <div id="shared-eventos-lista">
+          <div style="padding:20px;text-align:center;color:var(--c-slate);font-size:13px">Carregando...</div>
+        </div>
+      </div>`;
+    container.appendChild(div);
+    try {
+      const hoje = new Date().toISOString().split('T')[0];
+      const { data } = await _sb()
+        .from('eventos')
+        .select('*, coordenadorias(nome,sigla,cor,icone)')
+        .gte('data_inicio', hoje)
+        .order('data_inicio', { ascending: true })
+        .limit(12);
+      const el = document.getElementById('shared-eventos-lista');
+      if (!el) return;
+      el.innerHTML = data?.length
+        ? data.map(e => {
+            const cor = e.coordenadorias?.cor || 'var(--c-accent)';
+            const dias = Math.ceil((new Date(e.data_inicio) - new Date()) / 86400000);
+            return `
+              <div style="background:var(--b-1);border:1px solid var(--b-2);border-radius:10px;
+                          padding:14px 16px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:8px">
+                <div style="display:flex;align-items:center;gap:12px">
+                  <div style="width:36px;height:36px;border-radius:10px;background:${cor}22;border:1px solid ${cor}44;
+                              display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">
+                    ${e.coordenadorias?.icone||'📌'}
+                  </div>
+                  <div>
+                    <div style="font-weight:700;font-size:13px;color:var(--c-white)">${sanitize(e.titulo)}</div>
+                    <div style="font-size:11px;color:var(--c-slate)">
+                      📅 ${_fmt(e.data_inicio)}
+                      ${e.local?' · 📍 '+sanitize(e.local):''}
+                      ${e.vagas?' · 👥 '+e.vagas+' vagas':''}
+                    </div>
+                  </div>
+                </div>
+                <div style="display:flex;align-items:center;gap:8px">
+                  <span style="font-size:10px;font-weight:700;padding:3px 8px;border-radius:99px;
+                               background:${cor}22;color:${cor};border:1px solid ${cor}44">
+                    ${sanitize(e.coordenadorias?.sigla||'—')}
+                  </span>
+                  <span style="font-size:13px;font-weight:800;color:${dias<=7?'var(--red)':dias<=30?'var(--yellow)':'var(--green)'}">
+                    ${dias===0?'Hoje':dias===1?'Amanhã':`${dias}d`}
+                  </span>
+                </div>
+              </div>`;
+          }).join('')
+        : '<div style="padding:16px;text-align:center;color:var(--c-slate);font-size:13px">Nenhum evento futuro cadastrado ainda.</div>';
+    } catch(e) { console.warn('[Compartilhado]', e); }
+  },
+  publicarData() {
+    if (!window.Permissoes?.pode('podeCriarEvento')) {
+      mostrarToast('Você não tem permissão para publicar datas.','warning');
+      return;
+    }
+    const hoje = new Date().toISOString().slice(0,16);
+    abrirModal({ titulo:'📅 Publicar Data no Calendário', tipo:'info', corpo:`
+      <div class="form-group"><label class="form-label">Título do Evento *</label>
+        <input id="pd-titulo" class="form-input" placeholder="Ex: NUPIDAY 2026"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div class="form-group"><label class="form-label">Data e hora *</label>
+          <input id="pd-data" type="datetime-local" class="form-input" value="${hoje}"></div>
+        <div class="form-group"><label class="form-label">Vagas</label>
+          <input id="pd-vagas" type="number" class="form-input" placeholder="50"></div>
+      </div>
+      <div class="form-group"><label class="form-label">Local</label>
+        <input id="pd-local" class="form-input" placeholder="UFPI / Online"></div>
+      <div class="form-group"><label class="form-label">Tipo</label>
+        <select id="pd-tipo" class="form-select">
+          <option value="evento">Evento</option>
+          <option value="reuniao">Reunião Geral</option>
+          <option value="treinamento">Treinamento</option>
+          <option value="visita">Visita Técnica</option>
+        </select></div>`,
+    botoes:[
+      {texto:'Cancelar',classe:'btn-ghost',acao:fecharModal},
+      {texto:'Publicar ✓',classe:'btn-primary',acao:()=>this._salvarData()}
+    ]});
+  },
+  async _salvarData() {
+    const titulo = document.getElementById('pd-titulo')?.value?.trim();
+    const data   = document.getElementById('pd-data')?.value;
+    const vagas  = parseInt(document.getElementById('pd-vagas')?.value)||null;
+    const local  = document.getElementById('pd-local')?.value?.trim();
+    const tipo   = document.getElementById('pd-tipo')?.value||'evento';
+    if (!titulo||!data) { mostrarToast('Preencha título e data!','warning'); return; }
+    fecharModal();
+    try {
+      await _sb().from('eventos').insert([{
+        titulo, tipo, data_inicio:data,
+        vagas:vagas||null, local:local||null, ativo:true,
+        coordenadoria_id: window._appProfile?.coordenadoria_id||null,
+        criado_por: window._appProfile?.id,
+      }]);
+      mostrarToast('Evento publicado no calendário!','success');
+      this._carregarProximos();
+    } catch(e) { mostrarToast('Erro ao publicar evento.','error'); }
+  },
+};
+
+window.PageGeral          = PageGeral;
+window.PageMarketing      = PageMarketing;
+window.PageFinancas       = PageFinancas;
+window.PageProjetos       = PageProjetos;
+window.PageOperacoes      = PageOperacoes;
+window.PagePessoas        = PagePessoas;
+window.PageDev            = PageDev;
+window.PageGlobal         = PageGlobal;
+window.PageNotificacoes   = PageNotificacoes;
+window.PageCompartilhado  = PageCompartilhado;
+
+/* ── Estende goTo() do app.js sem sobrescrever (aguarda boot) ── */
+document.addEventListener('nupi:booted', () => {
+  const _goToOriginal = window.goTo;
+  window.goTo = function(id) {
+    _goToOriginal(id);
+    /* Roteador de páginas extras */
+    const mapa = {
+      'notificacoes':      () => PageNotificacoes.init(),
+      'compartilhado':     () => PageCompartilhado.init(),
+      'geral_melhorias':   () => PageGeral._renderMelhorias(),
+      'geral_parcerias':   () => PageGeral._renderParcerias(),
+      'mkt_kanban':        () => PageMarketing._renderKanban(),
+      'fin_calendario':    () => PageFinancas._renderCalendario(),
+      'fin_fluxo':         () => PageFinancas._renderFluxo(),
+      'fin_abj':           () => PageFinancas._renderABJFin(),
+      'ops_relatorios':    () => PageOperacoes._renderRelatorios(),
+      'ops_pops':          () => PageOperacoes._renderPops(),
+      'gp_clima':          () => PagePessoas._renderClima(),
+      'gp_tap':            () => PagePessoas._renderTAP(),
+      'gp_crm':            () => PagePessoas._renderMembros(),
+      'dev_usuarios':      () => PageDev.init(),
+      'prj_enegep':        () => PageProjetos._renderEventos(),
+      'prj_treinamentos':  () => PageProjetos._renderEventos(),
+      'prj_nupicast':      () => PageProjetos._renderEventos(),
+    };
+    if (mapa[id]) try { mapa[id](); } catch(e) { console.warn('[pages goTo]', id, e); }
+  };
+});
