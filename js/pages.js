@@ -60,6 +60,119 @@ const PageGeral = {
     this._renderMelhorias();
     this._renderParcerias();
   },
+
+  /* ── Dashboard da Coordenação Geral (page-geral) ─────────────
+     Popula o PCD e o Gerenciador de Reuniões que já existem no HTML.
+  ── */
+  async _renderGeralDashboard() {
+    this._popularPCD();
+  },
+
+  /* ── PCD: detecta membros com 2+ meses sem entregas ── */
+  async _popularPCD() {
+    const el = document.getElementById('pcdAlerts');
+    if (!el || !_sb()) return;
+    el.innerHTML = '<div style="font-size:12px;color:var(--c-slate)">Verificando…</div>';
+    try {
+      /* Pega todos os membros ativos */
+      const { data: membros } = await _sb()
+        .from('users')
+        .select('id,nome,coordenadorias(nome)')
+        .eq('ativo', true)
+        .neq('role', 'admin');
+      if (!membros?.length) { el.innerHTML = '<p style="font-size:13px;color:var(--c-slate)">Sem membros cadastrados.</p>'; return; }
+      /* Limite: 2 meses atrás */
+      const limite = new Date();
+      limite.setMonth(limite.getMonth() - 2);
+      const limStr = limite.toISOString().split('T')[0];
+      /* Busca última atividade (evento criado_por) de cada membro */
+      const { data: ativos } = await _sb()
+        .from('eventos')
+        .select('criado_por, created_at')
+        .gte('created_at', limStr);
+      const ativosSet = new Set((ativos||[]).map(e => e.criado_por));
+      const inativos = membros.filter(m => !ativosSet.has(m.id));
+      if (!inativos.length) {
+        el.innerHTML = '<div style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--c-slate)">✅ Todos os membros têm entregas nos últimos 2 meses.</div>';
+        return;
+      }
+      el.innerHTML = `
+        <div style="background:var(--red)18;border:1px solid var(--red)33;border-radius:10px;padding:12px 14px;margin-bottom:10px;font-size:12px;color:var(--red);font-weight:700">
+          ⚠️ ${inativos.length} membro(s) sem entregas nos últimos 2 meses — Avalie PCD ou realocação.
+        </div>` +
+        inativos.map(m => `
+          <div style="background:var(--b-1);border:1px solid var(--b-2);border-radius:8px;
+                      padding:10px 14px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:6px">
+            <div>
+              <div style="font-weight:700;font-size:13px;color:var(--c-white)">${sanitize(m.nome||'—')}</div>
+              <div style="font-size:11px;color:var(--c-slate)">${sanitize(m.coordenadorias?.nome||'Sem coord')}</div>
+            </div>
+            <span style="font-size:10px;font-weight:800;padding:3px 9px;border-radius:99px;
+                         background:var(--red)22;color:var(--red);border:1px solid var(--red)44">
+              🔴 +2 meses sem entrega
+            </span>
+          </div>`).join('');
+    } catch(e) { el.innerHTML='<p style="font-size:12px;color:var(--c-slate)">Erro ao verificar PCD.</p>'; console.warn(e); }
+  },
+
+  /* ── Módulo Institucional: logo, missão, regimento, PCD ── */
+  _renderInstitucional() {
+    const pg = document.getElementById('page-geral_planejamento');
+    if (!pg) return;
+    /* Injeta seção institucional abaixo do planejamento semestral */
+    if (document.getElementById('inst-section')) return; /* já injetado */
+    const container = pg.querySelector('.content');
+    if (!container) return;
+    const div = document.createElement('div');
+    div.id = 'inst-section';
+    div.innerHTML = _sc('Identidade Institucional','🏛️',`
+      <p style="font-size:13px;color:var(--c-slate);margin-bottom:16px">
+        Documentos obrigatórios do Núcleo — Atividades 01, 02 e 04.
+        Repositório central de identidade visual e documentos jurídicos.
+      </p>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px">
+        ${[
+          { icone:'🖼️', label:'Logotipo Oficial', sub:'PNG ou JPEG', id:'inst-logo',    btn:'Atualizar logo' },
+          { icone:'📝', label:'Missão, Visão e Valores', sub:'Atividade 02', id:'inst-mvv',     btn:'Editar MVV' },
+          { icone:'📋', label:'Regimento Interno', sub:'PDF — Atividade 01', id:'inst-reg',     btn:'Upload PDF' },
+          { icone:'⚖️', label:'Programa de Controle Disciplinar', sub:'PDF — Atividade 04', id:'inst-pcd', btn:'Upload PDF' },
+        ].map(item => `
+          <div style="background:var(--b-1);border:1px solid var(--b-2);border-radius:12px;padding:16px">
+            <div style="font-size:28px;margin-bottom:8px">${item.icone}</div>
+            <div style="font-weight:700;font-size:13px;color:var(--c-white);margin-bottom:4px">${item.label}</div>
+            <div style="font-size:11px;color:var(--c-slate);margin-bottom:12px">${item.sub}</div>
+            <div id="${item.id}-status" style="font-size:11px;color:var(--c-slate);margin-bottom:8px">
+              Status: <span style="color:var(--yellow)">⏳ Não verificado</span>
+            </div>
+            <button class="btn btn-ghost" style="font-size:11px;width:100%"
+                    onclick="PageGeral._instDoc('${item.id}','${item.label}')">${item.btn}</button>
+          </div>`).join('')}
+      </div>`);
+    container.appendChild(div);
+  },
+
+  _instDoc(id, label) {
+    abrirModal({ titulo:`🏛️ ${label}`, tipo:'info', corpo:`
+      <p style="font-size:13px;color:var(--c-slate);margin-bottom:14px">
+        Cole o link do documento no Google Drive ou outro repositório seguro.
+      </p>
+      <div class="form-group"><label class="form-label">Link do documento *</label>
+        <input id="inst-link" class="form-input" placeholder="https://drive.google.com/..."></div>
+      <div class="form-group"><label class="form-label">Versão / Data</label>
+        <input id="inst-versao" class="form-input" placeholder="v1.0 — ${new Date().getFullYear()}"></div>`,
+    botoes:[
+      { texto:'Cancelar', classe:'btn-ghost', acao: fecharModal },
+      { texto:'Salvar ✓', classe:'btn-primary', acao: () => {
+        const link = document.getElementById('inst-link')?.value?.trim();
+        if (!link) { mostrarToast('Cole o link do documento!','warning'); return; }
+        const statusEl = document.getElementById(`${id}-status`);
+        if (statusEl) statusEl.innerHTML = `Status: <span style="color:var(--green)">✅ Registrado</span>`;
+        localStorage.setItem(`nupi_inst_${id}`, JSON.stringify({ link, versao: document.getElementById('inst-versao')?.value }));
+        mostrarToast(`${label} registrado!`,'success');
+        fecharModal();
+      }}
+    ]});
+  },
   _renderReuniao() {
     const pg = document.getElementById('page-geral_reunioes');
     if (!pg) return;
@@ -112,7 +225,9 @@ const PageGeral = {
   _renderPlanejamento() {
     const pg = document.getElementById('page-geral_planejamento');
     if (!pg) return;
-    const ct = pg.querySelector('.content')||pg;
+    const ct = pg.querySelector('.content') || pg;
+    /* Injeta módulo institucional (lazy, só uma vez) */
+    setTimeout(() => this._renderInstitucional(), 100);
     const ano = new Date().getFullYear();
     ct.innerHTML = _sc('Planejamento Semestral','📅',`
       <p style="font-size:13px;color:var(--c-slate);margin-bottom:16px">
@@ -3042,6 +3157,8 @@ document.addEventListener('nupi:booted', () => {
     _goToOriginal(id);
     /* Apenas páginas que app.js NÃO trata */
     const mapa = {
+      /* Overview Coord Geral */
+      'geral':             () => PageGeral._renderGeralDashboard(),
       /* Gerais */
       'notificacoes':      () => PageNotificacoes.init(),
       'compartilhado':     () => PageCompartilhado.init(),
