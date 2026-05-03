@@ -38,7 +38,6 @@
       <div class="form-panel">
         <div class="form-card">
 
-          <!-- Logo -->
           <div style="margin-bottom:4px;">
             <div class="logo-wordmark" style="font-size:20px;margin-bottom:6px;">
               NUPIE<span class="pi">EPRO</span>
@@ -49,12 +48,10 @@
 
           <div class="form-divider"></div>
 
-          <!-- Loading -->
           <div id="conviteLoading">
             <p class="text-center text-muted"><span class="spinner"></span> Verificando convite…</p>
           </div>
 
-          <!-- Erro -->
           <div id="conviteError" style="display:none;">
             <div class="alert-box" id="conviteErrorMsg" style="display:block;"></div>
             <p class="footer-note" style="margin-top:16px;">
@@ -62,10 +59,8 @@
             </p>
           </div>
 
-          <!-- ═══ WIZARD ═══ -->
           <div id="wizard" style="display:none;">
 
-            <!-- Barra de progresso -->
             <div class="wiz-bar">
               <div class="wiz-dot active" id="wd1">1</div>
               <div class="wiz-line" id="wl1"></div>
@@ -77,8 +72,6 @@
             </div>
 
             <form id="conviteForm" class="invite-wizard" onsubmit="return false;" style="margin-top:1rem;">
-              
-              <!-- Informações Pessoais -->
               <div class="form-section-header">👤 Informações Pessoais</div>
               <div class="two-cols">
                 <div class="field">
@@ -102,7 +95,6 @@
                 <input type="date" id="conviteNascimento" required>
               </div>
 
-              <!-- Acesso ao Sistema -->
               <div class="form-section-header">🔐 Acesso ao Sistema</div>
               <div class="field">
                 <label for="convitePassword">Criar Senha</label>
@@ -113,7 +105,6 @@
                 <input type="password" id="conviteConfirm" placeholder="Repita a senha" required minlength="6" autocomplete="new-password">
               </div>
 
-              <!-- Preferências -->
               <div class="form-section-header">🎨 Preferências de Tema</div>
               <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 0.8rem;">Escolha o tema que você prefere. Pode alterar depois nas configurações.</p>
               <div class="theme-selector">
@@ -135,7 +126,6 @@
             </form>
           </div>
 
-          <!-- ═══ SUCESSO ═══ -->
           <div id="conviteSuccess" style="display:none;">
             <div class="success-wrap">
               <div class="success-icon">✅</div>
@@ -158,7 +148,6 @@
     </div>
   </div>
 
-  <!-- Toast PWA Install Prompt -->
   <div id="pwaToast" class="pwn-toast" style="display: none;">
     <div>📲 Instale o app para acesso rápido!</div>
     <button class="pwn-btn" onclick="installPWA()">Instalar</button>
@@ -211,7 +200,6 @@
       document.getElementById('pwaToast').style.display = 'none';
     }
 
-    // Salvar tema selecionado após registro
     const originalRegister = window.doConviteRegister;
     window.doConviteRegister = async function() {
       localStorage.setItem('nupie_theme', selectedTheme);

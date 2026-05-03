@@ -12,7 +12,7 @@
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="NUPIEEPRO">
-  <title>NUPIEEPRO — Especialista em Gestão</title>
+  <title>NUPIEEPRO — Acesso ao Sistema</title>
   
   <!-- Ícones e Web App -->
   <link rel="manifest" href="manifest.json">
@@ -24,31 +24,31 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Plus+Jakarta+Sans:wght@700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   
-  <!-- [V9.0] Design System Centralizado -->
-  <link rel="stylesheet" href="css/themes-override.css">
-  
   <!-- EmailJS SDK -->
   <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 
-  <!-- Temas: aplicar antes do render para evitar flash de cor errada -->
-  <script>
-    const _t = localStorage.getItem('nupie_theme') || 'nucleo';
-    document.documentElement.setAttribute('data-theme', _t === 'default' ? 'nucleo' : _t);
-  </script>
-
-  <!-- Sistema de temas completo — mesmo do dashboard -->
-  <link rel="stylesheet" href="css/themes-override.css">
-
   <style>
     :root {
-      --black:      var(--c-bg,     #000000);
-      --white:      var(--c-white,  #ffffff);
+      /* Login é sempre escuro — não usa o tema salvo do usuário */
+      --c-bg:       #000000;
+      --c-s1:       #050505;
+      --c-s2:       rgba(8, 8, 8, 0.75);
+      --c-s3:       #111111;
+      --c-accent:   #f75412;
+      --c-accent2:  #ff7043;
+      --c-white:    #ffffff;
+      --c-slate:    rgba(255,255,255,0.55);
+      --border:     rgba(255,255,255,0.10);
+      --a-1: rgba(247,84,18,0.06);
+      --a-2: rgba(247,84,18,0.12);
+      --a-3: rgba(247,84,18,0.22);
+      --black:      #000000;
+      --white:      #ffffff;
+      --orange:     #f75412;
+      --orange-dim: rgba(247,84,18,0.12);
       --font-body: 'DM Sans', sans-serif;
       --font-head: 'Plus Jakarta Sans', sans-serif;
       --font-mono: 'JetBrains Mono', monospace;
-      /* Fallbacks para quando themes-override.css ainda não carregou */
-      --orange:     var(--c-accent, #f75412);
-      --orange-dim: var(--a-2,     rgba(247,84,18,0.12));
     }
 
     /* Login sempre com fundo escuro — independente do tema claro/escuro */
@@ -371,8 +371,8 @@
             Ao acessar esta área restrita, você concorda com nossos <a href="#" style="color: var(--orange); text-decoration: none;">Termos de Uso e Política de Privacidade (LGPD)</a>, e autoriza o processamento seguro dos seus dados operacionais.
           </div>
           <button id="btnLogin" class="btn-submit" onclick="doLogin()">
-            Efetuar Login de Especialista
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            Acessar o Sistema
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
           </button>
         </form>
 

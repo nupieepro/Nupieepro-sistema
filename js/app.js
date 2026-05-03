@@ -897,45 +897,60 @@ const Dashboard = {
    Theme & Font System
    ============================================================ */
 const Theme = {
-  apply(name) {
-    if (name === 'default') name = 'dark-orange';
+  _aliases: {
+    'default': 'dark-orange',
+    'fusion':  'dark-purple',
+    'orange':  'dark-orange',
+    'glimmer': 'dark',
+    'badboy':  'dark-orange',
+    'frufru':  'rose',
+    'roxo':    'dark-purple',
+    'claro-suave': 'luminous',
+    'alto-contraste': 'obsidian',
+    'branco-laranja': 'white-orange',
+  },
+
+  apply(name, silent = false) {
+    if (this._aliases[name]) name = this._aliases[name];
     document.documentElement.setAttribute('data-theme', name);
     localStorage.setItem('nupie_theme', name);
-    localStorage.setItem('nupie_theme_updated', new Date().toISOString());
-    
+
     document.querySelectorAll('[id^="themeBtn-"]').forEach(b => b.classList.remove('active'));
     const btn = document.getElementById('themeBtn-' + name);
     if (btn) btn.classList.add('active');
-    
-    // Update sistema label
+
     const themeLabel = {
-      'dark-orange': 'Fusion Elite',
-      'luminous': 'Claro Premium',
-      'obsidian': 'Obsidian Dark'
+      'dark-orange':  'Orange Industrial',
+      'dark-purple':  'Fusion Elite',
+      'luminous':     'Claro Premium',
+      'obsidian':     'Obsidian Dark',
+      'dark':         'Dark Premium',
+      'rose':         'Rose Quartz',
+      'white-orange': 'Branco + Laranja',
+      'nucleo':       'Núcleo (Padrão)',
     };
     const label = document.getElementById('systemThemeLabel');
-    if (label) label.textContent = themeLabel[name] || 'Customizado';
+    if (label) label.textContent = themeLabel[name] || name;
 
     haptic();
-    App.toast('Tema alterado com sucesso!', 'success', 2000);
+    if (!silent) App.toast('Tema alterado!', 'success', 1500);
   },
 
-  applyFont(name) {
+  applyFont(name, silent = false) {
     document.documentElement.setAttribute('data-font', name === 'default' ? '' : name);
     localStorage.setItem('nupie_font', name);
-    localStorage.setItem('nupie_font_updated', new Date().toISOString());
     document.querySelectorAll('[id^="fontBtn-"]').forEach(b => b.classList.remove('active'));
     const btn = document.getElementById('fontBtn-' + name);
     if (btn) btn.classList.add('active');
     haptic();
-    App.toast('Fonte alterada com sucesso!', 'success', 2000);
+    if (!silent) App.toast('Fonte alterada!', 'success', 1500);
   },
 
   init() {
     const theme = localStorage.getItem('nupie_theme') || 'dark-orange';
     const font  = localStorage.getItem('nupie_font')  || 'default';
-    Theme.apply(theme);
-    Theme.applyFont(font);
+    Theme.apply(theme, true);
+    Theme.applyFont(font, true);
   }
 };
 
