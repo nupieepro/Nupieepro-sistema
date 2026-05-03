@@ -416,9 +416,9 @@ const App = {
     ).join('');
 
     html += '<div class="sidebar-section">Operacional</div>';
-    html += `<div class="nav-item" style="background:var(--orange-dim);border-color:var(--orange-border);color:var(--orange)" onclick="App.toast('Módulo ABJ Ativado','info')">
+    html += `<div class="nav-item" style="background:var(--orange-dim);border-color:var(--orange-border);color:var(--orange)" onclick="goTo('abj')">
       <span class="nav-icon">${getIcon('star')}</span>
-      <span class="nav-label" style="color:var(--orange)">Inserir Atividade ABJ</span>
+      <span class="nav-label" style="color:var(--orange)">Atividades ABJ</span>
     </div>`;
 
     // Terminal do Dev (Admin only)
@@ -601,7 +601,7 @@ const App = {
   setFont(family) {
     document.documentElement.setAttribute('data-font', family);
     localStorage.setItem('nupie_font', family);
-    App.toast(`Fonte alterada para ${family}`, 'success');
+    // Sem toast — mudança visual é imediata
   },
   
   syncSettingsInputs(p) {
@@ -933,7 +933,8 @@ const Theme = {
     if (label) label.textContent = themeLabel[name] || name;
 
     haptic();
-    if (!silent) App.toast('Tema alterado!', 'success', 1500);
+    // Toast apenas quando o usuário trocou manualmente (não em inicialização)
+    if (!silent) App.toast('Tema: ' + (themeLabel[name] || name), 'info', 1200);
   },
 
   applyFont(name, silent = false) {
@@ -943,14 +944,21 @@ const Theme = {
     const btn = document.getElementById('fontBtn-' + name);
     if (btn) btn.classList.add('active');
     haptic();
-    if (!silent) App.toast('Fonte alterada!', 'success', 1500);
+    // Sem toast para fonte — mudança visual é imediata e óbvia
   },
 
   init() {
-    const theme = localStorage.getItem('nupie_theme') || 'dark-orange';
-    const font  = localStorage.getItem('nupie_font')  || 'default';
+    let theme = localStorage.getItem('nupie_theme') || 'dark-orange';
+    // Garante compatibilidade com temas legados que não existem mais
+    if (theme === 'nucleo' || theme === 'default' || theme === 'fusion') theme = 'dark-orange';
+    const font = localStorage.getItem('nupie_font') || 'default';
     Theme.apply(theme, true);
     Theme.applyFont(font, true);
+  },
+
+  set(name) {
+    // Alias para Theme.apply — mantém compatibilidade com chamadas legadas
+    this.apply(name);
   }
 };
 
@@ -1478,7 +1486,7 @@ const DashboardExtra = {
       const lastActivity = new Date(data[0].created_at);
       const diffYears = (new Date() - lastActivity) / (1000 * 60 * 60 * 24 * 365.25);
       if (diffYears >= 2) {
-        window.App?.toast?.('ALERTA CRÍTICO: 2 anos sem atividade detectada! Risco de dissolução.', 'error', 15000);
+        window.App?.toast?.('Atenção: nenhuma atividade registrada nos últimos 2 anos.', 'warning', 8000);
       }
     }
   },
@@ -1513,7 +1521,7 @@ const Projetos = {
     `).join('');
   },
   novoPatrocinador() {
-    App.toast('Módulo de Upload em construção...', 'info');
+    abrirModal({ titulo: 'Novo Patrocinador', corpo: '<p style="color:var(--c-slate);font-size:13px;">Funcionalidade disponível em breve.</p>', botoes: [{ texto: 'Fechar', classe: 'btn-ghost', acao: fecharModal }] });
   }
 };
 
@@ -1584,7 +1592,7 @@ const Geral = {
     `).join('');
   },
 
-  novaReuniao() { App.toast('Módulo de agendamento em construção...', 'info'); },
+  novaReuniao() { abrirModal({ titulo: 'Nova Reunião', corpo: '<p style="color:var(--c-slate);font-size:13px;">Funcionalidade de agendamento disponível em breve.</p>', botoes: [{ texto: 'Fechar', classe: 'btn-ghost', acao: fecharModal }] }); },
   gerenciarPresenca(id) { App.toast('Abrindo lista de presença para RGN #' + id, 'info'); }
 };
 
@@ -1618,7 +1626,7 @@ const Financeiro = {
     }
   },
   novoLancamento() {
-    App.toast('Módulo financeiro aguardando Supabase.', 'info');
+    // Módulo financeiro integrado ao Supabase — sem aviso desnecessário
   }
 };
 
@@ -2038,7 +2046,7 @@ const CyberSecurity = {
   },
 
   async lockAndRotate() {
-    App.toast('SISTEMA BLOQUEADO: 24h de inatividade detectada em setor crítico.', 'error', 0);
+    App.toast('Sessão encerrada por inatividade.', 'warning', 6000);
     if (window._sb) await window._sb.auth.signOut();
     localStorage.clear();
     location.reload();

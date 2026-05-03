@@ -259,11 +259,9 @@
     .btn-submit:hover {
       background: var(--orange);
       color: #fff;
-      transform: translateY(-3px);
-      box-shadow: 0 15px 30px rgba(247, 84, 18, 0.25);
-      animation: glitchMini 0.2s ease infinite;
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(247, 84, 18, 0.30);
     }
-    @keyframes glitchMini { 0% { transform: translate(1px, 0); } 50% { transform: translate(-1px, 0); } 100% { transform: translate(0, 0); } }
 
     .card-footer { display: flex; justify-content: space-between; margin-top: 2rem; }
     .btn-link { background: none; border: none; color: rgba(255,255,255,0.3); font-size: 12px; cursor: pointer; transition: color 0.2s; }
@@ -324,13 +322,6 @@
 <body>
 
   <div class="bg-blueprint"></div>
-  
-  <div class="hud-overlay">
-    <div class="hud-line hud-v"></div>
-    <div class="hud-line hud-h"></div>
-    <div class="hud-tag hud-tl">OS_STATUS: SECURE_CORE_v8</div>
-    <div class="hud-tag hud-br">APEX INDUSTRIAL INTERFACE</div>
-  </div>
 
   <div class="industrial-stage">
     <div class="gear gear-1">
@@ -347,9 +338,9 @@
         <img src="assets/icon-192.png" alt="Logo" class="logo-icon">
         <div class="logo-text">NUPIE<span>EPRO</span></div>
       </div>
-      <h1 class="shimmer-text">Geração de Alta<br>Performance Industrial.</h1>
-      <p class="subtitle">O Nexus de gestão técnica, operacional e financeira do núcleo. Ambiente de acesso restrito de nível especialista.</p>
-      <div style="margin-top:2rem; font-size:11px; color:var(--c-slate); opacity:0.6; letter-spacing:1px; font-weight:700;">V9.0 SPECIALIST — INDUSTRIAL SYSTEM</div>
+      <h1 class="shimmer-text">Gestão do NUPIEEPRO<br>Tudo em um só lugar.</h1>
+      <p class="subtitle">Plataforma interna do Núcleo Piauiense de Estudantes de Engenharia de Produção — UFPI. Acesso restrito a membros.</p>
+      <div style="margin-top:2rem; font-size:11px; color:var(--c-slate); opacity:0.6; letter-spacing:1px; font-weight:700;">NUPIEEPRO · ABEPRO JOVEM · UFPI 2026</div>
     </div>
 
     <div class="login-section">
@@ -358,39 +349,39 @@
 
         <form id="loginForm" onsubmit="return false;" novalidate>
           <div class="form-group">
-            <label class="form-label" for="loginEmail">Identificação de Usuário</label>
-            <input type="email" id="loginEmail" class="form-input" placeholder="id.specialist@nupieepro.com" required>
+            <label class="form-label" for="loginEmail">E-mail</label>
+            <input type="email" id="loginEmail" class="form-input" placeholder="seu@email.com" required>
           </div>
 
           <div class="form-group">
-            <label class="form-label" for="loginPassword">Chave de Segurança</label>
+            <label class="form-label" for="loginPassword">Senha</label>
             <input type="password" id="loginPassword" class="form-input" placeholder="••••••••" required>
           </div>
 
           <div style="font-size: 10px; color: rgba(255,255,255,0.4); margin-bottom: 1rem; text-align: left; line-height: 1.4;">
-            Ao acessar esta área restrita, você concorda com nossos <a href="#" style="color: var(--orange); text-decoration: none;">Termos de Uso e Política de Privacidade (LGPD)</a>, e autoriza o processamento seguro dos seus dados operacionais.
+            Ao acessar o sistema, você concorda com os <a href="#" style="color: var(--orange); text-decoration: none;">Termos de Uso e Política de Privacidade (LGPD)</a>.
           </div>
           <button id="btnLogin" class="btn-submit" onclick="doLogin()">
-            Acessar o Sistema
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            Entrar
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><polyline points="9 18 15 12 9 6"/></svg>
           </button>
         </form>
 
         <div class="card-footer">
-          <button class="btn-link" onclick="togglePanel('resetPanel')">Recuperação de Chave</button>
-          <button class="btn-link" onclick="togglePanel('convitePanel')">Validação de Convite</button>
+          <button class="btn-link" onclick="togglePanel('resetPanel')">Esqueci minha senha</button>
+          <button class="btn-link" onclick="togglePanel('convitePanel')">Ativar convite</button>
         </div>
 
         <div id="resetPanel" class="panel-wrap">
           <div id="resetAlert" class="alert"></div>
-          <input type="email" id="resetEmail" class="form-input" placeholder="E-mail principal">
-          <button id="btnReset" class="btn-submit" onclick="doResetPassword()" style="background:var(--orange); color:#fff; margin-top:1rem;">Enviar Chave</button>
+          <input type="email" id="resetEmail" class="form-input" placeholder="Seu e-mail cadastrado">
+          <button id="btnReset" class="btn-submit" onclick="doResetPassword()" style="background:var(--orange); color:#fff; margin-top:1rem;">Enviar link de recuperação</button>
         </div>
 
         <div id="convitePanel" class="panel-wrap">
           <div id="conviteAlert" class="alert"></div>
-          <input type="text" id="conviteTokenInput" class="form-input" placeholder="Token Industrial">
-          <button class="btn-submit" onclick="ativarConvite()" style="background:var(--orange); color:#fff; margin-top:1rem;">Ativar Especialista</button>
+          <input type="text" id="conviteTokenInput" class="form-input" placeholder="Código de convite">
+          <button class="btn-submit" onclick="ativarConvite()" style="background:var(--orange); color:#fff; margin-top:1rem;">Ativar conta</button>
         </div>
       </div>
     </div>
@@ -410,7 +401,7 @@
         const email = await MagicLink.verify(magic);
         if (email) {
           localStorage.setItem('mockSession', email);
-          App.toast('Sessão restaurada via Magic Link!', 'success');
+          App.toast('Login realizado com sucesso!', 'success');
           setTimeout(() => App.redirect('dashboard.html'), 800);
           return;
         }

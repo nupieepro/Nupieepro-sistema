@@ -4,41 +4,45 @@
    O tema "nucleo" (Lojinha) só é ativado quando data-theme="nucleo".
    ────────────────────────────────────────────────────────────── */
 [data-theme="nucleo"] {
-  --c-bg:        #F5F7FB;   /* Fundo da Lojinha */
-  --c-s1:        #0f0732;   /* Roxo Brand */
-  --c-s2:        #161042;   
-  --c-s3:        #ffffff;   
-  --c-s4:        #e4eaf5;   
-  --c-s5:        #f75412;   
-  --c-white:     #ffffff;
-  --c-slate:     #a0a8c0;
+  --c-bg:        #f4f6fb;
+  --c-s1:        #0f0732;
+  --c-s2:        #161042;
+  --c-s3:        #ffffff;
+  --c-s4:        #e4eaf5;
+  --c-s5:        #f75412;
+  --c-white:     #0a0e1a;   /* Texto escuro para fundo claro */
+  --c-slate:     #3d4663;
   --text-primary: #0a0e1a;
   --text-secondary: #1a1f35;
   --c-accent:    #f75412;
   --c-accent2:   #ff7043;
   --c-purple:    #29324f;
   --c-purple-l:  #f75412;
-  --b-1:   rgba(10,14,26,0.08);
-  --b-2:   rgba(10,14,26,0.15);
-  --b-3:   rgba(10,14,26,0.24);
+  --t-1: #0a0e1a;
+  --t-2: #29324f;
+  --t-3: rgba(10,14,26,0.60);
+  --t-4: rgba(10,14,26,0.40);
+  --b-1:   rgba(10,14,26,0.10);
+  --b-2:   rgba(10,14,26,0.18);
+  --b-3:   rgba(10,14,26,0.28);
   --b-a:   rgba(247,84,18,0.35);
-  --b-p:   rgba(10,14,26,0.20);
+  --b-p:   rgba(10,14,26,0.22);
   --border: rgba(10,14,26,0.12);
-  --a-1: rgba(247,84,18,0.06);
-  --a-2: rgba(247,84,18,0.12);
+  --a-1: rgba(247,84,18,0.07);
+  --a-2: rgba(247,84,18,0.13);
   --a-3: rgba(247,84,18,0.22);
-  --p-1: rgba(10,14,26,0.08);
-  --p-2: rgba(10,14,26,0.15);
+  --p-1: rgba(10,14,26,0.07);
+  --p-2: rgba(10,14,26,0.14);
   --sh-xs:     0 1px 3px  rgba(0,0,0,0.07);
   --sh-sm:     0 4px 12px rgba(0,0,0,0.09);
   --sh-md:     0 8px 28px rgba(0,0,0,0.11);
   --sh-lg:     0 20px 60px rgba(0,0,0,0.14);
   --sh-accent: 0 8px 32px rgba(247,84,18,0.22);
-  --black:          #f0f3f8;
+  --black:          #0a0e1a;
   --navy:           #29324f;
   --navy-mid:       #1e2a42;
   --navy-card:      #ffffff;
-  --slate:          #a0a8c0;
+  --slate:          #3d4663;
   --orange:         #f75412;
   --orange-light:   #ff7043;
   --orange-dim:     rgba(247,84,18,0.10);
@@ -50,9 +54,9 @@
   --w10:            rgba(10,14,26,0.12);
   --w5:             rgba(10,14,26,0.06);
   --tx-1: #0a0e1a;
-  --tx-2: #1a1f35;
-  --tx-3: rgba(10,14,26,0.65);
-  --tx-4: rgba(10,14,26,0.45);
+  --tx-2: #29324f;
+  --tx-3: rgba(10,14,26,0.62);
+  --tx-4: rgba(10,14,26,0.40);
   --dur-1: 120ms;
   --dur-2: 200ms;
   --dur-3: 350ms;
@@ -63,6 +67,54 @@
 [data-theme="nucleo"] ::-webkit-scrollbar-track {
   background: rgba(41,50,79,0.04);
 }
+/* Texto do corpo no tema claro nucleo */
+[data-theme="nucleo"] body,
+[data-theme="nucleo"] .main-area {
+  color: #0a0e1a;
+}
+[data-theme="nucleo"] .section-card,
+[data-theme="nucleo"] .sum-card,
+[data-theme="nucleo"] .setting-card {
+  color: #0a0e1a;
+  background: #ffffff;
+  border-color: rgba(10,14,26,0.10);
+}
+[data-theme="nucleo"] .section-title,
+[data-theme="nucleo"] .topbar-title,
+[data-theme="nucleo"] .sum-label,
+[data-theme="nucleo"] .sum-value,
+[data-theme="nucleo"] .sum-sub {
+  color: #0a0e1a;
+}
+[data-theme="nucleo"] .form-input,
+[data-theme="nucleo"] .form-select {
+  background: #f4f6fb;
+  color: #0a0e1a;
+  border-color: rgba(10,14,26,0.18);
+}
+[data-theme="nucleo"] .option-btn {
+  color: #29324f;
+  background: rgba(10,14,26,0.04);
+}
+[data-theme="nucleo"] .option-btn:hover {
+  color: #0a0e1a;
+  background: rgba(10,14,26,0.08);
+}
+[data-theme="nucleo"] .tab {
+  color: rgba(10,14,26,0.55);
+}
+[data-theme="nucleo"] .tab.active {
+  color: #0a0e1a;
+  border-bottom-color: #f75412;
+}
+[data-theme="nucleo"] .data-table th { color: rgba(10,14,26,0.55); }
+[data-theme="nucleo"] .data-table td { color: #0a0e1a; }
+[data-theme="nucleo"] .notif-title   { color: #0a0e1a; }
+[data-theme="nucleo"] .notif-desc    { color: #29324f; }
+[data-theme="nucleo"] .kanban-card   { background: #f4f6fb; border-color: rgba(10,14,26,0.12); }
+[data-theme="nucleo"] .kanban-card-title { color: #0a0e1a; }
+[data-theme="nucleo"] .u-name { color: #ffffff; }
+[data-theme="nucleo"] .u-role { color: rgba(255,255,255,0.72); }
 [data-theme="nucleo"] .sidebar {
   --c-white:  #ffffff;
   --c-slate:  rgba(255,255,255,0.72);
@@ -187,7 +239,11 @@
   --c-white: #212940;
   --c-accent: #f75412;
   --c-accent2: #ff7043;
-  --b-1: rgba(33,41,64,0.15); /* Bordas mais escuras */
+  --t-1: #212940;
+  --t-2: #29324f;
+  --t-3: rgba(41,50,79,0.58);
+  --t-4: rgba(41,50,79,0.38);
+  --b-1: rgba(33,41,64,0.15);
   --b-2: rgba(33,41,64,0.25);
   --b-3: rgba(33,41,64,0.35);
   --b-a: rgba(248,89,0,0.40);
@@ -195,18 +251,21 @@
   --a-1: rgba(247,84,18,0.06);
   --a-2: rgba(247,84,18,0.11);
   --a-3: rgba(247,84,18,0.20);
+  --p-1: rgba(41,50,79,0.06);
+  --p-2: rgba(41,50,79,0.12);
+  --b-p: rgba(41,50,79,0.25);
   --sh-sm: 0 4px 12px rgba(0,0,0,0.07);
   --sh-md: 0 8px 28px rgba(0,0,0,0.09);
   --sh-accent: 0 8px 32px rgba(247,84,18,0.18);
   --white: #212940;
-  --orange: #f85900; /* Laranja Lojinha */
+  --orange: #f85900;
   --w70: #6b7599;
   --w40: rgba(33,41,64,0.42);
   --w10: rgba(33,41,64,0.08);
   --w5:  rgba(33,41,64,0.04);
   --tx-1: #212940;
   --tx-2: #29324f;
-  --tx-3: rgba(41,50,79,0.55);
+  --tx-3: rgba(41,50,79,0.58);
   --tx-4: rgba(41,50,79,0.35);
 }
 [data-theme="luminous"] .sidebar,
@@ -234,6 +293,47 @@
 [data-theme="claro-suave"] .mobile-nav {
   background: #29324f;
 }
+/* Texto escuro para o corpo nos temas claros */
+[data-theme="luminous"] body,
+[data-theme="luminous"] .main-area,
+[data-theme="claro-suave"] body,
+[data-theme="claro-suave"] .main-area {
+  color: #212940;
+}
+[data-theme="luminous"] .section-card,
+[data-theme="luminous"] .sum-card,
+[data-theme="luminous"] .setting-card,
+[data-theme="claro-suave"] .section-card,
+[data-theme="claro-suave"] .sum-card,
+[data-theme="claro-suave"] .setting-card {
+  background: #ffffff;
+  color: #212940;
+  border-color: rgba(33,41,64,0.15);
+}
+[data-theme="luminous"] .section-title,
+[data-theme="luminous"] .sum-label,
+[data-theme="luminous"] .sum-value,
+[data-theme="claro-suave"] .section-title,
+[data-theme="claro-suave"] .sum-label,
+[data-theme="claro-suave"] .sum-value {
+  color: #212940;
+}
+[data-theme="luminous"] .form-input,
+[data-theme="luminous"] .form-select,
+[data-theme="claro-suave"] .form-input,
+[data-theme="claro-suave"] .form-select {
+  background: #f5f6fa;
+  color: #212940;
+  border-color: rgba(33,41,64,0.20);
+}
+[data-theme="luminous"] .tab,
+[data-theme="claro-suave"] .tab {
+  color: rgba(33,41,64,0.55);
+}
+[data-theme="luminous"] .tab.active,
+[data-theme="claro-suave"] .tab.active {
+  color: #212940;
+}
 [data-theme="rose"],
 [data-theme="frufru"] {
   --c-bg:    #fff5f8;
@@ -242,10 +342,14 @@
   --c-s3:    #ffffff;
   --c-s4:    #fce8f2;
   --c-s5:    #e91e8c;
-  --c-slate: #9b6e8a;
+  --c-slate: #7a4a68;
   --c-white: #3d1a2e;
-  --c-accent:  #e91e8c;
-  --c-accent2: #f472b6;
+  --c-accent:  #c0186e;
+  --c-accent2: #e040a8;
+  --t-1: #3d1a2e;
+  --t-2: #5c2843;
+  --t-3: rgba(61,26,46,0.60);
+  --t-4: rgba(61,26,46,0.38);
   --c-purple:   #b5548e;
   --c-purple-l: #f472b6;
   --b-1: rgba(181,84,142,0.12);
@@ -383,12 +487,16 @@
   --c-s3:    #ffffff;
   --c-s4:    #ffe8df;
   --c-s5:    #f85900;
-  --c-slate: #7a5948;
+  --c-slate: #5a3828;
   --c-white: #1a0a00;
-  --c-accent:  #f85900;
-  --c-accent2: #ff7d33;
-  --c-purple:   #f85900;
-  --c-purple-l: #ff8a40;
+  --c-accent:  #d04a00;
+  --c-accent2: #f06020;
+  --c-purple:   #d04a00;
+  --c-purple-l: #e86030;
+  --t-1: #1a0a00;
+  --t-2: #3d1800;
+  --t-3: rgba(26,10,0,0.60);
+  --t-4: rgba(26,10,0,0.38);
   --b-1: rgba(15, 10, 0, 0.15);
   --b-2: rgba(15, 10, 0, 0.25);
   --b-3: rgba(15, 10, 0, 0.35);
@@ -667,25 +775,4 @@ body.profile-switching-in .sidebar-logo {
   background: rgba(41,50,79,0.18);
 }
 
-/* [V9.0] HUD Scanlines p/ Temas Dark */
-[data-theme="dark"]::after,
-[data-theme="obsidian"]::after,
-[data-theme="dark-orange"]::after,
-[data-theme="badboy"]::after,
-[data-theme="dark-purple"]::after {
-  content: "";
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%), 
-              linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
-  background-size: 100% 4px, 4px 100%;
-  z-index: 9999;
-  opacity: 0.3;
-  mix-blend-mode: overlay;
-  animation: scanlineMove 8s linear infinite;
-}
-@keyframes scanlineMove {
-  0% { background-position: 0 0; }
-  100% { background-position: 0 100%; }
-}
+/* Scanlines HUD removidas — causavam ofuscação nos temas escuros */

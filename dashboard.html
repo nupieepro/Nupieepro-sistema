@@ -32,9 +32,9 @@
   
   <script>
     // Injeção Crítica: Impede a tela branca de "Blink"
-    const _t = localStorage.getItem('nupie_theme') || 'nucleo';
+    const _t = localStorage.getItem('nupie_theme') || 'dark-orange';
     const _f = localStorage.getItem('nupie_font') || 'default';
-    document.documentElement.setAttribute('data-theme', _t === 'default' ? 'nucleo' : _t);
+    document.documentElement.setAttribute('data-theme', _t === 'default' ? 'dark-orange' : _t);
     if (_f !== 'default') document.documentElement.setAttribute('data-font', _f);
   </script>
 </head>
@@ -46,7 +46,7 @@
         <img src="assets/logo.png" id="sideLogoImg" style="height:85px; width:auto; max-width:100%; object-fit:contain; margin-bottom:12px;" alt="NUPIEEPRO">
         <div style="text-align:center;">
           <div class="sidebar-logo-text" style="font-size:1.4rem; letter-spacing:0.05em;">NUPIE<span>EPRO</span></div>
-          <div class="sidebar-logo-sub" style="font-size:10px; opacity:0.6; margin-top:4px;">PLATAFORMA DE GESTÃO INDUSTRIAL</div>
+          <div class="sidebar-logo-sub" style="font-size:10px; opacity:0.6; margin-top:4px;">GESTÃO 2026 · ABEPRO JOVEM</div>
         </div>
       </div>
 
@@ -70,7 +70,7 @@
       </div>
 
       <div style="padding:1.5rem; text-align:center; border-top:1px solid var(--b-1); margin-top:auto;">
-        <div class="shimmer-text" style="font-size:10px; font-weight:800; line-height:1.2; opacity:0.8;">
+        <div style="font-size:10px; font-weight:700; line-height:1.2; opacity:0.6; color:rgba(255,255,255,0.7); letter-spacing:0.06em;">
           NUPIEEPRO · ABEPRO JOVEM · UFPI
         </div>
       </div>
@@ -81,7 +81,7 @@
       <div class="page active" id="page-dashboard">
         <div class="topbar">
           <div style="display:flex;align-items:center;gap:12px;">
-            <button class="topbar-toggle" onclick="toggleSidebar()">☰</button>
+            <button class="topbar-toggle" onclick="toggleSidebar()"><svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
             <img src="assets/icon-192.png" class="d-md-none" style="height:32px; object-fit:contain; filter: drop-shadow(0 0 5px var(--orange));" alt="Logo">
             <div>
               <div class="topbar-title" id="greeting-title">Dashboard</div>
@@ -103,9 +103,11 @@
                 <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><circle cx="12" cy="12" r="10"/><path d="M12 2a10 10 0 0 0 0 20"/></svg>
               </button>
               <div id="themeMenu" class="dropdown-content">
-                <div onclick="Theme.set('nucleo')">Núcleo (Padrão)</div>
-                <div onclick="Theme.set('dark-purple')">Roxo Premium</div>
-                <div onclick="Theme.set('default')">Tema Dark</div>
+                <div onclick="Theme.apply('dark-orange')">Laranja Industrial</div>
+                <div onclick="Theme.apply('dark-purple')">Roxo Premium</div>
+                <div onclick="Theme.apply('dark')">Dark Clássico</div>
+                <div onclick="Theme.apply('luminous')">Modo Claro</div>
+                <div onclick="Theme.apply('obsidian')">Obsidian</div>
               </div>
             </div>
             <button class="btn btn-icon" onclick="App.loadNotifCount()" title="Atualizar">
@@ -184,7 +186,7 @@
           </div>
 
           <div class="section-card">
-            <div class="section-title">Ã Rápidas</div>
+            <div class="section-title">Ações Rápidas</div>
             <div style="display:flex;gap:8px;flex-wrap:wrap;" id="quickBtns"></div>
           </div>
 
@@ -203,9 +205,13 @@
                 <button class="btn btn-ghost" style="font-size:11px;padding:4px 10px;" onclick="goTo('compartilhado')">Ver completo</button>
               </div>
               <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--s3);">
-                <button class="cal-nav-btn" style="padding:4px 10px;font-size:14px;" onclick="MiniCal.prev()">‹</button>
+                <button class="cal-nav-btn" style="padding:4px 10px;font-size:14px;" onclick="MiniCal.prev()">
+                  <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+                </button>
                 <span class="cal-month-label" id="miniCalLabel" style="font-size:13px;"></span>
-                <button class="cal-nav-btn" style="padding:4px 10px;font-size:14px;" onclick="MiniCal.next()">›</button>
+                <button class="cal-nav-btn" style="padding:4px 10px;font-size:14px;" onclick="MiniCal.next()">
+                  <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+                </button>
               </div>
               
               <div class="mini-cal-grid" id="miniCalGrid">
@@ -581,11 +587,12 @@
               <div style="display:flex;flex-direction:column;gap:12px;margin-top:1rem">
                 <div class="form-group">
                   <label class="form-label">Escolha o Tema</label>
-                  <select class="form-select" id="config-tema" onchange="Theme.set(this.value)">
-                    <option value="nucleo">Núcleo (Padrão)</option>
+                  <select class="form-select" id="config-tema" onchange="Theme.apply(this.value)">
+                    <option value="dark-orange">Laranja Industrial (Padrão)</option>
                     <option value="dark-purple">Roxo Premium</option>
-                    <option value="default">Dark Clássico</option>
-                    <option value="dark-orange">Laranja Industrial</option>
+                    <option value="dark">Dark Clássico</option>
+                    <option value="luminous">Modo Claro</option>
+                    <option value="obsidian">Obsidian</option>
                   </select>
                 </div>
                 <div class="form-group">
@@ -603,12 +610,12 @@
               <div class="section-title">ℹ️ Sobre o Sistema</div>
               <div style="margin-top:1rem;text-align:center;padding:1rem">
                 <img src="assets/logo.png" style="height:60px;margin-bottom:12px" alt="Logo">
-                <div style="font-weight:800;font-size:18px;color:var(--c-white)">NUPIEEPRO V9.0</div>
-                <div style="font-size:12px;color:var(--c-slate);margin-top:4px">Geração de Alta Performance Industrial</div>
-                
+                <div style="font-weight:800;font-size:18px;color:var(--c-white)">NUPIEEPRO</div>
+                <div style="font-size:12px;color:var(--c-slate);margin-top:4px">Sistema de Gestão Interna — Gestão 2026</div>
+
                 <div style="margin-top:2rem;padding-top:1rem;border-top:1px solid var(--b-1);font-size:11px;color:var(--c-slate)">
                   Desenvolvido por <strong style="color:var(--c-accent)">JR</strong><br>
-                  © 2026 — Núcleo de Engenharia de Produção
+                  © 2026 — NUPIEEPRO · UFPI
                 </div>
               </div>
             </div>
@@ -618,7 +625,7 @@
       <div class="page" id="page-geral">
         <div class="topbar">
           <div style="display:flex;align-items:center;gap:12px;">
-            <button class="topbar-toggle" onclick="toggleSidebar()">☰</button>
+            <button class="topbar-toggle" onclick="toggleSidebar()"><svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
             <div>
               <div class="topbar-title">Gestão Estratégica</div>
               <div class="topbar-sub">Assembleia, Votações e Governança</div>
@@ -671,7 +678,7 @@
       <div class="page" id="page-notificacoes">
         <div class="topbar">
           <div style="display:flex;align-items:center;gap:12px;">
-            <button class="topbar-toggle" onclick="toggleSidebar()">☰</button>
+            <button class="topbar-toggle" onclick="toggleSidebar()"><svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
             <div>
               <div class="topbar-title">Notificações</div>
               <div class="topbar-sub">Central de alertas do núcleo</div>
@@ -745,7 +752,7 @@
       <div class="page" id="page-abj">
         <div class="topbar">
           <div style="display:flex;align-items:center;gap:12px;">
-            <button class="topbar-toggle" onclick="toggleSidebar()">☰</button>
+            <button class="topbar-toggle" onclick="toggleSidebar()"><svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
             <div>
               <div class="topbar-title">Selo ABJ 2026</div>
               <div class="topbar-sub">Checklist de 18 atividades oficiais</div>
@@ -779,7 +786,7 @@
       <div class="page" id="page-tarefas">
         <div class="topbar">
           <div style="display:flex;align-items:center;gap:12px;">
-            <button class="topbar-toggle" onclick="toggleSidebar()">☰</button>
+            <button class="topbar-toggle" onclick="toggleSidebar()"><svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
             <div>
               <div class="topbar-title">Demandas</div>
               <div class="topbar-sub">Cada coordenadoria adiciona — GER/Dev edita</div>
@@ -857,7 +864,7 @@
       <div class="page" id="page-compartilhado">
         <div class="topbar">
           <div style="display:flex;align-items:center;gap:12px;">
-            <button class="topbar-toggle" onclick="toggleSidebar()">☰</button>
+            <button class="topbar-toggle" onclick="toggleSidebar()"><svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
             <div>
               <div class="topbar-title">Calendário Universal</div>
               <div class="topbar-sub">Agenda oficial NUPIEEPRO — todos os anos</div>
@@ -871,14 +878,18 @@
           <div class="section-card">
             <!-- Nav do calendário -->
             <div class="cal-nav">
-              <button class="cal-nav-btn" onclick="Cal.prev()">‹</button>
+              <button class="cal-nav-btn" onclick="Cal.prev()" title="Mês anterior">
+                <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+              </button>
               <div style="display:flex;align-items:center;gap:12px;flex:1;justify-content:center;">
                 <div class="cal-month-label" id="calMonthLabel">Abril 2026</div>
                 <select class="cal-year-select" id="calYearSelect" onchange="Cal.goYear(this.value)">
                   <!-- Populated by JS -->
                 </select>
               </div>
-              <button class="cal-nav-btn" onclick="Cal.next()">›</button>
+              <button class="cal-nav-btn" onclick="Cal.next()" title="Próximo mês">
+                <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+              </button>
             </div>
 
             <!-- Grid do calendário -->
@@ -914,7 +925,7 @@
       <div class="page" id="page-manu">
         <div class="topbar">
           <div style="display:flex;align-items:center;gap:12px;">
-            <button class="topbar-toggle" onclick="toggleSidebar()">☰</button>
+            <button class="topbar-toggle" onclick="toggleSidebar()"><svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
             <div>
               <div class="topbar-title">Repositório Central</div>
               <div class="topbar-sub">Manuais, regimentos e normas vigentes</div>
@@ -956,7 +967,7 @@
       <div class="page" id="page-marketing">
         <div class="topbar">
           <div style="display:flex;align-items:center;gap:12px;">
-            <button class="topbar-toggle" onclick="toggleSidebar()">☰</button>
+            <button class="topbar-toggle" onclick="toggleSidebar()"><svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
             <div>
               <div class="topbar-title">Agência Marketing</div>
               <div class="topbar-sub">Coordenação MKT — Gestão de Ativos</div>
@@ -986,7 +997,7 @@
       <div class="page" id="page-operacoes">
         <div class="topbar">
           <div style="display:flex;align-items:center;gap:12px;">
-            <button class="topbar-toggle" onclick="toggleSidebar()">☰</button>
+            <button class="topbar-toggle" onclick="toggleSidebar()"><svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
             <div>
                 <div class="topbar-title">Operações Hub</div>
                 <div class="topbar-sub">Cofre de POPs e Auditoria de Relatórios</div>
@@ -1029,7 +1040,7 @@
       <div class="page" id="page-projetos">
         <div class="topbar">
           <div style="display:flex;align-items:center;gap:12px;">
-            <button class="topbar-toggle" onclick="toggleSidebar()">☰</button>
+            <button class="topbar-toggle" onclick="toggleSidebar()"><svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
             <div><div class="topbar-title">Portfólio & Ações</div><div class="topbar-sub">Gestão de Patrocinadores e NUPICAST</div></div>
           </div>
           <button class="btn btn-primary" onclick="Projetos.novoPatrocinador()">+ Adicionar Patrocinador</button>
@@ -1060,7 +1071,7 @@
       <div class="page" id="page-financeiro">
         <div class="topbar">
           <div style="display:flex;align-items:center;gap:12px;">
-            <button class="topbar-toggle" onclick="toggleSidebar()">☰</button>
+            <button class="topbar-toggle" onclick="toggleSidebar()"><svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
             <div>
               <div class="topbar-title">Teses Financeiras</div>
               <div class="topbar-sub">Gestão da Lojinha e Tesouraria Global</div>
@@ -1105,7 +1116,7 @@
       <div class="page" id="page-gp">
         <div class="topbar">
           <div style="display:flex;align-items:center;gap:12px;">
-            <button class="topbar-toggle" onclick="toggleSidebar()">☰</button>
+            <button class="topbar-toggle" onclick="toggleSidebar()"><svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
             <div>
               <div class="topbar-title">Talent Bank Hub</div>
               <div class="topbar-sub">CRM de Talentos e Pesquisa de Clima</div>
@@ -1251,7 +1262,7 @@
       <div class="page" id="page-configuracoes">
         <div class="topbar">
           <div style="display:flex;align-items:center;gap:12px;">
-            <button class="topbar-toggle" onclick="toggleSidebar()">☰</button>
+            <button class="topbar-toggle" onclick="toggleSidebar()"><svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
             <div>
               <div class="topbar-title">Configurações</div>
               <div class="topbar-sub">Tema, aparência e preferências do sistema</div>

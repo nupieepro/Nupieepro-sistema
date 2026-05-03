@@ -166,7 +166,7 @@ async function doLogin() {
   } catch (err) {
     showAlert(err.message || 'E-mail ou senha incorretos.', 'error');
   } finally {
-    if (btn) { btn.classList.remove('loading'); btn.textContent = 'Entrar na Plataforma'; }
+    if (btn) { btn.classList.remove('loading'); btn.textContent = 'Entrar'; }
   }
 }
 
