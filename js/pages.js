@@ -414,7 +414,7 @@ const PageGeral = {
       const coords = await getCoords();
       const ger = coords.find(c=>c.sigla==='GER');
       await _sb().from('demandas').insert([{
-        titulo, descricao:desc||null, coluna:'aberto', tipo:'melhoria',
+        titulo, descricao:desc||null, coluna:'pendente',
         coordenadoria_id:ger?.id||null,
         responsavel_id: window._appProfile?.id,
         criado_por: window._appProfile?.id,
@@ -458,7 +458,7 @@ const PageGeral = {
       await _sb().from('demandas').insert([{
         titulo: nome,
         descricao: [tipo, contato, obj].filter(Boolean).join(' · ') || null,
-        coluna:'aberto', tipo:'parceria',
+        coluna:'pendente',
         coordenadoria_id: ger?.id||null,
         criado_por: window._appProfile?.id,
       }]);
@@ -672,7 +672,7 @@ const PageMarketing = {
       const mkt = coords.find(c => c.sigla === 'MKT');
       await _sb().from('demandas').insert([{
         titulo, coluna, descricao: desc || null,
-        prazo: prazo || null, tipo,
+        prazo: prazo || null,
         coordenadoria_id: mkt?.id || null,
         responsavel_id:   window._appProfile?.id,
         criado_por:       window._appProfile?.id,
@@ -1062,7 +1062,7 @@ const PageFinancas = {
       const fin = coords.find(c => c.sigla === 'FIN');
       await _sb().from('demandas').insert([{
         titulo: nome, descricao: email || null,
-        coluna: 'backlog', tipo: 'abepro',
+        coluna: 'pendente',
         coordenadoria_id: fin?.id || null,
         criado_por: window._appProfile?.id,
         responsavel_id: window._appProfile?.id,
@@ -1073,7 +1073,7 @@ const PageFinancas = {
   },
   async _confirmarComp(id) {
     try {
-      await _sb().from('demandas').update({ coluna: 'concluido' }).eq('id', id);
+      await _sb().from('demandas').update({ coluna: 'auditada' }).eq('id', id);
       mostrarToast('Comprovante confirmado!','success');
       this._carregarABEPRO();
     } catch(e) { mostrarToast('Erro ao confirmar.','error'); }
@@ -1460,15 +1460,15 @@ const PageOperacoes = {
     const el=document.getElementById('ops-relatorios-lista');
     if(!el||!_sb())return;
     try {
-      const {data}=await _sb().from('relatorios_mensais').select('*').order('mes_referencia',{ascending:false}).limit(12);
+      const {data}=await _sb().from('relatorios_mensais').select('*').order('ano',{ascending:false}).order('mes',{ascending:false}).limit(12);
       el.innerHTML=data?.length
         ?data.map(r=>`
           <div style="background:var(--b-1);border:1px solid var(--b-2);border-radius:10px;
                       padding:12px 16px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
             <div>
-              <div style="font-weight:700;font-size:13px;color:var(--c-white)">${sanitize(r.mes_referencia||'—')}</div>
+              <div style="font-weight:700;font-size:13px;color:var(--c-white)">${String(r.mes||'?').padStart(2,'0')}/${r.ano||'?'}</div>
               <div style="font-size:12px;color:var(--c-slate)">
-                Enviado: ${_fmt(r.enviado_em)} · Pontos: ${r.pontos||'—'}
+                Enviado: ${_fmt(r.created_at)} · Pontos ABJ: ${r.pontos_abj||'—'}
               </div>
             </div>
             <span style="font-size:11px;font-weight:700;padding:3px 9px;border-radius:99px;

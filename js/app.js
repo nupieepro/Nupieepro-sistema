@@ -1298,7 +1298,7 @@ const Pessoas = {
       // 1. Criar no Auth? (Geralmente requer Admin API key)
       App.toast('Adicionando membro ao núcleo...', 'info');
       const { error } = await _sb.from('users').insert({
-        email, nome, cargo, role, nascimento: bday, mandate_start: mandate,
+        email, nome, cargo, role, aniversario: bday,
         coordenadoria_id: (await _sb.from('coordenadorias').select('id').eq('sigla', coordSigla).single()).data?.id,
         ativo: true
       });
@@ -1400,9 +1400,9 @@ const DashboardExtra = {
     let bdays = [];
 
     if (sb) {
-      const { data } = await sb.from('users').select('nome, nascimento, iniciais').not('nascimento', 'is', null);
+      const { data } = await sb.from('users').select('nome, aniversario, iniciais').not('aniversario', 'is', null);
       bdays = (data || []).filter(u => {
-        const m = new Date(u.nascimento + 'T12:00:00').getMonth() + 1;
+        const m = new Date(u.aniversario + 'T12:00:00').getMonth() + 1;
         return m === month;
       });
     }
@@ -1414,7 +1414,7 @@ const DashboardExtra = {
 
       if (mural) mural.style.display = 'block';
     listEl.innerHTML = bdays.map(u => {
-      const d = new Date(u.nascimento + 'T12:00:00').getDate();
+      const d = new Date(u.aniversario + 'T12:00:00').getDate();
       return `
         <div style="flex:0 0 140px; background:var(--s1); border:1px solid var(--b-1); border-radius:12px; padding:12px; display:flex; flex-direction:column; align-items:center; gap:8px;">
           <div class="side-avatar" style="width:40px;height:40px;font-size:14px;margin:0;"><i data-lucide="cake" style="stroke-width:1.5px;"></i></div>
@@ -1428,7 +1428,7 @@ const DashboardExtra = {
 
     // Sincronizar com Calendário Global
     bdays.forEach(u => {
-      const d = new Date(u.nascimento + 'T12:00:00').getDate();
+      const d = new Date(u.aniversario + 'T12:00:00').getDate();
       const key = `${new Date().getFullYear()}-${month}-${d}`;
       if (!CAL_EVENTS[key]) CAL_EVENTS[key] = [];
       CAL_EVENTS[key].push({ label: `Aniversário: ${u.nome}`, tag: '🎂', color: 'var(--yellow)' });
