@@ -3154,6 +3154,11 @@ window.PageCompartilhado  = PageCompartilhado;
 document.addEventListener('nupi:booted', () => {
   const _goToOriginal = window.goTo;
   window.goTo = function(id) {
+    // Garante que TODAS as páginas (incluindo as fora do ALL_PAGES) sejam ocultadas antes de navegar
+    document.querySelectorAll('[id^="page-"]').forEach(function(el) {
+      el.style.display = '';
+      el.classList.remove('active');
+    });
     _goToOriginal(id);
     /* Apenas páginas que app.js NÃO trata */
     const mapa = {
