@@ -352,7 +352,7 @@ const App = {
 
     const { data } = await _sb
       .from('users')
-      .select('*, coordenadorias(nome, sigla, icon)')
+      .select('*, coordenadorias(nome, sigla, icone)')
       .eq('id', user.id)
       .single();
 
@@ -789,7 +789,7 @@ const Dashboard = {
       // Fetch KPIs in parallel
       const [abjRes, tasksRes, membersRes, vendasRes, despesasRes] = await Promise.all([
         _sb.from('progresso_abj').select('pontos'),
-        _sb.from('demandas').select('coluna').neq('coluna', 'concluida'),
+        _sb.from('demandas').select('coluna').neq('coluna', 'auditada'),
         _sb.from('users').select('id', { count: 'exact', head: true }).eq('ativo', true),
         _sb.from('vendas').select('valor'),
         _sb.from('despesas').select('valor'),
@@ -1875,9 +1875,9 @@ function _buildNav(role) {
 const Kanban = (() => {
   const COLS = [
     { id: 'afazer',    label: 'A Fazer',       coluna: 'pendente' },
-    { id: 'producao',  label: 'Em Produção',    coluna: 'em_producao' },
+    { id: 'producao',  label: 'Em Produção',    coluna: 'exec' },
     { id: 'evidencia', label: 'Evidência',      coluna: 'evidencia' },
-    { id: 'concluida', label: 'Concluídas',     coluna: 'concluida' },
+    { id: 'concluida', label: 'Concluídas',     coluna: 'auditada' },
   ];
 
   let _demands = [];
@@ -1888,7 +1888,7 @@ const Kanban = (() => {
     try {
       const { data, error } = await window._supabase
         .from('demandas')
-        .select('*')
+        .select('*, coordenadorias(sigla)')
         .order('created_at', { ascending: false });
       if (error) throw error;
       _demands = data || [];
@@ -1915,10 +1915,11 @@ const Kanban = (() => {
 
   function _cardHtml(d) {
     const prazo = d.prazo ? `<span class="kanban-card-meta">📅 ${new Date(d.prazo).toLocaleDateString('pt-BR')}</span>` : '';
-    const dest  = d.coordenadoria ? `<span class="kanban-card-tag">${d.coordenadoria.toUpperCase()}</span>` : '';
-    
+    const coordSigla = d.coordenadorias?.sigla;
+    const dest  = coordSigla ? `<span class="kanban-card-tag">${coordSigla}</span>` : '';
+
     // V6.0: Remetente Icon
-    const remSigla = d.coord_remetente || 'GER';
+    const remSigla = coordSigla || 'GER';
     const remIcon  = `<span class="kanban-rem-icon" title="Origem: ${remSigla}">${remSigla}</span>`;
     
     return `<div class="kanban-card" onclick="Kanban.abrirDetalhes('${d.id}')">
@@ -1963,19 +1964,16 @@ const Kanban = (() => {
 
     if (window._supabase) {
       try {
-        const creator = window._appProfile?.email || 'desconhecido';
-        const remCoord = window._appProfile?.coordenadorias?.sigla || 'GER';
-
+        const coordRes = await window._supabase.from('coordenadorias').select('id').eq('sigla', coord).single();
         const { data, error } = await window._supabase
           .from('demandas')
-          .insert([{ 
-            titulo, 
-            coordenadoria: coord, 
-            prazo, 
-            descricao: desc, 
+          .insert([{
+            titulo,
+            coordenadoria_id: coordRes.data?.id || null,
+            prazo,
+            descricao: desc,
             coluna: 'pendente',
-            criado_por: creator,
-            coord_remetente: remCoord
+            criado_por: window._appProfile?.id,
           }])
           .select()
           .single();

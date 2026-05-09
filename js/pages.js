@@ -22,23 +22,27 @@ function _addDiasUteis(n) {
 }
 
 /* ── Notificação: grava na tabela notificacoes de um usuário ── */
-async function _notificar(userId, titulo, mensagem, tipo = 'sistema') {
+async function _notificar(userId, titulo, mensagem, tipo = 'info') {
   if (!_sb() || !userId) return;
+  const VALID_TIPOS = ['info', 'alerta', 'sucesso', 'erro'];
+  const tipoFinal = VALID_TIPOS.includes(tipo) ? tipo : 'info';
   try {
-    await _sb().from('notificacoes').insert([{ user_id: userId, titulo, mensagem, tipo, lida: false }]);
+    await _sb().from('notificacoes').insert([{ user_id: userId, titulo, mensagem, tipo: tipoFinal, lida: false }]);
   } catch(e) { console.warn('[notif]', e); }
 }
 
 /* ── Notificação em broadcast: dispara para todos de uma coord ── */
-async function _notificarCoord(sigla, titulo, mensagem, tipo = 'sistema') {
+async function _notificarCoord(sigla, titulo, mensagem, tipo = 'info') {
   if (!_sb()) return;
+  const VALID_TIPOS = ['info', 'alerta', 'sucesso', 'erro'];
+  const tipoFinal = VALID_TIPOS.includes(tipo) ? tipo : 'info';
   try {
     const coords = await getCoords();
     const coord  = coords.find(c => c.sigla === sigla);
     if (!coord) return;
     const { data } = await _sb().from('users').select('id').eq('coordenadoria_id', coord.id).eq('ativo', true);
     if (!data?.length) return;
-    await _sb().from('notificacoes').insert(data.map(u => ({ user_id: u.id, titulo, mensagem, tipo, lida: false })));
+    await _sb().from('notificacoes').insert(data.map(u => ({ user_id: u.id, titulo, mensagem, tipo: tipoFinal, lida: false })));
   } catch(e) { console.warn('[notif coord]', e); }
 }
 
@@ -541,11 +545,12 @@ const PageGeral = {
       const uid = window._appProfile?.id;
       await _sb().from('frequencia').upsert([{
         evento_id: eventoId, user_id: uid, presente: true,
+        tipo: 'evento', data: new Date().toISOString().split('T')[0],
       }], { onConflict: 'evento_id,user_id' });
       mostrarToast('Check-in realizado! ✅','success');
       /* Notifica o próprio usuário */
       _notificar(uid, 'Check-in confirmado ✅',
-        'Sua presença foi registrada.', 'reuniao');
+        'Sua presença foi registrada.', 'sucesso');
     } catch(e) { mostrarToast('Erro ao registrar check-in.','error'); }
   },
 };
@@ -556,10 +561,10 @@ const PageMarketing = {
     if (!pg) return;
     const ct = pg.querySelector('.content')||pg;
     const colunas = [
-      { id:'backlog',    label:'🗂️ Backlog',    cor:'var(--c-slate)' },
-      { id:'andamento',  label:'⚡ Em andamento', cor:'var(--yellow)'  },
-      { id:'revisao',    label:'👁️ Revisão',     cor:'var(--c-accent)' },
-      { id:'concluido',  label:'✅ Publicado',    cor:'var(--green)'   },
+      { id:'pendente',   label:'🗂️ Backlog',    cor:'var(--c-slate)' },
+      { id:'exec',       label:'⚡ Em andamento', cor:'var(--yellow)'  },
+      { id:'realizada',  label:'👁️ Revisão',     cor:'var(--c-accent)' },
+      { id:'auditada',   label:'✅ Publicado',    cor:'var(--green)'   },
     ];
     ct.innerHTML = _sc('Kanban de Conteúdo','📋',`
       <p style="font-size:13px;color:var(--c-slate);margin-bottom:16px">
@@ -590,7 +595,7 @@ const PageMarketing = {
         .select('*,users!responsavel_id(nome,iniciais)')
         .eq('coordenadoria_id', mkt?.id||'')
         .order('created_at',{ascending:false});
-      const cols = { backlog:[], andamento:[], revisao:[], concluido:[] };
+      const cols = { pendente:[], exec:[], realizada:[], auditada:[] };
       (data||[]).forEach(d => { if (cols[d.coluna]) cols[d.coluna].push(d); });
       Object.entries(cols).forEach(([colId, cards]) => {
         const el = document.getElementById(`mkt-col-${colId}`);
@@ -661,7 +666,7 @@ const PageMarketing = {
   },
   async _salvarDemanda() {
     const titulo = document.getElementById('nd-titulo')?.value?.trim();
-    const coluna = 'backlog';
+    const coluna = 'pendente';
     const prazo  = document.getElementById('nd-prazo')?.value || null;
     const desc   = document.getElementById('nd-desc')?.value?.trim();
     const tipo   = document.getElementById('nd-tipo')?.value || 'conteudo';
@@ -680,7 +685,7 @@ const PageMarketing = {
       mostrarToast('Demanda criada!','success');
       /* Notifica coordenadores de Marketing */
       _notificarCoord('MKT', `Nova demanda: ${titulo}`,
-        `Uma nova demanda de ${tipo} foi aberta${prazo ? ` com prazo em ${_fmt(prazo)}.` : '.'}`, 'demanda');
+        `Uma nova demanda de ${tipo} foi aberta${prazo ? ` com prazo em ${_fmt(prazo)}.` : '.'}`, 'info');
       this._carregarKanban();
     } catch(e) { mostrarToast('Erro ao criar demanda.','error'); }
   },
