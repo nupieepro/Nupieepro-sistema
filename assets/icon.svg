@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <rect width="64" height="64" rx="14" fill="#0a0514"/>
+  <text x="32" y="40" font-family="system-ui,sans-serif" font-size="22" font-weight="800" fill="#f65214" text-anchor="middle" letter-spacing="-1">NP</text>
+  <rect x="12" y="46" width="40" height="3" rx="1.5" fill="#f65214" opacity="0.4"/>
+</svg>

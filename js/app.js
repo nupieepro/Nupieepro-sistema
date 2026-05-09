@@ -2129,7 +2129,7 @@ window.MagicLink    = MagicLink;
 window.Pessoas      = Pessoas;
 window.Kanban       = Kanban;
 window.Dashboard    = Dashboard;
-window.Auth         = Auth; // Caso auth esteja no mesmo escopo ou carregado
+window.Auth         = typeof Auth !== 'undefined' ? Auth : null;
 window.Financeiro   = Financeiro;
 window.CyberSecurity = CyberSecurity;
 window._sb          = window._sb || _sb;

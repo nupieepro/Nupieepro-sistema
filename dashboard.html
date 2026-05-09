@@ -238,7 +238,7 @@
 
       <!-- Sidebar Footer: user chip -->
       <div class="sidebar-footer">
-        <div class="sidebar-user-chip" onclick="document.getElementById('profileScreen').classList.remove('hidden')" style="cursor:pointer;" title="Trocar perfil">
+        <div class="sidebar-user-chip" onclick="document.getElementById('profileScreen').style.display='flex'" style="cursor:pointer;" title="Trocar perfil">
           <div class="u-avatar" id="sideAvatar">?</div>
           <div class="sidebar-user-info">
             <div class="u-name" id="sideName">Carregando...</div>
@@ -305,7 +305,7 @@
                 <div style="font-weight:700;font-size:13px;" id="dropName">—</div>
                 <div style="font-size:11px;color:var(--fg-3);font-family:var(--font-mono);" id="dropRole">—</div>
               </div>
-              <a class="profile-dropdown-item" href="#" onclick="document.getElementById('profileScreen').classList.remove('hidden');toggleProfileDropdown();return false;">
+              <a class="profile-dropdown-item" href="#" onclick="document.getElementById('profileScreen').style.display='flex';toggleProfileDropdown();return false;">
                 <svg viewBox="0 0 20 20" fill="currentColor" width="14" height="14"><path d="M8 9a3 3 0 100-6 3 3 0 000 6zM8 11a6 6 0 016 6H2a6 6 0 016-6z"/></svg>
                 Trocar de perfil
               </a>
@@ -2044,7 +2044,7 @@
   </div><!-- /app-shell -->
 
   <!-- ═══ PROFILE SCREEN OVERLAY ═══ -->
-  <div id="profileScreen" class="hidden" style="position:fixed;inset:0;z-index:1000;background:rgba(10,5,25,0.92);backdrop-filter:blur(20px);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:2rem;">
+  <div id="profileScreen" style="display:none;position:fixed;inset:0;z-index:1000;background:rgba(10,5,25,0.92);backdrop-filter:blur(20px);flex-direction:column;align-items:center;justify-content:center;padding:2rem;">
     <div style="margin-bottom:2rem;text-align:center;">
       <div style="font-family:var(--font-mono);font-size:10px;letter-spacing:3px;color:var(--fg-3);text-transform:uppercase;margin-bottom:8px;">Selecionar Perfil de Acesso</div>
       <div class="shimmer" style="font-family:var(--font-display);font-size:24px;font-weight:800;">Quem está usando o sistema?</div>
@@ -2108,7 +2108,7 @@
       </div>
 
     </div>
-    <button onclick="document.getElementById('profileScreen').classList.add('hidden')" style="margin-top:2rem;background:none;border:1px solid var(--border-2);color:var(--fg-3);padding:8px 20px;border-radius:8px;cursor:pointer;font-size:13px;">Cancelar</button>
+    <button onclick="document.getElementById('profileScreen').style.display='none'" style="margin-top:2rem;background:none;border:1px solid var(--border-2);color:var(--fg-3);padding:8px 20px;border-radius:8px;cursor:pointer;font-size:13px;">Cancelar</button>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
@@ -2172,7 +2172,7 @@
         if (dropR) dropR.textContent = r;
       }
       setTimeout(function() {
-        document.getElementById('profileScreen').classList.add('hidden');
+        document.getElementById('profileScreen').style.display='none';
         all.forEach(function(c) {
           c.style.transform = '';
           c.style.opacity = '';
