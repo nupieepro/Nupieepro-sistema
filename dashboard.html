@@ -258,11 +258,8 @@
     </aside>
 
     <!-- ═══ MAIN AREA ═══ -->
-    <div id="devBanner" style="display:none; background:var(--orange-dim); border-bottom:1px solid var(--orange-border); padding:6px 12px; font-size:10px; font-weight:800; text-transform:uppercase; letter-spacing:1px; color:var(--orange); align-items:center; gap:8px;">
-      <span class="pulse-dot"></span> DEV MODE ACTIVE — BYPASS ENABLED
-    </div>
 
-    <div class="main-area">
+<div class="main-area">
 
       <!-- ══════════════════════════════════════════════
            PAGE: DASHBOARD EP
@@ -351,7 +348,7 @@
             </div>
             <div class="ep-hero-right">
               <!-- OEE Donut SVG -->
-              <svg width="140" height="140" viewBox="0 0 140 140">
+              <svg width="110" height="110" viewBox="0 0 140 140">
                 <!-- D ring r=62 -->
                 <circle cx="70" cy="70" r="62" fill="none" stroke="var(--surface-3)" stroke-width="8"/>
                 <circle cx="70" cy="70" r="62" fill="none" stroke="#5b9cf6" stroke-width="8" stroke-linecap="round"
@@ -2266,10 +2263,6 @@
         const profile = await app.initDashboard();
         if (profile && typeof window.Dashboard !== 'undefined') {
           window.Dashboard.render(profile);
-          if (profile.role === 'admin') {
-            const banner = document.getElementById('devBanner');
-            if (banner) banner.style.display = 'flex';
-          }
         }
       }
 

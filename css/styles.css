@@ -715,23 +715,23 @@ code, kbd, .mono { font: var(--t-mono); }
 
 /* ════ CONTENT ════ */
 .content {
-  padding: var(--s6) var(--s8);
-  display: flex; flex-direction: column; gap: var(--s6);
+  padding: var(--s4) var(--s6);
+  display: flex; flex-direction: column; gap: var(--s4);
   flex: 1;
 }
 
 /* ════ KPI / SUM CARDS ════ */
 .summary-grid, .dash-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: var(--s4);
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--s3);
 }
 .sum-card {
   background: var(--surface-3);
   border: 1px solid var(--border-1);
   border-radius: var(--r-lg);
-  padding: var(--s5);
-  display: flex; flex-direction: column; gap: var(--s2);
+  padding: 14px 16px;
+  display: flex; flex-direction: column; gap: 6px;
   transition: border-color var(--dur-2) var(--ease), transform var(--dur-2) var(--spring), box-shadow var(--dur-2) var(--ease);
   cursor: default;
   position: relative; overflow: hidden;
@@ -741,31 +741,31 @@ code, kbd, .mono { font: var(--t-mono); }
 .sum-card.clickable:hover { border-color: var(--border-2); transform: translateY(-2px); box-shadow: var(--sh-md); }
 .sum-card.hl { border-color: var(--accent-2); }
 .sum-card.hl:hover { border-color: var(--border-orange); box-shadow: var(--sh-accent); }
-.sum-label { font-size: 11px; color: var(--fg-3); text-transform: uppercase; letter-spacing: 0.1em; font-weight: 500; }
-.sum-value { font: 800 28px/1 var(--font-display); color: var(--fg-1); }
-.sum-sub, .sum-trend { font-size: 12px; color: var(--fg-3); }
+.sum-label { font-size: 10px; color: var(--fg-3); text-transform: uppercase; letter-spacing: 0.1em; font-weight: 600; }
+.sum-value { font: 800 24px/1 var(--font-display); color: var(--fg-1); }
+.sum-sub, .sum-trend { font-size: 11px; color: var(--fg-3); }
 
 /* ════ SECTION CARDS ════ */
 .section-card {
   background: var(--surface-3);
   border: 1px solid var(--border-1);
   border-radius: var(--r-lg);
-  padding: var(--s5);
+  padding: var(--s4);
 }
-.section-title { font: var(--t-h3); margin-bottom: var(--s4); color: var(--fg-1); }
+.section-title { font: var(--t-h3); margin-bottom: var(--s3); color: var(--fg-1); }
 
 /* Glass card variant */
 .glass-card {
   background: var(--glass); backdrop-filter: blur(12px);
   border: 1px solid var(--glass-border); border-radius: var(--r-xl);
-  padding: 22px; box-shadow: var(--glass-shadow);
+  padding: 16px; box-shadow: var(--glass-shadow);
 }
 
 /* Dashboard EP hero */
 .ep-hero {
   background: var(--glass); backdrop-filter: blur(12px);
   border: 1px solid var(--glass-border); border-radius: var(--r-xl);
-  padding: 28px; position: relative; overflow: hidden;
+  padding: 16px 20px; position: relative; overflow: hidden;
   box-shadow: var(--glass-shadow);
 }
 .ep-hero::before {
@@ -776,7 +776,7 @@ code, kbd, .mono { font: var(--t-mono); }
 }
 
 /* ════ DASH LAYOUT ════ */
-.dash-two-col { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s6); }
+.dash-two-col { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s4); }
 .ep-two-col-14 { display: grid; grid-template-columns: 1.4fr 1fr; gap: 16px; }
 .ep-two-col-11 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
 .ep-two-col-12 { display: grid; grid-template-columns: 1fr 1.2fr; gap: 16px; }
@@ -1078,7 +1078,7 @@ body { font-family: var(--font-body); }
 [data-font] body { font-family: var(--font-body); }
 
 /* ════ RESPONSIVE ════ */
-@media (max-width: 1024px) { .summary-grid, .dash-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 900px) { .summary-grid, .dash-grid { grid-template-columns: repeat(2, 1fr); } }
 @media (max-width: 768px) {
   body { overflow: auto; }
   .app-shell { overflow: auto; height: auto; min-height: 100vh; }
@@ -1243,13 +1243,13 @@ body.tv-mode .topbar { background: #000 !important; border-bottom: none !importa
 /* ════ EP HERO EXTRAS ════ */
 .ep-hero {
   display: flex; align-items: center; justify-content: space-between;
-  padding: 28px 32px; gap: 24px; flex-wrap: wrap;
+  padding: 16px 20px; gap: 16px; flex-wrap: wrap;
 }
-.ep-hero-left { flex: 1; min-width: 200px; }
+.ep-hero-left { flex: 1; min-width: 160px; }
 .ep-hero-right { display: flex; align-items: center; justify-content: center; }
 .ep-oee-value {
-  font-size: 56px; font-weight: 900; font-family: var(--font-display);
-  line-height: 1; letter-spacing: -2px;
+  font-size: 40px; font-weight: 900; font-family: var(--font-display);
+  line-height: 1; letter-spacing: -1.5px;
 }
 
 /* ════ GLASS CARD ════ */
