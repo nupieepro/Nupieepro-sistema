@@ -402,10 +402,62 @@
             </div>
           </div>
 
-          <!-- Analytics Row — dados reais do Supabase -->
-          <div class="dash-two-col" style="margin-bottom:var(--s6);">
+          <!-- ── Gráficos Analíticos — dados reais do Supabase ── -->
 
-            <!-- Pipeline de Demandas por Status -->
+          <!-- Linha 1: Pareto de Backlog + Frequência de Eventos -->
+          <div class="dash-two-col" style="margin-bottom:var(--s5);">
+            <section class="section-card">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+                <h3 class="section-title" style="margin:0;">Pareto — Backlog por Área</h3>
+                <button class="btn btn-ghost" style="font-size:11px;padding:4px 10px;" onclick="goTo('demandas')">Kanban →</button>
+              </div>
+              <div id="dashChartPareto" style="display:flex;flex-direction:column;gap:8px;">
+                <p style="color:var(--fg-3);font-size:13px;text-align:center;padding:24px 0;">Carregando...</p>
+              </div>
+            </section>
+            <section class="section-card">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+                <h3 class="section-title" style="margin:0;">Frequência de Eventos / Mês</h3>
+                <button class="btn btn-ghost" style="font-size:11px;padding:4px 10px;" onclick="goTo('calendario')">Calendário →</button>
+              </div>
+              <div id="dashChartFreq" style="min-height:100px;">
+                <p style="color:var(--fg-3);font-size:13px;text-align:center;padding:24px 0;">Carregando...</p>
+              </div>
+            </section>
+          </div>
+
+          <!-- Linha 2: Radar ABEPRO + Auditoria 5S + Demandas por Coord. -->
+          <div class="dash-chart-trio" style="margin-bottom:var(--s5);">
+            <section class="section-card">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+                <h3 class="section-title" style="margin:0;font-size:13px;">Radar ABEPRO</h3>
+                <button class="btn btn-ghost" style="font-size:11px;padding:3px 8px;" onclick="goTo('abj')">ABJ →</button>
+              </div>
+              <div id="dashChartRadar" style="display:flex;justify-content:center;align-items:center;min-height:130px;">
+                <p style="color:var(--fg-3);font-size:12px;text-align:center;">Carregando...</p>
+              </div>
+            </section>
+            <section class="section-card">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+                <h3 class="section-title" style="margin:0;font-size:13px;">Auditoria 5S</h3>
+                <span style="font-size:10px;color:var(--fg-4);">toque p/ editar</span>
+              </div>
+              <div id="dashChart5S" style="min-height:100px;">
+                <p style="color:var(--fg-3);font-size:12px;text-align:center;padding:20px 0;">Carregando...</p>
+              </div>
+            </section>
+            <section class="section-card">
+              <div style="margin-bottom:10px;">
+                <h3 class="section-title" style="margin:0;font-size:13px;">Demandas / Coord.</h3>
+              </div>
+              <div id="dashChartCoord" style="display:flex;flex-direction:column;gap:6px;min-height:100px;">
+                <p style="color:var(--fg-3);font-size:12px;text-align:center;padding:20px 0;">Carregando...</p>
+              </div>
+            </section>
+          </div>
+
+          <!-- Linha 3: Pipeline de Status + Progresso ABJ por Estrela -->
+          <div class="dash-two-col" style="margin-bottom:var(--s6);">
             <section class="section-card">
               <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
                 <h3 class="section-title" style="margin:0;">Pipeline de Demandas</h3>
@@ -415,11 +467,9 @@
                 <p style="color:var(--fg-3);font-size:13px;text-align:center;padding:24px 0;">Carregando...</p>
               </div>
             </section>
-
-            <!-- Atividades ABJ por Área -->
             <section class="section-card">
               <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
-                <h3 class="section-title" style="margin:0;">Atividades ABJ — Áreas ABEPRO</h3>
+                <h3 class="section-title" style="margin:0;">Progresso ABJ — Estrelas</h3>
                 <button class="btn btn-ghost" style="font-size:11px;padding:4px 10px;" onclick="goTo('abj')">Ver ABJ →</button>
               </div>
               <div id="dashAbjAreas" style="display:flex;flex-direction:column;gap:8px;">
@@ -589,7 +639,7 @@
           <div class="section-card">
             <div style="display:flex;justify-content:space-between;margin-bottom:1rem;">
               <div class="section-title">Candidatos e Talentos</div>
-              <button class="btn btn-primary" onclick="App.toast('Módulo de Importação em breve','info')">+ Novo Talento</button>
+              <button class="btn btn-primary" onclick="typeof PagePessoas!=='undefined'&&PagePessoas.novoTalento()">+ Novo Talento</button>
             </div>
             <div class="table-responsive">
               <table style="width:100%;text-align:left;">

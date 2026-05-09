@@ -281,14 +281,35 @@ const PageGeral = {
     abrirModal({ titulo:`📅 Plano ${semestre}º Semestre ${ano}`, tipo:'info', corpo:`
       <div class="form-group"><label class="form-label">Título do Plano *</label>
         <input id="pl-titulo" class="form-input" value="Plano de Ação ${semestre}º Semestre ${ano}"></div>
+      <div class="form-group"><label class="form-label">Data de Aprovação *</label>
+        <input id="pl-data" class="form-input" type="date" value="${new Date().toISOString().slice(0,10)}"></div>
       <div class="form-group"><label class="form-label">Objetivos Principais *</label>
         <textarea id="pl-obj" class="form-input" style="height:90px" placeholder="Ex: Realizar evento estadual, aumentar engajamento 20%..."></textarea></div>
       <div class="form-group"><label class="form-label">Ações Conjuntas com ABJ</label>
         <textarea id="pl-abj" class="form-input" style="height:70px" placeholder="Ações planejadas com o Representante Estadual..."></textarea></div>`,
     botoes:[
       {texto:'Cancelar',classe:'btn-ghost',acao:fecharModal},
-      {texto:'Salvar ✓',classe:'btn-primary',acao:()=>{mostrarToast(`Plano ${semestre}º Semestre salvo!`,'success');fecharModal();}}
+      {texto:'Salvar ✓',classe:'btn-primary',acao:()=>PageGeral._salvarPlano(semestre,ano)}
     ]});
+  },
+  async _salvarPlano(semestre, ano) {
+    const titulo = document.getElementById('pl-titulo')?.value?.trim();
+    const data   = document.getElementById('pl-data')?.value;
+    const obj    = document.getElementById('pl-obj')?.value?.trim();
+    const abj    = document.getElementById('pl-abj')?.value?.trim();
+    if (!titulo || !data) { mostrarToast('Preencha título e data de aprovação!','warning'); return; }
+    fecharModal();
+    try {
+      const coords = await getCoords();
+      const ger = coords.find(c=>c.sigla==='GER');
+      await _sb().from('eventos').insert([{
+        titulo, tipo:'reuniao', data_inicio:data, ativo:true,
+        coordenadoria_id: ger?.id||null,
+        criado_por: window._appProfile?.id,
+        descricao: JSON.stringify({ tipo_especial:'planejamento', semestre, ano, objetivos:obj, acoes_abj:abj })
+      }]);
+      mostrarToast(`Plano ${semestre}º Semestre salvo com sucesso!`,'success');
+    } catch(e) { mostrarToast('Erro ao salvar plano.','error'); }
   },
   verAtividades(semestre) {
     mostrarToast(`Atividades do ${semestre}º semestre — integrado com ABJ em breve.`,'info');
@@ -1299,15 +1320,39 @@ const PageProjetos = {
     }catch(e){mostrarToast('Erro ao salvar.','error');}
   },
   novoEpisodio() {
-    abrirModal({ titulo:'🎙️ Rastrear NUPICAST', tipo:'info', corpo:`
+    abrirModal({ titulo:'🎙️ Registrar Episódio NUPICAST', tipo:'info', corpo:`
       <div class="form-group"><label class="form-label">Título do Episódio *</label>
-        <input id="ne-titulo" class="form-input" placeholder="Ex: NUPICAST #01"></div>
-      <div class="form-group"><label class="form-label">Link do YouTube/Spotify</label>
-        <input id="ne-link" class="form-input" placeholder="https://..."></div>`,
+        <input id="ne-titulo" class="form-input" placeholder="Ex: NUPICAST #01 — Engenharia de Produção"></div>
+      <div class="form-group"><label class="form-label">Data de Publicação *</label>
+        <input id="ne-data" class="form-input" type="date" value="${new Date().toISOString().slice(0,10)}"></div>
+      <div class="form-group"><label class="form-label">Link YouTube / Spotify</label>
+        <input id="ne-link" class="form-input" placeholder="https://youtube.com/..."></div>
+      <div class="form-group"><label class="form-label">Convidados</label>
+        <input id="ne-conv" class="form-input" placeholder="Ex: Prof. João Silva, Empresa XYZ"></div>`,
     botoes:[
       {texto:'Cancelar',classe:'btn-ghost',acao:fecharModal},
-      {texto:'Rastrear',classe:'btn-primary',acao:()=> { mostrarToast('Episódio rastreado!','success'); fecharModal(); }}
+      {texto:'Registrar',classe:'btn-primary',acao:()=>PageProjetos._salvarEpisodio()}
     ]});
+  },
+  async _salvarEpisodio() {
+    const titulo = document.getElementById('ne-titulo')?.value?.trim();
+    const data   = document.getElementById('ne-data')?.value;
+    const link   = document.getElementById('ne-link')?.value?.trim();
+    const conv   = document.getElementById('ne-conv')?.value?.trim();
+    if (!titulo || !data) { mostrarToast('Preencha título e data!','warning'); return; }
+    fecharModal();
+    try {
+      const coords = await getCoords();
+      const prj = coords.find(c=>c.sigla==='PRJ');
+      await _sb().from('eventos').insert([{
+        titulo, tipo:'podcast', data_inicio:data, ativo:true,
+        coordenadoria_id: prj?.id||null,
+        criado_por: window._appProfile?.id,
+        descricao: JSON.stringify({ link:link||null, convidados:conv||null })
+      }]);
+      mostrarToast('Episódio registrado com sucesso!','success');
+      PageProjetos._carregarEpisodios?.();
+    } catch(e) { mostrarToast('Erro ao registrar episódio.','error'); }
   },
   /* ── ENEGEP — Atividade 14 (Momento ENEGEP) ──
      Exige: fotos, lista de presença, link de inscrição/certificado.
@@ -1426,15 +1471,43 @@ const PageProjetos = {
     mostrarToast('Use o botão "Registrar participação ENEGEP" para registrar evidências.','info');
   },
   novoTreinamento() {
-    abrirModal({ titulo:'📚 Registrar Treinamento', tipo:'info', corpo:`
-      <div class="form-group"><label class="form-label">Nome do Treinamento *</label>
-        <input id="tr-nome" class="form-input"></div>
-      <div class="form-group"><label class="form-label">Link/Certificado</label>
-        <input id="tr-link" class="form-input" placeholder="https://..."></div>`,
+    abrirModal({ titulo:'📚 Registrar Capacitação', tipo:'info', corpo:`
+      <div class="form-group"><label class="form-label">Nome da Capacitação *</label>
+        <input id="trp-nome" class="form-input" placeholder="Ex: Workshop de Design Thinking"></div>
+      <div class="form-group"><label class="form-label">Data *</label>
+        <input id="trp-data" class="form-input" type="date" value="${new Date().toISOString().slice(0,10)}"></div>
+      <div class="form-group"><label class="form-label">Local / Modalidade</label>
+        <input id="trp-local" class="form-input" placeholder="Presencial / Online"></div>
+      <div class="form-group"><label class="form-label">Vagas</label>
+        <input id="trp-vagas" class="form-input" type="number" min="1" placeholder="20"></div>
+      <div class="form-group"><label class="form-label">Link / Certificado</label>
+        <input id="trp-link" class="form-input" placeholder="https://..."></div>`,
     botoes:[
       {texto:'Cancelar',classe:'btn-ghost',acao:fecharModal},
-      {texto:'Salvar',classe:'btn-primary',acao:()=> { mostrarToast('Treinamento registrado!','success'); fecharModal(); }}
+      {texto:'Registrar',classe:'btn-primary',acao:()=>PageProjetos._salvarCapacitacao()}
     ]});
+  },
+  async _salvarCapacitacao() {
+    const titulo = document.getElementById('trp-nome')?.value?.trim();
+    const data   = document.getElementById('trp-data')?.value;
+    const local  = document.getElementById('trp-local')?.value?.trim();
+    const vagas  = parseInt(document.getElementById('trp-vagas')?.value)||null;
+    const link   = document.getElementById('trp-link')?.value?.trim();
+    if (!titulo || !data) { mostrarToast('Preencha nome e data!','warning'); return; }
+    fecharModal();
+    try {
+      const coords = await getCoords();
+      const prj = coords.find(c=>c.sigla==='PRJ');
+      await _sb().from('eventos').insert([{
+        titulo, tipo:'treinamento', data_inicio:data,
+        local:local||null, vagas:vagas||null, ativo:true,
+        coordenadoria_id: prj?.id||null,
+        criado_por: window._appProfile?.id,
+        descricao: link ? JSON.stringify({link}) : null
+      }]);
+      mostrarToast('Capacitação registrada!','success');
+      PageProjetos._renderEventos?.();
+    } catch(e) { mostrarToast('Erro ao registrar capacitação.','error'); }
   }
 };
 const PageOperacoes = {
@@ -1981,15 +2054,88 @@ const PagePessoas = {
   },
   exportar(){mostrarToast('Exportação aguardando Supabase.','info');},
   novoTalento() {
-    abrirModal({ titulo:'👤 Novo Talento', tipo:'info', corpo:`
+    abrirModal({ titulo:'👤 Registrar no Banco de Talentos', tipo:'info', corpo:`
       <div class="form-group"><label class="form-label">Nome Completo *</label>
-        <input id="nt-nome" class="form-input"></div>
-      <div class="form-group"><label class="form-label">Universidade</label>
-        <input id="nt-univ" class="form-input"></div>`,
+        <input id="nt-nome" class="form-input" placeholder="Ex: Maria Silva"></div>
+      <div class="form-group"><label class="form-label">Habilidades / Área *</label>
+        <input id="nt-habilidades" class="form-input" placeholder="Ex: Design, Gestão de Projetos, Python"></div>
+      <div class="form-group"><label class="form-label">Universidade / Instituição</label>
+        <input id="nt-univ" class="form-input" placeholder="Ex: UESPI, IFPI"></div>
+      <div class="form-group"><label class="form-label">Contato (e-mail ou @)</label>
+        <input id="nt-contato" class="form-input" placeholder="email@exemplo.com ou @instagram"></div>`,
     botoes:[
       {texto:'Cancelar',classe:'btn-ghost',acao:fecharModal},
-      {texto:'Salvar',classe:'btn-primary',acao:()=> { mostrarToast('Talento registrado!','success'); fecharModal(); }}
+      {texto:'Registrar',classe:'btn-primary',acao:()=>PagePessoas._salvarTalento()}
     ]});
+  },
+  async _salvarTalento() {
+    const nome        = document.getElementById('nt-nome')?.value?.trim();
+    const habilidades = document.getElementById('nt-habilidades')?.value?.trim();
+    const univ        = document.getElementById('nt-univ')?.value?.trim();
+    const contato     = document.getElementById('nt-contato')?.value?.trim();
+    if (!nome || !habilidades) { mostrarToast('Preencha nome e habilidades!','warning'); return; }
+    fecharModal();
+    try {
+      const coords = await getCoords();
+      const gp = coords.find(c=>c.sigla==='GP');
+      await _sb().from('demandas').insert([{
+        titulo: nome, coluna:'pendente',
+        descricao: JSON.stringify({ tipo:'talento', habilidades, universidade:univ||null, contato:contato||null }),
+        coordenadoria_id: gp?.id||null,
+        criado_por: window._appProfile?.id,
+      }]);
+      mostrarToast('Talento registrado com sucesso!','success');
+      PagePessoas._carregarTalentos?.();
+    } catch(e) { mostrarToast('Erro ao registrar talento.','error'); }
+  },
+  _renderTalentos() {
+    const pg = document.getElementById('page-gp_talentos');
+    if (!pg) return;
+    const ct = pg.querySelector('.content') || pg;
+    ct.innerHTML = _sc('Banco de Talentos','👥',`
+      <p style="font-size:13px;color:var(--c-slate);margin-bottom:14px">
+        CRM de candidatos e membros com habilidades estratégicas para recrutamento e formação de equipes.
+      </p>
+      ${_btn('+ Registrar Talento','PagePessoas.novoTalento()')}
+      <div style="margin-top:16px;overflow-x:auto;">
+        <table style="width:100%;text-align:left;border-collapse:collapse;">
+          <thead>
+            <tr style="color:var(--c-slate);border-bottom:1px solid var(--b-1);">
+              <th style="padding:10px 12px;font-size:12px;font-weight:600;">Nome</th>
+              <th style="padding:10px 12px;font-size:12px;font-weight:600;">Habilidades</th>
+              <th style="padding:10px 12px;font-size:12px;font-weight:600;">Instituição</th>
+              <th style="padding:10px 12px;font-size:12px;font-weight:600;">Contato</th>
+            </tr>
+          </thead>
+          <tbody id="talentosGrid">
+            <tr><td colspan="4" style="padding:20px;text-align:center;color:var(--c-slate);font-size:13px">Carregando...</td></tr>
+          </tbody>
+        </table>
+      </div>`);
+    this._carregarTalentos();
+  },
+  async _carregarTalentos() {
+    const el = document.getElementById('talentosGrid');
+    if (!el || !_sb()) return;
+    try {
+      const { data } = await _sb().from('demandas')
+        .select('titulo, descricao, created_at')
+        .ilike('descricao','%"tipo":"talento"%')
+        .order('created_at',{ascending:false}).limit(50);
+      if (!data?.length) {
+        el.innerHTML = '<tr><td colspan="4" style="padding:20px;text-align:center;color:var(--c-slate);font-size:13px">Nenhum talento cadastrado ainda.</td></tr>';
+        return;
+      }
+      el.innerHTML = data.map(d => {
+        let info = {}; try { info = JSON.parse(d.descricao||'{}'); } catch(_){}
+        return `<tr style="border-bottom:1px solid var(--b-1);">
+          <td style="padding:10px 12px;font-size:13px;font-weight:600;color:var(--c-white)">${sanitize(d.titulo)}</td>
+          <td style="padding:10px 12px;font-size:12px;color:var(--c-slate)">${sanitize(info.habilidades||'—')}</td>
+          <td style="padding:10px 12px;font-size:12px;color:var(--c-slate)">${sanitize(info.universidade||'—')}</td>
+          <td style="padding:10px 12px;font-size:12px;color:var(--c-slate)">${sanitize(info.contato||'—')}</td>
+        </tr>`;
+      }).join('');
+    } catch(e) { el.innerHTML='<tr><td colspan="4" style="padding:16px;color:var(--c-slate)">Erro ao carregar.</td></tr>'; }
   }
 };
 /* ══════════════════════════════════════════════════════════════
@@ -2921,15 +3067,76 @@ const PageGlobal = {
   },
 
   novaPauta() {
-    abrirModal({ titulo:'🗳️ Criar Pauta de Votação', tipo:'info', corpo:`
-      <div class="form-group"><label class="form-label">Título da Pauta *</label>
+    abrirModal({ titulo:'🗳️ Registrar Assembleia', tipo:'info', corpo:`
+      <div class="form-group"><label class="form-label">Pauta / Título *</label>
         <input id="pv-titulo" class="form-input" placeholder="Ex: Aprovação de Contas 2026"></div>
-      <div class="form-group"><label class="form-label">Descrição</label>
-        <textarea id="pv-desc" class="form-input" style="height:80px"></textarea></div>`,
+      <div class="form-group"><label class="form-label">Data da Assembleia *</label>
+        <input id="pv-data" class="form-input" type="date" value="${new Date().toISOString().slice(0,10)}"></div>
+      <div class="form-group"><label class="form-label">Local</label>
+        <input id="pv-local" class="form-input" placeholder="Ex: Sala 201, CCE"></div>
+      <div class="form-group"><label class="form-label">Descrição / Pauta completa</label>
+        <textarea id="pv-desc" class="form-input" style="height:80px" placeholder="Descreva os pontos de pauta..."></textarea></div>`,
     botoes:[
       {texto:'Cancelar',classe:'btn-ghost',acao:fecharModal},
-      {texto:'Abrir Votação',classe:'btn-primary',acao:()=> { mostrarToast('Pauta aberta para votação!','success'); fecharModal(); }}
+      {texto:'Registrar',classe:'btn-primary',acao:()=>PageGlobal._salvarAssembleia()}
     ]});
+  },
+  async _salvarAssembleia() {
+    const titulo = document.getElementById('pv-titulo')?.value?.trim();
+    const data   = document.getElementById('pv-data')?.value;
+    const local  = document.getElementById('pv-local')?.value?.trim();
+    const desc   = document.getElementById('pv-desc')?.value?.trim();
+    if (!titulo || !data) { mostrarToast('Preencha pauta e data!','warning'); return; }
+    fecharModal();
+    try {
+      const coords = await getCoords();
+      const ger = coords.find(c=>c.sigla==='GER');
+      await _sb().from('eventos').insert([{
+        titulo, tipo:'assembleia', data_inicio:data,
+        local:local||null, descricao:desc||null, ativo:true,
+        coordenadoria_id: ger?.id||null,
+        criado_por: window._appProfile?.id,
+      }]);
+      mostrarToast('Assembleia registrada com sucesso!','success');
+      PageGlobal._carregarAssembleia?.();
+    } catch(e) { mostrarToast('Erro ao registrar assembleia.','error'); }
+  },
+
+  _renderAssembleia() {
+    const pg = document.getElementById('page-global_assembleia');
+    if (!pg) return;
+    const ct = pg.querySelector('.content') || pg;
+    ct.innerHTML = _sc('Assembleias do Núcleo','🗳️',`
+      <p style="font-size:13px;color:var(--c-slate);margin-bottom:14px">
+        Registro de pautas, votações e atas das assembleias gerais.
+        Requer quórum mínimo e publicação de ata em até 72h.
+      </p>
+      ${_btn('+ Nova Assembleia','PageGlobal.novaPauta()')}
+      <div id="assembleia-lista" style="margin-top:14px;display:flex;flex-direction:column;gap:8px">
+        <div style="padding:20px;text-align:center;color:var(--c-slate);font-size:13px">Carregando...</div>
+      </div>`);
+    this._carregarAssembleia();
+  },
+
+  async _carregarAssembleia() {
+    const el = document.getElementById('assembleia-lista');
+    if (!el || !_sb()) return;
+    try {
+      const { data } = await _sb().from('eventos')
+        .select('*').eq('tipo','assembleia')
+        .order('data_inicio', {ascending:false}).limit(20);
+      el.innerHTML = (data||[]).length
+        ? data.map(e => `
+            <div style="background:var(--b-1);border:1px solid var(--b-2);border-radius:10px;padding:14px 16px">
+              <div style="font-weight:700;font-size:13px;color:var(--c-white);margin-bottom:4px">${sanitize(e.titulo)}</div>
+              <div style="font-size:12px;color:var(--c-slate)">
+                📅 ${_fmt(e.data_inicio)}
+                ${e.local ? ` · 📍 ${sanitize(e.local)}` : ''}
+              </div>
+              ${e.descricao ? `<div style="font-size:12px;color:var(--c-slate);margin-top:6px">${sanitize(e.descricao)}</div>` : ''}
+            </div>`).join('')
+        : '<div style="padding:16px;text-align:center;color:var(--c-slate);font-size:13px">Nenhuma assembleia registrada ainda.</div>';
+    } catch(e) { el.innerHTML='<div style="padding:16px;color:var(--c-slate)">Erro ao carregar assembleias.</div>'; }
   }
 };
 
@@ -3183,6 +3390,7 @@ document.addEventListener('nupi:booted', () => {
       'ops_relatorios':    () => PageOperacoes._renderRelatorios(),
       'ops_arquivo':       () => PageOperacoes._renderPops(),
       /* Gestão de Pessoas */
+      'gp_talentos':       () => PagePessoas._renderTalentos(),
       'gp_clima':          () => PagePessoas._renderClima(),
       'gp_tap':            () => PagePessoas._renderTAP(),
       'gp_crm':            () => PagePessoas._renderMembros(),
@@ -3193,9 +3401,10 @@ document.addEventListener('nupi:booted', () => {
       'prj_treinamentos':  () => PageProjetos._renderEventos(),
       'prj_nupicast':      () => PageProjetos._renderEventos(),
       /* Globais */
-      'global_visitas':    () => PageGlobal._renderVisitas(),
+      'global_visitas':       () => PageGlobal._renderVisitas(),
       'global_apresentacoes': () => PageGlobal._renderApresentacoes(),
-      'global_producao':   () => PageGlobal._renderProducao(),
+      'global_producao':      () => PageGlobal._renderProducao(),
+      'global_assembleia':    () => PageGlobal._renderAssembleia(),
     };
     if (mapa[id]) try { mapa[id](); } catch(e) { console.warn('[pages goTo]', id, e); }
   };

@@ -731,6 +731,7 @@ function goTo(id) {
   if (id === 'fin_fluxo')         typeof PageFinancas  !== 'undefined' && PageFinancas.init();
   if (id === 'prj_eventos')       typeof PageProjetos  !== 'undefined' && PageProjetos.init();
   if (id === 'ops_pops')          typeof PageOperacoes !== 'undefined' && PageOperacoes._renderPops();
+  if (id === 'gp_talentos')       typeof PagePessoas   !== 'undefined' && PagePessoas._renderTalentos();
 }
 
 function toggleSidebar() {
@@ -820,10 +821,17 @@ const Dashboard = {
         }
       }
 
+      // Gráficos — dados reais
+      Dashboard.renderChartPareto(allDemands);
+      Dashboard.renderChartCoord(allDemands);
+      Dashboard.render5S();
+      Dashboard.renderChartFreq().catch(e => console.warn('[Dash FreqEvt]', e.message));
+      Dashboard.renderChartRadar().catch(e => console.warn('[Dash Radar]', e.message));
+
       // Pipeline de Demandas por status
       Dashboard.renderPipeline(allDemands);
 
-      // ABJ: progresso por estrela (nova query)
+      // ABJ: progresso por estrela
       Dashboard.renderAbjEstrelas().catch(e => console.warn('[Dash ABJ]', e.message));
 
     } catch (err) {
@@ -901,6 +909,159 @@ const Dashboard = {
     }).join('');
   },
 
+  renderChartPareto(demands) {
+    const el = document.getElementById('dashChartPareto');
+    if (!el) return;
+    const active = (demands||[]).filter(d => !['realizada','auditada'].includes(d.coluna));
+    if (!active.length) {
+      el.innerHTML = '<p style="color:var(--fg-3);font-size:13px;text-align:center;padding:24px 0;">Nenhuma demanda ativa cadastrada ainda.</p>';
+      return;
+    }
+    const counts = {};
+    active.forEach(d => { const s = d.coordenadorias?.sigla||'GER'; counts[s]=(counts[s]||0)+1; });
+    const COR = {GER:'var(--tag-geral,#f97316)',OPS:'var(--blue,#5b9cf6)',GP:'var(--yellow,#f5c518)',MKT:'var(--red,#ef4444)',PRJ:'var(--brand-orange,#f97316)',FIN:'var(--green,#2dd4a0)'};
+    const sorted = Object.entries(counts).sort((a,b)=>b[1]-a[1]);
+    const max = sorted[0]?.[1]||1;
+    el.innerHTML = sorted.map(([s,c])=>`
+      <div>
+        <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px;">
+          <span style="color:var(--fg-2);">${s}</span>
+          <span style="font-family:var(--font-mono);font-weight:700;color:${COR[s]||'var(--brand-orange)'};">${c}</span>
+        </div>
+        <div style="height:8px;background:var(--surface-2);border-radius:4px;">
+          <div style="width:${Math.round(c/max*100)}%;height:100%;background:${COR[s]||'var(--brand-orange)'};border-radius:4px;transition:width 1s var(--spring);"></div>
+        </div>
+      </div>`).join('');
+  },
+
+  async renderChartFreq() {
+    const el = document.getElementById('dashChartFreq');
+    if (!el) return;
+    const now = new Date();
+    const months = Array.from({length:6},(_,i)=>{
+      const d = new Date(now.getFullYear(), now.getMonth()-5+i, 1);
+      return { key:`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`, label:d.toLocaleDateString('pt-BR',{month:'short'}).replace('.','').slice(0,3).toUpperCase() };
+    });
+    const counts = Object.fromEntries(months.map(m=>[m.key,0]));
+    if (_sb) {
+      try {
+        const { data } = await _sb.from('eventos').select('created_at');
+        (data||[]).forEach(ev=>{ const d=new Date(ev.created_at); const k=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`; if(k in counts) counts[k]++; });
+      } catch(_) {}
+    }
+    const vals = months.map(m=>counts[m.key]);
+    const mx = Math.max(...vals,1);
+    el.innerHTML = `<div style="display:flex;align-items:flex-end;gap:5px;height:90px;">`+
+      months.map((m,i)=>{
+        const h = vals[i]>0 ? Math.max(Math.round(vals[i]/mx*72),8) : 4;
+        return `<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;">
+          <div style="width:100%;height:${h}px;background:${vals[i]>0?'var(--brand-orange)':'var(--surface-2)'};border-radius:3px 3px 0 0;opacity:${vals[i]>0?0.85:0.35};transition:height 1s var(--spring);" title="${vals[i]} eventos"></div>
+          <div style="font-size:9px;color:var(--fg-4);white-space:nowrap;">${m.label}</div>
+        </div>`;
+      }).join('')+'</div>';
+  },
+
+  async renderChartRadar() {
+    const el = document.getElementById('dashChartRadar');
+    if (!el) return;
+    const ESTRELAS = [
+      {label:'1ª ★',atv:[1,2,3,4,6]},{label:'2ª ★',atv:[8,9]},
+      {label:'3ª ★',atv:[7,13,14]},{label:'4ª ★',atv:[5,16]},{label:'5ª ★',atv:[11,12,18]}
+    ];
+    let pcts = [0,0,0,0,0];
+    if (_sb) {
+      try {
+        const [r1,r2] = await Promise.all([
+          _sb.from('atividades_abj').select('id,numero').eq('ativo',true),
+          _sb.from('progresso_abj').select('atividade_id,status'),
+        ]);
+        const atv = r1.data||[], prog = r2.data||[];
+        pcts = ESTRELAS.map(e=>{
+          const ids = e.atv.map(n=>atv.find(a=>a.numero===n)?.id).filter(Boolean);
+          const done = ids.filter(id=>prog.find(p=>p.atividade_id===id&&p.status==='concluido')).length;
+          return ids.length ? Math.round(done/ids.length*100) : 0;
+        });
+      } catch(_) {}
+    }
+    const cx=90,cy=90,r=65;
+    const angs = ESTRELAS.map((_,i)=>(i*72-90)*Math.PI/180);
+    const coord = (pct,ai)=>[cx+r*(pct/100)*Math.cos(angs[ai]),cy+r*(pct/100)*Math.sin(angs[ai])];
+    const path = pts=>pts.map((p,i)=>`${i?'L':'M'}${p[0].toFixed(1)},${p[1].toFixed(1)}`).join('')+'Z';
+    const rings=[25,50,75,100].map(g=>{const gp=angs.map(a=>[cx+r*(g/100)*Math.cos(a),cy+r*(g/100)*Math.sin(a)]);return`<path d="${path(gp)}" fill="none" stroke="var(--surface-2)" stroke-width="1"/>`;}).join('');
+    const axes=angs.map(a=>`<line x1="${cx}" y1="${cy}" x2="${(cx+r*Math.cos(a)).toFixed(1)}" y2="${(cy+r*Math.sin(a)).toFixed(1)}" stroke="var(--surface-2)" stroke-width="1"/>`).join('');
+    const dataP=path(ESTRELAS.map((_,i)=>coord(pcts[i]||2,i)));
+    const lbls=ESTRELAS.map((e,i)=>{const lx=(cx+(r+18)*Math.cos(angs[i])).toFixed(1);const ly=(cy+(r+18)*Math.sin(angs[i])).toFixed(1);return`<text x="${lx}" y="${ly}" text-anchor="middle" dominant-baseline="middle" fill="var(--fg-3)" font-size="10" font-family="inherit">${e.label}</text>`;}).join('');
+    el.innerHTML=`<svg viewBox="0 0 180 180" style="width:100%;max-height:155px;">${rings}${axes}<path d="${dataP}" fill="var(--brand-orange)" fill-opacity="0.18" stroke="var(--brand-orange)" stroke-width="2"/>${lbls}</svg>`;
+  },
+
+  render5S() {
+    const el = document.getElementById('dashChart5S');
+    if (!el) return;
+    const S=['Seiri','Seiton','Seiso','Seiketsu','Shitsuke'];
+    const scores=JSON.parse(localStorage.getItem('np_5s')||'null')||[7,7,7,7,7];
+    el.innerHTML=`<div style="display:flex;align-items:flex-end;gap:5px;height:90px;">`+
+      S.map((s,i)=>{
+        const h=Math.max(Math.round(scores[i]/10*72),4);
+        const cor=scores[i]>=8?'var(--green)':scores[i]>=5?'var(--brand-orange)':'#ef4444';
+        return`<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;" onclick="Dashboard.edit5S(${i})" title="${s}: ${scores[i]}/10">
+          <div style="width:100%;height:${h}px;background:${cor};border-radius:3px 3px 0 0;opacity:0.85;"></div>
+          <div style="font-size:9px;color:var(--fg-4);">${s.slice(0,2)}</div>
+        </div>`;
+      }).join('')+
+      `</div><div style="font-size:10px;color:var(--fg-4);text-align:center;margin-top:6px;">Média: ${(scores.reduce((a,b)=>a+b,0)/5).toFixed(1)}/10</div>`;
+  },
+
+  edit5S(idx) {
+    const S=['Seiri','Seiton','Seiso','Seiketsu','Shitsuke'];
+    const DESCR=['Senso de Utilização','Senso de Organização','Senso de Limpeza','Senso de Padronização','Senso de Disciplina'];
+    const scores=JSON.parse(localStorage.getItem('np_5s')||'null')||[7,7,7,7,7];
+    abrirModal({ titulo:`${S[idx]} — ${DESCR[idx]}`, tipo:'info', corpo:`
+      <div class="form-group">
+        <label class="form-label">Nota de 0 a 10</label>
+        <input id="5s-nota" class="form-input" type="number" min="0" max="10" value="${scores[idx]}">
+      </div>
+      <div style="font-size:12px;color:var(--fg-3,var(--c-slate));margin-top:6px;padding:8px 12px;background:var(--surface-2,var(--b-1));border-radius:8px;">
+        <strong style="color:#ef4444">0–4</strong> Insuficiente &nbsp;·&nbsp;
+        <strong style="color:var(--brand-orange,#f97316)">5–7</strong> Regular &nbsp;·&nbsp;
+        <strong style="color:var(--green,#2dd4a0)">8–10</strong> Ótimo
+      </div>`,
+    botoes:[
+      {texto:'Cancelar',classe:'btn-ghost',acao:fecharModal},
+      {texto:'Salvar',classe:'btn-primary',acao:()=>{
+        const v=Math.max(0,Math.min(10,parseInt(document.getElementById('5s-nota')?.value)||0));
+        scores[idx]=v;
+        localStorage.setItem('np_5s',JSON.stringify(scores));
+        fecharModal();
+        Dashboard.render5S();
+      }}
+    ]});
+  },
+
+  renderChartCoord(demands) {
+    const el = document.getElementById('dashChartCoord');
+    if (!el) return;
+    const all = demands||[];
+    if (!all.length) {
+      el.innerHTML='<p style="color:var(--fg-3);font-size:12px;text-align:center;padding:20px 0;">Sem demandas.</p>';
+      return;
+    }
+    const counts={};
+    all.forEach(d=>{ const s=d.coordenadorias?.sigla||'GER'; counts[s]=(counts[s]||0)+1; });
+    const COR={GER:'var(--tag-geral,#f97316)',OPS:'var(--blue,#5b9cf6)',GP:'var(--yellow,#f5c518)',MKT:'var(--red,#ef4444)',PRJ:'var(--brand-orange,#f97316)',FIN:'var(--green,#2dd4a0)'};
+    const sorted=Object.entries(counts).sort((a,b)=>b[1]-a[1]);
+    const max=sorted[0]?.[1]||1;
+    el.innerHTML=sorted.map(([s,c])=>`
+      <div>
+        <div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:2px;">
+          <span style="color:var(--fg-2);">${s}</span>
+          <span style="font-family:var(--font-mono);font-weight:700;font-size:11px;color:${COR[s]||'var(--brand-orange)'};">${c}</span>
+        </div>
+        <div style="height:6px;background:var(--surface-2);border-radius:3px;">
+          <div style="width:${Math.round(c/max*100)}%;height:100%;background:${COR[s]||'var(--brand-orange)'};border-radius:3px;transition:width 1s var(--spring);opacity:0.7;"></div>
+        </div>
+      </div>`).join('');
+  },
+
   renderDemo(profile) {
     Dashboard.setKPIs(0, 0, 0, 0, 0, 0);
     const auditBar = document.getElementById('audit-bar');
@@ -919,6 +1080,15 @@ const Dashboard = {
     if (pipeEl) pipeEl.innerHTML = '<p style="color:var(--fg-3);font-size:13px;text-align:center;padding:16px 0;">Sem conexão com o servidor.</p>';
     const abjEl = document.getElementById('dashAbjAreas');
     if (abjEl) abjEl.innerHTML = '<p style="color:var(--fg-3);font-size:13px;text-align:center;padding:16px 0;">Sem conexão com o servidor.</p>';
+    // Gráficos — estado offline
+    ['dashChartPareto','dashChartCoord'].forEach(id=>{
+      const e=document.getElementById(id);
+      if(e) e.innerHTML='<p style="color:var(--fg-3);font-size:12px;text-align:center;padding:20px 0;">Sem conexão.</p>';
+    });
+    Dashboard.renderChartFreq(); // mostra barras zeradas sem query
+    Dashboard.render5S();        // localStorage funciona offline
+    const radarEl=document.getElementById('dashChartRadar');
+    if(radarEl) radarEl.innerHTML='<p style="color:var(--fg-3);font-size:12px;text-align:center;">Sem conexão.</p>';
   },
 
   setKPIs(pts, tasks, members, saldo, vendas, despesas) {
