@@ -819,10 +819,86 @@ const Dashboard = {
           '</div>';
         }
       }
+
+      // Pipeline de Demandas por status
+      Dashboard.renderPipeline(allDemands);
+
+      // ABJ: progresso por estrela (nova query)
+      Dashboard.renderAbjEstrelas().catch(e => console.warn('[Dash ABJ]', e.message));
+
     } catch (err) {
       console.error('Dashboard fetch error:', err);
       Dashboard.renderDemo(profile);
     }
+  },
+
+  renderPipeline(demands) {
+    const el = document.getElementById('dashPipeline');
+    if (!el) return;
+    const cols = [
+      { id:'pendente',  label:'Pendente',    cor:'var(--fg-3)' },
+      { id:'exec',      label:'Em Execução', cor:'var(--brand-orange)' },
+      { id:'evidencia', label:'Evidência',   cor:'var(--blue)' },
+      { id:'realizada', label:'Realizada',   cor:'var(--green)' },
+      { id:'auditada',  label:'Auditada',    cor:'var(--brand-purple-l)' },
+    ];
+    if (!demands || demands.length === 0) {
+      el.innerHTML = '<p style="color:var(--fg-3);font-size:13px;text-align:center;padding:24px 0;">Nenhuma demanda cadastrada ainda. <a href="#" onclick="goTo(\'demandas\');return false;" style="color:var(--brand-orange);">Criar primeira →</a></p>';
+      return;
+    }
+    const max = Math.max(...cols.map(c => demands.filter(d => d.coluna === c.id).length), 1);
+    el.innerHTML = cols.map(c => {
+      const count = demands.filter(d => d.coluna === c.id).length;
+      const pct = Math.round((count / max) * 100);
+      return `<div>
+        <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px;">
+          <span style="color:var(--fg-2);">${c.label}</span>
+          <span style="font-family:var(--font-mono);color:${c.cor};font-weight:700;">${count}</span>
+        </div>
+        <div style="height:6px;background:var(--surface-2);border-radius:3px;">
+          <div style="width:${pct}%;height:100%;background:${c.cor};border-radius:3px;transition:width 1s var(--spring);opacity:0.85;"></div>
+        </div>
+      </div>`;
+    }).join('');
+  },
+
+  async renderAbjEstrelas() {
+    const el = document.getElementById('dashAbjAreas');
+    if (!el || !_sb) return;
+    const [r1, r2] = await Promise.all([
+      _sb.from('atividades_abj').select('id, numero, nome, ativo').eq('ativo', true),
+      _sb.from('progresso_abj').select('atividade_id, status'),
+    ]);
+    const atividades = r1.data || [];
+    const progresso  = r2.data || [];
+    if (atividades.length === 0) {
+      el.innerHTML = '<p style="color:var(--fg-3);font-size:13px;text-align:center;padding:24px 0;">Atividades ABJ não encontradas.</p>';
+      return;
+    }
+    const statusDe = (atvId) => progresso.find(p => p.atividade_id === atvId)?.status || 'pendente';
+    const estrelas = [
+      {n:1, label:'1ª Estrela', atv:[1,2,3,4,6]},
+      {n:2, label:'2ª Estrela', atv:[8,9]},
+      {n:3, label:'3ª Estrela', atv:[7,13,14]},
+      {n:4, label:'4ª Estrela', atv:[5,16]},
+      {n:5, label:'5ª Estrela', atv:[11,12,18]},
+    ];
+    el.innerHTML = estrelas.map(e => {
+      const items = e.atv.map(n => atividades.find(a => a.numero === n)).filter(Boolean);
+      const done = items.filter(a => statusDe(a.id) === 'concluido').length;
+      const total = items.length;
+      const pct = total ? Math.round((done / total) * 100) : 0;
+      const cor = pct === 100 ? 'var(--green)' : pct > 0 ? 'var(--brand-orange)' : 'var(--fg-4)';
+      return `<div>
+        <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px;">
+          <span style="color:var(--fg-2);">${e.label}</span>
+          <span style="font-family:var(--font-mono);color:${cor};font-weight:700;">${done}/${total}</span>
+        </div>
+        <div style="height:6px;background:var(--surface-2);border-radius:3px;">
+          <div style="width:${pct}%;height:100%;background:${cor};border-radius:3px;transition:width 1s var(--spring);"></div>
+        </div>
+      </div>`;
+    }).join('');
   },
 
   renderDemo(profile) {
@@ -839,6 +915,10 @@ const Dashboard = {
     if (elDelT) elDelT.textContent = 'Sem dados';
     const recentEl = document.getElementById('dashRecent');
     if (recentEl) recentEl.innerHTML = '<p style="color:var(--fg-3);font-size:13px;text-align:center;padding:16px 0;">Sem conexão — verifique sua internet.</p>';
+    const pipeEl = document.getElementById('dashPipeline');
+    if (pipeEl) pipeEl.innerHTML = '<p style="color:var(--fg-3);font-size:13px;text-align:center;padding:16px 0;">Sem conexão com o servidor.</p>';
+    const abjEl = document.getElementById('dashAbjAreas');
+    if (abjEl) abjEl.innerHTML = '<p style="color:var(--fg-3);font-size:13px;text-align:center;padding:16px 0;">Sem conexão com o servidor.</p>';
   },
 
   setKPIs(pts, tasks, members, saldo, vendas, despesas) {

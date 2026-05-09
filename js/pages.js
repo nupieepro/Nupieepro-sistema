@@ -890,7 +890,7 @@ const PageFinancas = {
     const hoje=new Date().toISOString().split('T')[0];
     abrirModal({titulo:'🗓️ Novo Evento Comercial',tipo:'info',corpo:`
       <div class="form-group"><label class="form-label">Nome do Evento *</label>
-        <input id="ec-titulo" class="form-input" placeholder="Ex: Festa Junina UFPI"></div>
+        <input id="ec-titulo" class="form-input" placeholder="Ex: Semana Acadêmica de EP"></div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
         <div class="form-group"><label class="form-label">Data do evento *</label>
           <input id="ec-data" type="date" class="form-input" value="${hoje}"></div>
@@ -898,7 +898,7 @@ const PageFinancas = {
           <input id="ec-meta" type="number" class="form-input" placeholder="500"></div>
       </div>
       <div class="form-group"><label class="form-label">Local</label>
-        <input id="ec-local" class="form-input" placeholder="UFPI – Bloco A"></div>`,
+        <input id="ec-local" class="form-input" placeholder="Ex: Anfiteatro Central"></div>`,
     botoes:[
       {texto:'Cancelar',classe:'btn-ghost',acao:fecharModal},
       {texto:'Cadastrar ✓',classe:'btn-primary',acao:()=>this._salvarEventoComercial()}
@@ -1271,7 +1271,7 @@ const PageProjetos = {
           <input id="pe-data" type="datetime-local" class="form-input" value="${hoje}"></div>
       </div>
       <div class="form-group"><label class="form-label">Local</label>
-        <input id="pe-local" class="form-input" placeholder="UFPI / Online"></div>
+        <input id="pe-local" class="form-input" placeholder="Presencial / Online"></div>
       <div class="form-group"><label class="form-label">Vagas</label>
         <input id="pe-vagas" type="number" class="form-input" placeholder="50"></div>`,
     botoes:[
@@ -1863,7 +1863,7 @@ const PagePessoas = {
           <input id="tr-vagas" type="number" class="form-input" placeholder="20"></div>
       </div>
       <div class="form-group"><label class="form-label">Local / Link</label>
-        <input id="tr-local" class="form-input" placeholder="UFPI / https://meet.google.com/..."></div>`,
+        <input id="tr-local" class="form-input" placeholder="Presencial / https://meet.google.com/..."></div>`,
     botoes:[
       {texto:'Cancelar',classe:'btn-ghost',acao:fecharModal},
       {texto:'Registrar ✓',classe:'btn-primary',acao:()=>this._salvarTreinamento()}
@@ -3105,7 +3105,7 @@ const PageCompartilhado = {
           <input id="pd-vagas" type="number" class="form-input" placeholder="50"></div>
       </div>
       <div class="form-group"><label class="form-label">Local</label>
-        <input id="pd-local" class="form-input" placeholder="UFPI / Online"></div>
+        <input id="pd-local" class="form-input" placeholder="Presencial / Online"></div>
       <div class="form-group"><label class="form-label">Tipo</label>
         <select id="pd-tipo" class="form-select">
           <option value="evento">Evento</option>

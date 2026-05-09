@@ -402,190 +402,30 @@
             </div>
           </div>
 
-          <!-- Charts Row 1 -->
+          <!-- Analytics Row — dados reais do Supabase -->
           <div class="dash-two-col" style="margin-bottom:var(--s6);">
 
-            <!-- Pareto de Demandas Atrasadas -->
+            <!-- Pipeline de Demandas por Status -->
             <section class="section-card">
               <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
-                <h3 class="section-title" style="margin:0;">Pareto — Demandas Atrasadas</h3>
-                <span style="font-size:9px;font-family:var(--font-mono);color:var(--fg-3);background:var(--surface-3);padding:2px 8px;border-radius:4px;letter-spacing:1px;">DEMONSTRATIVO</span>
+                <h3 class="section-title" style="margin:0;">Pipeline de Demandas</h3>
+                <button class="btn btn-ghost" style="font-size:11px;padding:4px 10px;" onclick="goTo('demandas')">Ver Kanban →</button>
               </div>
-              <svg viewBox="0 0 280 160" width="100%" style="overflow:visible;">
-                <!-- Bars -->
-                <rect x="10" y="30" width="34" height="110" rx="3" fill="var(--brand-orange)" opacity="0.9"/>
-                <rect x="52" y="60" width="34" height="80" rx="3" fill="var(--brand-orange)" opacity="0.75"/>
-                <rect x="94" y="85" width="34" height="55" rx="3" fill="var(--brand-orange)" opacity="0.6"/>
-                <rect x="136" y="105" width="34" height="35" rx="3" fill="var(--brand-orange)" opacity="0.45"/>
-                <rect x="178" y="120" width="34" height="20" rx="3" fill="var(--brand-orange)" opacity="0.3"/>
-                <rect x="220" y="130" width="34" height="10" rx="3" fill="var(--brand-orange)" opacity="0.2"/>
-                <!-- Cumulative line -->
-                <polyline points="27,30 69,60 111,85 153,105 195,120 237,130" fill="none" stroke="#9b7be8" stroke-width="2" stroke-linejoin="round"/>
-                <circle cx="27" cy="30" r="3" fill="#9b7be8"/>
-                <circle cx="69" cy="60" r="3" fill="#9b7be8"/>
-                <circle cx="111" cy="85" r="3" fill="#9b7be8"/>
-                <circle cx="153" cy="105" r="3" fill="#9b7be8"/>
-                <circle cx="195" cy="120" r="3" fill="#9b7be8"/>
-                <circle cx="237" cy="130" r="3" fill="#9b7be8"/>
-                <!-- 80% dashed line -->
-                <line x1="0" y1="54" x2="280" y2="54" stroke="var(--fg-3)" stroke-width="1" stroke-dasharray="4,3"/>
-                <text x="5" y="50" fill="var(--fg-3)" font-size="9" font-family="var(--font-mono)">80%</text>
-                <!-- Labels -->
-                <text x="27" y="155" text-anchor="middle" fill="var(--fg-3)" font-size="8">MKT</text>
-                <text x="69" y="155" text-anchor="middle" fill="var(--fg-3)" font-size="8">OPS</text>
-                <text x="111" y="155" text-anchor="middle" fill="var(--fg-3)" font-size="8">GER</text>
-                <text x="153" y="155" text-anchor="middle" fill="var(--fg-3)" font-size="8">FIN</text>
-                <text x="195" y="155" text-anchor="middle" fill="var(--fg-3)" font-size="8">PRJ</text>
-                <text x="237" y="155" text-anchor="middle" fill="var(--fg-3)" font-size="8">G.P</text>
-              </svg>
+              <div id="dashPipeline" style="display:flex;flex-direction:column;gap:10px;">
+                <p style="color:var(--fg-3);font-size:13px;text-align:center;padding:24px 0;">Carregando...</p>
+              </div>
             </section>
 
-            <!-- CEP/SPC Chart -->
+            <!-- Atividades ABJ por Área -->
             <section class="section-card">
               <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
-                <h3 class="section-title" style="margin:0;">CEP — Publicações MKT</h3>
-                <span style="font-size:9px;font-family:var(--font-mono);color:var(--fg-3);background:var(--surface-3);padding:2px 8px;border-radius:4px;letter-spacing:1px;">DEMONSTRATIVO</span>
+                <h3 class="section-title" style="margin:0;">Atividades ABJ — Áreas ABEPRO</h3>
+                <button class="btn btn-ghost" style="font-size:11px;padding:4px 10px;" onclick="goTo('abj')">Ver ABJ →</button>
               </div>
-              <svg viewBox="0 0 280 160" width="100%" style="overflow:visible;">
-                <!-- UCL, Mean, LCL lines -->
-                <line x1="0" y1="25" x2="280" y2="25" stroke="#f87171" stroke-width="1" stroke-dasharray="4,3"/>
-                <line x1="0" y1="80" x2="280" y2="80" stroke="#2dd4a0" stroke-width="1.5"/>
-                <line x1="0" y1="135" x2="280" y2="135" stroke="#f87171" stroke-width="1" stroke-dasharray="4,3"/>
-                <text x="4" y="22" fill="#f87171" font-size="8" font-family="var(--font-mono)">UCL</text>
-                <text x="4" y="77" fill="#2dd4a0" font-size="8" font-family="var(--font-mono)">X̄</text>
-                <text x="4" y="132" fill="#f87171" font-size="8" font-family="var(--font-mono)">LCL</text>
-                <!-- Data points -->
-                <polyline points="30,90 52,70 74,85 96,60 118,95 140,45 162,78 184,88 206,30 228,82 250,75 272,80"
-                  fill="none" stroke="#9b7be8" stroke-width="1.5" stroke-linejoin="round"/>
-                <!-- Normal points -->
-                <circle cx="30" cy="90" r="3" fill="#9b7be8"/>
-                <circle cx="52" cy="70" r="3" fill="#9b7be8"/>
-                <circle cx="74" cy="85" r="3" fill="#9b7be8"/>
-                <circle cx="96" cy="60" r="3" fill="#9b7be8"/>
-                <circle cx="118" cy="95" r="3" fill="#9b7be8"/>
-                <circle cx="162" cy="78" r="3" fill="#9b7be8"/>
-                <circle cx="184" cy="88" r="3" fill="#9b7be8"/>
-                <circle cx="228" cy="82" r="3" fill="#9b7be8"/>
-                <circle cx="250" cy="75" r="3" fill="#9b7be8"/>
-                <circle cx="272" cy="80" r="3" fill="#9b7be8"/>
-                <!-- Out of control: points near UCL -->
-                <circle cx="140" cy="45" r="4" fill="#f87171"/>
-                <circle cx="206" cy="30" r="4" fill="#f87171"/>
-              </svg>
-            </section>
-          </div>
-
-          <!-- Charts Row 2 -->
-          <div class="dash-two-col" style="margin-bottom:var(--s6);">
-
-            <!-- ABEPRO Radar -->
-            <section class="section-card">
-              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
-                <h3 class="section-title" style="margin:0;">Cobertura ABEPRO — 10 Áreas</h3>
-                <span style="font-size:9px;font-family:var(--font-mono);color:var(--fg-3);background:var(--surface-3);padding:2px 8px;border-radius:4px;letter-spacing:1px;">DEMONSTRATIVO</span>
+              <div id="dashAbjAreas" style="display:flex;flex-direction:column;gap:8px;">
+                <p style="color:var(--fg-3);font-size:13px;text-align:center;padding:24px 0;">Carregando...</p>
               </div>
-              <svg viewBox="0 0 280 280" width="100%">
-                <g transform="translate(140,140)">
-                  <!-- Grid circles -->
-                  <circle r="100" fill="none" stroke="var(--border-1)" stroke-width="1"/>
-                  <circle r="75" fill="none" stroke="var(--border-1)" stroke-width="1"/>
-                  <circle r="50" fill="none" stroke="var(--border-1)" stroke-width="1"/>
-                  <circle r="25" fill="none" stroke="var(--border-1)" stroke-width="1"/>
-                  <!-- Axes (10 areas, 36° apart) -->
-                  <line x1="0" y1="0" x2="0" y2="-100" stroke="var(--border-1)" stroke-width="1"/>
-                  <line x1="0" y1="0" x2="58.8" y2="-80.9" stroke="var(--border-1)" stroke-width="1"/>
-                  <line x1="0" y1="0" x2="95.1" y2="-30.9" stroke="var(--border-1)" stroke-width="1"/>
-                  <line x1="0" y1="0" x2="95.1" y2="30.9" stroke="var(--border-1)" stroke-width="1"/>
-                  <line x1="0" y1="0" x2="58.8" y2="80.9" stroke="var(--border-1)" stroke-width="1"/>
-                  <line x1="0" y1="0" x2="0" y2="100" stroke="var(--border-1)" stroke-width="1"/>
-                  <line x1="0" y1="0" x2="-58.8" y2="80.9" stroke="var(--border-1)" stroke-width="1"/>
-                  <line x1="0" y1="0" x2="-95.1" y2="30.9" stroke="var(--border-1)" stroke-width="1"/>
-                  <line x1="0" y1="0" x2="-95.1" y2="-30.9" stroke="var(--border-1)" stroke-width="1"/>
-                  <line x1="0" y1="0" x2="-58.8" y2="-80.9" stroke="var(--border-1)" stroke-width="1"/>
-                  <!-- Data polygon (scaled values: 80,65,90,70,55,75,60,85,45,70 out of 100) -->
-                  <polygon
-                    points="0,-80 38.2,-52.6 85.6,-27.8 66.6,21.6 32.4,44.5 0,75 -44.1,60.7 -80.8,26.3 -42.8,-13.9 -38.2,-52.6"
-                    fill="rgba(155,123,232,0.2)" stroke="#9b7be8" stroke-width="2" stroke-linejoin="round"/>
-                  <!-- Labels -->
-                  <text x="0" y="-108" text-anchor="middle" fill="var(--fg-3)" font-size="8">Produção</text>
-                  <text x="64" y="-86" text-anchor="start" fill="var(--fg-3)" font-size="8">P&amp;D</text>
-                  <text x="98" y="-28" text-anchor="start" fill="var(--fg-3)" font-size="8">Qualidade</text>
-                  <text x="98" y="36" text-anchor="start" fill="var(--fg-3)" font-size="8">Ergonomia</text>
-                  <text x="62" y="90" text-anchor="start" fill="var(--fg-3)" font-size="8">Estratégia</text>
-                  <text x="0" y="115" text-anchor="middle" fill="var(--fg-3)" font-size="8">Logística</text>
-                  <text x="-62" y="90" text-anchor="end" fill="var(--fg-3)" font-size="8">Sustent.</text>
-                  <text x="-100" y="36" text-anchor="end" fill="var(--fg-3)" font-size="8">Gestão</text>
-                  <text x="-100" y="-28" text-anchor="end" fill="var(--fg-3)" font-size="8">Engenharia</text>
-                  <text x="-64" y="-86" text-anchor="end" fill="var(--fg-3)" font-size="8">Educação</text>
-                </g>
-              </svg>
             </section>
-
-            <!-- 5S Audit + IES -->
-            <div style="display:flex;flex-direction:column;gap:var(--s4);">
-              <section class="section-card">
-                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
-                  <h3 class="section-title" style="margin:0;">Auditoria 5S</h3>
-                  <span style="font-size:9px;font-family:var(--font-mono);color:var(--fg-3);background:var(--surface-3);padding:2px 8px;border-radius:4px;letter-spacing:1px;">DEMONSTRATIVO</span>
-                </div>
-                <div style="display:flex;flex-direction:column;gap:10px;">
-                  <div>
-                    <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px;"><span style="color:var(--fg-2);">Seiri (Utilização)</span><span style="font-family:var(--font-mono);color:var(--brand-orange);">85%</span></div>
-                    <div style="height:4px;background:var(--surface-3);border-radius:2px;"><div style="width:85%;height:100%;background:var(--brand-orange);border-radius:2px;"></div></div>
-                  </div>
-                  <div>
-                    <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px;"><span style="color:var(--fg-2);">Seiton (Organização)</span><span style="font-family:var(--font-mono);color:#2dd4a0;">90%</span></div>
-                    <div style="height:4px;background:var(--surface-3);border-radius:2px;"><div style="width:90%;height:100%;background:#2dd4a0;border-radius:2px;"></div></div>
-                  </div>
-                  <div>
-                    <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px;"><span style="color:var(--fg-2);">Seisō (Limpeza)</span><span style="font-family:var(--font-mono);color:#5b9cf6;">72%</span></div>
-                    <div style="height:4px;background:var(--surface-3);border-radius:2px;"><div style="width:72%;height:100%;background:#5b9cf6;border-radius:2px;"></div></div>
-                  </div>
-                  <div>
-                    <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px;"><span style="color:var(--fg-2);">Seiketsu (Padronização)</span><span style="font-family:var(--font-mono);color:#f5c518;">68%</span></div>
-                    <div style="height:4px;background:var(--surface-3);border-radius:2px;"><div style="width:68%;height:100%;background:#f5c518;border-radius:2px;"></div></div>
-                  </div>
-                  <div>
-                    <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px;"><span style="color:var(--fg-2);">Shitsuke (Disciplina)</span><span style="font-family:var(--font-mono);color:#9b7be8;">74%</span></div>
-                    <div style="height:4px;background:var(--surface-3);border-radius:2px;"><div style="width:74%;height:100%;background:#9b7be8;border-radius:2px;"></div></div>
-                  </div>
-                </div>
-              </section>
-
-              <!-- IES Piauí Coverage -->
-              <section class="section-card">
-                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
-                  <h3 class="section-title" style="margin:0;">Cobertura IES Piauí</h3>
-                  <span style="font-size:9px;font-family:var(--font-mono);color:var(--fg-3);background:var(--surface-3);padding:2px 8px;border-radius:4px;letter-spacing:1px;">DEMONSTRATIVO</span>
-                </div>
-                <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;">
-                  <div style="background:var(--surface-2);border-radius:8px;padding:10px;text-align:center;border:1px solid var(--border-1);">
-                    <div style="font-size:18px;font-weight:800;color:var(--brand-orange);font-family:var(--font-mono);">198</div>
-                    <div style="font-size:9px;color:var(--fg-3);margin-top:2px;">IES-A</div>
-                  </div>
-                  <div style="background:var(--surface-2);border-radius:8px;padding:10px;text-align:center;border:1px solid var(--border-1);">
-                    <div style="font-size:18px;font-weight:800;color:#9b7be8;font-family:var(--font-mono);">84</div>
-                    <div style="font-size:9px;color:var(--fg-3);margin-top:2px;">IES-B</div>
-                  </div>
-                  <div style="background:var(--surface-2);border-radius:8px;padding:10px;text-align:center;border:1px solid var(--border-1);">
-                    <div style="font-size:18px;font-weight:800;color:#5b9cf6;font-family:var(--font-mono);">28</div>
-                    <div style="font-size:9px;color:var(--fg-3);margin-top:2px;">IES-C</div>
-                  </div>
-                  <div style="background:var(--surface-2);border-radius:8px;padding:10px;text-align:center;border:1px solid var(--border-1);">
-                    <div style="font-size:18px;font-weight:800;color:#f5c518;font-family:var(--font-mono);">6</div>
-                    <div style="font-size:9px;color:var(--fg-3);margin-top:2px;">IES-D</div>
-                  </div>
-                  <div style="background:var(--surface-2);border-radius:8px;padding:10px;text-align:center;border:1px solid var(--border-1);">
-                    <div style="font-size:18px;font-weight:800;color:var(--fg-3);font-family:var(--font-mono);">0</div>
-                    <div style="font-size:9px;color:var(--fg-3);margin-top:2px;">IES-E</div>
-                  </div>
-                  <div style="background:var(--surface-2);border-radius:8px;padding:10px;text-align:center;border:1px solid var(--border-1);">
-                    <div style="font-size:18px;font-weight:800;color:var(--fg-3);font-family:var(--font-mono);">0</div>
-                    <div style="font-size:9px;color:var(--fg-3);margin-top:2px;">IES-F</div>
-                  </div>
-                </div>
-              </section>
-            </div>
           </div>
 
           <!-- Mural de Aniversários (hidden, populated by JS) -->

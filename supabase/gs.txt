@@ -419,7 +419,7 @@ function registrarPedido(dados) {
   var nome     = dados.nome.toString().replace(/[<>"']/g,'').substring(0, 100);
   var zap      = dados.whatsapp.toString().replace(/\D/g,'').substring(0, 15);
   var email    = dados.email ? dados.email.toString().substring(0, 100) : '';
-  var entrega  = dados.entrega || 'Retirada UFPI';
+  var entrega  = dados.entrega || 'Retirada no Local';
   var endereco = dados.endereco ? dados.endereco.toString().substring(0, 200) : '';
   var pgto     = dados.pagamento || 'PIX';
   var obs      = dados.observacao ? dados.observacao.toString().substring(0, 300) : '';
@@ -582,7 +582,7 @@ function enviarEmailCliente(emailCliente, nome, numero, itens, total, pgto) {
           <p style="color:#999;font-size:0.8rem;margin-top:20px">Dúvidas? Fale com a gente no Instagram: <a href="https://www.instagram.com/nupieepro" style="color:#f85900">@nupieepro</a></p>
         </div>
         <div style="background:#f8f9fc;padding:16px;text-align:center;border-radius:0 0 12px 12px;font-size:0.75rem;color:#999">
-          ${CONFIG.NOME_LOJA} · Núcleo Piauiense de Estudantes de Engenharia de Produção — UFPI
+          ${CONFIG.NOME_LOJA} · Núcleo Piauiense de Estudantes de Engenharia de Produção
         </div>
       </div>
     `;
