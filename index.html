@@ -24,37 +24,71 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Plus+Jakarta+Sans:wght@700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   
+  <!-- Theme init: aplica o tema salvo antes de qualquer render -->
+  <script>
+    (function(){
+      var _t = localStorage.getItem('np-theme') || localStorage.getItem('nupie_theme') || 'nucleo';
+      var m = {'dark-orange':'nucleo','dark-purple':'violet','fusion':'nucleo','luminous':'papel','orange':'noite','obsidian':'noite','bad-boy':'noite','default':'nucleo'};
+      if (m[_t]) _t = m[_t];
+      document.documentElement.setAttribute('data-theme', _t);
+    })();
+  </script>
+
   <!-- EmailJS SDK -->
   <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 
   <style>
     :root {
-      /* Login é sempre escuro — não usa o tema salvo do usuário */
-      --c-bg:       #000000;
-      --c-s1:       #050505;
-      --c-s2:       rgba(8, 8, 8, 0.75);
-      --c-s3:       #111111;
-      --c-accent:   #f75412;
-      --c-accent2:  #ff7043;
+      /* Núcleo (azul petróleo) — padrão */
+      --c-bg:       #0d1c2a;
+      --c-s1:       #0a1520;
+      --c-s2:       rgba(17, 32, 51, 0.80);
+      --c-s3:       #1a2d40;
+      --c-accent:   #f65214;
+      --c-accent2:  #ff7a3d;
       --c-white:    #ffffff;
-      --c-slate:    rgba(255,255,255,0.55);
-      --border:     rgba(255,255,255,0.10);
-      --a-1: rgba(247,84,18,0.06);
-      --a-2: rgba(247,84,18,0.12);
-      --a-3: rgba(247,84,18,0.22);
-      --black:      #000000;
+      --c-slate:    rgba(184,204,216,0.60);
+      --border:     rgba(255,255,255,0.08);
+      --a-1: rgba(246,82,20,0.06);
+      --a-2: rgba(246,82,20,0.12);
+      --a-3: rgba(246,82,20,0.22);
+      --black:      #0d1c2a;
       --white:      #ffffff;
-      --orange:     #f75412;
-      --orange-dim: rgba(247,84,18,0.12);
+      --orange:     #f65214;
+      --orange-dim: rgba(246,82,20,0.12);
       --font-body: 'DM Sans', sans-serif;
       --font-head: 'Plus Jakarta Sans', sans-serif;
       --font-mono: 'JetBrains Mono', monospace;
     }
 
-    /* Login sempre com fundo escuro — independente do tema claro/escuro */
+    /* Noite (preto + laranja) */
+    [data-theme="noite"] {
+      --c-bg: #000000; --c-s1: #060300; --c-s2: rgba(14,8,5,0.80); --c-s3: #15100a;
+      --c-white: #ffffff; --c-slate: rgba(214,195,177,0.60); --border: rgba(246,82,20,0.10);
+      --black: #000000;
+    }
+
+    /* Violet (preto + roxo) */
+    [data-theme="violet"] {
+      --c-bg: #000000; --c-s1: #050308; --c-s2: rgba(10,6,15,0.80); --c-s3: #110a1a;
+      --c-accent: #b9a0ff; --c-accent2: #d4c2ff; --orange: #b9a0ff; --orange-dim: rgba(155,123,232,0.12);
+      --a-1: rgba(155,123,232,0.06); --a-2: rgba(155,123,232,0.12); --a-3: rgba(155,123,232,0.22);
+      --c-white: #ffffff; --c-slate: rgba(200,185,255,0.60); --border: rgba(155,123,232,0.12);
+      --black: #000000;
+    }
+
+    /* Papel (claro + roxo) */
+    [data-theme="papel"] {
+      --c-bg: #f7f5fb; --c-s1: #eeebf5; --c-s2: rgba(240,237,250,0.90); --c-s3: #e6dff5;
+      --c-accent: #9b7be8; --c-accent2: #b9a0ff; --orange: #9b7be8; --orange-dim: rgba(155,123,232,0.12);
+      --a-1: rgba(155,123,232,0.05); --a-2: rgba(155,123,232,0.10); --a-3: rgba(155,123,232,0.20);
+      --c-white: #213248; --c-slate: rgba(33,50,72,0.55); --border: rgba(33,50,72,0.10);
+      --black: #f7f5fb; --white: #213248;
+    }
+
     html, body {
-      background: #000 !important;
-      color: #fff;
+      background: var(--c-bg);
+      color: var(--c-white);
     }
 
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }

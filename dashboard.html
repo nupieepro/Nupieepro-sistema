@@ -31,7 +31,7 @@
       var _t = localStorage.getItem('np-theme') || localStorage.getItem('nupie_theme') || 'nucleo';
       var _f = localStorage.getItem('nupie_font') || 'default';
       // Map legacy theme names to new ones
-      var legacyMap = {'dark-orange':'nucleo','dark-purple':'violet','fusion':'nucleo','luminous':'papel','orange':'bad-boy','obsidian':'bad-boy','default':'nucleo'};
+      var legacyMap = {'dark-orange':'nucleo','dark-purple':'violet','fusion':'nucleo','luminous':'papel','orange':'noite','obsidian':'noite','bad-boy':'noite','default':'nucleo'};
       if (legacyMap[_t]) _t = legacyMap[_t];
       document.documentElement.setAttribute('data-theme', _t);
       if (_f !== 'default') document.documentElement.setAttribute('data-font', _f);
@@ -45,7 +45,7 @@
     <aside class="sidebar" id="sidebar">
       <!-- Sidebar Header -->
       <div class="sidebar-header">
-        <img src="assets/icon.svg" id="sideLogoImg" class="sidebar-logo-img" alt="NUPIEEPRO">
+        <img src="assets/logo.png" id="sideLogoImg" class="sidebar-logo-img" alt="NUPIEEPRO">
         <div class="sidebar-logo-text">NUPIE<span>EPRO</span></div>
         <div class="sidebar-logo-sub">Sistema de Gestão</div>
       </div>
@@ -238,7 +238,7 @@
 
       <!-- Sidebar Footer: user chip -->
       <div class="sidebar-footer">
-        <div class="sidebar-user-chip" onclick="document.getElementById('profileScreen').style.display='flex'" style="cursor:pointer;" title="Trocar perfil">
+        <div class="sidebar-user-chip" onclick="goTo('configuracoes')" style="cursor:pointer;" title="Minhas configurações">
           <div class="u-avatar" id="sideAvatar">?</div>
           <div class="sidebar-user-info">
             <div class="u-name" id="sideName">Carregando...</div>
@@ -273,7 +273,7 @@
             </button>
             <div class="topbar-title-group">
               <div class="topbar-title">Dashboard EP</div>
-              <div class="topbar-sub">Engenharia de Performance — NUPIEEPRO 2026</div>
+              <div class="topbar-sub" id="topbarSaudacao">NUPIEEPRO 2026</div>
             </div>
           </div>
           <div class="topbar-center hide-mobile">
@@ -289,7 +289,7 @@
             </button>
             <button class="topbar-btn" style="position:relative;" onclick="goTo('notificacoes')" title="Notificações">
               <svg viewBox="0 0 20 20" fill="currentColor" width="18" height="18"><path d="M10 2a6 6 0 00-6 6v3.586l-.707.707A1 1 0 004 14h12a1 1 0 00.707-1.707L16 11.586V8a6 6 0 00-6-6zM10 18a3 3 0 01-3-3h6a3 3 0 01-3 3z"/></svg>
-              <span class="notif-badge" id="topbarNotifBadge">3</span>
+              <span class="notif-badge" id="topbarNotifBadge" style="display:none;">0</span>
             </button>
             <div class="profile-chip" onclick="toggleProfileDropdown()" id="profileChip">
               <div class="u-avatar" id="topbarAvatar" style="width:28px;height:28px;font-size:11px;">?</div>
@@ -302,9 +302,9 @@
                 <div style="font-weight:700;font-size:13px;" id="dropName">—</div>
                 <div style="font-size:11px;color:var(--fg-3);font-family:var(--font-mono);" id="dropRole">—</div>
               </div>
-              <a class="profile-dropdown-item" href="#" onclick="document.getElementById('profileScreen').style.display='flex';toggleProfileDropdown();return false;">
+              <a class="profile-dropdown-item" href="#" onclick="goTo('configuracoes');toggleProfileDropdown();return false;">
                 <svg viewBox="0 0 20 20" fill="currentColor" width="14" height="14"><path d="M8 9a3 3 0 100-6 3 3 0 000 6zM8 11a6 6 0 016 6H2a6 6 0 016-6z"/></svg>
-                Trocar de perfil
+                Meu perfil
               </a>
               <a class="profile-dropdown-item" href="#" onclick="goTo('gp');toggleProfileDropdown();return false;">
                 <svg viewBox="0 0 20 20" fill="currentColor" width="14" height="14"><path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"/></svg>
@@ -397,8 +397,8 @@
             </div>
             <div class="sum-card">
               <div class="sum-label">Taxa Entrega</div>
-              <div class="sum-value" style="color:#2dd4a0;">76%</div>
-              <div class="sum-trend">SLA &lt; 5 dias</div>
+              <div class="sum-value" id="stat-delivery" style="color:#2dd4a0;">—</div>
+              <div class="sum-trend" id="stat-delivery-trend">Calculando...</div>
             </div>
           </div>
 
@@ -407,7 +407,10 @@
 
             <!-- Pareto de Demandas Atrasadas -->
             <section class="section-card">
-              <h3 class="section-title" style="margin-bottom:16px;">Pareto — Demandas Atrasadas</h3>
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+                <h3 class="section-title" style="margin:0;">Pareto — Demandas Atrasadas</h3>
+                <span style="font-size:9px;font-family:var(--font-mono);color:var(--fg-3);background:var(--surface-3);padding:2px 8px;border-radius:4px;letter-spacing:1px;">DEMONSTRATIVO</span>
+              </div>
               <svg viewBox="0 0 280 160" width="100%" style="overflow:visible;">
                 <!-- Bars -->
                 <rect x="10" y="30" width="34" height="110" rx="3" fill="var(--brand-orange)" opacity="0.9"/>
@@ -439,7 +442,10 @@
 
             <!-- CEP/SPC Chart -->
             <section class="section-card">
-              <h3 class="section-title" style="margin-bottom:16px;">CEP — Publicações MKT</h3>
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+                <h3 class="section-title" style="margin:0;">CEP — Publicações MKT</h3>
+                <span style="font-size:9px;font-family:var(--font-mono);color:var(--fg-3);background:var(--surface-3);padding:2px 8px;border-radius:4px;letter-spacing:1px;">DEMONSTRATIVO</span>
+              </div>
               <svg viewBox="0 0 280 160" width="100%" style="overflow:visible;">
                 <!-- UCL, Mean, LCL lines -->
                 <line x1="0" y1="25" x2="280" y2="25" stroke="#f87171" stroke-width="1" stroke-dasharray="4,3"/>
@@ -474,7 +480,10 @@
 
             <!-- ABEPRO Radar -->
             <section class="section-card">
-              <h3 class="section-title" style="margin-bottom:8px;">Cobertura ABEPRO — 10 Áreas</h3>
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+                <h3 class="section-title" style="margin:0;">Cobertura ABEPRO — 10 Áreas</h3>
+                <span style="font-size:9px;font-family:var(--font-mono);color:var(--fg-3);background:var(--surface-3);padding:2px 8px;border-radius:4px;letter-spacing:1px;">DEMONSTRATIVO</span>
+              </div>
               <svg viewBox="0 0 280 280" width="100%">
                 <g transform="translate(140,140)">
                   <!-- Grid circles -->
@@ -515,7 +524,10 @@
             <!-- 5S Audit + IES -->
             <div style="display:flex;flex-direction:column;gap:var(--s4);">
               <section class="section-card">
-                <h3 class="section-title" style="margin-bottom:12px;">Auditoria 5S</h3>
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+                  <h3 class="section-title" style="margin:0;">Auditoria 5S</h3>
+                  <span style="font-size:9px;font-family:var(--font-mono);color:var(--fg-3);background:var(--surface-3);padding:2px 8px;border-radius:4px;letter-spacing:1px;">DEMONSTRATIVO</span>
+                </div>
                 <div style="display:flex;flex-direction:column;gap:10px;">
                   <div>
                     <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px;"><span style="color:var(--fg-2);">Seiri (Utilização)</span><span style="font-family:var(--font-mono);color:var(--brand-orange);">85%</span></div>
@@ -542,7 +554,10 @@
 
               <!-- IES Piauí Coverage -->
               <section class="section-card">
-                <h3 class="section-title" style="margin-bottom:12px;">Cobertura IES Piauí</h3>
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+                  <h3 class="section-title" style="margin:0;">Cobertura IES Piauí</h3>
+                  <span style="font-size:9px;font-family:var(--font-mono);color:var(--fg-3);background:var(--surface-3);padding:2px 8px;border-radius:4px;letter-spacing:1px;">DEMONSTRATIVO</span>
+                </div>
                 <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;">
                   <div style="background:var(--surface-2);border-radius:8px;padding:10px;text-align:center;border:1px solid var(--border-1);">
                     <div style="font-size:18px;font-weight:800;color:var(--brand-orange);font-family:var(--font-mono);">198</div>
@@ -1948,19 +1963,19 @@
                 <button class="option-btn active" id="themeBtn-nucleo" onclick="Theme.apply('nucleo')">
                   <div style="display:flex;gap:3px;">
                     <div style="width:14px;height:22px;border-radius:3px;background:#f65214;"></div>
-                    <div style="width:14px;height:22px;border-radius:3px;background:#9b7be8;"></div>
-                    <div style="width:14px;height:22px;border-radius:3px;background:#fff;"></div>
+                    <div style="width:14px;height:22px;border-radius:3px;background:#213248;"></div>
+                    <div style="width:14px;height:22px;border-radius:3px;background:#361f64;"></div>
                   </div>
-                  <div><div style="font-weight:700;">Núcleo</div><div style="font-size:11px;color:var(--t-3);">Laranja + Roxo · Padrão</div></div>
+                  <div><div style="font-weight:700;">Núcleo</div><div style="font-size:11px;color:var(--t-3);">Azul Petróleo · Padrão</div></div>
                   <span class="check">✓</span>
                 </button>
-                <button class="option-btn" id="themeBtn-bad-boy" onclick="Theme.apply('bad-boy')">
+                <button class="option-btn" id="themeBtn-noite" onclick="Theme.apply('noite')">
                   <div style="display:flex;gap:3px;">
                     <div style="width:14px;height:22px;border-radius:3px;background:#f65214;"></div>
                     <div style="width:14px;height:22px;border-radius:3px;background:#ff7a3d;"></div>
                     <div style="width:14px;height:22px;border-radius:3px;background:#1a0a04;"></div>
                   </div>
-                  <div><div style="font-weight:700;">Bad Boy</div><div style="font-size:11px;color:var(--t-3);">Preto + Laranja</div></div>
+                  <div><div style="font-weight:700;">Noite</div><div style="font-size:11px;color:var(--t-3);">Preto + Laranja</div></div>
                   <span class="check">✓</span>
                 </button>
                 <button class="option-btn" id="themeBtn-violet" onclick="Theme.apply('violet')">
@@ -2040,73 +2055,6 @@
 
   </div><!-- /app-shell -->
 
-  <!-- ═══ PROFILE SCREEN OVERLAY ═══ -->
-  <div id="profileScreen" style="display:none;position:fixed;inset:0;z-index:1000;background:rgba(10,5,25,0.92);backdrop-filter:blur(20px);flex-direction:column;align-items:center;justify-content:center;padding:2rem;">
-    <div style="margin-bottom:2rem;text-align:center;">
-      <div style="font-family:var(--font-mono);font-size:10px;letter-spacing:3px;color:var(--fg-3);text-transform:uppercase;margin-bottom:8px;">Selecionar Perfil de Acesso</div>
-      <div class="shimmer" style="font-family:var(--font-display);font-size:24px;font-weight:800;">Quem está usando o sistema?</div>
-    </div>
-    <div id="profileGrid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;max-width:900px;width:100%;">
-
-      <div class="profile-card" data-pid="yuri-dev" onclick="selectProfile(this)" style="--profile-color:#f65214;">
-        <div class="profile-card-avatar" style="background:linear-gradient(135deg,#f65214,#ff8c00);">YD</div>
-        <div class="profile-card-name">Yuri José</div>
-        <div class="profile-card-role">Dev / Full Access</div>
-        <div class="profile-card-badge" style="color:#f65214;border-color:rgba(246,82,20,0.3);">DEV</div>
-      </div>
-
-      <div class="profile-card" data-pid="yuri-mkt" onclick="selectProfile(this)" style="--profile-color:#e85aa8;">
-        <div class="profile-card-avatar" style="background:linear-gradient(135deg,#e85aa8,#c2185b);">YM</div>
-        <div class="profile-card-name">Yuri José</div>
-        <div class="profile-card-role">Assessor de Marketing</div>
-        <div class="profile-card-badge" style="color:#e85aa8;border-color:rgba(232,90,168,0.3);">MKT</div>
-      </div>
-
-      <div class="profile-card" data-pid="julia-geral" onclick="selectProfile(this)" style="--profile-color:#9b7be8;">
-        <div class="profile-card-avatar" style="background:linear-gradient(135deg,#9b7be8,#6c47c4);">JM</div>
-        <div class="profile-card-name">Júlia Mendes</div>
-        <div class="profile-card-role">Coord. Geral</div>
-        <div class="profile-card-badge" style="color:#9b7be8;border-color:rgba(155,123,232,0.3);">GER</div>
-      </div>
-
-      <div class="profile-card" data-pid="bruno-vice" onclick="selectProfile(this)" style="--profile-color:#9b7be8;">
-        <div class="profile-card-avatar" style="background:linear-gradient(135deg,#8b6be0,#5c39ac);">BC</div>
-        <div class="profile-card-name">Bruno Carvalho</div>
-        <div class="profile-card-role">Vice-Geral</div>
-        <div class="profile-card-badge" style="color:#9b7be8;border-color:rgba(155,123,232,0.3);">VICE</div>
-      </div>
-
-      <div class="profile-card" data-pid="marcos-ops" onclick="selectProfile(this)" style="--profile-color:#5b9cf6;">
-        <div class="profile-card-avatar" style="background:linear-gradient(135deg,#5b9cf6,#1565c0);">MO</div>
-        <div class="profile-card-name">Marcos Oliveira</div>
-        <div class="profile-card-role">Coord. Operações</div>
-        <div class="profile-card-badge" style="color:#5b9cf6;border-color:rgba(91,156,246,0.3);">OPS</div>
-      </div>
-
-      <div class="profile-card" data-pid="ana-fin" onclick="selectProfile(this)" style="--profile-color:#2dd4a0;">
-        <div class="profile-card-avatar" style="background:linear-gradient(135deg,#2dd4a0,#00796b);">AS</div>
-        <div class="profile-card-name">Ana Sousa</div>
-        <div class="profile-card-role">Coord. Finanças</div>
-        <div class="profile-card-badge" style="color:#2dd4a0;border-color:rgba(45,212,160,0.3);">FIN</div>
-      </div>
-
-      <div class="profile-card" data-pid="lucas-gp" onclick="selectProfile(this)" style="--profile-color:#f5c518;">
-        <div class="profile-card-avatar" style="background:linear-gradient(135deg,#f5c518,#e65100);">LP</div>
-        <div class="profile-card-name">Lucas Pereira</div>
-        <div class="profile-card-role">Coord. Pessoas</div>
-        <div class="profile-card-badge" style="color:#f5c518;border-color:rgba(245,197,24,0.3);">G.P</div>
-      </div>
-
-      <div class="profile-card" data-pid="caio-proj" onclick="selectProfile(this)" style="--profile-color:#f65214;">
-        <div class="profile-card-avatar" style="background:linear-gradient(135deg,#f65214,#b71c1c);">CR</div>
-        <div class="profile-card-name">Caio Rodrigues</div>
-        <div class="profile-card-role">Coord. Projetos</div>
-        <div class="profile-card-badge" style="color:#f65214;border-color:rgba(246,82,20,0.3);">PRJ</div>
-      </div>
-
-    </div>
-    <button onclick="document.getElementById('profileScreen').style.display='none'" style="margin-top:2rem;background:none;border:1px solid var(--border-2);color:var(--fg-3);padding:8px 20px;border-radius:8px;cursor:pointer;font-size:13px;">Cancelar</button>
-  </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
   <script src="js/app.js?v=14"></script>
@@ -2129,53 +2077,6 @@
         document.getElementById('sidebar').classList.remove('open');
         document.getElementById('sidebarOverlay').classList.remove('active');
       }
-    }
-
-    // ── PROFILE SCREEN ─────────────────────────────────
-    function selectProfile(card) {
-      var all = document.querySelectorAll('.profile-card');
-      // Animate: selected scale up, others fade
-      all.forEach(function(c) {
-        if (c === card) {
-          c.style.transform = 'scale(1.05)';
-          c.style.opacity = '1';
-          c.style.boxShadow = '0 0 0 2px ' + getComputedStyle(c).getPropertyValue('--profile-color');
-        } else {
-          c.style.transform = 'scale(0.92)';
-          c.style.opacity = '0.3';
-        }
-      });
-      var pid = card.dataset.pid;
-      localStorage.setItem('np-profile', pid);
-      // Update topbar/sidebar name
-      var nameEl = card.querySelector('.profile-card-name');
-      var roleEl = card.querySelector('.profile-card-role');
-      var avatarEl = card.querySelector('.profile-card-avatar');
-      if (nameEl) {
-        var n = nameEl.textContent;
-        var r = roleEl ? roleEl.textContent : '';
-        var av = avatarEl ? avatarEl.textContent : n.charAt(0);
-        var topN = document.getElementById('topbarName');
-        var topAv = document.getElementById('topbarAvatar');
-        var sideN = document.getElementById('sideName');
-        var sideAv = document.getElementById('sideAvatar');
-        var dropN = document.getElementById('dropName');
-        var dropR = document.getElementById('dropRole');
-        if (topN) topN.textContent = n.split(' ')[0];
-        if (topAv) topAv.textContent = av;
-        if (sideN) sideN.textContent = n;
-        if (sideAv) sideAv.textContent = av;
-        if (dropN) dropN.textContent = n;
-        if (dropR) dropR.textContent = r;
-      }
-      setTimeout(function() {
-        document.getElementById('profileScreen').style.display='none';
-        all.forEach(function(c) {
-          c.style.transform = '';
-          c.style.opacity = '';
-          c.style.boxShadow = '';
-        });
-      }, 700);
     }
 
     // ── PROFILE DROPDOWN ───────────────────────────────
@@ -2243,7 +2144,7 @@
     var _origThemeApply = window.Theme.apply;
     window.Theme.apply = function(t) {
       // Map legacy names to new
-      var legMap = {'dark-orange':'nucleo','dark-purple':'violet','fusion':'nucleo','luminous':'papel','orange':'bad-boy','obsidian':'bad-boy'};
+      var legMap = {'dark-orange':'nucleo','dark-purple':'violet','fusion':'nucleo','luminous':'papel','orange':'noite','obsidian':'noite','bad-boy':'noite'};
       if (legMap[t]) t = legMap[t];
       document.documentElement.setAttribute('data-theme', t);
       localStorage.setItem('np-theme', t);

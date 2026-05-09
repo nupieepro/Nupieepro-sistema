@@ -493,9 +493,24 @@ const App = {
 
       const coordName = profile.coordenadorias?.nome || 'Geral';
 
-      document.getElementById('sideAvatar').textContent = profile.iniciais || profile.nome?.[0] || '?';
-      document.getElementById('sideName').textContent   = profile.nome || 'Usuário';
-      document.getElementById('sideRole').textContent   = (profile.cargo || profile.role || 'Membro') + ' · ' + coordName;
+      const userInitials = profile.iniciais || profile.nome?.[0] || '?';
+      const userLabel    = (profile.cargo || profile.role || 'Membro') + ' · ' + coordName;
+      const firstName    = profile.nome?.split(' ')[0] || 'Usuário';
+
+      const sid = document.getElementById('sideAvatar');
+      const snm = document.getElementById('sideName');
+      const srl = document.getElementById('sideRole');
+      const tav = document.getElementById('topbarAvatar');
+      const tnm = document.getElementById('topbarName');
+      const drn = document.getElementById('dropName');
+      const drr = document.getElementById('dropRole');
+      if (sid) sid.textContent = userInitials;
+      if (snm) snm.textContent = profile.nome || 'Usuário';
+      if (srl) srl.textContent = userLabel;
+      if (tav) tav.textContent = userInitials;
+      if (tnm) tnm.textContent = firstName;
+      if (drn) drn.textContent = profile.nome || 'Usuário';
+      if (drr) drr.textContent = userLabel;
 
       App.buildSidebar(coordName);
       App.buildMobileNav(coordName);
@@ -507,20 +522,18 @@ const App = {
       if (typeof Cal !== 'undefined') Cal.init();
       if (typeof MiniCal !== 'undefined') MiniCal.init();
 
-      updateNotifCount();
       await App.loadNotifCount().catch(e => console.warn('Notif check failed:', e));
 
-      // Saudação Dinâmica (V9.0)
+      // Saudação dinâmica
       const saudacao = App.getSaudacao();
       const sEl = document.getElementById('topbarSaudacao');
-      if (sEl) sEl.textContent = `${saudacao}, ${profile.nome || 'Líder'}!`;
+      if (sEl) sEl.textContent = `${saudacao}, ${firstName}!`;
 
-      // [V9.0] Role Switcher p/ JR (Dev Admin + MKT)
-      const isJR = profile.email?.includes('jjose') || profile.nome?.includes('Rayan');
+      // Role Switcher para o dev/admin
+      const isJR = profile.email?.includes('jjose') || profile.nome?.toLowerCase().includes('rayan');
       const btnSwitch = document.getElementById('btnSwitchRole');
       if (isJR && btnSwitch) btnSwitch.style.display = 'block';
 
-      // [V9.0] Sync Settings inputs
       App.syncSettingsInputs(profile);
 
       return profile;
@@ -529,51 +542,6 @@ const App = {
       App.toast('Erro ao carregar dashboard. Tente recarregar.', 'error');
       return null;
     }
-    // Expõe globalmente para módulos como ABJ
-    window._appProfile = profile;
-
-    // Checks de Mandato e Inatividade Global
-    if (typeof DashboardExtra !== 'undefined') {
-      DashboardExtra.syncMandates(profile);
-      DashboardExtra.checkGlobalInactivity();
-    }
-
-    const coordName = profile.coordenadorias?.nome || 'Geral';
-
-    // Set user chip
-    const userRoleLabel = (profile.coordenadorias?.sigla === 'MKT') ? 'Assessor & Dev' : (profile.cargo || profile.role || 'Membro');
-    document.getElementById('sideAvatar').textContent = profile.iniciais || profile.nome?.[0] || '?';
-    document.getElementById('sideName').textContent   = profile.nome || 'Usuário';
-    document.getElementById('sideRole').textContent   = userRoleLabel + ' · ' + coordName;
-    
-    // Saudação dinâmica com horário
-    const hour = new Date().getHours();
-    let greeting = 'Boa noite';
-    if (hour >= 5 && hour < 12) greeting = 'Bom dia';
-    else if (hour >= 12 && hour < 18) greeting = 'Boa tarde';
-    
-    const topbarTitle = document.querySelector('.topbar-title');
-    if (topbarTitle && topbarTitle.textContent === 'Dashboard') {
-      topbarTitle.textContent = `${greeting}, ${profile.nome || 'você'}!`;
-    }
-
-    App.buildSidebar(coordName);
-    App.buildMobileNav(coordName);
-
-    // Exibe links OPS apenas para coordenadores de ops ou admin/dev
-    const isOps = profile.role === 'admin' || (profile.coordenadorias?.sigla || '').toUpperCase() === 'OPS';
-    const opsSection = document.getElementById('opsLinksSection');
-    if (opsSection) opsSection.style.display = isOps ? 'contents' : 'none';
-
-    // Init calendários
-    Cal.init();
-    MiniCal.init();
-
-    // Init notification count
-    updateNotifCount();
-    await App.loadNotifCount();
-
-    return profile;
   },
 
   async loadNotifCount() {
@@ -786,38 +754,70 @@ const Dashboard = {
     }
 
     try {
-      // Fetch KPIs in parallel
-      const [abjRes, tasksRes, membersRes, vendasRes, despesasRes] = await Promise.all([
+      // Fetch KPIs em paralelo
+      const [abjRes, demandasRes, membersRes, vendasRes, despesasRes, recentRes] = await Promise.all([
         _sb.from('progresso_abj').select('pontos'),
-        _sb.from('demandas').select('coluna').neq('coluna', 'auditada'),
+        _sb.from('demandas').select('coluna, titulo, created_at, coordenadorias(sigla)').order('created_at', {ascending:false}).limit(50),
         _sb.from('users').select('id', { count: 'exact', head: true }).eq('ativo', true),
         _sb.from('vendas').select('valor'),
         _sb.from('despesas').select('valor'),
+        _sb.from('demandas').select('titulo, coluna, updated_at, coordenadorias(sigla)').order('updated_at', {ascending:false}).limit(6),
       ]);
-      
+
       cards.forEach(c => c.classList.remove('loading'));
 
-      const totalPts = (abjRes.data || []).reduce((s, r) => s + (r.pontos || 0), 0);
-      const activeTasks = (tasksRes.data || []).length;
+      const totalPts   = (abjRes.data || []).reduce((s, r) => s + (r.pontos || 0), 0);
+      const allDemands = demandasRes.data || [];
+      const activeTasks = allDemands.filter(d => !['realizada','auditada'].includes(d.coluna)).length;
+      const doneTasks   = allDemands.filter(d => ['realizada','auditada'].includes(d.coluna)).length;
+      const deliveryPct = allDemands.length ? Math.round((doneTasks / allDemands.length) * 100) : null;
       const totalMembers = membersRes.count || 0;
-      const totalVendas = (vendasRes.data || []).reduce((s, r) => s + parseFloat(r.valor || 0), 0);
-      const totalDespesas = (despesasRes.data || []).reduce((s, r) => s + parseFloat(r.valor || 0), 0);
+      const totalVendas  = (vendasRes.data || []).reduce((s, r) => s + parseFloat(r.valor || 0), 0);
+      const totalDespesas= (despesasRes.data || []).reduce((s, r) => s + parseFloat(r.valor || 0), 0);
       const saldo = totalVendas - totalDespesas;
 
       Dashboard.setKPIs(totalPts, activeTasks, totalMembers, saldo, totalVendas, totalDespesas);
-      
-      // --- [1] AUDITORIA ABJ (TERMÔMETRO) ---
-      const auditPct = Math.round((totalPts / 50) * 100); // 50 é a meta padrão
+
+      // Taxa de entrega dinâmica
+      const elDel = document.getElementById('stat-delivery');
+      const elDelT = document.getElementById('stat-delivery-trend');
+      if (elDel) elDel.textContent = deliveryPct !== null ? deliveryPct + '%' : '—';
+      if (elDelT) elDelT.textContent = deliveryPct !== null ? `${doneTasks} de ${allDemands.length} demandas` : 'Sem demandas cadastradas';
+
+      // Auditoria ABJ
+      const auditPct = Math.round((totalPts / 50) * 100);
       const auditBar = document.getElementById('audit-bar');
       const auditTxt = document.getElementById('audit-percent');
       const auditStatus = document.getElementById('audit-status');
-      
       if (auditBar) auditBar.style.width = Math.min(auditPct, 100) + '%';
       if (auditTxt) auditTxt.textContent = auditPct + '%';
       if (auditStatus) {
-        if (auditPct >= 100) auditStatus.textContent = '✅ Auditoria Completa! Selo Garantido.';
-        else if (auditPct >= 70) auditStatus.textContent = '🔥 Quase lá! Foco no fechamento.';
-        else auditStatus.textContent = '📊 Sincronizado. Continue reportando atividades.';
+        if (auditPct >= 100) auditStatus.textContent = 'Auditoria completa — Selo garantido';
+        else if (auditPct >= 70) auditStatus.textContent = 'Quase lá — foco no fechamento';
+        else auditStatus.textContent = 'Sincronizado — continue reportando';
+      }
+
+      // Atividade recente (demandas reais)
+      const recentEl = document.getElementById('dashRecent');
+      if (recentEl) {
+        const items = recentRes.data || [];
+        if (items.length === 0) {
+          recentEl.innerHTML = '<p style="color:var(--fg-3);font-size:13px;text-align:center;padding:16px 0;">Nenhuma atividade registrada.</p>';
+        } else {
+          const colLabel = {pendente:'Pendente',exec:'Em execução',realizada:'Realizada',auditada:'Auditada'};
+          recentEl.innerHTML = '<div style="display:flex;flex-direction:column;gap:6px;">' +
+            items.map(d => {
+              const sigla = d.coordenadorias?.sigla || 'GER';
+              const tag = sigla.toLowerCase();
+              const dt = d.updated_at ? new Date(d.updated_at).toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'}) : '—';
+              return `<div style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--surface-2);border-radius:8px;font-size:13px;">
+                <span class="coord-tag tag-${tag}" style="flex-shrink:0;">${sigla}</span>
+                <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${d.titulo || 'Demanda'}</span>
+                <span style="color:var(--fg-3);font-size:11px;font-family:var(--font-mono);flex-shrink:0;">${dt}</span>
+              </div>`;
+            }).join('') +
+          '</div>';
+        }
       }
     } catch (err) {
       console.error('Dashboard fetch error:', err);
@@ -826,38 +826,19 @@ const Dashboard = {
   },
 
   renderDemo(profile) {
-    // Show demo data when Supabase is not configured
-    Dashboard.setKPIs(47, 10, 16, 1500, 2260, 760);
-    
-    // Demo Mode: Audit Termômetro
+    Dashboard.setKPIs(0, 0, 0, 0, 0, 0);
     const auditBar = document.getElementById('audit-bar');
     const auditTxt = document.getElementById('audit-percent');
-    if (auditBar) auditBar.style.width = '94%';
-    if (auditTxt) auditTxt.textContent = '94%';
-    document.getElementById('dashRecent').innerHTML = `
-      <div style="display:flex;flex-direction:column;gap:8px;">
-        <div style="display:flex;align-items:center;gap:8px;padding:8px;background:var(--w5);border-radius:8px;font-size:13px;">
-          <span class="coord-tag tag-operacoes">OPS</span>
-          <span>Relatório mensal março enviado</span>
-          <span style="margin-left:auto;color:var(--w40);font-size:11px;">Hoje</span>
-        </div>
-        <div style="display:flex;align-items:center;gap:8px;padding:8px;background:var(--w5);border-radius:8px;font-size:13px;">
-          <span class="coord-tag tag-geral">GER</span>
-          <span>Confirmação mensal ABJ — atividades 1-4</span>
-          <span style="margin-left:auto;color:var(--w40);font-size:11px;">Ontem</span>
-        </div>
-        <div style="display:flex;align-items:center;gap:8px;padding:8px;background:var(--w5);border-radius:8px;font-size:13px;">
-          <span class="coord-tag tag-projetos">PRJ</span>
-          <span>Treinamento Excel Avançado realizado</span>
-          <span style="margin-left:auto;color:var(--w40);font-size:11px;">3 dias</span>
-        </div>
-        <div style="display:flex;align-items:center;gap:8px;padding:8px;background:var(--w5);border-radius:8px;font-size:13px;">
-          <span class="coord-tag tag-marketing">MKT</span>
-          <span>3 posts publicados em março</span>
-          <span style="margin-left:auto;color:var(--w40);font-size:11px;">5 dias</span>
-        </div>
-      </div>
-    `;
+    const auditStatus = document.getElementById('audit-status');
+    if (auditBar) auditBar.style.width = '0%';
+    if (auditTxt) auditTxt.textContent = '0%';
+    if (auditStatus) auditStatus.textContent = 'Sem conexão com o servidor';
+    const elDel = document.getElementById('stat-delivery');
+    const elDelT = document.getElementById('stat-delivery-trend');
+    if (elDel) elDel.textContent = '—';
+    if (elDelT) elDelT.textContent = 'Sem dados';
+    const recentEl = document.getElementById('dashRecent');
+    if (recentEl) recentEl.innerHTML = '<p style="color:var(--fg-3);font-size:13px;text-align:center;padding:16px 0;">Sem conexão — verifique sua internet.</p>';
   },
 
   setKPIs(pts, tasks, members, saldo, vendas, despesas) {
@@ -898,15 +879,20 @@ const Dashboard = {
    ============================================================ */
 const Theme = {
   _aliases: {
-    'default': 'dark-orange',
-    'fusion':  'dark-purple',
-    'orange':  'dark-orange',
-    'glimmer': 'dark',
-    'badboy':  'dark-orange',
-    'frufru':  'rose',
-    'roxo':    'dark-purple',
-    'claro-suave': 'luminous',
-    'alto-contraste': 'obsidian',
+    'default':        'nucleo',
+    'fusion':         'nucleo',
+    'dark-orange':    'nucleo',
+    'dark-purple':    'violet',
+    'orange':         'noite',
+    'obsidian':       'noite',
+    'bad-boy':        'noite',
+    'badboy':         'noite',
+    'luminous':       'papel',
+    'glimmer':        'dark',
+    'frufru':         'rose',
+    'roxo':           'violet',
+    'claro-suave':    'papel',
+    'alto-contraste': 'noite',
     'branco-laranja': 'white-orange',
   },
 
@@ -920,6 +906,10 @@ const Theme = {
     if (btn) btn.classList.add('active');
 
     const themeLabel = {
+      'nucleo':       'Núcleo (Padrão)',
+      'noite':        'Noite',
+      'violet':       'Violeta',
+      'papel':        'Papel',
       'dark-orange':  'Orange Industrial',
       'dark-purple':  'Fusion Elite',
       'luminous':     'Claro Premium',
@@ -927,7 +917,6 @@ const Theme = {
       'dark':         'Dark Premium',
       'rose':         'Rose Quartz',
       'white-orange': 'Branco + Laranja',
-      'nucleo':       'Núcleo (Padrão)',
     };
     const label = document.getElementById('systemThemeLabel');
     if (label) label.textContent = themeLabel[name] || name;
@@ -948,9 +937,9 @@ const Theme = {
   },
 
   init() {
-    let theme = localStorage.getItem('nupie_theme') || 'dark-orange';
-    // Garante compatibilidade com temas legados que não existem mais
-    if (theme === 'nucleo' || theme === 'default' || theme === 'fusion') theme = 'dark-orange';
+    let theme = localStorage.getItem('nupie_theme') || localStorage.getItem('np-theme') || 'nucleo';
+    const legMap = {'dark-orange':'nucleo','dark-purple':'violet','fusion':'nucleo','luminous':'papel','orange':'noite','obsidian':'noite','bad-boy':'noite','default':'nucleo'};
+    if (legMap[theme]) theme = legMap[theme];
     const font = localStorage.getItem('nupie_font') || 'default';
     Theme.apply(theme, true);
     Theme.applyFont(font, true);

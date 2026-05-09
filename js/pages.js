@@ -373,8 +373,8 @@ const PageGeral = {
               <div style="font-size:12px;color:var(--c-slate)">${sanitize(d.descricao||'—')} · ${_fmt(d.created_at)}</div>
             </div>
             <span style="font-size:11px;font-weight:700;padding:3px 9px;border-radius:99px;
-                         background:var(--green)22;color:var(--green);border:1px solid var(--green)44">
-              ${d.coluna==='concluido'?'✓ Ativa':'Pendente'}
+                         background:${['realizada','auditada'].includes(d.coluna)?'var(--green)22':'var(--yellow)22'};color:${['realizada','auditada'].includes(d.coluna)?'var(--green)':'var(--yellow)'};border:1px solid ${['realizada','auditada'].includes(d.coluna)?'var(--green)44':'var(--yellow)44'}">
+              ${['realizada','auditada'].includes(d.coluna)?'✓ Concluída':'⏳ Em andamento'}
             </span>
           </div>`).join('')
         : '<div style="padding:16px;text-align:center;color:var(--c-slate);font-size:13px">Nenhuma parceria registrada ainda.</div>';
@@ -1010,7 +1010,7 @@ const PageFinancas = {
         .eq('tipo','abepro')
         .order('created_at', { ascending: false });
       const lista = data || [];
-      const comComp = lista.filter(d => d.coluna === 'concluido').length;
+      const comComp = lista.filter(d => ['realizada','auditada'].includes(d.coluna)).length;
       if (tot) tot.textContent = lista.length;
       if (pag) pag.textContent = comComp;
       if (pen) pen.textContent = lista.length - comComp;
@@ -1026,12 +1026,12 @@ const PageFinancas = {
             </div>
             <div style="display:flex;align-items:center;gap:8px">
               <span style="font-size:11px;font-weight:700;padding:3px 9px;border-radius:99px;
-                           background:${d.coluna==='concluido'?'var(--green)22':'var(--yellow)22'};
-                           color:${d.coluna==='concluido'?'var(--green)':'var(--yellow)'};
-                           border:1px solid ${d.coluna==='concluido'?'var(--green)44':'var(--yellow)44'}">
-                ${d.coluna==='concluido'?'✓ Comprovante OK':'⏳ Pendente'}
+                           background:${['realizada','auditada'].includes(d.coluna)?'var(--green)22':'var(--yellow)22'};
+                           color:${['realizada','auditada'].includes(d.coluna)?'var(--green)':'var(--yellow)'};
+                           border:1px solid ${['realizada','auditada'].includes(d.coluna)?'var(--green)44':'var(--yellow)44'}">
+                ${['realizada','auditada'].includes(d.coluna)?'✓ Confirmado':'⏳ Pendente'}
               </span>
-              ${d.coluna!=='concluido'
+              ${!['realizada','auditada'].includes(d.coluna)
                 ? `<button class="btn btn-ghost" style="font-size:11px;padding:4px 10px"
                            onclick="PageFinancas._confirmarComp('${d.id}')">Confirmar ✓</button>`
                 : ''}
