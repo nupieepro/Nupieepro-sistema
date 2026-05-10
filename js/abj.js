@@ -364,7 +364,7 @@ const ABJModule = (() => {
     if (!pg) return;
     const content = pg.querySelector('.content') || pg;
     const totalPts = _progresso.reduce((s, p) => s + (p.pontos || 0), 0);
-    const pct = Math.min(100, Math.round((totalPts / 882) * 100));
+    const pct = Math.min(100, Math.round((totalPts / (window.META_ABJ || 882)) * 100));
 
     content.innerHTML = `
       <div style="display:flex;flex-direction:column;gap:16px">
@@ -401,7 +401,7 @@ const ABJModule = (() => {
     await carregar();
     /* Recalcula pontos após carregar dados frescos */
     const pts = _progresso.reduce((s, p) => s + (p.pontos || 0), 0);
-    const pctAtual = Math.min(100, Math.round((pts / 882) * 100));
+    const pctAtual = Math.min(100, Math.round((pts / (window.META_ABJ || 882)) * 100));
     const elPts = document.getElementById('abj-total-pts');
     const elBar = document.getElementById('abj-pts-bar');
     if (elPts) elPts.textContent = pts;

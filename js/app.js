@@ -150,7 +150,7 @@ const RateLimiter = {
 };
 
 // === NOME DO REMETENTE ===
-const _EMAIL_SENDER = 'Nupieepro Sistem';
+const _EMAIL_SENDER = 'NUPIEEPRO Sistema';
 
 const EmailService = {
   init() {
@@ -325,11 +325,7 @@ const App = {
 
   /** Require auth — redirect to login if not authenticated */
   async requireAuth() {
-    if (!_sb) {
-      const mock = localStorage.getItem('mockSession');
-      if (mock === 'jjoserrayan2711@gmail.com') return { user: { email: mock } };
-      App.redirect('index.html'); return null;
-    }
+    if (!_sb) { App.redirect('index.html'); return null; }
     const { data: { session } } = await _sb.auth.getSession();
     if (!session) { App.redirect('index.html'); return null; }
     return session;
@@ -337,22 +333,7 @@ const App = {
 
   /** Get current user profile from public.users */
   async getProfile() {
-    if (!_sb) {
-      const mock = localStorage.getItem('mockSession');
-      if (mock === 'jjoserrayan2711@gmail.com') {
-        return {
-          id: 'dev-chefe',
-          email: mock,
-          nome: 'JR',
-          role: 'assessor',
-          cargo: 'Assessor de Marketing',
-          iniciais: 'JR',
-          _isDev: true,
-          coordenadorias: { nome: 'Marketing', sigla: 'MKT', icone: 'layers' }
-        };
-      }
-      return null;
-    }
+    if (!_sb) return null;
     const { data: { user } } = await _sb.auth.getUser();
     if (!user) return null;
 
@@ -1868,7 +1849,7 @@ const Assembleia = {
     if (!sb) { el.innerHTML = '<p class="text-muted text-sm">Banco não conectado.</p>'; return; }
     el.innerHTML = '<p class="text-muted text-sm">Carregando votações...</p>';
     try {
-      const { data } = await sb.from('votacoes').select('*').eq('status', 'aberta').order('criado_em', { ascending: false });
+      const { data } = await sb.from('votacoes').select('*').eq('ativa', true).order('criada_em', { ascending: false });
       if (!data || data.length === 0) {
         el.innerHTML = '<p class="text-muted text-sm">Nenhuma votação ativa no momento.</p>';
         return;
@@ -1902,7 +1883,7 @@ const Assembleia = {
           const sb = window._supabase;
           if (sb) {
             try {
-              await sb.from('votacoes').insert({ titulo, opcoes, status: 'aberta', criado_em: new Date().toISOString() });
+              await sb.from('votacoes').insert({ titulo, opcoes, ativa: true });
               App.toast('Votação criada com sucesso!', 'success');
               Assembleia.init();
             } catch(e) { App.toast('Erro ao criar votação.', 'error'); }
@@ -1917,7 +1898,7 @@ const Assembleia = {
     const sb = window._supabase;
     if (!sb) { App.toast('Banco não conectado.', 'error'); return; }
     try {
-      await sb.from('votos').insert({ votacao_id: votacaoId, opcao, registrado_em: new Date().toISOString() });
+      await sb.from('votos').insert({ votacao_id: votacaoId, opcao, user_id: window._appProfile?.id });
       App.toast(`Voto em "${opcao}" computado!`, 'success');
     } catch(e) {
       App.toast('Erro ao registrar voto.', 'error');

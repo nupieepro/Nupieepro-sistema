@@ -18,7 +18,7 @@
 // --- AQUI ESTÁ A SUA URL NOVA ---
 const API = "https://script.google.com/macros/s/AKfycbyHQG1P43Johs9NvxkaoKNELhsXagVmCammU2kCLmibsQriH7OP863nUZssCl3CNOLkoQ/exec";
 
-let cache={eventos:[],inscritos:[]},eventoSelecionado=null;window.onload=function(){const p=new URLSearchParams(window.location.search);if(p.get("token")==="nupi2026"){carregar()}else{document.body.innerHTML='<h2 style="text-align:center;margin-top:50px">Acesso Negado</h2>'}};
+let cache={eventos:[],inscritos:[]},eventoSelecionado=null;window.onload=function(){const p=new URLSearchParams(window.location.search);if(p.get("token")==="nup!0ps#2026$QK7"){carregar()}else{document.body.innerHTML='<h2 style="text-align:center;margin-top:50px">Acesso Negado</h2>'}};
 function go(t){document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));document.getElementById('view-'+t).classList.add('active');event.currentTarget.classList.add('active')}
 async function carregar(){const r=await fetch(API+"?action=get_admin").then(res=>res.json());cache=r;renderEventos();renderFiltro();if(eventoSelecionado)selecionarEvento(eventoSelecionado.id)}
 function renderEventos(){document.getElementById('lista-eventos').innerHTML=cache.eventos.map(e=>`<div class="event-item ${eventoSelecionado?.id===e.id?'selected':''}" onclick="selecionarEvento('${e.id}')"><div style="font-weight:700">${e.nome||'Novo'}</div><div style="font-size:.7rem;opacity:.6">${e.data} - ${e.status}</div>${e.ativo?'<span class="badge-live">NO AR</span>':''}</div>`).join('')}

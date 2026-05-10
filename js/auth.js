@@ -4,13 +4,7 @@ const Auth = {
 
   async login(email, password) {
     const sb = this._db();
-    if (!sb) {
-      if (email === 'jjoserrayan2711@gmail.com') {
-        localStorage.setItem('mockSession', email);
-        return { user: { id: 'dev-chefe', email } };
-      }
-      throw new Error('Sistema de dados offline. Verifique a URL do Supabase no app.js');
-    }
+    if (!sb) throw new Error('Sistema offline. Verifique a conexão com a internet.');
     const { data, error } = await sb.auth.signInWithPassword({ email, password });
     if (error) throw error;
     return data;
@@ -48,7 +42,7 @@ const Auth = {
       coordenadoria_id: convite.coordenadoria_id,
       iniciais,
       apelido: extraMetadata.apelido || nome.split(' ')[0],
-      data_nascimento: extraMetadata.data_nascimento || null,
+      aniversario: extraMetadata.data_nascimento || null,
       nome_primeiro: extraMetadata.nome_primeiro || nome.split(' ')[0],
       nome_sobrenome: extraMetadata.nome_sobrenome || nome.split(' ').slice(1).join(' ')
     };
