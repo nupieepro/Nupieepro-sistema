@@ -796,8 +796,9 @@ const PageMarketing = {
       semIni.setDate(semIni.getDate() - semIni.getDay());
       semIni.setHours(0, 0, 0, 0);
       const { data } = await _sb()
-        .from('calendario')
+        .from('eventos')
         .select('*')
+        .eq('tipo','publicacao')
         .order('data_inicio', { ascending: false })
         .limit(20);
       const posts  = data || [];
@@ -854,10 +855,10 @@ const PageMarketing = {
     try {
       const coords = await getCoords();
       const mkt = coords.find(c=>c.sigla==='MKT');
-      await _sb().from('calendario').insert([{
+      await _sb().from('eventos').insert([{
         titulo:desc, descricao:link||null,
         data_inicio: data+'T12:00:00',
-        tipo:'evento', cor:'#f75412',
+        tipo:'publicacao', ativo:true,
         coordenadoria_id: mkt?.id||null,
         criado_por: window._appProfile?.id
       }]);

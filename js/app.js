@@ -2527,7 +2527,7 @@ const NovoCal = {
       const fim    = new Date(this.year, this.month + 1, 0).toISOString().split('T')[0];
       const { data } = await sb.from('eventos').select('titulo,data_inicio,tipo,coordenadorias(sigla)').gte('data_inicio', inicio).lte('data_inicio', fim).order('data_inicio');
       if (!data?.length) { el.innerHTML = '<p style="font-size:12px;color:var(--fg-3);text-align:center;padding:1rem;">Nenhum evento neste mês.</p>'; return; }
-      const CORES = { reuniao:'#9b7be8', evento:'var(--brand-orange)', treinamento:'#5b9cf6', enegep:'#f5c518', podcast:'#e85aa8', assembleia:'#2dd4a0' };
+      const CORES = { reuniao:'#9b7be8', evento:'var(--brand-orange)', treinamento:'#5b9cf6', enegep:'#f5c518', podcast:'#e85aa8', assembleia:'#2dd4a0', publicacao:'#f75412' };
       el.innerHTML = data.map(e => {
         const cor = CORES[e.tipo] || 'var(--fg-3)';
         const dia = e.data_inicio ? new Date(e.data_inicio + 'T12:00:00').toLocaleDateString('pt-BR', { day:'2-digit', month:'short' }) : '—';
@@ -2550,7 +2550,7 @@ const NovoCal = {
       const fim   = new Date(this.year, this.month + 1, 0).toISOString().split('T')[0];
       const { data } = await sb.from('eventos').select('titulo,data_inicio,tipo,coordenadorias(sigla,icone)').gte('data_inicio', hoje).lte('data_inicio', fim).order('data_inicio').limit(8);
       if (!data?.length) { el.innerHTML = '<p style="font-size:13px;color:var(--fg-3);text-align:center;padding:16px 0;">Nenhum evento cadastrado neste mês.<br><span style="font-size:11px;">Use o botão abaixo para registrar.</span></p>'; return; }
-      const CORES = { reuniao:'#9b7be8', evento:'var(--brand-orange)', treinamento:'#5b9cf6', enegep:'#f5c518', podcast:'#e85aa8', assembleia:'#2dd4a0' };
+      const CORES = { reuniao:'#9b7be8', evento:'var(--brand-orange)', treinamento:'#5b9cf6', enegep:'#f5c518', podcast:'#e85aa8', assembleia:'#2dd4a0', publicacao:'#f75412' };
       el.innerHTML = data.map(e => {
         const cor   = CORES[e.tipo] || 'var(--fg-3)';
         const d     = e.data_inicio ? new Date(e.data_inicio + 'T12:00:00') : null;
