@@ -715,6 +715,16 @@ body.profile-switching-in .sidebar-logo {
   100% { transform: scale(1) rotate(0); }
 }
 .abj-star.earned { color: var(--c-accent); }
+.abj-star.partial { color: var(--yellow, #f5c518); }
+.abj-star.partial .abj-star-icon { filter: grayscale(0.5) opacity(0.7); }
+.evidence-input {
+  width: 100%; background: var(--c-s1); border: 1px solid var(--b-1);
+  border-radius: 8px; padding: 10px 12px; color: var(--c-white);
+  font-family: var(--f-body); font-size: 13px; transition: border-color 0.2s;
+  box-sizing: border-box;
+}
+.evidence-input:focus { outline: none; border-color: var(--c-accent); }
+.evidence-input::placeholder { color: var(--c-slate); opacity: 0.6; }
 .abj-countdown {
   display: inline-flex; gap: 14px; align-items: center;
   background: var(--a-1); border: 1px solid var(--b-a);
