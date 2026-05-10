@@ -311,8 +311,39 @@ const PageGeral = {
       mostrarToast(`Plano ${semestre}º Semestre salvo com sucesso!`,'success');
     } catch(e) { mostrarToast('Erro ao salvar plano.','error'); }
   },
-  verAtividades(semestre) {
-    mostrarToast(`Atividades do ${semestre}º semestre — integrado com ABJ em breve.`,'info');
+  async verAtividades(semestre) {
+    if (!_sb()) return;
+    try {
+      const coords = await getCoords();
+      const ger = coords.find(c => c.sigla === 'GER');
+      const { data } = await _sb()
+        .from('eventos')
+        .select('*, users!criado_por(nome)')
+        .eq('tipo','reuniao')
+        .eq('coordenadoria_id', ger?.id || '')
+        .order('data_inicio',{ascending:false});
+      const planos = (data||[]).filter(e => {
+        try { const d=JSON.parse(e.descricao||'{}'); return d.tipo_especial==='planejamento' && String(d.semestre)===String(semestre); }
+        catch { return false; }
+      });
+      if (!planos.length) {
+        abrirModal({ titulo:`📅 Planos ${semestre}º Semestre`, tipo:'info',
+          corpo:'<div style="padding:24px;text-align:center;color:var(--c-slate);font-size:13px">Nenhum plano registrado para este semestre ainda.</div>',
+          botoes:[{texto:'Fechar',classe:'btn-ghost',acao:fecharModal}]});
+        return;
+      }
+      const html = planos.map(e => {
+        let d={}; try { d=JSON.parse(e.descricao); } catch {}
+        return `<div style="background:var(--b-1);border:1px solid var(--b-2);border-radius:10px;padding:16px;margin-bottom:10px">
+          <div style="font-weight:700;font-size:14px;color:var(--c-white);margin-bottom:4px">${sanitize(e.titulo)}</div>
+          <div style="font-size:11px;color:var(--c-slate);margin-bottom:10px">📅 Aprovado em ${_fmt(e.data_inicio)}${e.users?.nome?` · Por: ${sanitize(e.users.nome)}`:''}</div>
+          ${d.objetivos?`<div style="margin-bottom:8px"><div style="font-size:11px;font-weight:700;color:var(--c-accent);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">Objetivos</div><div style="font-size:13px;color:var(--c-white);white-space:pre-wrap">${sanitize(d.objetivos)}</div></div>`:''}
+          ${d.acoes_abj?`<div><div style="font-size:11px;font-weight:700;color:var(--green);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">Ações ABJ</div><div style="font-size:13px;color:var(--c-white);white-space:pre-wrap">${sanitize(d.acoes_abj)}</div></div>`:''}
+        </div>`;
+      }).join('');
+      abrirModal({ titulo:`📅 Planos ${semestre}º Semestre (${planos.length})`, tipo:'info', corpo:html,
+        botoes:[{texto:'Fechar',classe:'btn-ghost',acao:fecharModal}]});
+    } catch(e) { mostrarToast('Erro ao carregar planos.','error'); }
   },
   _renderMelhorias() {
     const pg = document.getElementById('page-geral_melhorias');
@@ -651,7 +682,62 @@ const PageMarketing = {
       });
     } catch(e) { console.warn('[MKT Kanban]', e); }
   },
-  editarDemanda(id) { mostrarToast(`Demanda ${id.slice(0,8)}… — edição em breve.`,'info'); },
+  async editarDemanda(id) {
+    if (!_sb()) return;
+    try {
+      const { data: d, error } = await _sb().from('demandas').select('*').eq('id', id).single();
+      if (error || !d) { mostrarToast('Demanda não encontrada.','error'); return; }
+      abrirModal({ titulo:'✏️ Editar Demanda', tipo:'info', corpo:`
+        <div class="form-group"><label class="form-label">Título *</label>
+          <input id="ed-titulo" class="form-input" value="${sanitize(d.titulo||'')}"></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div class="form-group"><label class="form-label">Tipo</label>
+            <select id="ed-tipo" class="form-select">
+              <option value="conteudo" ${d.tipo==='conteudo'?'selected':''}>Conteúdo / Post</option>
+              <option value="lojinha" ${d.tipo==='lojinha'?'selected':''}>🛍️ Lojinha</option>
+              <option value="divulgacao" ${d.tipo==='divulgacao'?'selected':''}>Divulgação</option>
+            </select></div>
+          <div class="form-group"><label class="form-label">Prazo</label>
+            <input id="ed-prazo" type="date" class="form-input" value="${d.prazo||''}"></div>
+        </div>
+        <div class="form-group"><label class="form-label">Status</label>
+          <select id="ed-coluna" class="form-select">
+            <option value="pendente" ${d.coluna==='pendente'?'selected':''}>🗂️ Backlog</option>
+            <option value="exec" ${d.coluna==='exec'?'selected':''}>⚡ Em andamento</option>
+            <option value="realizada" ${d.coluna==='realizada'?'selected':''}>👁️ Revisão</option>
+            <option value="auditada" ${d.coluna==='auditada'?'selected':''}>✅ Publicado</option>
+          </select></div>
+        <div class="form-group"><label class="form-label">Descrição</label>
+          <textarea id="ed-desc" class="form-input" style="height:70px">${sanitize(d.descricao||'')}</textarea></div>`,
+      botoes:[
+        { texto:'🗑️ Excluir', classe:'btn-ghost', acao:()=>PageMarketing._excluirDemanda(id) },
+        { texto:'Cancelar',   classe:'btn-ghost', acao:fecharModal },
+        { texto:'Salvar ✓',  classe:'btn-primary',acao:()=>PageMarketing._salvarEdicaoDemanda(id) },
+      ]});
+    } catch(e) { mostrarToast('Erro ao carregar demanda.','error'); }
+  },
+  async _salvarEdicaoDemanda(id) {
+    const titulo   = document.getElementById('ed-titulo')?.value?.trim();
+    const tipo     = document.getElementById('ed-tipo')?.value;
+    const prazo    = document.getElementById('ed-prazo')?.value || null;
+    const coluna   = document.getElementById('ed-coluna')?.value;
+    const descricao= document.getElementById('ed-desc')?.value?.trim() || null;
+    if (!titulo) { mostrarToast('Preencha o título!','warning'); return; }
+    fecharModal();
+    try {
+      await _sb().from('demandas').update({ titulo, tipo, prazo, coluna, descricao }).eq('id', id);
+      mostrarToast('Demanda atualizada!','success');
+      this._carregarKanban();
+    } catch(e) { mostrarToast('Erro ao salvar.','error'); }
+  },
+  async _excluirDemanda(id) {
+    fecharModal();
+    try {
+      await _sb().from('demandas').delete().eq('id', id);
+      mostrarToast('Demanda excluída.','info');
+      this._carregarKanban();
+    } catch(e) { mostrarToast('Erro ao excluir.','error'); }
+  },
   novaDemanda() {
     /* Prazo padrão: 10 dias úteis (regra da Lojinha ABJ) */
     const prazo10du = _addDiasUteis(10);
@@ -2027,7 +2113,40 @@ const PagePessoas = {
         : '<div style="padding:16px;text-align:center;color:var(--c-slate);font-size:13px">Nenhuma pesquisa registrada ainda.</div>';
     } catch(e) { el.innerHTML='<div style="padding:16px;color:var(--c-slate)">Erro ao carregar.</div>'; }
   },
-  historicoPesquisas() { mostrarToast('Histórico completo em breve.','info'); },
+  async historicoPesquisas() {
+    if (!_sb()) return;
+    try {
+      const { data } = await _sb()
+        .from('eventos')
+        .select('*')
+        .eq('tipo','pesquisa_clima')
+        .order('data_inicio',{ascending:false});
+      if (!data?.length) {
+        abrirModal({ titulo:'📊 Histórico de Pesquisas', tipo:'info',
+          corpo:'<div style="padding:24px;text-align:center;color:var(--c-slate);font-size:13px">Nenhuma pesquisa registrada ainda.</div>',
+          botoes:[{texto:'Fechar',classe:'btn-ghost',acao:fecharModal}]});
+        return;
+      }
+      const html = data.map(p=>`
+        <div style="background:var(--b-1);border:1px solid var(--b-2);border-radius:10px;
+                    padding:14px 16px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:8px">
+          <div>
+            <div style="font-weight:700;font-size:13px;color:var(--c-white)">${sanitize(p.titulo)}</div>
+            <div style="font-size:12px;color:var(--c-slate)">📅 ${_fmt(p.data_inicio)}
+              ${p.descricao?` · <a href="${sanitize(p.descricao)}" target="_blank" style="color:var(--c-accent)">Link ↗</a>`:''}
+            </div>
+          </div>
+          <span style="font-size:11px;font-weight:700;padding:3px 9px;border-radius:99px;
+                       background:${p.ativo?'var(--c-accent)22':'var(--green)22'};
+                       color:${p.ativo?'var(--c-accent)':'var(--green)'};
+                       border:1px solid ${p.ativo?'var(--c-accent)44':'var(--green)44'}">
+            ${p.ativo?'🟠 Aberta':'✓ Encerrada'}
+          </span>
+        </div>`).join('');
+      abrirModal({ titulo:`📊 Histórico de Pesquisas (${data.length})`, tipo:'info', corpo:html,
+        botoes:[{texto:'Fechar',classe:'btn-ghost',acao:fecharModal}]});
+    } catch(e) { mostrarToast('Erro ao carregar histórico.','error'); }
+  },
   _tapStep: 0,
   _tapData: {},
   _TAP_SECOES: [
@@ -2235,7 +2354,42 @@ const PagePessoas = {
         : '<div style="padding:16px;text-align:center;color:var(--c-slate);font-size:13px">Nenhum treinamento registrado.</div>';
     } catch(e) { el.innerHTML='<div style="padding:16px;color:var(--c-slate)">Erro ao carregar.</div>'; }
   },
-  relatorioTAP() { mostrarToast('Relatório de participação TAP em breve.','info'); },
+  async relatorioTAP() {
+    if (!_sb()) return;
+    try {
+      const { data } = await _sb()
+        .from('eventos')
+        .select('*, users!criado_por(nome, apelido)')
+        .eq('tipo','tap')
+        .order('data_inicio',{ascending:false});
+      if (!data?.length) {
+        abrirModal({ titulo:'💡 TAPs Submetidos', tipo:'info',
+          corpo:'<div style="padding:24px;text-align:center;color:var(--c-slate);font-size:13px">Nenhum TAP submetido ainda.</div>',
+          botoes:[{texto:'Fechar',classe:'btn-ghost',acao:fecharModal}]});
+        return;
+      }
+      const html = data.map(t => {
+        let s={}; try { s=JSON.parse(t.descricao||'{}'); } catch {}
+        const autor = t.users?.apelido||t.users?.nome||'Desconhecido';
+        return `
+          <div style="background:var(--b-1);border:1px solid var(--b-2);border-radius:12px;padding:16px;margin-bottom:10px">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:8px;margin-bottom:10px">
+              <div>
+                <div style="font-weight:700;font-size:14px;color:var(--c-white)">${sanitize(t.titulo)}</div>
+                <div style="font-size:12px;color:var(--c-slate);margin-top:2px">📅 ${_fmt(t.data_inicio)} · 👤 ${sanitize(autor)}</div>
+              </div>
+              <span style="font-size:10px;font-weight:800;padding:4px 10px;border-radius:99px;
+                           background:var(--c-accent)22;color:var(--c-accent);border:1px solid var(--c-accent)44;
+                           text-transform:uppercase;letter-spacing:.05em;white-space:nowrap">TAP Inovador</span>
+            </div>
+            ${s.identificacao?`<div style="margin-bottom:6px;font-size:13px;color:var(--c-white)"><strong style="color:var(--c-accent)">Identificação:</strong> ${sanitize(s.identificacao.slice(0,220))}${s.identificacao.length>220?'…':''}</div>`:''}
+            ${s.objetivo?`<div style="font-size:13px;color:var(--c-slate)"><strong style="color:var(--c-white)">Objetivo:</strong> ${sanitize(s.objetivo.slice(0,220))}${s.objetivo.length>220?'…':''}</div>`:''}
+          </div>`;
+      }).join('');
+      abrirModal({ titulo:`💡 TAPs Submetidos (${data.length})`, tipo:'info', corpo:html,
+        botoes:[{texto:'Fechar',classe:'btn-ghost',acao:fecharModal}]});
+    } catch(e) { mostrarToast('Erro ao carregar TAPs.','error'); }
+  },
   novoTreinamento() {
     const hoje=new Date().toISOString().slice(0,16);
     abrirModal({ titulo:'🎓 Registrar Capacitação', tipo:'info', corpo:`
