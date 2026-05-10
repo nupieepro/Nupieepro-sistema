@@ -1080,7 +1080,7 @@
             <!-- Monthly Grid -->
             <section class="section-card" style="min-width:0;">
               <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
-                <h3 style="font-weight:700;font-size:14px;margin:0;">Maio 2026</h3>
+                <h3 id="novoCalLabel" style="font-weight:700;font-size:14px;margin:0;">Maio 2026</h3>
                 <div style="display:flex;gap:4px;">
                   <button class="cal-nav-btn" onclick="NovoCal.prev()">‹</button>
                   <button class="cal-nav-btn" onclick="NovoCal.next()">›</button>
@@ -1507,36 +1507,6 @@
       </div>
 
       <!-- ══════════════════════════════════════════════
-           PAGE: MARKETING
-      ══════════════════════════════════════════════ -->
-      <div class="page" id="page-marketing">
-        <div class="topbar">
-          <div style="display:flex;align-items:center;gap:12px;">
-            <button class="topbar-toggle" onclick="toggleSidebar()">☰</button>
-            <div>
-              <div class="topbar-title">Agência Marketing</div>
-              <div class="topbar-sub">Coordenação MKT — Gestão de Ativos</div>
-            </div>
-          </div>
-          <button class="btn btn-primary" onclick="App.toast('Nova campanha — FASE 4','info')">+ Campanha</button>
-        </div>
-        <div class="content">
-          <div class="summary-grid">
-            <div class="sum-card"><div class="sum-label">Postagens Planejadas</div><div class="sum-value text-orange" id="mktPosts">0</div></div>
-            <div class="sum-card"><div class="sum-label">Alcance Estimado</div><div class="sum-value" id="mktAlcance">—</div></div>
-            <div class="sum-card"><div class="sum-label">Aprovações Pendentes</div><div class="sum-value" style="color:var(--red)" id="mktPending">0</div></div>
-            <div class="sum-card"><div class="sum-label">Campanhas Ativas</div><div class="sum-value" style="color:var(--green)" id="mktCampanhas">0</div></div>
-          </div>
-          <div class="section-card">
-            <div class="section-title">Cronograma de Postagens</div>
-            <div id="mktPostsList">
-              <p class="text-muted text-sm" style="text-align:center;padding:2rem 0;">Nenhuma postagem cadastrada ainda.<br>Use <strong>+ Campanha</strong> para adicionar.</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- ══════════════════════════════════════════════
            PAGE: OPERAÇÕES HUB
       ══════════════════════════════════════════════ -->
       <div class="page" id="page-operacoes">
@@ -1947,28 +1917,11 @@
 
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-  <script src="js/app.js?v=14"></script>
-  <script src="js/auth.js?v=14"></script>
-  <script src="js/abj.js?v=14"></script>
+  <script src="js/app.js?v=15"></script>
+  <script src="js/auth.js?v=15"></script>
+  <script src="js/abj.js?v=15"></script>
+  <script src="js/pages.js?v=15"></script>
   <script>
-    // ── NAVIGATION HELPER ──────────────────────────────
-    function goTo(pageId) {
-      // Hide all pages
-      document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-      // Show target page
-      var target = document.getElementById('page-' + pageId);
-      if (target) target.classList.add('active');
-      // Update nav active state
-      document.querySelectorAll('.nav-item').forEach(function(item) {
-        item.classList.toggle('active', item.dataset.page === pageId);
-      });
-      // Close sidebar on mobile
-      if (window.innerWidth < 768) {
-        document.getElementById('sidebar').classList.remove('open');
-        document.getElementById('sidebarOverlay').classList.remove('active');
-      }
-    }
-
     // ── PROFILE DROPDOWN ───────────────────────────────
     function toggleProfileDropdown() {
       var dd = document.getElementById('profileDropdown');
@@ -2056,6 +2009,9 @@
           window.Dashboard.render(profile);
         }
       }
+
+      // Ativa o interceptador de rotas do pages.js (sub-páginas)
+      document.dispatchEvent(new CustomEvent('nupi:booted'));
 
       // Sync topbar avatar/name from sidebar after JS init
       setTimeout(function() {

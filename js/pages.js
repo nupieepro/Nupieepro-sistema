@@ -3381,7 +3381,13 @@ document.addEventListener('nupi:booted', () => {
       'compartilhado':     () => PageCompartilhado.init(),
       'geral_melhorias':   () => PageGeral._renderMelhorias(),
       'geral_parcerias':   () => PageGeral._renderParcerias(),
-      /* Marketing */
+      /* Páginas top-level do menu lateral */
+      'demandas':          () => typeof Dem !== 'undefined' && Dem.setView('kanban', document.getElementById('demViewKanban')),
+      'calendario':        () => typeof NovoCal !== 'undefined' && NovoCal._render(),
+      'gp':                () => typeof GP !== 'undefined' && GP.loadTalentBank(),
+      'marketing':         () => typeof Marketing !== 'undefined' && Marketing.loadKanban(),
+      'projetos':          () => typeof Projetos !== 'undefined' && Projetos.loadSponsors(),
+      /* Marketing sub */
       'mkt_kanban':        () => PageMarketing._renderKanban(),
       /* Financeiro — IDs corretos conforme HTML */
       'fin_abepro':        () => PageFinancas._renderABJFin(),
@@ -3396,7 +3402,7 @@ document.addEventListener('nupi:booted', () => {
       'gp_crm':            () => PagePessoas._renderMembros(),
       /* Dev / Admin */
       'dev_usuarios':      () => PageDev.init(),
-      /* Projetos */
+      /* Projetos sub */
       'prj_enegep':        () => PageProjetos._renderENEGEP(),
       'prj_treinamentos':  () => PageProjetos._renderEventos(),
       'prj_nupicast':      () => PageProjetos._renderEventos(),

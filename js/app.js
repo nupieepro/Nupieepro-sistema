@@ -684,6 +684,7 @@ const ALL_PAGES = [
   'dashboard','abj','tarefas','pessoas','projetos',
   'operacoes','marketing','financeiro','compartilhado',
   'manu','notificacoes','config','configuracoes',
+  'demandas','calendario','geral','gp',
   'geral_reunioes','geral_planejamento','geral_melhorias','geral_parcerias',
   'mkt_tracker','mkt_kanban',
   'fin_fluxo','fin_abepro','fin_comercial',
@@ -732,6 +733,13 @@ function goTo(id) {
   if (id === 'prj_eventos')       typeof PageProjetos  !== 'undefined' && PageProjetos.init();
   if (id === 'ops_pops')          typeof PageOperacoes !== 'undefined' && PageOperacoes._renderPops();
   if (id === 'gp_talentos')       typeof PagePessoas   !== 'undefined' && PagePessoas._renderTalentos();
+  if (id === 'demandas')          Dem.setView('kanban', document.getElementById('demViewKanban'));
+  if (id === 'calendario')        NovoCal._render();
+  if (id === 'gp')                { GP.loadTalentBank(); Pessoas.loadMembers(); }
+  if (id === 'marketing')         Marketing.loadKanban();
+  if (id === 'projetos')          Projetos.loadSponsors();
+  if (id === 'notificacoes')      typeof PageNotificacoes !== 'undefined' && PageNotificacoes.init();
+  if (id === 'compartilhado')     typeof PageCompartilhado !== 'undefined' && PageCompartilhado.init();
 }
 
 function toggleSidebar() {
@@ -2107,6 +2115,80 @@ function _buildNav(role) {
 
   nav.innerHTML = html;
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   DEM — Controlador de visão da página Demandas
+   ═══════════════════════════════════════════════════════════════ */
+const Dem = {
+  setView(view, btn) {
+    document.querySelectorAll('.dem-view-btn').forEach(b => {
+      b.style.background = 'transparent';
+      b.style.color = 'var(--fg-3)';
+    });
+    if (btn) { btn.style.background = 'var(--surface-3)'; btn.style.color = 'var(--fg-1)'; }
+    const map = { kanban: 'demViewKanbanContent', lista: 'demViewListaContent', heatmap: 'demViewHeatContent' };
+    Object.keys(map).forEach(v => {
+      const el = document.getElementById(map[v]);
+      if (el) el.style.display = (v === view) ? '' : 'none';
+    });
+  }
+};
+window.Dem = Dem;
+
+/* ═══════════════════════════════════════════════════════════════
+   NovoCal — Calendário dinâmico da página Calendário (full-page)
+   ═══════════════════════════════════════════════════════════════ */
+const NovoCal = {
+  year: new Date().getFullYear(),
+  month: new Date().getMonth(),
+
+  prev() { this.month--; if (this.month < 0) { this.month = 11; this.year--; } this._render(); },
+  next() { this.month++; if (this.month > 11) { this.month = 0; this.year++; } this._render(); },
+
+  _render() {
+    const grid  = document.getElementById('calNovoGrid');
+    const label = document.getElementById('novoCalLabel');
+    if (!grid) return;
+    if (label) label.textContent = MONTHS_PT[this.month] + ' ' + this.year;
+
+    const today    = new Date();
+    const firstDay = new Date(this.year, this.month, 1).getDay();
+    const days     = new Date(this.year, this.month + 1, 0).getDate();
+
+    let html = '';
+    for (let i = 0; i < firstDay; i++) html += '<div></div>';
+    for (let d = 1; d <= days; d++) {
+      const isToday = d === today.getDate() && this.month === today.getMonth() && this.year === today.getFullYear();
+      html += `<div style="aspect-ratio:1;border-radius:6px;border:1px solid var(--border-1);padding:4px;font-size:11px;font-family:var(--font-mono);${isToday ? 'background:rgba(246,82,20,0.15);border-color:var(--brand-orange);font-weight:700;color:var(--brand-orange);' : ''}">${d}</div>`;
+    }
+    grid.innerHTML = html;
+
+    this._loadEventos();
+  },
+
+  async _loadEventos() {
+    const el = document.getElementById('calEventsList');
+    if (!el) return;
+    const sb = window._supabase;
+    if (!sb) { el.innerHTML = '<p style="font-size:12px;color:var(--fg-3);">Conecte ao Supabase para ver eventos.</p>'; return; }
+    try {
+      const inicio = new Date(this.year, this.month, 1).toISOString().split('T')[0];
+      const fim    = new Date(this.year, this.month + 1, 0).toISOString().split('T')[0];
+      const { data } = await sb.from('eventos').select('titulo,data_inicio,tipo,coordenadorias(sigla)').gte('data_inicio', inicio).lte('data_inicio', fim).order('data_inicio');
+      if (!data?.length) { el.innerHTML = '<p style="font-size:12px;color:var(--fg-3);text-align:center;padding:1rem;">Nenhum evento neste mês.</p>'; return; }
+      const CORES = { reuniao:'#9b7be8', evento:'var(--brand-orange)', treinamento:'#5b9cf6', enegep:'#f5c518', podcast:'#e85aa8', assembleia:'#2dd4a0' };
+      el.innerHTML = data.map(e => {
+        const cor = CORES[e.tipo] || 'var(--fg-3)';
+        const dia = e.data_inicio ? new Date(e.data_inicio + 'T12:00:00').toLocaleDateString('pt-BR', { day:'2-digit', month:'short' }) : '—';
+        return `<div style="display:flex;gap:10px;align-items:flex-start;padding:10px;background:${cor}18;border-radius:8px;border-left:3px solid ${cor};">
+          <div style="min-width:44px;text-align:center;font-size:11px;font-weight:700;color:${cor};">${dia}</div>
+          <div><div style="font-weight:600;font-size:13px;">${e.titulo||'—'}</div><div style="font-size:11px;color:var(--fg-3);">${e.coordenadorias?.sigla||''} · ${e.tipo||''}</div></div>
+        </div>`;
+      }).join('');
+    } catch(err) { el.innerHTML = '<p style="font-size:12px;color:var(--fg-3);">Erro ao carregar eventos.</p>'; }
+  }
+};
+window.NovoCal = NovoCal;
 
 /* ═══════════════════════════════════════════════════════════════
    KANBAN MODULE — Demandas por coordenadoria

@@ -103,6 +103,7 @@ function showAlert(msg, type, containerId = 'loginAlert') {
   el.textContent = msg;
   const base = el.dataset.alertClass || el.className.split(' ')[0] || 'alert-box';
   el.className = base + ' ' + type;
+  el.style.display = '';
 }
 
 function showPanelAlert(msg, type, id) {
@@ -256,104 +257,104 @@ function ativarConvite() {
    Convite (Invite) Page
    ============================================================ */
 function initConvitePage() {
-  const token = (window.App ? window.App.param('token') : new URLSearchParams(window.location.search).get('token'));
+  const token = new URLSearchParams(window.location.search).get('token');
+  const loadingEl = document.getElementById('conviteLoading');
+  const errorEl   = document.getElementById('conviteError');
+  const errorMsg  = document.getElementById('conviteErrorMsg');
+  const wizardEl  = document.getElementById('wizard');
+
   if (!token) {
-    const content = document.getElementById('conviteContent');
-    if (content) {
-      content.innerHTML = `
-        <div style="text-align:center;padding:1.5rem 0;">
-          <div style="font-size:48px;margin-bottom:16px;">🔗</div>
-          <p style="color:var(--w70,#919abb);margin-bottom:20px;line-height:1.6;">
-            Você precisa de um link de convite para criar sua conta.<br>
-            Solicite ao coordenador responsável.
-          </p>
-          <a href="index.html" style="color:#7c52c8;font-weight:600;text-decoration:none;">← Voltar ao login</a>
-        </div>`;
-    }
+    if (loadingEl) loadingEl.style.display = 'none';
+    if (errorEl)   errorEl.style.display = '';
+    if (errorMsg)  errorMsg.textContent = 'Você precisa de um link de convite válido. Solicite ao seu coordenador.';
     return;
   }
 
-  loadConviteInfo(token);
-}
-
-async function loadConviteInfo(token) {
-  const infoEl = document.getElementById('conviteInfo');
-  const sb = window._sb || window._supabase;
-  if (!sb) {
-    if (infoEl) infoEl.innerHTML = '<p class="text-center text-muted">Verificação requer conexão com o servidor.</p>';
-    const form = document.getElementById('conviteForm');
-    if (form) form.style.display = 'none';
-    return;
-  }
-
-  try {
-    const { data: convite, error } = await sb
-      .from('convites')
-      .select('*, coordenadorias(nome, sigla)')
-      .eq('token', token)
-      .eq('usado', false)
-      .gt('expires_at', new Date().toISOString())
-      .single();
-
-    if (error || !convite) {
-      if (infoEl) infoEl.innerHTML = '<p class="text-center" style="color:#f09595;">Convite inválido ou expirado.</p>';
-      const form = document.getElementById('conviteForm');
-      if (form) form.style.display = 'none';
+  (async () => {
+    const sb = window._sb || window._supabase;
+    if (!sb) {
+      if (loadingEl) loadingEl.style.display = 'none';
+      if (errorEl)   errorEl.style.display = '';
+      if (errorMsg)  errorMsg.textContent = 'Sistema offline. Verifique a conexão com o servidor.';
       return;
     }
+    try {
+      const { data: convite, error } = await sb
+        .from('convites')
+        .select('*, coordenadorias(nome, sigla)')
+        .eq('token', token)
+        .eq('usado', false)
+        .gt('expires_at', new Date().toISOString())
+        .single();
 
-    if (infoEl) {
-      infoEl.innerHTML = `
-        <dl class="convite-info">
-          <dt>Email</dt>
-          <dd>${convite.email}</dd>
-          <dt>Coordenadoria</dt>
-          <dd>${convite.coordenadorias ? convite.coordenadorias.sigla + ' — ' + convite.coordenadorias.nome : 'Geral'}</dd>
-          <dt>Função</dt>
-          <dd>${convite.cargo || convite.role}</dd>
-        </dl>
-      `;
+      if (error || !convite) {
+        if (loadingEl) loadingEl.style.display = 'none';
+        if (errorEl)   errorEl.style.display = '';
+        if (errorMsg)  errorMsg.textContent = 'Convite inválido, já utilizado ou expirado. Solicite um novo convite.';
+        return;
+      }
+
+      // Token válido — mostra o formulário e preenche info do convite
+      if (loadingEl) loadingEl.style.display = 'none';
+      if (wizardEl)  wizardEl.style.display = '';
+
+      const infoEl = document.getElementById('conviteInfoBox');
+      if (infoEl) {
+        const coord = convite.coordenadorias ? `${convite.coordenadorias.sigla} — ${convite.coordenadorias.nome}` : 'Geral';
+        infoEl.innerHTML = `<span>📧 ${convite.email}</span><span>·</span><span>${coord}</span><span>·</span><span>${convite.cargo || convite.role}</span>`;
+      }
+    } catch (e) {
+      if (loadingEl) loadingEl.style.display = 'none';
+      if (errorEl)   errorEl.style.display = '';
+      if (errorMsg)  errorMsg.textContent = 'Erro ao verificar convite: ' + (e.message || 'tente novamente.');
     }
-  } catch {
-    if (infoEl) infoEl.innerHTML = '<p class="text-center text-muted">Erro ao carregar convite.</p>';
-  }
+  })();
 }
 
 async function doConviteRegister() {
-  const token = (window.App ? window.App.param('token') : new URLSearchParams(window.location.search).get('token'));
-  const nome = document.getElementById('conviteNome').value.trim();
-  const sobrenome = document.getElementById('conviteSobrenome').value.trim();
-  const apelido = document.getElementById('conviteApelido').value.trim();
-  const nascimento = document.getElementById('conviteNascimento').value;
-  const password = document.getElementById('convitePassword').value;
-  const confirm = document.getElementById('conviteConfirm').value;
+  const token = new URLSearchParams(window.location.search).get('token');
+  const nome      = document.getElementById('conviteNome')?.value.trim();
+  const sobrenome = document.getElementById('conviteSobrenome')?.value.trim();
+  const apelido   = document.getElementById('conviteApelido')?.value.trim();
+  const nascimento= document.getElementById('conviteNascimento')?.value;
+  const password  = document.getElementById('convitePassword')?.value;
+  const confirm   = document.getElementById('conviteConfirm')?.value;
 
-  if (!nome) { showAlert('Insira seu nome.', 'error', 'conviteAlert'); return; }
-  if (!sobrenome) { showAlert('Insira seu sobrenome.', 'error', 'conviteAlert'); return; }
-  if (!apelido) { showAlert('Insira seu apelido.', 'error', 'conviteAlert'); return; }
-  if (!nascimento) { showAlert('Insira sua data de aniversário.', 'error', 'conviteAlert'); return; }
+  if (!nome)        { showAlert('Insira seu nome.',                          'error', 'conviteAlert'); return; }
+  if (!sobrenome)   { showAlert('Insira seu sobrenome.',                     'error', 'conviteAlert'); return; }
+  if (!apelido)     { showAlert('Insira seu apelido.',                       'error', 'conviteAlert'); return; }
+  if (!nascimento)  { showAlert('Insira sua data de aniversário.',           'error', 'conviteAlert'); return; }
   if (password.length < 6) { showAlert('Senha deve ter pelo menos 6 caracteres.', 'error', 'conviteAlert'); return; }
-  if (password !== confirm) { showAlert('As senhas não coincidem.', 'error', 'conviteAlert'); return; }
+  if (password !== confirm) { showAlert('As senhas não coincidem.',          'error', 'conviteAlert'); return; }
 
   const btn = document.getElementById('btnConvite');
-  btn.classList.add('loading');
-  btn.textContent = 'Criando sua conta...';
+  if (btn) { btn.disabled = true; btn.textContent = 'Criando sua conta…'; }
 
   try {
     const nomeCompleto = `${nome} ${sobrenome}`;
     await Auth.registerWithToken(token, nomeCompleto, password, {
-      apelido: apelido,
-      data_nascimento: nascimento,
-      nome_primeiro: nome,
-      nome_sobrenome: sobrenome
+      apelido, data_nascimento: nascimento, nome_primeiro: nome, nome_sobrenome: sobrenome
     });
-    showAlert('Conta criada com sucesso! Bem-vindo(a), ' + apelido + '!', 'success', 'conviteAlert');
-    if (window.App) window.App.toast('🎉 Bem-vindo ao NUPIEEPRO, ' + apelido + '!', 'success');
-    setTimeout(() => { window.location.href = 'dashboard.html'; }, 1500);
+
+    // Exibe tela de sucesso
+    const wizardEl  = document.getElementById('wizard');
+    const successEl = document.getElementById('conviteSuccess');
+    const titleEl   = document.getElementById('successTitle');
+    const subEl     = document.getElementById('successSub');
+    const cdEl      = document.getElementById('cd');
+    if (wizardEl)  wizardEl.style.display = 'none';
+    if (successEl) successEl.style.display = '';
+    if (titleEl)   titleEl.textContent = 'Conta criada, ' + apelido + '! 🎉';
+    if (subEl)     subEl.textContent   = 'Bem-vindo(a) ao sistema NUPIEEPRO. Redirecionando…';
+
+    let count = 3;
+    const timer = setInterval(() => {
+      count--;
+      if (cdEl) cdEl.textContent = count;
+      if (count <= 0) { clearInterval(timer); window.location.href = 'dashboard.html'; }
+    }, 1000);
   } catch (err) {
-    showAlert(err.message || 'Erro ao criar conta.', 'error', 'conviteAlert');
-  } finally {
-    btn.classList.remove('loading');
-    btn.textContent = 'Criar Minha Conta';
+    showAlert(err.message || 'Erro ao criar conta. Tente novamente.', 'error', 'conviteAlert');
+    if (btn) { btn.disabled = false; btn.textContent = 'Criar Minha Conta'; }
   }
 }
