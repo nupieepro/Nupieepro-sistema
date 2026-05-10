@@ -363,6 +363,8 @@ const ABJModule = (() => {
     const pg = document.getElementById('page-abj');
     if (!pg) return;
     const content = pg.querySelector('.content') || pg;
+    const role = window._appProfile?.role;
+    const isGER = role === 'admin' || role === 'coordenador_geral';
     const totalPts = _progresso.reduce((s, p) => s + (p.pontos || 0), 0);
     const pct = Math.min(100, Math.round((totalPts / (window.META_ABJ || 882)) * 100));
 
@@ -392,6 +394,18 @@ const ABJModule = (() => {
           <div style="font-size:11px;font-weight:700;color:var(--c-slate);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px">⏱️ Próximo prazo</div>
           <div id="abj-countdown"></div>
         </div>
+        ${isGER ? `
+        <div class="section-card" style="padding:18px 20px;border-color:var(--c-accent)44">
+          <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:10px">
+            <div style="font-size:11px;font-weight:700;color:var(--c-accent);text-transform:uppercase;letter-spacing:.06em">🔑 Painel GER — Validação Retroativa</div>
+          </div>
+          <p style="font-size:12px;color:var(--c-slate);margin-bottom:12px;line-height:1.6">
+            Regularize atividades já realizadas antes do sistema entrar no ar. Valide para qualquer membro sem exigir evidência de upload.
+          </p>
+          <button class="btn btn-primary" onclick="ABJModule.validarParaMembro()" style="font-size:13px">
+            ✅ Validar atividade para membro
+          </button>
+        </div>` : ''}
         <div class="section-card" style="padding:20px 24px">
           <div style="font-size:11px;font-weight:700;color:var(--c-slate);text-transform:uppercase;letter-spacing:.06em;margin-bottom:16px">📋 Atividades</div>
           <div id="abj-lista"></div>
@@ -413,7 +427,63 @@ const ABJModule = (() => {
     _renderLista();
   }
 
-  return { init, carregar, abrirDetalhe, renderEstrelas, renderCountdown };
+  /* ── Painel GER: valida atividade para qualquer membro ── */
+  async function validarParaMembro() {
+    const sb = window._supabase;
+    if (!sb) { mostrarToast('Banco não conectado.', 'error'); return; }
+    let membros = [];
+    try {
+      const { data } = await sb.from('users').select('id,nome,role').eq('ativo', true).order('nome');
+      membros = data || [];
+    } catch(e) { mostrarToast('Erro ao carregar membros.', 'error'); return; }
+
+    const optsMemb = membros.map(m => `<option value="${m.id}">${m.nome} (${m.role || 'membro'})</option>`).join('');
+    const optsAtv  = _atividades.map(a => `<option value="${a.id}" data-pts="${a.pontos_por_entrada||0}">${a.numero}. ${a.nome} — ${a.pontos_por_entrada||0} pts</option>`).join('');
+
+    abrirModal({ titulo: '✅ Validar atividade para membro', tipo: 'info', corpo: `
+      <div class="form-group"><label class="form-label">Membro *</label>
+        <select id="ger-membro" class="form-input">${optsMemb}</select></div>
+      <div class="form-group"><label class="form-label">Atividade *</label>
+        <select id="ger-atv" class="form-input" onchange="(function(s){var o=s.options[s.selectedIndex];document.getElementById('ger-pts').value=o.dataset.pts||0;})(this)">${optsAtv}</select></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div class="form-group"><label class="form-label">Pontos</label>
+          <input id="ger-pts" type="number" class="form-input" value="${_atividades[0]?.pontos_por_entrada||0}" min="0"></div>
+        <div class="form-group"><label class="form-label">Mês referência</label>
+          <input id="ger-mes" class="form-input" placeholder="Ex: maio 2026"></div>
+      </div>
+      <div class="form-group"><label class="form-label">Observação</label>
+        <input id="ger-obs" class="form-input" value="Validado retroativamente pela GER"></div>`,
+      botoes: [
+        { texto: 'Cancelar', classe: 'btn-ghost', acao: fecharModal },
+        { texto: 'Validar ✓', classe: 'btn-primary', acao: () => _executarValidacao() },
+      ] });
+  }
+
+  async function _executarValidacao() {
+    const userId = document.getElementById('ger-membro')?.value;
+    const atvId  = document.getElementById('ger-atv')?.value;
+    const pts    = parseInt(document.getElementById('ger-pts')?.value) || 0;
+    const mesRef = document.getElementById('ger-mes')?.value?.trim() || null;
+    const obs    = document.getElementById('ger-obs')?.value?.trim() || 'Validado retroativamente pela GER';
+    if (!userId || !atvId) { mostrarToast('Selecione membro e atividade.', 'warning'); return; }
+    fecharModal();
+    try {
+      await window._supabase.from('progresso_abj').insert([{
+        atividade_id: atvId,
+        registrado_por: userId,
+        status: 'concluido',
+        pontos: pts,
+        mes_ref: mesRef,
+        observacao: obs,
+        concluido_em: new Date().toISOString(),
+      }]);
+      mostrarToast('Atividade validada com sucesso!', 'success');
+      await carregar();
+      _renderLista();
+    } catch(e) { mostrarToast('Erro ao validar: ' + (e.message || 'tente de novo'), 'error'); }
+  }
+
+  return { init, carregar, abrirDetalhe, renderEstrelas, renderCountdown, validarParaMembro };
 })();
 
 window.ABJModule    = ABJModule;
