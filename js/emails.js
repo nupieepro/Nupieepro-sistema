@@ -13,7 +13,7 @@
  */
 
 const EmailsModule = (() => {
-  const SVC  = 'service_85bjukt';
+  const SVC  = 'service_4d8167g';
   const PKEY = 'WIiLVFRJPDeqTP7Ox';
 
   /* ── garante SDK inicializado ── */

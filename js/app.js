@@ -8,7 +8,7 @@ const _SB_URL = 'https://quwpyrdxyibcbyzwfilb.supabase.co';
 const _SB_KEY = 'sb_publishable_VmEMT07DiE1f5DtxzgZomA_-F0gZIpM';
 
 const _EMAILJS_PUB_KEY = 'WIiLVFRJPDeqTP7Ox';
-const _EMAILJS_SERVICE = 'service_85bjukt';
+const _EMAILJS_SERVICE = 'service_4d8167g';
 
 // Inicialização SEGURA do Supabase (try-catch para nunca travar o sistema)
 let _sb = null;
