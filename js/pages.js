@@ -1324,6 +1324,10 @@ const PageFinancas = {
           <div style="font-size:11px;color:var(--c-slate)">Despesas mês</div>
         </div>
       </div>
+      <div style="background:var(--b-1);border:1px solid var(--b-2);border-radius:10px;padding:14px;margin-bottom:16px">
+        <div style="font-size:12px;color:var(--c-slate);margin-bottom:8px;font-weight:600">Últimos 6 meses — Vendas vs Despesas</div>
+        <canvas id="fin-chart" height="160"></canvas>
+      </div>
       <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px">
         ${_btn('+ Registrar venda',"PageFinancas.lancar('venda')")}
         ${_btn('+ Registrar despesa',"PageFinancas.lancar('despesa')",'btn-ghost')}
@@ -1342,17 +1346,20 @@ const PageFinancas = {
     const el=document.getElementById('fin-lista');
     if(!el||!_sb())return;
     try {
-      const mesIni=new Date();mesIni.setDate(1);
-      const mesStr=mesIni.toISOString().split('T')[0];
+      const hoje=new Date();
+      const mesIniDate=new Date(hoje.getFullYear(),hoje.getMonth(),1);
+      const mesStr=mesIniDate.toISOString().split('T')[0];
+      const seisAtras=new Date(hoje.getFullYear(),hoje.getMonth()-5,1).toISOString().split('T')[0];
       const [rv,rd]=await Promise.all([
-        _sb().from('vendas').select('*').order('data_venda',{ascending:false}).limit(15),
-        _sb().from('despesas').select('*').order('data_despesa',{ascending:false}).limit(15),
+        _sb().from('vendas').select('*').gte('data_venda',seisAtras).order('data_venda',{ascending:false}),
+        _sb().from('despesas').select('*').gte('data_despesa',seisAtras).order('data_despesa',{ascending:false}),
       ]);
       const vendas   = (rv.data||[]);
       const despesas = (rd.data||[]);
       const totVenda = vendas.filter(v=>v.data_venda>=mesStr).reduce((s,v)=>s+Number(v.valor||0),0);
       const totDesp  = despesas.filter(d=>d.data_despesa>=mesStr).reduce((s,d)=>s+Number(d.valor||0),0);
       const saldo    = totVenda-totDesp;
+      this._renderChart(vendas, despesas);
       const sEl=document.getElementById('fin-saldo');
       const eEl=document.getElementById('fin-entrada');
       const saEl=document.getElementById('fin-saida');
@@ -1423,6 +1430,43 @@ const PageFinancas = {
       mostrarToast(`${tipo==='venda'?'Venda':'Despesa'} registrada!`,'success');
       this._carregarFluxo();
     }catch(e){mostrarToast('Erro ao salvar.','error');}
+  },
+  _renderChart(vendas, despesas) {
+    const canvas = document.getElementById('fin-chart');
+    if (!canvas || typeof Chart === 'undefined') return;
+    const MESES = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+    const hoje = new Date();
+    const labels = [], vVals = [], dVals = [];
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date(hoje.getFullYear(), hoje.getMonth() - i, 1);
+      const yy = d.getFullYear();
+      const mm = String(d.getMonth() + 1).padStart(2,'0');
+      const ini = `${yy}-${mm}-01`;
+      const prox = new Date(yy, d.getMonth() + 1, 1);
+      const fim = `${prox.getFullYear()}-${String(prox.getMonth()+1).padStart(2,'0')}-01`;
+      labels.push(`${MESES[d.getMonth()]}/${String(yy).slice(2)}`);
+      vVals.push(vendas.filter(v=>v.data_venda>=ini&&v.data_venda<fim).reduce((s,v)=>s+Number(v.valor||0),0));
+      dVals.push(despesas.filter(d=>d.data_despesa>=ini&&d.data_despesa<fim).reduce((s,d)=>s+Number(d.valor||0),0));
+    }
+    if (canvas._chartInst) canvas._chartInst.destroy();
+    canvas._chartInst = new Chart(canvas, {
+      type: 'bar',
+      data: {
+        labels,
+        datasets: [
+          { label:'Vendas', data:vVals, backgroundColor:'#22c55e44', borderColor:'#22c55e', borderWidth:2, borderRadius:6 },
+          { label:'Despesas', data:dVals, backgroundColor:'#f8717144', borderColor:'#f87171', borderWidth:2, borderRadius:6 },
+        ],
+      },
+      options: {
+        responsive:true,
+        plugins:{ legend:{ labels:{ color:'#94a3b8', font:{ size:11 } } } },
+        scales: {
+          x:{ ticks:{ color:'#94a3b8', font:{size:10} }, grid:{ color:'#ffffff11' } },
+          y:{ ticks:{ color:'#94a3b8', font:{size:10}, callback:v=>'R$'+v.toFixed(0) }, grid:{ color:'#ffffff11' } },
+        },
+      },
+    });
   },
 };
 const PageProjetos = {
@@ -1830,6 +1874,188 @@ const PageOperacoes = {
     }catch(e){el.innerHTML='<div style="padding:16px;color:var(--c-slate)">Erro ao carregar.</div>';}
   },
   verHistorico(){mostrarToast('Histórico completo aguardando módulo de relatório.','info');},
+  /* ── Gestão de Inscrições ── */
+  async _renderInscricoes() {
+    const pg=document.getElementById('page-ops_inscricoes');
+    if(!pg)return;
+    const ct=pg.querySelector('.content')||pg;
+    ct.innerHTML=_sc('Gestão de Inscrições','🎟️',`
+      <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap">
+        ${_btn('+ Novo evento','PageOperacoes.novoEventoInscricao()')}
+      </div>
+      <div id="ins-eventos-lista" style="display:flex;flex-direction:column;gap:10px">
+        <div style="padding:20px;text-align:center;color:var(--c-slate);font-size:13px">Carregando...</div>
+      </div>`);
+    await this._carregarEventosInscricao();
+  },
+  async _carregarEventosInscricao() {
+    const el=document.getElementById('ins-eventos-lista');
+    if(!el||!_sb())return;
+    try {
+      const {data}=await _sb().from('eventos_inscricao').select('*').order('data_inicio',{ascending:false});
+      if(!data?.length){el.innerHTML='<div style="padding:20px;text-align:center;color:var(--c-slate);font-size:13px">Nenhum evento de inscrição cadastrado.</div>';return;}
+      el.innerHTML=data.map(e=>{
+        const abertas=e.inscricoes_abertas;
+        const vagas=e.vagas?`${e.vagas_ocupadas||0}/${e.vagas}`:`${e.vagas_ocupadas||0}`;
+        const dataI=e.data_inicio?new Date(e.data_inicio).toLocaleDateString('pt-BR'):'—';
+        return `
+          <div style="background:var(--b-1);border:1px solid var(--b-2);border-radius:12px;padding:14px 16px">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:8px">
+              <div>
+                <div style="font-weight:700;font-size:14px;color:var(--c-white)">${e.icone||'🎯'} ${sanitize(e.nome)}</div>
+                <div style="font-size:12px;color:var(--c-slate);margin-top:2px">📅 ${dataI} · 👥 ${vagas} inscrições</div>
+                ${e.local?`<div style="font-size:12px;color:var(--c-slate)">📍 ${sanitize(e.local)}</div>`:''}
+              </div>
+              <span style="font-size:11px;font-weight:700;padding:3px 10px;border-radius:99px;
+                           background:${abertas?'var(--green)22':'var(--b-2)'};
+                           color:${abertas?'var(--green)':'var(--c-slate)'};
+                           border:1px solid ${abertas?'var(--green)44':'var(--b-2)'}">
+                ${abertas?'✅ Abertas':'🔒 Fechadas'}
+              </span>
+            </div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">
+              ${_btn(abertas?'🔒 Fechar inscrições':'✅ Abrir inscrições',
+                `PageOperacoes._toggleInscricoes('${e.id}',${!abertas})`,abertas?'btn-ghost':'btn-primary')}
+              ${_btn('👥 Ver inscritos',`PageOperacoes._verInscritos('${e.id}','${sanitize(e.nome).replace(/'/g,"\\'")}')`, 'btn-ghost')}
+              ${_btn('✏️ Editar',`PageOperacoes._editarEventoInscricao('${e.id}')`, 'btn-ghost')}
+            </div>
+          </div>`;
+      }).join('');
+    }catch(e){el.innerHTML='<div style="padding:16px;color:var(--c-slate)">Erro ao carregar.</div>';}
+  },
+  novoEventoInscricao() {
+    const hoje=new Date().toISOString().slice(0,16);
+    abrirModal({titulo:'🎟️ Novo Evento de Inscrição',tipo:'info',corpo:`
+      <div class="form-group"><label class="form-label">Nome do evento *</label>
+        <input id="ins-nome" class="form-input" placeholder="Ex: Assembleia Geral 2026"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div class="form-group"><label class="form-label">Data/hora início</label>
+          <input id="ins-ini" type="datetime-local" class="form-input" value="${hoje}"></div>
+        <div class="form-group"><label class="form-label">Data/hora fim</label>
+          <input id="ins-fim" type="datetime-local" class="form-input"></div>
+      </div>
+      <div class="form-group"><label class="form-label">Local</label>
+        <input id="ins-local" class="form-input" placeholder="Ex: Auditório A, Bloco B"></div>
+      <div class="form-group"><label class="form-label">Vagas (vazio = ilimitado)</label>
+        <input id="ins-vagas" type="number" class="form-input" placeholder="Ex: 50"></div>
+      <div class="form-group"><label class="form-label">Ícone</label>
+        <input id="ins-icone" class="form-input" value="🎯" style="width:80px"></div>`,
+      botoes:[
+        {texto:'Cancelar',classe:'btn-ghost',acao:fecharModal},
+        {texto:'Criar evento ✓',classe:'btn-primary',acao:()=>this._salvarEventoInscricao()},
+      ]});
+  },
+  async _salvarEventoInscricao() {
+    const nome  =document.getElementById('ins-nome')?.value?.trim();
+    const ini   =document.getElementById('ins-ini')?.value;
+    const fim   =document.getElementById('ins-fim')?.value;
+    const local =document.getElementById('ins-local')?.value?.trim();
+    const vagas =parseInt(document.getElementById('ins-vagas')?.value)||null;
+    const icone =document.getElementById('ins-icone')?.value?.trim()||'🎯';
+    if(!nome){mostrarToast('Informe o nome do evento!','warning');return;}
+    fecharModal();
+    try {
+      await _sb().from('eventos_inscricao').insert([{nome,local:local||null,data_inicio:ini||null,data_fim:fim||null,vagas,icone,inscricoes_abertas:false}]);
+      mostrarToast('Evento criado!','success');
+      this._carregarEventosInscricao();
+    }catch(e){mostrarToast('Erro ao criar evento.','error');}
+  },
+  async _toggleInscricoes(id, abrir) {
+    try {
+      await _sb().from('eventos_inscricao').update({inscricoes_abertas:abrir}).eq('id',id);
+      mostrarToast(abrir?'Inscrições abertas!':'Inscrições fechadas!','success');
+      this._carregarEventosInscricao();
+    }catch(e){mostrarToast('Erro ao alterar status.','error');}
+  },
+  async _editarEventoInscricao(id) {
+    const {data:e}=await _sb().from('eventos_inscricao').select('*').eq('id',id).single();
+    if(!e){mostrarToast('Evento não encontrado.','error');return;}
+    const ini=e.data_inicio?new Date(e.data_inicio).toISOString().slice(0,16):'';
+    const fim=e.data_fim?new Date(e.data_fim).toISOString().slice(0,16):'';
+    abrirModal({titulo:'✏️ Editar Evento',tipo:'info',corpo:`
+      <div class="form-group"><label class="form-label">Nome *</label>
+        <input id="ins-e-nome" class="form-input" value="${sanitize(e.nome)}"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div class="form-group"><label class="form-label">Data/hora início</label>
+          <input id="ins-e-ini" type="datetime-local" class="form-input" value="${ini}"></div>
+        <div class="form-group"><label class="form-label">Data/hora fim</label>
+          <input id="ins-e-fim" type="datetime-local" class="form-input" value="${fim}"></div>
+      </div>
+      <div class="form-group"><label class="form-label">Local</label>
+        <input id="ins-e-local" class="form-input" value="${sanitize(e.local||'')}"></div>
+      <div class="form-group"><label class="form-label">Vagas</label>
+        <input id="ins-e-vagas" type="number" class="form-input" value="${e.vagas||''}"></div>`,
+      botoes:[
+        {texto:'Cancelar',classe:'btn-ghost',acao:fecharModal},
+        {texto:'Salvar ✓',classe:'btn-primary',acao:()=>this._salvarEdicaoEvento(id)},
+      ]});
+  },
+  async _salvarEdicaoEvento(id) {
+    const nome  =document.getElementById('ins-e-nome')?.value?.trim();
+    const ini   =document.getElementById('ins-e-ini')?.value;
+    const fim   =document.getElementById('ins-e-fim')?.value;
+    const local =document.getElementById('ins-e-local')?.value?.trim();
+    const vagas =parseInt(document.getElementById('ins-e-vagas')?.value)||null;
+    if(!nome){mostrarToast('Nome obrigatório!','warning');return;}
+    fecharModal();
+    try {
+      await _sb().from('eventos_inscricao').update({nome,local:local||null,data_inicio:ini||null,data_fim:fim||null,vagas}).eq('id',id);
+      mostrarToast('Evento atualizado!','success');
+      this._carregarEventosInscricao();
+    }catch(e){mostrarToast('Erro ao atualizar.','error');}
+  },
+  async _verInscritos(eventoId, nomeEvento) {
+    abrirModal({titulo:`👥 Inscritos — ${nomeEvento}`,tipo:'info',corpo:`
+      <div id="ins-lista-modal" style="max-height:50vh;overflow-y:auto;margin-bottom:8px">
+        <div style="padding:16px;text-align:center;color:var(--c-slate)">Carregando...</div>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        ${_btn('📥 Exportar CSV',`PageOperacoes._exportarCSV('${eventoId}','${nomeEvento.replace(/'/g,"\\'")}')`, 'btn-ghost')}
+      </div>`,
+      botoes:[{texto:'Fechar',classe:'btn-ghost',acao:fecharModal}]});
+    try {
+      const {data}=await _sb().from('inscricoes_eventos').select('*').eq('evento_id',eventoId).order('created_at');
+      const el=document.getElementById('ins-lista-modal');
+      if(!el)return;
+      if(!data?.length){el.innerHTML='<div style="padding:16px;text-align:center;color:var(--c-slate)">Nenhum inscrito ainda.</div>';return;}
+      el.innerHTML=data.map(i=>`
+        <div style="background:var(--b-1);border:1px solid var(--b-2);border-radius:8px;padding:10px 12px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px">
+          <div>
+            <div style="font-weight:600;font-size:13px;color:var(--c-white)">${sanitize(i.nome)}</div>
+            <div style="font-size:11px;color:var(--c-slate)">${sanitize(i.email)}${i.e_membro?' · ⭐ Membro':''}</div>
+            ${i.curso?`<div style="font-size:11px;color:var(--c-slate)">${sanitize(i.curso)}${i.instituicao?' — '+sanitize(i.instituicao):''}</div>`:''}
+          </div>
+          <select onchange="PageOperacoes._atualizarPresenca('${i.id}',this.value)"
+            style="background:var(--b-2);border:1px solid var(--b-3);border-radius:6px;padding:4px 8px;color:var(--c-white);font-size:11px">
+            <option value="inscrito" ${i.status==='inscrito'?'selected':''}>⏳ Inscrito</option>
+            <option value="presente" ${i.status==='presente'?'selected':''}>✅ Presente</option>
+            <option value="ausente" ${i.status==='ausente'?'selected':''}>❌ Ausente</option>
+            <option value="cancelado" ${i.status==='cancelado'?'selected':''}>🚫 Cancelado</option>
+          </select>
+        </div>`).join('');
+    }catch(e){document.getElementById('ins-lista-modal')?.innerHTML='<div style="padding:16px;color:var(--c-slate)">Erro ao carregar.</div>';}
+  },
+  async _atualizarPresenca(id, status) {
+    try {
+      await _sb().from('inscricoes_eventos').update({status}).eq('id',id);
+      mostrarToast('Status atualizado!','success');
+    }catch(e){mostrarToast('Erro ao atualizar.','error');}
+  },
+  async _exportarCSV(eventoId, nomeEvento) {
+    try {
+      const {data}=await _sb().from('inscricoes_eventos').select('*').eq('evento_id',eventoId).order('created_at');
+      if(!data?.length){mostrarToast('Nenhum inscrito para exportar.','warning');return;}
+      const esc=v=>`"${(v||'').replace(/"/g,'""')}"`;
+      const header='Nome,Email,CPF,Curso,Instituição,Membro,Status,Inscrito em';
+      const rows=data.map(i=>[esc(i.nome),esc(i.email),esc(i.cpf),esc(i.curso),esc(i.instituicao),i.e_membro?'Sim':'Não',i.status||'inscrito',i.created_at?new Date(i.created_at).toLocaleString('pt-BR'):''].join(','));
+      const csv=[header,...rows].join('\n');
+      const a=document.createElement('a');
+      a.href='data:text/csv;charset=utf-8,﻿'+encodeURIComponent(csv);
+      a.download=`inscritos-${nomeEvento.replace(/\s+/g,'-')}.csv`;
+      a.click();
+      mostrarToast('CSV exportado!','success');
+    }catch(e){mostrarToast('Erro ao exportar.','error');}
+  },
   async _renderPops() {
     const pg=document.getElementById('page-ops_pops');
     if(!pg)return;
@@ -3842,6 +4068,7 @@ const PageGlobal = {
     if (!pg) return;
     const ct = pg.querySelector('.content') || pg;
     ct.innerHTML = _sc('Painel Estratégico','📊','<div id="gestao-kpis" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:10px"><div style="text-align:center;color:var(--c-slate);padding:20px;grid-column:1/-1">Carregando...</div></div>') +
+      _sc('Membros por Coordenadoria','📈','<canvas id="gestao-chart" height="180"></canvas>') +
       _sc('Coordenadorias','🏛️','<div id="gestao-coords" style="display:flex;flex-direction:column;gap:8px"><div style="padding:16px;text-align:center;color:var(--c-slate);font-size:13px">Carregando...</div></div>');
     if (!_sb()) return;
     try {
@@ -3868,6 +4095,27 @@ const PageGlobal = {
         .from('users').select('coordenadoria_id').eq('ativo',true);
       const cntMap = {};
       (membPorCoord||[]).forEach(u => { if(u.coordenadoria_id) cntMap[u.coordenadoria_id] = (cntMap[u.coordenadoria_id]||0)+1; });
+      /* gráfico de membros por coordenadoria */
+      const canvas = document.getElementById('gestao-chart');
+      if (canvas && typeof Chart !== 'undefined') {
+        if (canvas._chartInst) canvas._chartInst.destroy();
+        const labels = coords.map(c=>c.sigla);
+        const values = coords.map(c=>cntMap[c.id]||0);
+        const bgColors = coords.map(c=>(c.cor||'#3b82f6')+'99');
+        const bdColors = coords.map(c=>c.cor||'#3b82f6');
+        canvas._chartInst = new Chart(canvas, {
+          type:'bar',
+          data:{ labels, datasets:[{ label:'Membros ativos', data:values, backgroundColor:bgColors, borderColor:bdColors, borderWidth:2, borderRadius:6 }] },
+          options:{
+            indexAxis:'y', responsive:true,
+            plugins:{ legend:{ display:false } },
+            scales:{
+              x:{ ticks:{ color:'#94a3b8', font:{size:10}, stepSize:1 }, grid:{ color:'#ffffff11' } },
+              y:{ ticks:{ color:'#94a3b8', font:{size:11} }, grid:{ color:'#ffffff11' } },
+            },
+          },
+        });
+      }
       document.getElementById('gestao-coords').innerHTML = coords.map(c => `
         <div style="background:var(--b-1);border:1px solid var(--b-2);border-radius:10px;padding:12px 16px;display:flex;justify-content:space-between;align-items:center">
           <div style="display:flex;align-items:center;gap:10px">
