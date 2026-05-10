@@ -439,7 +439,7 @@ const PageGeral = {
       const coords = await getCoords();
       const ger = coords.find(c=>c.sigla==='GER');
       await _sb().from('demandas').insert([{
-        titulo, descricao:desc||null, coluna:'pendente',
+        titulo, descricao:desc||null, coluna:'pendente', tipo:'melhoria',
         coordenadoria_id:ger?.id||null,
         responsavel_id: window._appProfile?.id,
         criado_por: window._appProfile?.id,
@@ -483,7 +483,7 @@ const PageGeral = {
       await _sb().from('demandas').insert([{
         titulo: nome,
         descricao: [tipo, contato, obj].filter(Boolean).join(' · ') || null,
-        coluna:'pendente',
+        coluna:'pendente', tipo:'parceria',
         coordenadoria_id: ger?.id||null,
         criado_por: window._appProfile?.id,
       }]);
@@ -1251,7 +1251,7 @@ const PageFinancas = {
       const fin = coords.find(c => c.sigla === 'FIN');
       await _sb().from('demandas').insert([{
         titulo: nome, descricao: email || null,
-        coluna: 'pendente',
+        coluna: 'pendente', tipo: 'abepro',
         coordenadoria_id: fin?.id || null,
         criado_por: window._appProfile?.id,
         responsavel_id: window._appProfile?.id,
@@ -1817,7 +1817,7 @@ const PageOperacoes = {
       </div>`);
     if(!sb){document.getElementById('ops-pops-list').innerHTML='<p style="color:var(--fg-3);font-size:13px;">Banco não conectado.</p>';return;}
     try {
-      const {data}=await sb.from('pops').select('*').order('titulo');
+      const {data}=await sb.from('pops').select('*').order('nome');
       const el=document.getElementById('ops-pops-list');
       if(!el)return;
       if(!data||data.length===0){
@@ -1837,12 +1837,12 @@ const PageOperacoes = {
         const ativoIcon=p.ativo!==false?'🟢':'🔴';
         return `<div style="background:var(--surface-2);border:1px solid var(--border-1);border-radius:10px;padding:12px 16px;display:flex;justify-content:space-between;align-items:center">
           <div>
-            <span style="font-size:13px;color:var(--fg-1);font-weight:600;">📄 ${p.titulo}</span>${tag}
+            <span style="font-size:13px;color:var(--fg-1);font-weight:600;">📄 ${p.nome}</span>${tag}
             ${p.descricao?`<div style="font-size:11px;color:var(--fg-3);margin-top:3px;">${p.descricao}</div>`:''}
           </div>
           <div style="display:flex;gap:6px;align-items:center;">
             <span title="${p.ativo!==false?'Ativo':'Inativo'}">${ativoIcon}</span>
-            <button class="btn btn-ghost" style="font-size:11px;padding:4px 8px;" onclick="PageOperacoes.editarPop('${p.id}','${(p.titulo||'').replace(/'/g,"\\'")}')">Editar</button>
+            <button class="btn btn-ghost" style="font-size:11px;padding:4px 8px;" onclick="PageOperacoes.editarPop('${p.id}','${(p.nome||'').replace(/'/g,"\\'")}')">Editar</button>
           </div>
         </div>`;
       }).join('');
@@ -1866,7 +1866,7 @@ const PageOperacoes = {
         fecharModal();
         if(!_sb()){mostrarToast('Banco não conectado.','error');return;}
         try{
-          await _sb().from('pops').insert({titulo,descricao:desc||null,data_revisao:revisao||null,ativo:true,criado_por:window._appProfile?.id});
+          await _sb().from('pops').insert({nome:titulo,descricao:desc||null,data_revisao:revisao||null,ativo:true,criado_por:window._appProfile?.id});
           mostrarToast('POP cadastrado com sucesso!','success');
           PageOperacoes._renderPops();
         }catch(e){mostrarToast('Erro ao salvar POP.','error');}
@@ -1885,7 +1885,7 @@ const PageOperacoes = {
         fecharModal();
         if(!_sb()){mostrarToast('Banco não conectado.','error');return;}
         try{
-          await _sb().from('pops').update({titulo:novoTitulo}).eq('id',id);
+          await _sb().from('pops').update({nome:novoTitulo}).eq('id',id);
           mostrarToast('POP atualizado!','success');
           PageOperacoes._renderPops();
         }catch(e){mostrarToast('Erro ao atualizar POP.','error');}
