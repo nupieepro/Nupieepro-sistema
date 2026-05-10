@@ -3,13 +3,12 @@
  * emails.js — Templates e envios de e-mail via EmailJS
  * NÃO usar alert() / confirm() — usar mostrarToast()
  *
- * Serviço:  service_85bjukt
+ * Serviço:  service_4d8167g
  * Remetente: nupieeprotreinamentos@gmail.com  (NUPIEEPRO Sistema)
  *
- * Templates necessários no dashboard EmailJS (criar manualmente):
- *   template_aniversario  → variáveis: {{nome}}, {{primeiro_nome}}
- *   template_despedida    → variáveis: {{nome}}, {{primeiro_nome}}, {{cargo}}, {{coord}}
- *   template_convite      → variáveis: {{nome_convidado}}, {{email}}, {{coord}}, {{cargo}}, {{link}}, {{criado_por}}
+ * Templates ativos no EmailJS:
+ *   template_convite   → para_email, nome_convidado, coord, cargo, ano_gestao, link, criado_por
+ *   template_despedida → para_email, nome, primeiro_nome, cargo, coord
  */
 
 const EmailsModule = (() => {
@@ -177,9 +176,4 @@ const EmailsModule = (() => {
 
 window.EmailsModule = EmailsModule;
 
-/* Integra com o boot do sistema */
-document.addEventListener('nupi:booted', () => {
-  /* Verifica aniversários uma vez por dia (além da push.js que faz local) */
-  setTimeout(() => EmailsModule.checarAniversariosEmail(), 12000);
-  setInterval(() => EmailsModule.checarAniversariosEmail(), 86400000); /* 24 h */
-});
+/* template_aniversario desabilitado — plano gratuito EmailJS suporta 2 templates (convite + despedida) */
