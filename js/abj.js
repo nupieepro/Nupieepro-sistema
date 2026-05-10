@@ -272,9 +272,9 @@ const ABJModule = (() => {
     const userId  = window._appProfile?.id;
 
     try {
-      /* Verifica se já existe um progresso para este mês (ou atividade única) */
+      /* Verifica se já existe um progresso do próprio usuário para esta atividade/mês */
       let progId = null;
-      let qProg = sb.from('progresso_abj').select('id').eq('atividade_id', a.id);
+      let qProg = sb.from('progresso_abj').select('id').eq('atividade_id', a.id).eq('registrado_por', userId);
       if (mensal) qProg = qProg.eq('mes_ref', mesRef);
       const { data: progRows } = await qProg.order('created_at').limit(1);
       const ex = progRows?.[0] || null;
