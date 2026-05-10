@@ -1326,7 +1326,7 @@ const PageFinancas = {
       </div>
       <div style="background:var(--b-1);border:1px solid var(--b-2);border-radius:10px;padding:14px;margin-bottom:16px">
         <div style="font-size:12px;color:var(--c-slate);margin-bottom:8px;font-weight:600">Últimos 6 meses — Vendas vs Despesas</div>
-        <canvas id="fin-chart" height="160"></canvas>
+        <div style="position:relative;height:180px"><canvas id="fin-chart"></canvas></div>
       </div>
       <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px">
         ${_btn('+ Registrar venda',"PageFinancas.lancar('venda')")}
@@ -1446,7 +1446,7 @@ const PageFinancas = {
       const fim = `${prox.getFullYear()}-${String(prox.getMonth()+1).padStart(2,'0')}-01`;
       labels.push(`${MESES[d.getMonth()]}/${String(yy).slice(2)}`);
       vVals.push(vendas.filter(v=>v.data_venda>=ini&&v.data_venda<fim).reduce((s,v)=>s+Number(v.valor||0),0));
-      dVals.push(despesas.filter(d=>d.data_despesa>=ini&&d.data_despesa<fim).reduce((s,d)=>s+Number(d.valor||0),0));
+      dVals.push(despesas.filter(dep=>dep.data_despesa>=ini&&dep.data_despesa<fim).reduce((s,dep)=>s+Number(dep.valor||0),0));
     }
     if (canvas._chartInst) canvas._chartInst.destroy();
     canvas._chartInst = new Chart(canvas, {
@@ -1459,7 +1459,7 @@ const PageFinancas = {
         ],
       },
       options: {
-        responsive:true,
+        responsive:true, maintainAspectRatio:false,
         plugins:{ legend:{ labels:{ color:'#94a3b8', font:{ size:11 } } } },
         scales: {
           x:{ ticks:{ color:'#94a3b8', font:{size:10} }, grid:{ color:'#ffffff11' } },
@@ -2050,7 +2050,7 @@ const PageOperacoes = {
       const rows=data.map(i=>[esc(i.nome),esc(i.email),esc(i.cpf),esc(i.curso),esc(i.instituicao),i.e_membro?'Sim':'Não',i.status||'inscrito',i.created_at?new Date(i.created_at).toLocaleString('pt-BR'):''].join(','));
       const csv=[header,...rows].join('\n');
       const a=document.createElement('a');
-      a.href='data:text/csv;charset=utf-8,﻿'+encodeURIComponent(csv);
+      a.href='data:text/csv;charset=utf-8,'+encodeURIComponent('﻿'+csv);
       a.download=`inscritos-${nomeEvento.replace(/\s+/g,'-')}.csv`;
       a.click();
       mostrarToast('CSV exportado!','success');
@@ -4068,7 +4068,7 @@ const PageGlobal = {
     if (!pg) return;
     const ct = pg.querySelector('.content') || pg;
     ct.innerHTML = _sc('Painel Estratégico','📊','<div id="gestao-kpis" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:10px"><div style="text-align:center;color:var(--c-slate);padding:20px;grid-column:1/-1">Carregando...</div></div>') +
-      _sc('Membros por Coordenadoria','📈','<canvas id="gestao-chart" height="180"></canvas>') +
+      _sc('Membros por Coordenadoria','📈','<div style="position:relative;height:180px"><canvas id="gestao-chart"></canvas></div>') +
       _sc('Coordenadorias','🏛️','<div id="gestao-coords" style="display:flex;flex-direction:column;gap:8px"><div style="padding:16px;text-align:center;color:var(--c-slate);font-size:13px">Carregando...</div></div>');
     if (!_sb()) return;
     try {
@@ -4107,7 +4107,7 @@ const PageGlobal = {
           type:'bar',
           data:{ labels, datasets:[{ label:'Membros ativos', data:values, backgroundColor:bgColors, borderColor:bdColors, borderWidth:2, borderRadius:6 }] },
           options:{
-            indexAxis:'y', responsive:true,
+            indexAxis:'y', responsive:true, maintainAspectRatio:false,
             plugins:{ legend:{ display:false } },
             scales:{
               x:{ ticks:{ color:'#94a3b8', font:{size:10}, stepSize:1 }, grid:{ color:'#ffffff11' } },
