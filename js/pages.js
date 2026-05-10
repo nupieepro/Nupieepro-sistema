@@ -734,9 +734,19 @@ const PageMarketing = {
         criado_por:       window._appProfile?.id,
       }]);
       mostrarToast('Demanda criada!','success');
-      /* Notifica coordenadores de Marketing */
+      /* Notifica coordenadores de Marketing (in-app) */
       _notificarCoord('MKT', `Nova demanda: ${titulo}`,
         `Uma nova demanda de ${tipo} foi aberta${prazo ? ` com prazo em ${_fmt(prazo)}.` : '.'}`, 'info', 'demanda');
+      /* Email de confirmação para o responsável */
+      if (window._appProfile?.email) {
+        EmailsModule?.enviarDemandaCadastrada({
+          email: window._appProfile.email,
+          nome:  window._appProfile.nome,
+          titulo, tipo, coord: 'MKT',
+          prazo: prazo || null,
+          criadoPor: window._appProfile.nome,
+        });
+      }
       this._carregarKanban();
     } catch(e) { mostrarToast('Erro ao criar demanda.','error'); }
   },

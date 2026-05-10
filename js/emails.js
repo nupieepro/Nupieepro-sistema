@@ -6,9 +6,9 @@
  * Serviço:  service_4d8167g
  * Remetente: nupieeprotreinamentos@gmail.com  (NUPIEEPRO Sistema)
  *
- * Templates ativos no EmailJS:
- *   template_convite   → para_email, nome_convidado, coord, cargo, ano_gestao, link, criado_por
- *   template_despedida → para_email, nome, primeiro_nome, cargo, coord
+ * Templates ativos no EmailJS (plano gratuito = 2 templates):
+ *   template_convite → para_email, nome_convidado, coord, cargo, link, criado_por, assunto, mensagem
+ *   template_demanda → para_email, nome, titulo_demanda, tipo_demanda, coord, prazo, criado_por, assunto, mensagem
  */
 
 const EmailsModule = (() => {
@@ -69,33 +69,40 @@ const EmailsModule = (() => {
   }
 
   /* ════════════════════════════════════════════
-     👋 2. DESPEDIDA (desligamento)
-     Chamado ao desativar membro (ativo = false)
+     📋 2. DEMANDA CADASTRADA
+     Chamado ao criar demanda no sistema — notifica o responsável
+     { email, nome, titulo, tipo, coord, prazo, criadoPor }
   ════════════════════════════════════════════ */
-  async function enviarDespedida(membro, coord) {
-    const primeiroNome = membro.apelido || membro.nome?.split(' ')[0] || 'membro';
-    return _send('template_despedida', {
-      para_email:    membro.email,
-      nome:          membro.nome,
-      primeiro_nome: primeiroNome,
-      cargo:         membro.cargo || membro.role || 'membro',
-      coord:         coord || 'NUPIEEPRO',
-      assunto: 'Até logo e muito sucesso na sua jornada! 🚀',
+  async function enviarDemandaCadastrada({ email, nome, titulo, tipo, coord, prazo, criadoPor }) {
+    const primeiroNome = nome?.split(' ')[0] || 'membro';
+    const tipoPretty = { conteudo:'Conteúdo / Post', lojinha:'Lojinha', divulgacao:'Divulgação',
+      melhoria:'Melhoria', parceria:'Parceria', abepro:'ABEPRO', talento:'Talento' }[tipo] || tipo || 'Demanda';
+    const prazoFmt = prazo ? new Date(prazo + 'T12:00:00').toLocaleDateString('pt-BR', { day:'2-digit', month:'long', year:'numeric' }) : null;
+    return _send('template_demanda', {
+      para_email:     email,
+      nome:           nome,
+      titulo_demanda: titulo,
+      tipo_demanda:   tipoPretty,
+      coord:          coord || 'NUPIEEPRO',
+      prazo:          prazoFmt || 'Sem prazo definido',
+      criado_por:     criadoPor || 'Sistema',
+      assunto: `Nova demanda cadastrada: ${titulo}`,
       mensagem: [
-        `Olá, ${primeiroNome}.`,
+        `Olá, ${primeiroNome}!`,
         '',
-        'Grandes ciclos se encerram para que novas e incríveis histórias possam ser escritas. 💙🧡',
+        'Uma nova demanda foi registrada no sistema e você está como responsável. ✅',
         '',
-        'Hoje nos despedimos, mas o sentimento que fica é de uma imensa gratidão por toda a sua dedicação,',
-        'produtividade e pelas marcas positivas que você deixa no Nupi. Trabalhar ao seu lado foi um grande',
-        'aprendizado para todos nós.',
+        `📌 Título: ${titulo}`,
+        `📂 Tipo: ${tipoPretty}`,
+        `🏛️ Coordenadoria: ${coord || 'NUPIEEPRO'}`,
+        prazoFmt ? `📅 Prazo: ${prazoFmt}` : '',
+        `👤 Registrado por: ${criadoPor || 'Sistema'}`,
         '',
-        'Desejamos que a sua trajetória seja brilhante e cheia de novas conquistas. Lembre-se de que as',
-        'portas estarão sempre abertas e que você sempre fará parte da nossa história. Voa alto!',
+        'Acesse o sistema para acompanhar o andamento:',
+        `🔗 ${typeof location !== 'undefined' ? location.origin : 'https://nupieepro.pages.dev'}/dashboard.html`,
         '',
-        'Com carinho e admiração,',
-        'Equipe Nupi',
-      ].join('\n'),
+        'Equipe NUPIEEPRO',
+      ].filter(l => l !== '').join('\n'),
     });
   }
 
@@ -165,7 +172,7 @@ const EmailsModule = (() => {
   /* ── Expõe API pública ── */
   return {
     enviarAniversario,
-    enviarDespedida,
+    enviarDemandaCadastrada,
     enviarConvite,
     checarAniversariosEmail,
   };
@@ -173,4 +180,4 @@ const EmailsModule = (() => {
 
 window.EmailsModule = EmailsModule;
 
-/* template_aniversario desabilitado — plano gratuito EmailJS suporta 2 templates (convite + despedida) */
+/* template_aniversario desabilitado — plano gratuito EmailJS suporta 2 templates (convite + demanda) */
