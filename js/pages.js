@@ -1977,8 +1977,8 @@ const PageOperacoes = {
       el.innerHTML = data?.length
         ? data.map(d => `<div style="background:var(--b-1);border:1px solid var(--b-2);border-radius:10px;padding:14px 16px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
             <div>
-              <div style="font-weight:700;font-size:13px;color:var(--c-white)">${sanitize(d.titulo||d.nome||'Documento')}</div>
-              <div style="font-size:12px;color:var(--c-slate)">${d.tipo?`📂 ${sanitize(d.tipo)} · `:''}📅 ${_fmt(d.created_at)}</div>
+              <div style="font-weight:700;font-size:13px;color:var(--c-white)">${sanitize(d.nome||'Documento')}</div>
+              <div style="font-size:12px;color:var(--c-slate)">${d.descricao?`📂 ${sanitize(d.descricao)} · `:''}📅 ${_fmt(d.created_at)}</div>
             </div>
             ${d.conteudo?`<a href="${sanitize(d.conteudo)}" target="_blank" class="btn btn-ghost" style="font-size:11px;padding:6px 12px;text-decoration:none">Abrir ↗</a>`:'<span style="font-size:11px;color:var(--c-slate)">Sem link</span>'}
           </div>`).join('')
@@ -2005,14 +2005,14 @@ const PageOperacoes = {
       [{ label:'Salvar', cls:'btn-primary', cb:'PageOperacoes._salvarArquivo()' }]);
   },
   async _salvarArquivo() {
-    const titulo = document.getElementById('arq-titulo')?.value?.trim();
-    const tipo   = document.getElementById('arq-tipo')?.value;
-    const link   = document.getElementById('arq-link')?.value?.trim();
-    if (!titulo) { mostrarToast('Informe o título do documento.','warning'); return; }
+    const nome = document.getElementById('arq-titulo')?.value?.trim();
+    const tipo = document.getElementById('arq-tipo')?.value;
+    const link = document.getElementById('arq-link')?.value?.trim();
+    if (!nome) { mostrarToast('Informe o título do documento.','warning'); return; }
     fecharModal();
     try {
       await _sb().from('pops').insert([{
-        titulo, tipo: tipo||null,
+        nome, descricao: tipo||null,
         conteudo: link||null,
         criado_por: window._appProfile?.id,
         ativo: true
