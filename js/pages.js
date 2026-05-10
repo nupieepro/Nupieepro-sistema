@@ -1986,23 +1986,24 @@ const PageOperacoes = {
     } catch(e) { el.innerHTML='<div style="padding:16px;color:var(--c-slate)">Erro ao carregar.</div>'; }
   },
   novoArquivo() {
-    const campos = [
-      { id:'arq-titulo', label:'Título do documento *', type:'text', placeholder:'Ex: POP de Reuniões' },
-      { id:'arq-tipo',   label:'Tipo', type:'select', opts:['POP','Ata','Regulamento','Edital','Outro'] },
-      { id:'arq-link',   label:'Link (Google Drive, Notion…)', type:'url', placeholder:'https://...' },
-    ];
-    const html = campos.map(c =>
-      c.type === 'select'
-        ? `<label style="font-size:12px;color:var(--c-slate);display:block;margin-bottom:6px">${c.label}
-             <select id="${c.id}" class="modal-input" style="width:100%;margin-top:4px;background:var(--b-1);color:var(--c-white);border:1px solid var(--b-3);border-radius:8px;padding:8px 10px;font-size:13px">
-               ${c.opts.map(o=>`<option>${o}</option>`).join('')}
-             </select></label>`
-        : `<label style="font-size:12px;color:var(--c-slate);display:block;margin-bottom:6px">${c.label}
-             <input id="${c.id}" type="${c.type}" placeholder="${c.placeholder||''}" class="modal-input"
-               style="width:100%;margin-top:4px;background:var(--b-1);color:var(--c-white);border:1px solid var(--b-3);border-radius:8px;padding:8px 10px;font-size:13px;box-sizing:border-box"></label>`
-    ).join('<div style="height:10px"></div>');
-    mostrarModal('Novo Documento',`<div style="display:flex;flex-direction:column;gap:4px">${html}</div>`,
-      [{ label:'Salvar', cls:'btn-primary', cb:'PageOperacoes._salvarArquivo()' }]);
+    const corpo = `
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <label style="font-size:12px;color:var(--c-slate);display:block">Título do documento *
+          <input id="arq-titulo" type="text" placeholder="Ex: POP de Reuniões"
+            style="width:100%;margin-top:4px;background:var(--b-1);color:var(--c-white);border:1px solid var(--b-3);border-radius:8px;padding:8px 10px;font-size:13px;box-sizing:border-box">
+        </label>
+        <label style="font-size:12px;color:var(--c-slate);display:block">Tipo
+          <select id="arq-tipo" style="width:100%;margin-top:4px;background:var(--b-1);color:var(--c-white);border:1px solid var(--b-3);border-radius:8px;padding:8px 10px;font-size:13px">
+            <option>POP</option><option>Ata</option><option>Regulamento</option><option>Edital</option><option>Outro</option>
+          </select>
+        </label>
+        <label style="font-size:12px;color:var(--c-slate);display:block">Link (Google Drive, Notion…)
+          <input id="arq-link" type="url" placeholder="https://..."
+            style="width:100%;margin-top:4px;background:var(--b-1);color:var(--c-white);border:1px solid var(--b-3);border-radius:8px;padding:8px 10px;font-size:13px;box-sizing:border-box">
+        </label>
+      </div>`;
+    abrirModal({ titulo:'🗂️ Novo Documento', tipo:'info', corpo,
+      botoes:[{ texto:'Salvar', classe:'btn-primary', acao:() => PageOperacoes._salvarArquivo() }] });
   },
   async _salvarArquivo() {
     const nome = document.getElementById('arq-titulo')?.value?.trim();
