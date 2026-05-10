@@ -1514,7 +1514,7 @@ const PageProjetos = {
         descricao: JSON.stringify({ link:link||null, convidados:conv||null })
       }]);
       mostrarToast('Episódio registrado com sucesso!','success');
-      PageProjetos._carregarEpisodios?.();
+      PageProjetos._carregar();
     } catch(e) { mostrarToast('Erro ao registrar episódio.','error'); }
   },
   /* ── ENEGEP — Atividade 14 (Momento ENEGEP) ──

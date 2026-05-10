@@ -2066,7 +2066,7 @@ const Operacoes = {
     }
     vault.innerHTML = '<p style="color:var(--fg-3);font-size:13px;padding:12px;">Carregando POPs...</p>';
     try {
-      const { data } = await sb.from('pops').select('id, titulo, descricao, data_revisao, ativo').eq('ativo', true).order('titulo');
+      const { data } = await sb.from('pops').select('id, nome, descricao, data_revisao, ativo').eq('ativo', true).order('nome');
       if (!data || data.length === 0) {
         vault.innerHTML = `
           <div style="grid-column:1/-1;padding:24px;text-align:center;color:var(--fg-3);font-size:13px;">
@@ -2086,7 +2086,7 @@ const Operacoes = {
           `<div style="font-size:10px;color:var(--fg-3);">Revisão: ${revisao.toLocaleDateString('pt-BR')}</div>`;
         return `<div style="background:var(--surface-2);border:1px solid var(--border-1);padding:16px;border-radius:12px;cursor:pointer;" onclick="goTo('ops_pops')">
           <div style="font-size:20px;margin-bottom:8px;">📄</div>
-          <div style="font-weight:700;font-size:13px;color:var(--fg-1);margin-bottom:4px;">${p.titulo}</div>
+          <div style="font-weight:700;font-size:13px;color:var(--fg-1);margin-bottom:4px;">${p.nome}</div>
           ${venceLabel}
         </div>`;
       }).join('');
