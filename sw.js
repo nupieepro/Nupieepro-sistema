@@ -3,7 +3,7 @@
    Network-first com fallback para cache offline
    ============================================================ */
 
-const CACHE_NAME = 'nupieepro-v12';
+const CACHE_NAME = 'nupieepro-v13';
 const ASSETS = [
   './',
   './index.html',
