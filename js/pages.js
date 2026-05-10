@@ -2276,6 +2276,7 @@ const PagePessoas = {
   },
   convidar() {
     getCoords().then(coords=>{
+      this._conviteCoords = coords;
       abrirModal({titulo:'✉️ Convidar Membro',tipo:'info',corpo:`
         <div class="form-group"><label class="form-label">E-mail *</label>
           <input id="inv-email" type="email" class="form-input" placeholder="email@exemplo.com"></div>
@@ -2306,22 +2307,47 @@ const PagePessoas = {
     });
   },
   async _enviarConvite() {
-    const email =document.getElementById('inv-email')?.value?.trim();
-    const coord =document.getElementById('inv-coord')?.value;
-    const cargo =document.getElementById('inv-cargo')?.value;
-    const role  =document.getElementById('inv-role')?.value||'assessor';
-    if(!email){mostrarToast('Insira o e-mail!','warning');return;}
+    const email = document.getElementById('inv-email')?.value?.trim();
+    const coord = document.getElementById('inv-coord')?.value;
+    const cargo = document.getElementById('inv-cargo')?.value;
+    const role  = document.getElementById('inv-role')?.value || 'assessor';
+    if (!email) { mostrarToast('Insira o e-mail!', 'warning'); return; }
     fecharModal();
     try {
-      await _sb().from('convites').insert([{
+      const { data, error } = await _sb().from('convites').insert([{
         email, coordenadoria_id: coord, cargo, role,
         criado_por: window._appProfile?.id,
-      }]);
-      mostrarToast(`Convite enviado para ${email}!`, 'success');
-      /* Notifica admins */
+      }]).select().single();
+      if (error) throw error;
+
+      const coordInfo = this._conviteCoords?.find(c => c.id === coord);
+      const link = `${location.origin}/convite.html?token=${data.token}`;
+
+      let emailOk = false;
+      try {
+        await window.EmailsModule?.enviarConvite({
+          email, coord: coordInfo?.nome, cargo, token: data.token,
+          criadoPor: window._appProfile?.apelido || window._appProfile?.nome || 'Equipe Nupi'
+        });
+        emailOk = true;
+      } catch(_) {}
+
+      if (emailOk) {
+        mostrarToast(`Convite enviado para ${email}!`, 'success');
+      } else {
+        abrirModal({ titulo:'📋 Link de Convite', tipo:'info', corpo:`
+          <p style="margin-bottom:12px;color:var(--c-slate);font-size:14px">Email não configurado. Copie o link e envie manualmente para <strong>${email}</strong>:</p>
+          <div style="background:var(--b-1);border-radius:8px;padding:12px;word-break:break-all;font-size:12px;font-family:monospace;line-height:1.6">${link}</div>`,
+          botoes:[
+            { texto:'Copiar link', classe:'btn-primary', acao:()=>{ navigator.clipboard.writeText(link); fecharModal(); mostrarToast('Link copiado!','success'); } },
+            { texto:'Fechar', classe:'btn-ghost', acao: fecharModal }
+          ]
+        });
+      }
+
       _notificar(window._appProfile?.id,
         'Convite enviado 📩', `Convite gerado para ${email} (${cargo}).`, 'info', 'sistema');
-    }catch(e){mostrarToast('Erro ao enviar convite.','error');}
+    } catch(e) { mostrarToast('Erro ao enviar convite.', 'error'); }
   },
   adicionarClima() {
     const hoje = new Date().toISOString().split('T')[0];
