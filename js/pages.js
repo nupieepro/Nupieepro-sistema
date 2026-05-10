@@ -997,7 +997,7 @@ const PageFinancas = {
   _temAcesso() {
     const p=window._appProfile;
     const coord=p?.coordenadorias?.sigla;
-    return p?.role==='admin'||coord==='FIN';
+    return p?._isDev||p?.role==='admin'||coord==='FIN';
   },
   async init() { this._renderFluxo(); this._renderCalendario(); this._renderABJFin(); },
   _renderCalendario() {
@@ -2604,7 +2604,7 @@ const PageDev = {
   _tab: 'usuarios',
   _coords: [],   /* cache de coordenadorias */
 
-  _temAcesso() { return window._appProfile?.role === 'admin'; },
+  _temAcesso() { return window._appProfile?._isDev || window._appProfile?.role === 'admin'; },
 
   /* ── Entry point ── */
   async init() {

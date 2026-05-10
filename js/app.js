@@ -344,10 +344,11 @@ const App = {
           id: 'dev-chefe',
           email: mock,
           nome: 'JR',
-          role: 'admin',
-          cargo: 'Desenvolvedor',
+          role: 'assessor',
+          cargo: 'Assessor de Marketing',
           iniciais: 'JR',
-          coordenadorias: { nome: 'Geral', sigla: 'GER', icon: 'crown' }
+          _isDev: true,
+          coordenadorias: { nome: 'Marketing', sigla: 'MKT', icone: 'layers' }
         };
       }
       return null;
@@ -372,13 +373,15 @@ const App = {
         id: user.id,
         email: user.email,
         nome: meta.nome || emailName,
-        role: isDev ? 'admin' : (meta.role || 'membro'),
-        cargo: isDev ? 'Desenvolvedor' : (meta.cargo || 'Membro'),
+        role: meta.role || 'membro',
+        cargo: meta.cargo || 'Membro',
         iniciais: meta.iniciais || emailName.slice(0, 2).toUpperCase(),
+        _isDev: isDev,
         coordenadorias: { nome: 'Geral', sigla: 'GER', icon: 'crown' }
       };
     }
-    if (isDev) { data.role = 'admin'; data.cargo = 'Desenvolvedor'; }
+    // Preserva o perfil real do banco; _isDev habilita ferramentas de dev sem sobrescrever o papel real
+    if (isDev) data._isDev = true;
     return data;
   },
 
@@ -450,10 +453,10 @@ const App = {
       <span class="nav-label" style="color:var(--orange)">Atividades ABJ</span>
     </div>`;
 
-    /* ── Lojinha: admin e coordenação Financeira ── */
-    if (role === 'admin' || sigla === 'FIN') {
-      html += `<div class="sidebar-section">${role === 'admin' ? 'Terminal do Dev' : 'Lojinha NUPIEEPRO'}</div>`;
-      if (role === 'admin') {
+    /* ── Lojinha: dev e coordenação Financeira ── */
+    if (profile?._isDev || sigla === 'FIN') {
+      html += `<div class="sidebar-section">${profile?._isDev ? 'Terminal do Dev' : 'Lojinha NUPIEEPRO'}</div>`;
+      if (profile?._isDev) {
         html += `<div class="nav-item" style="color:var(--orange);border-left:2px solid var(--orange);" onclick="window.open('https://supabase.com/dashboard/project/quwpyrdxyibcbyzwfilb','_blank')">
           <span class="nav-icon">${getIcon('settings')}</span>
           <span class="nav-label">DB Supabase Dashboard</span>
@@ -555,7 +558,7 @@ const App = {
       App.buildSidebar(coordName);
       App.buildMobileNav(coordName);
 
-      const isOps = profile.role === 'admin' || (profile.coordenadorias?.sigla || '').toUpperCase() === 'OPS';
+      const isOps = profile._isDev || (profile.coordenadorias?.sigla || '').toUpperCase() === 'OPS';
       const opsSection = document.getElementById('opsLinksSection');
       if (opsSection) opsSection.style.display = isOps ? 'contents' : 'none';
 
@@ -571,7 +574,7 @@ const App = {
 
       // Role Switcher para o dev/admin
       const isJR = profile.email?.includes('jjose') || profile.nome?.toLowerCase().includes('rayan');
-      const btnSwitch = document.getElementById('btnSwitchRole');
+      const btnSwitch = document.getElementById('dropRoleSwitcher');
       if (isJR && btnSwitch) btnSwitch.style.display = 'block';
 
       App.syncSettingsInputs(profile);
@@ -650,9 +653,9 @@ const App = {
       p.cargo = cargo;
       
       // Update UI
-      document.getElementById('sideName').textContent = nome;
-      document.getElementById('sideAvatar').textContent = iniciais;
-      document.getElementById('sideRole').textContent = `${cargo} · ${p.coordenadorias?.nome || 'Geral'}`;
+      const _sn = document.getElementById('sideName'); if (_sn) _sn.textContent = nome;
+      const _sa = document.getElementById('sideAvatar'); if (_sa) _sa.textContent = iniciais;
+      const _sr = document.getElementById('sideRole'); if (_sr) _sr.textContent = `${cargo} · ${p.coordenadorias?.nome || 'Geral'}`;
       App.syncSettingsInputs(p);
       
       App.toast('Perfil atualizado com sucesso!', 'success');
@@ -681,7 +684,7 @@ const App = {
       
       // Re-build UI
       App.buildSidebar(newCoord);
-      document.getElementById('sideRole').textContent = `${window._activeRole.toUpperCase()} · ${newCoord}`;
+      const _srb = document.getElementById('sideRole'); if (_srb) _srb.textContent = `${window._activeRole.toUpperCase()} · ${newCoord}`;
       
       const badge = document.getElementById('profile-badge');
       if (badge) {
@@ -1483,10 +1486,9 @@ const Pessoas = {
     const mgrid = document.getElementById('manageGrid');
     const count = document.getElementById('memberCount');
 
-    // Dados mock enquanto Supabase não retorna
-    let members = [
-      { iniciais:'RB', nome:'Rayan Bezerra', cargo:'Desenvolvedor Chefe', coord:'Geral', email:'jjoserrayan2711@gmail.com', role:'admin', cor:'orange' },
-    ];
+    let members = [];
+
+    if (grid) grid.innerHTML = '<p style="color:var(--fg-3);font-size:13px;padding:16px 0;text-align:center;">Carregando...</p>';
 
     if (_sb) {
       const { data } = await _sb.from('users')
@@ -1507,7 +1509,11 @@ const Pessoas = {
 
     if (count) count.textContent = members.length + ' membros';
 
-    if (grid) grid.innerHTML = members.map(m => `
+    if (grid && members.length === 0) {
+      grid.innerHTML = '<p style="color:var(--fg-3);font-size:13px;padding:16px 0;text-align:center;">Nenhum membro cadastrado.</p>';
+    }
+
+    if (grid && members.length > 0) grid.innerHTML = members.map(m => `
       <div style="background:var(--c-s2);padding:14px;border-radius:12px;border:1px solid ${m.cor==='orange'?'var(--orange-border)':'var(--border)'};display:flex;align-items:center;gap:14px;">
         <div style="width:44px;height:44px;border-radius:50%;background:${m.cor==='orange'?'var(--orange-dim)':'var(--blue-dim)'};border:2px solid ${m.cor==='orange'?'var(--orange)':'var(--blue)'};color:${m.cor==='orange'?'var(--orange)':'var(--blue)'};display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px;flex-shrink:0;">${m.iniciais}</div>
         <div style="flex:1;min-width:0;">
@@ -2372,6 +2378,9 @@ function _buildNav(role) {
   html += `<div class="nav-item" id="nav-configuracoes" onclick="goTo('configuracoes')">
     <span class="nav-icon">⚙</span><span class="nav-label">Configurações</span>
   </div>`;
+  html += `<div class="nav-item" onclick="doLogout()" style="color:var(--brand-orange);">
+    <span class="nav-icon">↪</span><span class="nav-label">Sair</span>
+  </div>`;
 
   nav.innerHTML = html;
 }
@@ -2409,7 +2418,7 @@ const Dem = {
     const PRIO_COR = { alta: '#f87171', media: '#f5c518', baixa: '#2dd4a0' };
     try {
       const _p = window._appProfile;
-      const _isGlobal = !_p || _p.role === 'admin'
+      const _isGlobal = !_p || _p._isDev || _p.role === 'admin'
         || _p.coordenadorias?.sigla === 'GER'
         || _p.coordenadorias?.sigla === 'GP';
       let query = sb
@@ -2641,7 +2650,7 @@ const Kanban = (() => {
     if (!window._supabase) { _renderAll([]); return; }
     try {
       const _p = window._appProfile;
-      const _isGlobal = !_p || _p.role === 'admin'
+      const _isGlobal = !_p || _p._isDev || _p.role === 'admin'
         || _p.coordenadorias?.sigla === 'GER'
         || _p.coordenadorias?.sigla === 'GP';
       let q = window._supabase
@@ -2904,7 +2913,7 @@ const CyberSecurity = {
   check() {
     const profile = window._appProfile;
     if (!profile) return;
-    const isFin = (profile.coordenadorias?.sigla === 'FIN' || profile.role === 'admin');
+    const isFin = (profile.coordenadorias?.sigla === 'FIN' || profile._isDev || profile.role === 'admin');
     if (!isFin) return;
 
     const diffHrs = (Date.now() - this.lastAction) / (1000 * 60 * 60);

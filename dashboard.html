@@ -50,15 +50,6 @@
         <div class="sidebar-logo-sub">Sistema de Gestão</div>
       </div>
 
-      <!-- Role switcher — só aparece para admin/dev -->
-      <div class="role-switcher d-none" id="roleSwitcher" style="flex-wrap:wrap;gap:2px;">
-        <div class="role-tab active" id="roleTab-ger" onclick="switchRole('ger')" title="Coord. Geral">⬡ GER</div>
-        <div class="role-tab" id="roleTab-ops" onclick="switchRole('ops')" title="Operações">⚙ OPS</div>
-        <div class="role-tab" id="roleTab-gp"  onclick="switchRole('gp')"  title="G. Pessoas">◒ G.P</div>
-        <div class="role-tab" id="roleTab-mkt" onclick="switchRole('mkt')" title="Assessor MKT">◬ MKT</div>
-        <div class="role-tab" id="roleTab-prj" onclick="switchRole('prj')" title="Projetos">◫ PRJ</div>
-        <div class="role-tab" id="roleTab-fin" onclick="switchRole('fin')" title="Finanças">◎ FIN</div>
-      </div>
 
       <!-- Navigation -->
       <nav id="sideNav" class="sidebar-nav">
@@ -233,28 +224,13 @@
           <svg class="nav-icon" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd"/></svg>
           <span>Configurações</span>
         </a>
+        <a class="nav-item" href="#" onclick="doLogout();return false;" style="--item-color:#f65214">
+          <svg class="nav-icon" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zm10.293 9.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L14.586 9H7a1 1 0 100 2h7.586l-1.293 1.293z" clip-rule="evenodd"/></svg>
+          <span>Sair</span>
+        </a>
 
       </nav>
 
-      <!-- Sidebar Footer: user chip -->
-      <div class="sidebar-footer">
-        <div class="sidebar-user-chip" onclick="goTo('configuracoes')" style="cursor:pointer;" title="Minhas configurações">
-          <div class="u-avatar" id="sideAvatar">?</div>
-          <div class="sidebar-user-info">
-            <div class="u-name" id="sideName">Carregando...</div>
-            <div class="u-role" id="sideRole">—</div>
-          </div>
-          <span class="status-dot"></span>
-        </div>
-        <button class="btn-logout" onclick="doLogout()" title="Sair">
-          <svg viewBox="0 0 20 20" fill="currentColor" width="16" height="16"><path fill-rule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zm10.293 9.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L14.586 9H7a1 1 0 100 2h7.586l-1.293 1.293z" clip-rule="evenodd"/></svg>
-        </button>
-      </div>
-
-      <!-- Signature -->
-      <div class="sidebar-signature">
-        <div class="shimmer" style="font-size:9px;font-weight:800;letter-spacing:1.5px;font-family:var(--font-mono);opacity:0.6;">NUPIEEPRO · GESTÃO 2026</div>
-      </div>
     </aside>
 
     <!-- ═══ MAIN AREA ═══ -->
@@ -310,6 +286,16 @@
                 <svg viewBox="0 0 20 20" fill="currentColor" width="14" height="14"><path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"/></svg>
                 Meu perfil de membro
               </a>
+              <!-- Role switcher: admin only -->
+              <div id="dropRoleSwitcher" style="display:none;border-top:1px solid var(--border-1);padding:8px 12px;">
+                <div style="font-size:10px;font-weight:700;color:var(--fg-3);letter-spacing:0.08em;font-family:var(--font-mono);margin-bottom:6px;">VISÃO</div>
+                <div class="role-switcher" style="margin:0;">
+                  <div class="role-tab active" id="roleTab-admin"   onclick="switchRole('admin');toggleProfileDropdown()"   title="Admin">⚡ ADM</div>
+                  <div class="role-tab"        id="roleTab-geral"   onclick="switchRole('geral');toggleProfileDropdown()"   title="Coord. Geral">⬡ GRL</div>
+                  <div class="role-tab"        id="roleTab-coord"   onclick="switchRole('coord');toggleProfileDropdown()"   title="Coordenador">◒ CRD</div>
+                  <div class="role-tab"        id="roleTab-assessor" onclick="switchRole('assessor');toggleProfileDropdown()" title="Assessor">◐ ASS</div>
+                </div>
+              </div>
               <div style="border-top:1px solid var(--border-1);margin-top:4px;padding-top:4px;">
                 <a class="profile-dropdown-item" href="#" onclick="doLogout();return false;" style="color:var(--brand-orange);">
                   <svg viewBox="0 0 20 20" fill="currentColor" width="14" height="14"><path fill-rule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zm10.293 9.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L14.586 9H7a1 1 0 100 2h7.586l-1.293 1.293z" clip-rule="evenodd"/></svg>
@@ -1624,11 +1610,11 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
   <script src="js/permissoes.js?v=20"></script>
-  <script src="js/app.js?v=21"></script>
-  <script src="js/auth.js?v=21"></script>
-  <script src="js/abj.js?v=21"></script>
-  <script src="js/relatorio.js?v=21"></script>
-  <script src="js/pages.js?v=21"></script>
+  <script src="js/app.js?v=24"></script>
+  <script src="js/auth.js?v=24"></script>
+  <script src="js/abj.js?v=24"></script>
+  <script src="js/relatorio.js?v=24"></script>
+  <script src="js/pages.js?v=24"></script>
   <script>
     // ── PROFILE DROPDOWN ───────────────────────────────
     function toggleProfileDropdown() {
