@@ -479,6 +479,17 @@ const App = {
       <span class="nav-label">Compartilhado</span>
     </div>`;
 
+    /* ── Sistema (sempre no final para todos) ── */
+    html += '<div class="sidebar-section">Sistema</div>';
+    html += `<div class="nav-item" id="nav-configuracoes" onclick="goTo('configuracoes')">
+      <span class="nav-icon">${getIcon('settings')}</span>
+      <span class="nav-label">Configurações</span>
+    </div>`;
+    html += `<div class="nav-item" onclick="doLogout()" style="color:var(--brand-orange);">
+      <span class="nav-icon">${getIcon('log-out')}</span>
+      <span class="nav-label">Sair</span>
+    </div>`;
+
     nav.innerHTML = html;
 
     /* Aplicar cor da coordenadoria como --item-color para o estado active do nav-item */
@@ -842,6 +853,7 @@ const Dashboard = {
       const saldo = totalVendas - totalDespesas;
 
       Dashboard.setKPIs(totalPts, activeTasks, totalMembers, saldo, totalVendas, totalDespesas);
+      DashboardExtra.loadBirthdays();
 
       // IDN Hero — Índice de Desempenho do Núcleo
       (function updateHeroIDN() {
@@ -2331,7 +2343,7 @@ function switchRole(role) {
   if (activeTab) activeTab.classList.add('active');
   _buildNav(role);
   // Atualiza chip do usuário
-  const chip = DEV_CHIP[role] || DEV_CHIP.ger;
+  const chip = DEV_CHIP[role] || DEV_CHIP.admin;
   const av = document.getElementById('sideAvatar');
   const nm = document.getElementById('sideName');
   const rl = document.getElementById('sideRole');
@@ -2339,7 +2351,7 @@ function switchRole(role) {
   if (nm) nm.textContent = chip.nome;
   if (rl) rl.textContent = chip.cargo;
   // Navega para a primeira página da visão
-  const firstPage = (DEV_PAGES[role] || DEV_PAGES.ger)[0];
+  const firstPage = (DEV_PAGES[role] || DEV_PAGES.admin)[0];
   if (firstPage) goTo(firstPage.id);
 }
 
