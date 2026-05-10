@@ -1976,10 +1976,10 @@ const Geral = {
         list.innerHTML = '<p class="text-muted text-sm">Nenhum membro ativo cadastrado.</p>';
         return;
       }
-      const { data: presencas } = await sb.from('presencas').select('user_id, justificada').eq('presente', false);
+      const { data: presencas } = await sb.from('frequencia').select('user_id, presente, observacao').eq('presente', false);
       const faltasPorMembro = {};
       (presencas || []).forEach(p => {
-        if (!p.justificada) faltasPorMembro[p.user_id] = (faltasPorMembro[p.user_id] || 0) + 1;
+        if (!p.observacao) faltasPorMembro[p.user_id] = (faltasPorMembro[p.user_id] || 0) + 1;
       });
       const alertas = membros
         .filter(m => (faltasPorMembro[m.id] || 0) >= 2)

@@ -1601,6 +1601,41 @@ const PageProjetos = {
       PageProjetos._carregar();
     } catch(e) { mostrarToast('Erro ao registrar episódio.','error'); }
   },
+  _renderNupicast() {
+    const pg = document.getElementById('page-prj_nupicast');
+    if (!pg) return;
+    const ct = pg.querySelector('.content') || pg;
+    ct.innerHTML = _sc('NUPICAST Tracker','🎙️',`
+      <p style="font-size:13px;color:var(--c-slate);margin-bottom:14px">
+        Episódios do NUPICAST — podcast do Núcleo.
+      </p>
+      ${_btn('+ Novo episódio','PageProjetos.novoEpisodio()')}
+      <div id="nupicast-lista" style="margin-top:14px;display:flex;flex-direction:column;gap:8px">
+        <div style="padding:20px;text-align:center;color:var(--c-slate);font-size:13px">Carregando...</div>
+      </div>`);
+    this._carregarNupicast();
+  },
+  async _carregarNupicast() {
+    const el = document.getElementById('nupicast-lista');
+    if (!el || !_sb()) return;
+    try {
+      const { data } = await _sb().from('eventos')
+        .select('*').eq('tipo','podcast')
+        .order('data_inicio',{ascending:false}).limit(20);
+      el.innerHTML = data?.length
+        ? data.map(e => {
+            let extra = {}; try { extra = JSON.parse(e.descricao||'{}'); } catch(_){}
+            return `<div style="background:var(--b-1);border:1px solid var(--b-2);border-radius:10px;padding:14px 16px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+              <div>
+                <div style="font-weight:700;font-size:13px;color:var(--c-white)">${sanitize(e.titulo)}</div>
+                <div style="font-size:12px;color:var(--c-slate)">📅 ${_fmt(e.data_inicio)}${extra.convidados?` · 🎤 ${sanitize(extra.convidados)}`:''}</div>
+              </div>
+              ${extra.link?`<a href="${sanitize(extra.link)}" target="_blank" class="btn btn-ghost" style="font-size:11px;padding:6px 12px;text-decoration:none">▶ Ouvir ↗</a>`:'<span style="font-size:11px;color:var(--c-slate)">Sem link</span>'}
+            </div>`;
+          }).join('')
+        : `<div style="padding:30px;text-align:center"><div style="font-size:36px;margin-bottom:12px">🎙️</div><div style="font-size:14px;font-weight:700;color:var(--c-white)">Nenhum episódio registrado</div></div>`;
+    } catch(e) { el.innerHTML='<div style="padding:16px;color:var(--c-slate)">Erro ao carregar.</div>'; }
+  },
   /* ── ENEGEP — Atividade 14 (Momento ENEGEP) ──
      Exige: fotos, lista de presença, link de inscrição/certificado.
   ── */
@@ -1753,8 +1788,43 @@ const PageProjetos = {
         descricao: link ? JSON.stringify({link}) : null
       }]);
       mostrarToast('Capacitação registrada!','success');
-      PageProjetos._renderEventos?.();
+      PageProjetos._renderTreinamentos?.();
     } catch(e) { mostrarToast('Erro ao registrar capacitação.','error'); }
+  },
+  _renderTreinamentos() {
+    const pg = document.getElementById('page-prj_treinamentos');
+    if (!pg) return;
+    const ct = pg.querySelector('.content') || pg;
+    ct.innerHTML = _sc('Capacitações e Treinamentos','📚',`
+      <p style="font-size:13px;color:var(--c-slate);margin-bottom:14px">
+        Capacitações externas e treinamentos realizados pelos membros do Núcleo.
+      </p>
+      ${_btn('+ Registrar capacitação','PageProjetos.novaCapacitacao()')}
+      <div id="treinamentos-lista" style="margin-top:14px;display:flex;flex-direction:column;gap:8px">
+        <div style="padding:20px;text-align:center;color:var(--c-slate);font-size:13px">Carregando...</div>
+      </div>`);
+    this._carregarTreinamentos();
+  },
+  async _carregarTreinamentos() {
+    const el = document.getElementById('treinamentos-lista');
+    if (!el || !_sb()) return;
+    try {
+      const { data } = await _sb().from('eventos')
+        .select('*').eq('tipo','treinamento')
+        .order('data_inicio',{ascending:false}).limit(30);
+      el.innerHTML = data?.length
+        ? data.map(e => {
+            let extra = {}; try { extra = JSON.parse(e.descricao||'{}'); } catch(_){}
+            return `<div style="background:var(--b-1);border:1px solid var(--b-2);border-radius:10px;padding:14px 16px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+              <div>
+                <div style="font-weight:700;font-size:13px;color:var(--c-white)">${sanitize(e.titulo)}</div>
+                <div style="font-size:12px;color:var(--c-slate)">📅 ${_fmt(e.data_inicio)}${e.local?` · 📍 ${sanitize(e.local)}`:''}${e.vagas?` · 👥 ${e.vagas} vagas`:''}</div>
+              </div>
+              ${extra.link?`<a href="${sanitize(extra.link)}" target="_blank" class="btn btn-ghost" style="font-size:11px;padding:6px 12px;text-decoration:none">Inscrição ↗</a>`:''}
+            </div>`;
+          }).join('')
+        : `<div style="padding:30px;text-align:center"><div style="font-size:36px;margin-bottom:12px">📚</div><div style="font-size:14px;font-weight:700;color:var(--c-white)">Nenhuma capacitação registrada</div></div>`;
+    } catch(e) { el.innerHTML='<div style="padding:16px;color:var(--c-slate)">Erro ao carregar.</div>'; }
   },
 
   /* ─── Parcerias e Patrocínios ─────────────────────────────── */
@@ -1884,6 +1954,73 @@ const PageOperacoes = {
     }catch(e){el.innerHTML='<div style="padding:16px;color:var(--c-slate)">Erro ao carregar.</div>';}
   },
   verHistorico(){mostrarToast('Histórico completo aguardando módulo de relatório.','info');},
+  _renderArquivo() {
+    const pg = document.getElementById('page-ops_arquivo');
+    if (!pg) return;
+    const ct = pg.querySelector('.content') || pg;
+    ct.innerHTML = _sc('Arquivo de Documentos','🗂️',`
+      <p style="font-size:13px;color:var(--c-slate);margin-bottom:14px">
+        POPs, atas, regulamentos e documentos institucionais do Núcleo.
+      </p>
+      ${_btn('+ Novo documento','PageOperacoes.novoArquivo()')}
+      <div id="arquivo-lista" style="margin-top:14px;display:flex;flex-direction:column;gap:8px">
+        <div style="padding:20px;text-align:center;color:var(--c-slate);font-size:13px">Carregando...</div>
+      </div>`);
+    this._carregarArquivo();
+  },
+  async _carregarArquivo() {
+    const el = document.getElementById('arquivo-lista');
+    if (!el || !_sb()) return;
+    try {
+      const { data } = await _sb().from('pops')
+        .select('*').order('created_at',{ascending:false}).limit(40);
+      el.innerHTML = data?.length
+        ? data.map(d => `<div style="background:var(--b-1);border:1px solid var(--b-2);border-radius:10px;padding:14px 16px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+            <div>
+              <div style="font-weight:700;font-size:13px;color:var(--c-white)">${sanitize(d.titulo||d.nome||'Documento')}</div>
+              <div style="font-size:12px;color:var(--c-slate)">${d.tipo?`📂 ${sanitize(d.tipo)} · `:''}📅 ${_fmt(d.created_at)}</div>
+            </div>
+            ${d.conteudo?`<a href="${sanitize(d.conteudo)}" target="_blank" class="btn btn-ghost" style="font-size:11px;padding:6px 12px;text-decoration:none">Abrir ↗</a>`:'<span style="font-size:11px;color:var(--c-slate)">Sem link</span>'}
+          </div>`).join('')
+        : `<div style="padding:30px;text-align:center"><div style="font-size:36px;margin-bottom:12px">🗂️</div><div style="font-size:14px;font-weight:700;color:var(--c-white)">Nenhum documento cadastrado</div></div>`;
+    } catch(e) { el.innerHTML='<div style="padding:16px;color:var(--c-slate)">Erro ao carregar.</div>'; }
+  },
+  novoArquivo() {
+    const campos = [
+      { id:'arq-titulo', label:'Título do documento *', type:'text', placeholder:'Ex: POP de Reuniões' },
+      { id:'arq-tipo',   label:'Tipo', type:'select', opts:['POP','Ata','Regulamento','Edital','Outro'] },
+      { id:'arq-link',   label:'Link (Google Drive, Notion…)', type:'url', placeholder:'https://...' },
+    ];
+    const html = campos.map(c =>
+      c.type === 'select'
+        ? `<label style="font-size:12px;color:var(--c-slate);display:block;margin-bottom:6px">${c.label}
+             <select id="${c.id}" class="modal-input" style="width:100%;margin-top:4px;background:var(--b-1);color:var(--c-white);border:1px solid var(--b-3);border-radius:8px;padding:8px 10px;font-size:13px">
+               ${c.opts.map(o=>`<option>${o}</option>`).join('')}
+             </select></label>`
+        : `<label style="font-size:12px;color:var(--c-slate);display:block;margin-bottom:6px">${c.label}
+             <input id="${c.id}" type="${c.type}" placeholder="${c.placeholder||''}" class="modal-input"
+               style="width:100%;margin-top:4px;background:var(--b-1);color:var(--c-white);border:1px solid var(--b-3);border-radius:8px;padding:8px 10px;font-size:13px;box-sizing:border-box"></label>`
+    ).join('<div style="height:10px"></div>');
+    mostrarModal('Novo Documento',`<div style="display:flex;flex-direction:column;gap:4px">${html}</div>`,
+      [{ label:'Salvar', cls:'btn-primary', cb:'PageOperacoes._salvarArquivo()' }]);
+  },
+  async _salvarArquivo() {
+    const titulo = document.getElementById('arq-titulo')?.value?.trim();
+    const tipo   = document.getElementById('arq-tipo')?.value;
+    const link   = document.getElementById('arq-link')?.value?.trim();
+    if (!titulo) { mostrarToast('Informe o título do documento.','warning'); return; }
+    fecharModal();
+    try {
+      await _sb().from('pops').insert([{
+        titulo, tipo: tipo||null,
+        conteudo: link||null,
+        criado_por: window._appProfile?.id,
+        ativo: true
+      }]);
+      mostrarToast('Documento cadastrado!','success');
+      PageOperacoes._renderArquivo();
+    } catch(e) { mostrarToast('Erro ao salvar documento.','error'); }
+  },
   /* ── Gestão de Inscrições ── */
   async _renderInscricoes() {
     const pg=document.getElementById('page-ops_inscricoes');
@@ -4398,7 +4535,7 @@ document.addEventListener('nupi:booted', () => {
       'fin_comercial':     () => PageFinancas._renderCalendario(),
       /* Operações */
       'ops_relatorios':    () => PageOperacoes._renderRelatorios(),
-      'ops_arquivo':       () => PageOperacoes._renderPops(),
+      'ops_arquivo':       () => PageOperacoes._renderArquivo(),
       /* Gestão de Pessoas */
       'gp_talentos':       () => PagePessoas._renderTalentos(),
       'gp_clima':          () => PagePessoas._renderClima(),
@@ -4410,8 +4547,8 @@ document.addEventListener('nupi:booted', () => {
       'dev_usuarios':      () => PageDev.init(),
       /* Projetos sub */
       'prj_enegep':        () => PageProjetos._renderENEGEP(),
-      'prj_treinamentos':  () => PageProjetos._renderEventos(),
-      'prj_nupicast':      () => PageProjetos._renderEventos(),
+      'prj_treinamentos':  () => PageProjetos._renderTreinamentos(),
+      'prj_nupicast':      () => PageProjetos._renderNupicast(),
       'prj_parcerias':     () => PageProjetos._renderParcerias(),
       /* Globais */
       'global_visitas':       () => PageGlobal._renderVisitas(),
