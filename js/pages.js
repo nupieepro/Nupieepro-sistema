@@ -3184,11 +3184,6 @@ const PageDev = {
     try {
       await _sb().from('users').update({ nome, apelido, cargo, role, coordenadoria_id: coordId, aniversario: aniv, ativo })
         .eq('id', userId);
-      /* Se desativou → envia e-mail de despedida */
-      if (!ativo && uOriginal.ativo) {
-        const coord = this._coords.find(c => c.id === coordId);
-        await window.EmailsModule?.enviarDespedida({ ...uOriginal, nome, apelido, cargo }, coord?.nome);
-      }
       fecharModal();
       mostrarToast('Usuário atualizado!', 'success');
       this._carregarUsuarios();
