@@ -682,62 +682,6 @@ const PageMarketing = {
       });
     } catch(e) { console.warn('[MKT Kanban]', e); }
   },
-  async editarDemanda(id) {
-    if (!_sb()) return;
-    try {
-      const { data: d, error } = await _sb().from('demandas').select('*').eq('id', id).single();
-      if (error || !d) { mostrarToast('Demanda não encontrada.','error'); return; }
-      abrirModal({ titulo:'✏️ Editar Demanda', tipo:'info', corpo:`
-        <div class="form-group"><label class="form-label">Título *</label>
-          <input id="ed-titulo" class="form-input" value="${sanitize(d.titulo||'')}"></div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-          <div class="form-group"><label class="form-label">Tipo</label>
-            <select id="ed-tipo" class="form-select">
-              <option value="conteudo" ${d.tipo==='conteudo'?'selected':''}>Conteúdo / Post</option>
-              <option value="lojinha" ${d.tipo==='lojinha'?'selected':''}>🛍️ Lojinha</option>
-              <option value="divulgacao" ${d.tipo==='divulgacao'?'selected':''}>Divulgação</option>
-            </select></div>
-          <div class="form-group"><label class="form-label">Prazo</label>
-            <input id="ed-prazo" type="date" class="form-input" value="${d.prazo||''}"></div>
-        </div>
-        <div class="form-group"><label class="form-label">Status</label>
-          <select id="ed-coluna" class="form-select">
-            <option value="pendente" ${d.coluna==='pendente'?'selected':''}>🗂️ Backlog</option>
-            <option value="exec" ${d.coluna==='exec'?'selected':''}>⚡ Em andamento</option>
-            <option value="realizada" ${d.coluna==='realizada'?'selected':''}>👁️ Revisão</option>
-            <option value="auditada" ${d.coluna==='auditada'?'selected':''}>✅ Publicado</option>
-          </select></div>
-        <div class="form-group"><label class="form-label">Descrição</label>
-          <textarea id="ed-desc" class="form-input" style="height:70px">${sanitize(d.descricao||'')}</textarea></div>`,
-      botoes:[
-        { texto:'🗑️ Excluir', classe:'btn-ghost', acao:()=>PageMarketing._excluirDemanda(id) },
-        { texto:'Cancelar',   classe:'btn-ghost', acao:fecharModal },
-        { texto:'Salvar ✓',  classe:'btn-primary',acao:()=>PageMarketing._salvarEdicaoDemanda(id) },
-      ]});
-    } catch(e) { mostrarToast('Erro ao carregar demanda.','error'); }
-  },
-  async _salvarEdicaoDemanda(id) {
-    const titulo   = document.getElementById('ed-titulo')?.value?.trim();
-    const tipo     = document.getElementById('ed-tipo')?.value;
-    const prazo    = document.getElementById('ed-prazo')?.value || null;
-    const coluna   = document.getElementById('ed-coluna')?.value;
-    const descricao= document.getElementById('ed-desc')?.value?.trim() || null;
-    if (!titulo) { mostrarToast('Preencha o título!','warning'); return; }
-    fecharModal();
-    try {
-      await _sb().from('demandas').update({ titulo, tipo, prazo, coluna, descricao }).eq('id', id);
-      mostrarToast('Demanda atualizada!','success');
-      this._carregarKanban();
-    } catch(e) { mostrarToast('Erro ao salvar.','error'); }
-  },
-  async _excluirDemanda(id) {
-    fecharModal();
-    try {
-      await _sb().from('demandas').delete().eq('id', id);
-      mostrarToast('Demanda excluída.','info');
-      this._carregarKanban();
-    } catch(e) { mostrarToast('Erro ao excluir.','error'); }
-  },
   novaDemanda() {
     /* Prazo padrão: 10 dias úteis (regra da Lojinha ABJ) */
     const prazo10du = _addDiasUteis(10);
@@ -1029,10 +973,10 @@ const PageMarketing = {
             </select></div>
           <div class="form-group"><label class="form-label">Status</label>
             <select id="ed-coluna" class="form-select">
-              <option value="backlog"   ${d.coluna==='backlog'?'selected':''}>Backlog</option>
-              <option value="andamento" ${d.coluna==='andamento'?'selected':''}>Em andamento</option>
-              <option value="revisao"   ${d.coluna==='revisao'?'selected':''}>Em revisão</option>
-              <option value="concluido" ${d.coluna==='concluido'?'selected':''}>Concluído</option>
+              <option value="pendente"  ${d.coluna==='pendente'?'selected':''}>🗂️ Backlog</option>
+              <option value="exec"      ${d.coluna==='exec'?'selected':''}>⚡ Em andamento</option>
+              <option value="realizada" ${d.coluna==='realizada'?'selected':''}>👁️ Revisão</option>
+              <option value="auditada"  ${d.coluna==='auditada'?'selected':''}>✅ Publicado</option>
             </select></div>
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
@@ -1069,7 +1013,6 @@ const PageMarketing = {
     } catch(e) { mostrarToast('Erro ao salvar.','error'); }
   },
   async _excluirDemanda(id) {
-    if (!confirm('Excluir esta demanda? Esta ação não pode ser desfeita.')) return;
     fecharModal();
     try {
       await _sb().from('demandas').delete().eq('id', id);
