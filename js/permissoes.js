@@ -43,10 +43,11 @@ const Permissoes = (() => {
      */
     coordenador_geral: {
       pagesVisible: [
-        'dashboard','abj','notificacoes','tarefas',
+        'dashboard','abj','notificacoes','tarefas','demandas','calendario',
         'geral_reunioes','geral_planejamento','geral_melhorias','geral_parcerias',
-        'global_visitas','global_apresentacoes','global_producao','global_assembleia',
-        'pessoas','compartilhado','dev_usuarios', /* gestão de pessoas */
+        'global_visitas','global_apresentacoes','global_producao','global_assembleia','global_gestao',
+        'pessoas','compartilhado','dev_usuarios',
+        'gp_aniversarios','gp_treinamentos','prj_parcerias',
       ],
       podeGerenciarUsuarios: false, /* só GP e admin */
       podeAlterarRoles: false,
@@ -130,12 +131,12 @@ const Permissoes = (() => {
 
   /* ── Páginas por coordenadoria ── */
   const PAGES_POR_COORD = {
-    'Geral':           ['geral_reunioes','geral_planejamento','geral_melhorias','geral_parcerias','global_visitas','global_apresentacoes','global_producao','global_assembleia'],
-    'Marketing':       ['mkt_tracker','mkt_kanban','global_visitas','global_apresentacoes'],
-    'Financeira':      ['fin_fluxo','fin_abepro','fin_comercial','global_visitas','global_apresentacoes'],
-    'Projetos':        ['prj_eventos','prj_enegep','prj_treinamentos','prj_nupicast','global_visitas','global_apresentacoes','global_producao'],
-    'Operações':       ['ops_relatorios','ops_pops','ops_arquivo','global_visitas','global_apresentacoes'],
-    'Gestão de Pessoas': ['gp_crm','gp_clima','gp_tap','global_visitas','global_apresentacoes'],
+    'Geral':       ['geral_reunioes','geral_planejamento','geral_melhorias','geral_parcerias','global_visitas','global_apresentacoes','global_producao','global_assembleia','global_gestao'],
+    'Marketing':   ['mkt_tracker','mkt_kanban','global_visitas','global_apresentacoes'],
+    'Finanças':    ['fin_fluxo','fin_abepro','fin_comercial','global_visitas','global_apresentacoes'],
+    'Projetos':    ['prj_eventos','prj_enegep','prj_treinamentos','prj_nupicast','prj_parcerias','global_visitas','global_apresentacoes','global_producao'],
+    'Operações':   ['ops_relatorios','ops_pops','ops_arquivo','global_visitas','global_apresentacoes'],
+    'G. Pessoas':  ['gp_talentos','gp_clima','gp_tap','gp_aniversarios','gp_treinamentos','global_visitas','global_apresentacoes'],
   };
 
   /* ══════════════════════════════════════════
@@ -278,11 +279,14 @@ const Permissoes = (() => {
     if (!p) return false;
     const m = getMatriz(p.role);
     if (m.pagesVisible === '*') return true;
+    /* Páginas universais: todos os papéis ativos têm acesso */
+    const SEMPRE = ['dashboard','notificacoes','tarefas','compartilhado','demandas','abj','calendario'];
+    if (SEMPRE.includes(pageId)) return true;
     if (Array.isArray(m.pagesVisible)) return m.pagesVisible.includes(pageId);
     if (m.pagesVisible === 'coordenadoria') {
       const coordNome = p.coordenadorias?.nome || '';
       const paginas   = PAGES_POR_COORD[coordNome] || [];
-      return paginas.includes(pageId) || ['dashboard','notificacoes','tarefas','compartilhado','demandas','abj'].includes(pageId);
+      return paginas.includes(pageId);
     }
     return false;
   }

@@ -22,17 +22,17 @@ function _addDiasUteis(n) {
 }
 
 /* ── Notificação: grava na tabela notificacoes de um usuário ── */
-async function _notificar(userId, titulo, mensagem, tipo = 'info') {
+async function _notificar(userId, titulo, mensagem, tipo = 'info', categoria = null) {
   if (!_sb() || !userId) return;
   const VALID_TIPOS = ['info', 'alerta', 'sucesso', 'erro'];
   const tipoFinal = VALID_TIPOS.includes(tipo) ? tipo : 'info';
   try {
-    await _sb().from('notificacoes').insert([{ user_id: userId, titulo, mensagem, tipo: tipoFinal, lida: false }]);
+    await _sb().from('notificacoes').insert([{ user_id: userId, titulo, mensagem, tipo: tipoFinal, categoria, lida: false }]);
   } catch(e) { console.warn('[notif]', e); }
 }
 
 /* ── Notificação em broadcast: dispara para todos de uma coord ── */
-async function _notificarCoord(sigla, titulo, mensagem, tipo = 'info') {
+async function _notificarCoord(sigla, titulo, mensagem, tipo = 'info', categoria = null) {
   if (!_sb()) return;
   const VALID_TIPOS = ['info', 'alerta', 'sucesso', 'erro'];
   const tipoFinal = VALID_TIPOS.includes(tipo) ? tipo : 'info';
@@ -42,7 +42,7 @@ async function _notificarCoord(sigla, titulo, mensagem, tipo = 'info') {
     if (!coord) return;
     const { data } = await _sb().from('users').select('id').eq('coordenadoria_id', coord.id).eq('ativo', true);
     if (!data?.length) return;
-    await _sb().from('notificacoes').insert(data.map(u => ({ user_id: u.id, titulo, mensagem, tipo: tipoFinal, lida: false })));
+    await _sb().from('notificacoes').insert(data.map(u => ({ user_id: u.id, titulo, mensagem, tipo: tipoFinal, categoria, lida: false })));
   } catch(e) { console.warn('[notif coord]', e); }
 }
 
@@ -571,7 +571,7 @@ const PageGeral = {
       mostrarToast('Check-in realizado! ✅','success');
       /* Notifica o próprio usuário */
       _notificar(uid, 'Check-in confirmado ✅',
-        'Sua presença foi registrada.', 'sucesso');
+        'Sua presença foi registrada.', 'sucesso', 'reuniao');
     } catch(e) { mostrarToast('Erro ao registrar check-in.','error'); }
   },
 };
@@ -706,7 +706,7 @@ const PageMarketing = {
       mostrarToast('Demanda criada!','success');
       /* Notifica coordenadores de Marketing */
       _notificarCoord('MKT', `Nova demanda: ${titulo}`,
-        `Uma nova demanda de ${tipo} foi aberta${prazo ? ` com prazo em ${_fmt(prazo)}.` : '.'}`, 'info');
+        `Uma nova demanda de ${tipo} foi aberta${prazo ? ` com prazo em ${_fmt(prazo)}.` : '.'}`, 'info', 'demanda');
       this._carregarKanban();
     } catch(e) { mostrarToast('Erro ao criar demanda.','error'); }
   },
@@ -732,18 +732,27 @@ const PageMarketing = {
       <div id="mkt-lista" style="margin-top:14px;display:flex;flex-direction:column;gap:8px">
         <div style="padding:20px;text-align:center;color:var(--c-slate);font-size:13px">Carregando...</div>
       </div>`) +
+    _sc('Métricas das Redes Sociais','📊',`
+      <p style="font-size:13px;color:var(--c-slate);margin-bottom:14px">
+        Registre os dados de alcance e engajamento periodicamente.
+      </p>
+      ${_btn('+ Registrar métricas',"PageMarketing.registrarMetrica()",'btn-ghost')}
+      <div id="mkt-metricas" style="margin-top:14px;display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px">
+        <div style="padding:16px;text-align:center;color:var(--c-slate);font-size:13px;grid-column:1/-1">Carregando...</div>
+      </div>`) +
     _sc('Links das Redes','🔗',`
       <div style="display:flex;flex-direction:column;gap:8px;font-size:13px">
         <a href="https://www.instagram.com/nupieepro" target="_blank"
            style="display:flex;justify-content:space-between;padding:10px;background:var(--b-1);border-radius:8px;color:var(--c-accent);text-decoration:none">
           <span>Instagram</span><span>@nupieepro ↗</span>
         </a>
-        <a href="https://www.facebook.com/nupieepro" target="_blank"
+        <a href="https://www.facebook.com/facebook.com/nupieepro" target="_blank"
            style="display:flex;justify-content:space-between;padding:10px;background:var(--b-1);border-radius:8px;color:var(--c-accent);text-decoration:none">
           <span>Facebook</span><span>NUPIEEPRO ↗</span>
         </a>
       </div>`);
     this._carregarPosts();
+    this._carregarMetricas();
   },
   async _carregarPosts() {
     const el      = document.getElementById('mkt-lista');
@@ -827,6 +836,160 @@ const PageMarketing = {
       sessionStorage.removeItem('nupi_aviso_post_sem');
       this._carregarPosts();
     } catch(e) { mostrarToast('Erro ao salvar.','error'); }
+  },
+  async _carregarMetricas() {
+    const el = document.getElementById('mkt-metricas');
+    if (!el || !_sb()) return;
+    try {
+      const { data } = await _sb()
+        .from('tracker_social')
+        .select('*')
+        .order('data_referencia', { ascending: false })
+        .limit(30);
+      if (!data?.length) {
+        el.innerHTML = '<div style="padding:16px;text-align:center;color:var(--c-slate);font-size:13px;grid-column:1/-1">Nenhuma métrica registrada ainda.</div>';
+        return;
+      }
+      /* Última entrada por plataforma */
+      const ultimas = {};
+      data.forEach(r => { if (!ultimas[r.plataforma]) ultimas[r.plataforma] = r; });
+      const ICON_PLT = { instagram:'📸', linkedin:'💼', youtube:'▶️', tiktok:'🎵', twitter:'𝕏', whatsapp:'💬' };
+      el.innerHTML = Object.values(ultimas).map(r => `
+        <div style="background:var(--b-1);border:1px solid var(--b-2);border-radius:10px;padding:14px;text-align:center">
+          <div style="font-size:22px;margin-bottom:6px">${ICON_PLT[r.plataforma]||'📱'}</div>
+          <div style="font-size:11px;font-weight:800;color:var(--c-white);text-transform:uppercase;letter-spacing:.04em">${r.plataforma}</div>
+          ${r.seguidores != null ? `<div style="font-size:18px;font-weight:900;color:var(--c-accent);margin-top:6px">${r.seguidores.toLocaleString('pt-BR')}</div><div style="font-size:10px;color:var(--c-slate)">seguidores</div>` : ''}
+          ${r.posts_mes != null ? `<div style="font-size:12px;color:var(--c-slate);margin-top:4px">${r.posts_mes} posts/mês</div>` : ''}
+          <div style="font-size:10px;color:var(--c-slate);margin-top:6px">Ref: ${_fmt(r.data_referencia)}</div>
+        </div>`).join('');
+    } catch(e) { el.innerHTML = '<div style="padding:16px;color:var(--c-slate);grid-column:1/-1">Erro ao carregar métricas.</div>'; }
+  },
+  registrarMetrica() {
+    const hoje = new Date().toISOString().split('T')[0];
+    abrirModal({ titulo:'📊 Registrar Métricas', tipo:'info', corpo:`
+      <div class="form-group"><label class="form-label">Plataforma *</label>
+        <select id="rm-plataforma" class="form-select">
+          <option value="">— Selecione —</option>
+          <option>instagram</option><option>linkedin</option><option>youtube</option>
+          <option>tiktok</option><option>twitter</option><option>whatsapp</option>
+        </select></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div class="form-group"><label class="form-label">Seguidores</label>
+          <input id="rm-seg" type="number" class="form-input" placeholder="1200"></div>
+        <div class="form-group"><label class="form-label">Posts no mês</label>
+          <input id="rm-posts" type="number" class="form-input" placeholder="8"></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div class="form-group"><label class="form-label">Curtidas médias</label>
+          <input id="rm-curtidas" type="number" step="0.1" class="form-input" placeholder="45.5"></div>
+        <div class="form-group"><label class="form-label">Alcance médio</label>
+          <input id="rm-alcance" type="number" class="form-input" placeholder="800"></div>
+      </div>
+      <div class="form-group"><label class="form-label">Data de referência</label>
+        <input id="rm-data" type="date" class="form-input" value="${hoje}"></div>`,
+    botoes:[
+      {texto:'Cancelar',classe:'btn-ghost',acao:fecharModal},
+      {texto:'Salvar ✓',classe:'btn-primary',acao:()=>this._salvarMetrica()}
+    ]});
+  },
+  async _salvarMetrica() {
+    const plat  = document.getElementById('rm-plataforma')?.value;
+    const seg   = document.getElementById('rm-seg')?.value;
+    const posts = document.getElementById('rm-posts')?.value;
+    const curt  = document.getElementById('rm-curtidas')?.value;
+    const alc   = document.getElementById('rm-alcance')?.value;
+    const data  = document.getElementById('rm-data')?.value;
+    if (!plat) { mostrarToast('Selecione a plataforma!','warning'); return; }
+    fecharModal();
+    try {
+      await _sb().from('tracker_social').insert([{
+        plataforma: plat,
+        seguidores:     seg   ? parseInt(seg)       : null,
+        posts_mes:      posts ? parseInt(posts)     : null,
+        curtidas_media: curt  ? parseFloat(curt)    : null,
+        alcance_medio:  alc   ? parseInt(alc)       : null,
+        data_referencia: data || new Date().toISOString().split('T')[0],
+        registrado_por: window._appProfile?.id,
+      }]);
+      mostrarToast('Métricas registradas!','success');
+      this._carregarMetricas();
+    } catch(e) { mostrarToast('Erro ao salvar métricas.','error'); }
+  },
+  async editarDemanda(id) {
+    if (!_sb()) return;
+    try {
+      const { data } = await _sb()
+        .from('demandas')
+        .select('*,users!responsavel_id(nome)')
+        .eq('id', id)
+        .single();
+      if (!data) { mostrarToast('Demanda não encontrada.','error'); return; }
+      const d = data;
+      const coords = await getCoords();
+      const mkt = coords.find(c => c.sigla === 'MKT');
+      const { data: membros } = mkt
+        ? await _sb().from('users').select('id,nome').eq('coordenadoria_id', mkt.id).eq('ativo', true).order('nome')
+        : { data: [] };
+      const memOpts = (membros||[]).map(m => `<option value="${m.id}" ${d.responsavel_id===m.id?'selected':''}>${sanitize(m.nome)}</option>`).join('');
+      abrirModal({ titulo:'✏️ Editar Demanda', tipo:'info', corpo:`
+        <div class="form-group"><label class="form-label">Título *</label>
+          <input id="ed-titulo" class="form-input" value="${sanitize(d.titulo||'')}"></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div class="form-group"><label class="form-label">Tipo</label>
+            <select id="ed-tipo" class="form-select">
+              <option value="conteudo"    ${d.tipo==='conteudo'?'selected':''}>Conteúdo</option>
+              <option value="divulgacao"  ${d.tipo==='divulgacao'?'selected':''}>Divulgação</option>
+              <option value="lojinha"     ${d.tipo==='lojinha'?'selected':''}>Lojinha</option>
+            </select></div>
+          <div class="form-group"><label class="form-label">Status</label>
+            <select id="ed-coluna" class="form-select">
+              <option value="backlog"   ${d.coluna==='backlog'?'selected':''}>Backlog</option>
+              <option value="andamento" ${d.coluna==='andamento'?'selected':''}>Em andamento</option>
+              <option value="revisao"   ${d.coluna==='revisao'?'selected':''}>Em revisão</option>
+              <option value="concluido" ${d.coluna==='concluido'?'selected':''}>Concluído</option>
+            </select></div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div class="form-group"><label class="form-label">Responsável</label>
+            <select id="ed-resp" class="form-select"><option value="">— Nenhum —</option>${memOpts}</select></div>
+          <div class="form-group"><label class="form-label">Prazo</label>
+            <input id="ed-prazo" type="date" class="form-input" value="${d.prazo||''}"></div>
+        </div>
+        <div class="form-group"><label class="form-label">Descrição</label>
+          <textarea id="ed-desc" class="form-input" rows="3">${sanitize(d.descricao||'')}</textarea></div>`,
+      botoes:[
+        {texto:'Excluir',classe:'btn-ghost',acao:()=>PageMarketing._excluirDemanda(id)},
+        {texto:'Cancelar',classe:'btn-ghost',acao:fecharModal},
+        {texto:'Salvar ✓',classe:'btn-primary',acao:()=>PageMarketing._atualizarDemanda(id)}
+      ]});
+    } catch(e) { mostrarToast('Erro ao carregar demanda.','error'); }
+  },
+  async _atualizarDemanda(id) {
+    const titulo = document.getElementById('ed-titulo')?.value?.trim();
+    if (!titulo) { mostrarToast('Título é obrigatório.','warning'); return; }
+    fecharModal();
+    try {
+      await _sb().from('demandas').update({
+        titulo,
+        tipo:          document.getElementById('ed-tipo')?.value,
+        coluna:        document.getElementById('ed-coluna')?.value,
+        responsavel_id:document.getElementById('ed-resp')?.value || null,
+        prazo:         document.getElementById('ed-prazo')?.value || null,
+        descricao:     document.getElementById('ed-desc')?.value?.trim() || null,
+        updated_at:    new Date().toISOString(),
+      }).eq('id', id);
+      mostrarToast('Demanda atualizada!','success');
+      this._carregarKanban();
+    } catch(e) { mostrarToast('Erro ao salvar.','error'); }
+  },
+  async _excluirDemanda(id) {
+    if (!confirm('Excluir esta demanda? Esta ação não pode ser desfeita.')) return;
+    fecharModal();
+    try {
+      await _sb().from('demandas').delete().eq('id', id);
+      mostrarToast('Demanda excluída.','info');
+      this._carregarKanban();
+    } catch(e) { mostrarToast('Erro ao excluir.','error'); }
   },
 };
 const PageFinancas = {
@@ -1508,11 +1671,95 @@ const PageProjetos = {
       mostrarToast('Capacitação registrada!','success');
       PageProjetos._renderEventos?.();
     } catch(e) { mostrarToast('Erro ao registrar capacitação.','error'); }
-  }
+  },
+
+  /* ─── Parcerias e Patrocínios ─────────────────────────────── */
+  _renderParcerias() {
+    const pg = document.getElementById('page-prj_parcerias');
+    if (!pg) return;
+    const ct = pg.querySelector('.content') || pg;
+    ct.innerHTML = _sc('Parcerias e Patrocínios','🤝',`
+      <p style="font-size:13px;color:var(--c-slate);margin-bottom:14px">
+        Empresas e instituições parceiras do NUPIEEPRO. Patrocinadores têm logo exibida nos eventos.
+      </p>
+      ${_btn('+ Nova parceria','PageProjetos.novaParceria()')}
+      <div id="prj-parcerias-lista" style="margin-top:16px;display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px">
+        <div style="padding:20px;text-align:center;color:var(--c-slate);font-size:13px;grid-column:1/-1">Carregando...</div>
+      </div>`);
+    this._carregarParcerias();
+  },
+  async _carregarParcerias() {
+    const el = document.getElementById('prj-parcerias-lista');
+    if (!el || !_sb()) return;
+    try {
+      const { data } = await _sb()
+        .from('parcerias')
+        .select('*')
+        .order('nome');
+      if (!data?.length) {
+        el.innerHTML = '<div style="padding:20px;text-align:center;color:var(--c-slate);font-size:13px;grid-column:1/-1">Nenhuma parceria cadastrada.</div>';
+        return;
+      }
+      el.innerHTML = data.map(p => `
+        <div style="background:var(--b-1);border:1px solid var(--b-2);border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:10px;align-items:center;text-align:center">
+          ${p.logo_url
+            ? `<img src="${sanitize(p.logo_url)}" alt="${sanitize(p.nome)}" style="max-height:52px;max-width:120px;object-fit:contain;border-radius:6px;">`
+            : `<div style="width:52px;height:52px;border-radius:50%;background:var(--c-s5);display:flex;align-items:center;justify-content:center;font-size:20px;">🤝</div>`}
+          <div>
+            <div style="font-weight:700;font-size:13px;color:var(--c-white)">${sanitize(p.nome)}</div>
+            ${p.tipo ? `<span style="font-size:10px;padding:2px 8px;border-radius:99px;background:var(--c-accent)22;color:var(--c-accent);border:1px solid var(--c-accent)44">${sanitize(p.tipo)}</span>` : ''}
+          </div>
+          ${p.descricao ? `<div style="font-size:12px;color:var(--c-slate)">${sanitize(p.descricao)}</div>` : ''}
+          ${p.site ? `<a href="${sanitize(p.site)}" target="_blank" style="font-size:12px;color:var(--c-accent);text-decoration:none">🔗 Visitar site</a>` : ''}
+        </div>`).join('');
+    } catch(e) { el.innerHTML = '<div style="padding:16px;color:var(--c-slate);grid-column:1/-1">Erro ao carregar.</div>'; }
+  },
+  novaParceria() {
+    abrirModal({ titulo:'🤝 Nova Parceria', tipo:'info', corpo:`
+      <div class="form-group"><label class="form-label">Nome da empresa / instituição *</label>
+        <input id="pp-nome" class="form-input" placeholder="Ex: SENAI Piauí"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div class="form-group"><label class="form-label">Tipo</label>
+          <select id="pp-tipo" class="form-select">
+            <option value="parceiro">Parceiro</option>
+            <option value="patrocinador">Patrocinador</option>
+            <option value="apoiador">Apoiador</option>
+          </select></div>
+        <div class="form-group"><label class="form-label">Site</label>
+          <input id="pp-site" class="form-input" placeholder="https://"></div>
+      </div>
+      <div class="form-group"><label class="form-label">URL da logo (link público)</label>
+        <input id="pp-logo" class="form-input" placeholder="https://...logo.png"></div>
+      <div class="form-group"><label class="form-label">Descrição</label>
+        <textarea id="pp-desc" class="form-input" rows="2" placeholder="Benefícios / contexto da parceria"></textarea></div>`,
+    botoes:[
+      {texto:'Cancelar',classe:'btn-ghost',acao:fecharModal},
+      {texto:'Salvar ✓',classe:'btn-primary',acao:()=>this._salvarParceria()}
+    ]});
+  },
+  async _salvarParceria() {
+    const nome  = document.getElementById('pp-nome')?.value?.trim();
+    const tipo  = document.getElementById('pp-tipo')?.value;
+    const site  = document.getElementById('pp-site')?.value?.trim();
+    const logo  = document.getElementById('pp-logo')?.value?.trim();
+    const desc  = document.getElementById('pp-desc')?.value?.trim();
+    if (!nome) { mostrarToast('Informe o nome da parceria!','warning'); return; }
+    fecharModal();
+    try {
+      await _sb().from('parcerias').insert([{
+        nome, tipo, site: site||null, logo_url: logo||null,
+        descricao: desc||null,
+        criado_por: window._appProfile?.id,
+      }]);
+      mostrarToast('Parceria cadastrada!','success');
+      this._carregarParcerias();
+    } catch(e) { mostrarToast('Erro ao salvar parceria.','error'); }
+  },
 };
 const PageOperacoes = {
   async init() { this._renderPops(); this._renderRelatorios(); },
   _renderRelatorios() {
+    if (typeof RelatorioModule !== 'undefined') { RelatorioModule.renderPagina(); return; }
     const pg=document.getElementById('page-ops_relatorios');
     if(!pg)return;
     const ct=pg.querySelector('.content')||pg;
@@ -1521,18 +1768,11 @@ const PageOperacoes = {
         Prazo: último dia de cada mês. Envio fora do prazo resulta em desconto de pontos (Regimento Art. 20º).
       </p>
       <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px">
-        ${_btn('Gerar relatório PDF',"PageOperacoes.gerarRelatorio()")}
-        ${_btn('Histórico',"PageOperacoes.verHistorico()",'btn-ghost')}
+        ${_btn('+ Novo relatório',"RelatorioModule?.abrirFormulario()")}
       </div>
       <div id="ops-relatorios-lista" style="display:flex;flex-direction:column;gap:8px">
-        <div style="padding:20px;text-align:center;color:var(--c-slate);font-size:13px">Carregando...</div>
-      </div>`) +
-    _sc('Arquivo Digital','🗂️',`
-      <p style="font-size:13px;color:var(--c-slate);margin-bottom:14px">
-        Atas de reunião, documentos e evidências ficam aqui.
-      </p>
-      ${_btn('+ Subir documento',"PageOperacoes.uploadDocumento()")}`);
-    this._carregarRelatorios();
+        <div style="padding:20px;text-align:center;color:var(--c-slate);font-size:13px">Módulo de relatórios não carregado.</div>
+      </div>`);
   },
   async _carregarRelatorios() {
     const el=document.getElementById('ops-relatorios-lista');
@@ -1560,24 +1800,97 @@ const PageOperacoes = {
     }catch(e){el.innerHTML='<div style="padding:16px;color:var(--c-slate)">Erro ao carregar.</div>';}
   },
   verHistorico(){mostrarToast('Histórico completo aguardando módulo de relatório.','info');},
-  _renderPops() {
+  async _renderPops() {
     const pg=document.getElementById('page-ops_pops');
     if(!pg)return;
     const ct=pg.querySelector('.content')||pg;
+    const sb=_sb();
     ct.innerHTML=_sc('Cofre de POPs','📁',`
-      <p style="font-size:13px;color:var(--c-slate);margin-bottom:14px">
+      <p style="font-size:13px;color:var(--fg-3);margin-bottom:14px">
         Procedimentos Operacionais Padrão — atualização semestral obrigatória (Regimento Art. 12º V).
       </p>
-      <div style="display:flex;flex-direction:column;gap:8px">
-        ${['Onboarding de membros','Relatório ABJ','Gestão de redes sociais',
-           'Planejamento semestral','Visita técnica','Passagem de bastão'].map(p=>
-          `<div style="background:var(--b-1);border:1px solid var(--b-2);border-radius:10px;
-                       padding:12px 16px;display:flex;justify-content:space-between;align-items:center">
-            <span style="font-size:13px;color:var(--c-white)">📄 ${p}</span>
-            <button class="btn btn-ghost" style="font-size:12px"
-              onclick="mostrarToast('${p} — em breve!','info')">Ver ↗</button>
-          </div>`).join('')}
+      <div style="display:flex;gap:8px;margin-bottom:14px;">
+        ${_btn('+ Novo POP',"PageOperacoes.novoPop()")}
+      </div>
+      <div id="ops-pops-list" style="display:flex;flex-direction:column;gap:8px">
+        <div style="padding:16px;text-align:center;color:var(--fg-3);font-size:13px;">Carregando POPs...</div>
       </div>`);
+    if(!sb){document.getElementById('ops-pops-list').innerHTML='<p style="color:var(--fg-3);font-size:13px;">Banco não conectado.</p>';return;}
+    try {
+      const {data}=await sb.from('pops').select('*').order('titulo');
+      const el=document.getElementById('ops-pops-list');
+      if(!el)return;
+      if(!data||data.length===0){
+        el.innerHTML=`<div style="padding:24px;text-align:center;color:var(--fg-3);font-size:13px;">
+          <p>Nenhum POP cadastrado ainda.</p>
+          <p style="font-size:11px;margin-top:6px;">Clique em "+ Novo POP" para adicionar o primeiro procedimento.</p>
+        </div>`;return;
+      }
+      const hoje=new Date();
+      el.innerHTML=data.map(p=>{
+        const revisao=p.data_revisao?new Date(p.data_revisao+'T12:00:00'):null;
+        const venceDias=revisao?Math.ceil((revisao-hoje)/(1000*60*60*24)):null;
+        const tag=venceDias===null?'':
+          venceDias<0?`<span style="font-size:10px;color:#f87171;margin-left:8px;">Vencido</span>`:
+          venceDias<=30?`<span style="font-size:10px;color:var(--brand-orange);margin-left:8px;">Vence em ${venceDias}d</span>`:
+          `<span style="font-size:10px;color:var(--fg-3);margin-left:8px;">Revisão: ${revisao.toLocaleDateString('pt-BR')}</span>`;
+        const ativoIcon=p.ativo!==false?'🟢':'🔴';
+        return `<div style="background:var(--surface-2);border:1px solid var(--border-1);border-radius:10px;padding:12px 16px;display:flex;justify-content:space-between;align-items:center">
+          <div>
+            <span style="font-size:13px;color:var(--fg-1);font-weight:600;">📄 ${p.titulo}</span>${tag}
+            ${p.descricao?`<div style="font-size:11px;color:var(--fg-3);margin-top:3px;">${p.descricao}</div>`:''}
+          </div>
+          <div style="display:flex;gap:6px;align-items:center;">
+            <span title="${p.ativo!==false?'Ativo':'Inativo'}">${ativoIcon}</span>
+            <button class="btn btn-ghost" style="font-size:11px;padding:4px 8px;" onclick="PageOperacoes.editarPop('${p.id}','${(p.titulo||'').replace(/'/g,"\\'")}')">Editar</button>
+          </div>
+        </div>`;
+      }).join('');
+    } catch(e) {
+      const el=document.getElementById('ops-pops-list');
+      if(el) el.innerHTML='<p style="color:var(--fg-3);font-size:13px;">Erro ao carregar POPs.</p>';
+    }
+  },
+  novoPop() {
+    abrirModal({titulo:'📄 Novo POP',corpo:`
+      <div class="form-group"><label class="form-label">Título do POP *</label><input id="pop-titulo" class="form-input" placeholder="Ex: Onboarding de membros"></div>
+      <div class="form-group"><label class="form-label">Descrição</label><textarea id="pop-desc" class="form-input" rows="2" placeholder="Resumo do procedimento..."></textarea></div>
+      <div class="form-group"><label class="form-label">Data da próxima revisão</label><input id="pop-revisao" class="form-input" type="date"></div>
+    `,botoes:[
+      {texto:'Cancelar',classe:'btn-ghost',acao:fecharModal},
+      {texto:'Salvar POP',classe:'btn-primary',acao:async()=>{
+        const titulo=document.getElementById('pop-titulo')?.value?.trim();
+        const desc=document.getElementById('pop-desc')?.value?.trim();
+        const revisao=document.getElementById('pop-revisao')?.value;
+        if(!titulo){mostrarToast('Informe o título do POP.','error');return;}
+        fecharModal();
+        if(!_sb()){mostrarToast('Banco não conectado.','error');return;}
+        try{
+          await _sb().from('pops').insert({titulo,descricao:desc||null,data_revisao:revisao||null,ativo:true,criado_por:window._appProfile?.id});
+          mostrarToast('POP cadastrado com sucesso!','success');
+          PageOperacoes._renderPops();
+        }catch(e){mostrarToast('Erro ao salvar POP.','error');}
+      }}
+    ]});
+  },
+  editarPop(id, titulo) {
+    abrirModal({titulo:`✏️ Editar POP: ${titulo}`,corpo:`
+      <p style="color:var(--fg-3);font-size:12px;margin-bottom:12px;">ID: ${id}</p>
+      <div class="form-group"><label class="form-label">Novo título</label><input id="pop-edit-titulo" class="form-input" value="${titulo}"></div>
+    `,botoes:[
+      {texto:'Cancelar',classe:'btn-ghost',acao:fecharModal},
+      {texto:'Salvar',classe:'btn-primary',acao:async()=>{
+        const novoTitulo=document.getElementById('pop-edit-titulo')?.value?.trim();
+        if(!novoTitulo){mostrarToast('Informe o título.','error');return;}
+        fecharModal();
+        if(!_sb()){mostrarToast('Banco não conectado.','error');return;}
+        try{
+          await _sb().from('pops').update({titulo:novoTitulo}).eq('id',id);
+          mostrarToast('POP atualizado!','success');
+          PageOperacoes._renderPops();
+        }catch(e){mostrarToast('Erro ao atualizar POP.','error');}
+      }}
+    ]});
   },
   gerarRelatorio() {
     mostrarToast('Iniciando geração de PDF ABJ...','info');
@@ -1889,8 +2202,7 @@ const PagePessoas = {
       mostrarToast('TAP submetido com sucesso! 🎉','success');
       /* Notifica Coord Geral */
       _notificarCoord('GER', '💡 Novo TAP submetido',
-        `O Termo de Abertura de Projeto foi submetido por ${window._appProfile?.nome || 'um membro'} para avaliação.`,
-        'abj');
+        `O Termo de Abertura de Projeto foi submetido por ${window._appProfile?.nome || 'um membro'} para avaliação.`, 'info', 'abj');
       this._renderTAPWizard();
     } catch(e) { mostrarToast('Erro ao submeter TAP.','error'); console.warn(e); }
   },
@@ -2008,7 +2320,7 @@ const PagePessoas = {
       mostrarToast(`Convite enviado para ${email}!`, 'success');
       /* Notifica admins */
       _notificar(window._appProfile?.id,
-        'Convite enviado 📩', `Convite gerado para ${email} (${cargo}).`, 'sistema');
+        'Convite enviado 📩', `Convite gerado para ${email} (${cargo}).`, 'info', 'sistema');
     }catch(e){mostrarToast('Erro ao enviar convite.','error');}
   },
   adicionarClima() {
@@ -2047,7 +2359,7 @@ const PagePessoas = {
       for (const c of coordsAll) {
         await _notificarCoord(c.sigla, '🌡️ Nova pesquisa de clima',
           `Uma nova pesquisa de clima organizacional foi aberta. Responda até ${data ? _fmt(data) : 'em breve'}.`,
-          'sistema');
+          'info', 'sistema');
       }
       this._carregarClima();
     } catch(e) { mostrarToast('Erro ao publicar pesquisa.','error'); }
@@ -2136,7 +2448,153 @@ const PagePessoas = {
         </tr>`;
       }).join('');
     } catch(e) { el.innerHTML='<tr><td colspan="4" style="padding:16px;color:var(--c-slate)">Erro ao carregar.</td></tr>'; }
-  }
+  },
+
+  /* ─── Aniversários do Núcleo ──────────────────────────────── */
+  _renderAniversarios() {
+    const pg = document.getElementById('page-gp_aniversarios');
+    if (!pg) return;
+    const ct = pg.querySelector('.content') || pg;
+    ct.innerHTML = _sc('Aniversários do Núcleo','🎂',`
+      <p style="font-size:13px;color:var(--c-slate);margin-bottom:14px">
+        Membros com aniversário neste mês e no próximo. O sistema envia e-mail automático no dia.
+      </p>
+      <div id="aniv-este-mes">
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--c-slate);margin-bottom:8px">Este mês</div>
+        <div id="aniv-este-lista" style="display:flex;flex-direction:column;gap:8px">
+          <div style="padding:16px;text-align:center;color:var(--c-slate);font-size:13px">Carregando...</div>
+        </div>
+      </div>
+      <div style="margin-top:20px">
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--c-slate);margin-bottom:8px">Próximo mês</div>
+        <div id="aniv-prox-lista" style="display:flex;flex-direction:column;gap:8px">
+          <div style="padding:16px;text-align:center;color:var(--c-slate);font-size:13px">Carregando...</div>
+        </div>
+      </div>`);
+    this._carregarAniversarios();
+  },
+  async _carregarAniversarios() {
+    const elEste = document.getElementById('aniv-este-lista');
+    const elProx = document.getElementById('aniv-prox-lista');
+    if (!elEste || !_sb()) return;
+    try {
+      const { data } = await _sb()
+        .from('users')
+        .select('nome,email,aniversario,avatar_url,iniciais,coordenadorias(nome)')
+        .eq('ativo', true)
+        .not('aniversario','is',null)
+        .order('nome');
+      if (!data?.length) {
+        const msg = '<div style="padding:16px;text-align:center;color:var(--c-slate);font-size:13px">Nenhum membro com aniversário cadastrado.</div>';
+        elEste.innerHTML = msg; if (elProx) elProx.innerHTML = msg;
+        return;
+      }
+      const hoje     = new Date();
+      const mesAtual = hoje.getMonth() + 1;
+      const mesProx  = mesAtual === 12 ? 1 : mesAtual + 1;
+      const _card = (m, dia) => `
+        <div style="background:var(--b-1);border:1px solid var(--b-2);border-radius:10px;padding:12px 16px;display:flex;align-items:center;gap:12px">
+          <div style="width:36px;height:36px;border-radius:50%;background:var(--c-s5);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#fff;flex-shrink:0;overflow:hidden">
+            ${m.avatar_url?`<img src="${sanitize(m.avatar_url)}" style="width:100%;height:100%;object-fit:cover">`:(m.iniciais||m.nome||'?').slice(0,2).toUpperCase()}
+          </div>
+          <div style="flex:1">
+            <div style="font-weight:700;font-size:13px;color:var(--c-white)">${sanitize(m.nome||m.email||'—')}</div>
+            <div style="font-size:12px;color:var(--c-slate)">${sanitize(m.coordenadorias?.nome||'—')} · 🎂 Dia ${dia}</div>
+          </div>
+        </div>`;
+      const esteMs = data.filter(m => { const [,mm] = (m.aniversario||'').split('-'); return parseInt(mm)===mesAtual; });
+      const proxMs = data.filter(m => { const [,mm] = (m.aniversario||'').split('-'); return parseInt(mm)===mesProx; });
+      const _renderLista = (arr, el) => {
+        el.innerHTML = arr.length
+          ? arr.sort((a,b)=>{ const da=(a.aniversario||'').slice(8); const db=(b.aniversario||'').slice(8); return da.localeCompare(db); })
+              .map(m=>_card(m,(m.aniversario||'').slice(8))).join('')
+          : '<div style="padding:12px;text-align:center;color:var(--c-slate);font-size:13px">Nenhum aniversariante.</div>';
+      };
+      _renderLista(esteMs, elEste);
+      if (elProx) _renderLista(proxMs, elProx);
+    } catch(e) { elEste.innerHTML='<div style="padding:16px;color:var(--c-slate)">Erro ao carregar.</div>'; }
+  },
+
+  /* ─── Treinamentos Internos (GP) ──────────────────────────── */
+  _renderTreinamentosInternos() {
+    const pg = document.getElementById('page-gp_treinamentos');
+    if (!pg) return;
+    const ct = pg.querySelector('.content') || pg;
+    const podeCriar = typeof Permissoes !== 'undefined'
+      ? Permissoes.pode('podeCriarEvento') || Permissoes.isAdmin()
+      : true;
+    ct.innerHTML = _sc('Treinamentos Internos','📚',`
+      <p style="font-size:13px;color:var(--c-slate);margin-bottom:14px">
+        Capacitações e onboarding geridos pela GP. Registros contam como Atividade 11 do ABJ.
+      </p>
+      ${podeCriar ? _btn('+ Novo treinamento','PagePessoas.novoTreinamentoInterno()') : ''}
+      <div id="gp-trein-lista" style="margin-top:16px;display:flex;flex-direction:column;gap:8px">
+        <div style="padding:20px;text-align:center;color:var(--c-slate);font-size:13px">Carregando...</div>
+      </div>`);
+    this._carregarTreinamentosInternos();
+  },
+  async _carregarTreinamentosInternos() {
+    const el = document.getElementById('gp-trein-lista');
+    if (!el || !_sb()) return;
+    try {
+      const { data } = await _sb()
+        .from('eventos')
+        .select('*,coordenadorias(nome)')
+        .eq('tipo','treinamento_interno')
+        .order('data_inicio', { ascending: false });
+      el.innerHTML = data?.length
+        ? data.map(e => {
+            const dt = e.data_inicio ? new Date(e.data_inicio+'T12:00:00').toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit',year:'2-digit'}) : '—';
+            return `<div style="background:var(--b-1);border:1px solid var(--b-2);border-radius:10px;padding:14px 16px">
+              <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:6px">
+                <div style="font-weight:700;font-size:14px;color:var(--c-white)">${sanitize(e.titulo)}</div>
+                <span style="font-size:10px;padding:2px 8px;border-radius:99px;background:var(--b-2);color:var(--c-slate)">📅 ${dt}</span>
+              </div>
+              ${e.local?`<div style="font-size:12px;color:var(--c-slate)">📍 ${sanitize(e.local)}</div>`:''}
+              ${e.vagas?`<div style="font-size:12px;color:var(--c-slate)">👥 ${e.vagas} vagas</div>`:''}
+            </div>`;
+          }).join('')
+        : '<div style="padding:16px;text-align:center;color:var(--c-slate);font-size:13px">Nenhum treinamento interno cadastrado.</div>';
+    } catch(e) { el.innerHTML='<div style="padding:16px;color:var(--c-slate)">Erro ao carregar.</div>'; }
+  },
+  novoTreinamentoInterno() {
+    const hoje = new Date().toISOString().slice(0,16);
+    abrirModal({ titulo:'📚 Novo Treinamento Interno', tipo:'info', corpo:`
+      <div class="form-group"><label class="form-label">Título *</label>
+        <input id="gti-titulo" class="form-input" placeholder="Ex: Onboarding novos membros"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div class="form-group"><label class="form-label">Data / hora</label>
+          <input id="gti-data" type="datetime-local" class="form-input" value="${hoje}"></div>
+        <div class="form-group"><label class="form-label">Local</label>
+          <input id="gti-local" class="form-input" placeholder="Sala / Online"></div>
+      </div>
+      <div class="form-group"><label class="form-label">Vagas</label>
+        <input id="gti-vagas" type="number" class="form-input" placeholder="Deixe vazio se ilimitado"></div>`,
+    botoes:[
+      {texto:'Cancelar',classe:'btn-ghost',acao:fecharModal},
+      {texto:'Criar ✓',classe:'btn-primary',acao:()=>PagePessoas._salvarTreinamentoInterno()}
+    ]});
+  },
+  async _salvarTreinamentoInterno() {
+    const titulo = document.getElementById('gti-titulo')?.value?.trim();
+    const data   = document.getElementById('gti-data')?.value;
+    const local  = document.getElementById('gti-local')?.value?.trim();
+    const vagas  = parseInt(document.getElementById('gti-vagas')?.value)||null;
+    if (!titulo||!data) { mostrarToast('Preencha título e data!','warning'); return; }
+    fecharModal();
+    try {
+      const coords = await getCoords();
+      const gp = coords.find(c=>c.sigla==='GP');
+      await _sb().from('eventos').insert([{
+        titulo, tipo:'treinamento_interno', data_inicio:data,
+        local:local||null, vagas:vagas||null, ativo:true,
+        coordenadoria_id: gp?.id || window._appProfile?.coordenadoria_id || null,
+        criado_por: window._appProfile?.id,
+      }]);
+      mostrarToast('Treinamento criado!','success');
+      this._carregarTreinamentosInternos();
+    } catch(e) { mostrarToast('Erro ao criar treinamento.','error'); }
+  },
 };
 /* ══════════════════════════════════════════════════════════════
    PageDev — Painel de Administração do Sistema (Admin Only)
@@ -3106,16 +3564,119 @@ const PageGlobal = {
     const pg = document.getElementById('page-global_assembleia');
     if (!pg) return;
     const ct = pg.querySelector('.content') || pg;
-    ct.innerHTML = _sc('Assembleias do Núcleo','🗳️',`
+    const podeGerenciar = Permissoes.pode('podeCriarEvento');
+    ct.innerHTML = _sc('Votações','🗳️',`
       <p style="font-size:13px;color:var(--c-slate);margin-bottom:14px">
-        Registro de pautas, votações e atas das assembleias gerais.
-        Requer quórum mínimo e publicação de ata em até 72h.
+        Votações ativas e histório de deliberações. Cada membro pode votar uma vez.
       </p>
-      ${_btn('+ Nova Assembleia','PageGlobal.novaPauta()')}
+      ${podeGerenciar ? _btn('+ Nova Votação','PageGlobal.novaVotacao()') : ''}
+      <div id="votacoes-lista" style="margin-top:14px;display:flex;flex-direction:column;gap:12px">
+        <div style="padding:20px;text-align:center;color:var(--c-slate);font-size:13px">Carregando...</div>
+      </div>`) +
+    _sc('Assembleias','📋',`
+      <p style="font-size:13px;color:var(--c-slate);margin-bottom:14px">
+        Registro de assembleias gerais. Ata deve ser publicada em até 72h.
+      </p>
+      ${podeGerenciar ? _btn('+ Nova Assembleia','PageGlobal.novaPauta()','btn-ghost') : ''}
       <div id="assembleia-lista" style="margin-top:14px;display:flex;flex-direction:column;gap:8px">
         <div style="padding:20px;text-align:center;color:var(--c-slate);font-size:13px">Carregando...</div>
       </div>`);
+    this._carregarVotacoes();
     this._carregarAssembleia();
+  },
+
+  async _carregarVotacoes() {
+    const el = document.getElementById('votacoes-lista');
+    if (!el || !_sb()) return;
+    const uid = window._appProfile?.id;
+    try {
+      const [{ data: vots }, { data: mVotos }] = await Promise.all([
+        _sb().from('votacoes').select('*').order('criada_em', { ascending: false }).limit(20),
+        uid ? _sb().from('votos').select('votacao_id,opcao').eq('user_id', uid) : { data: [] },
+      ]);
+      if (!vots?.length) {
+        el.innerHTML = '<div style="padding:16px;text-align:center;color:var(--c-slate);font-size:13px">Nenhuma votação registrada.</div>';
+        return;
+      }
+      const meuVotoMap = {};
+      (mVotos||[]).forEach(v => { meuVotoMap[v.votacao_id] = v.opcao; });
+      el.innerHTML = vots.map(v => {
+        const opcoes  = Array.isArray(v.opcoes) ? v.opcoes : (v.opcoes ? JSON.parse(v.opcoes) : []);
+        const jáVotei = meuVotoMap[v.id];
+        const expirou = v.expires_at && new Date(v.expires_at) < new Date();
+        const status  = !v.ativa || expirou ? '🔴 Encerrada' : '🟢 Aberta';
+        const podeVotar = v.ativa && !expirou && !jáVotei && uid;
+        return `
+          <div style="background:var(--b-1);border:1px solid ${v.ativa&&!expirou?'var(--b-2)':'var(--b-3)'};border-radius:12px;padding:16px">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:8px">
+              <div style="font-weight:700;font-size:14px;color:var(--c-white)">${sanitize(v.titulo)}</div>
+              <span style="font-size:10px;white-space:nowrap">${status}</span>
+            </div>
+            ${v.descricao ? `<div style="font-size:12px;color:var(--c-slate);margin-bottom:10px">${sanitize(v.descricao)}</div>` : ''}
+            ${jáVotei
+              ? `<div style="font-size:12px;color:var(--green)">✅ Você votou: <strong>${sanitize(jáVotei)}</strong></div>`
+              : opcoes.length
+                ? podeVotar
+                  ? `<div style="display:flex;flex-wrap:wrap;gap:8px">${opcoes.map(op=>`<button class="btn btn-ghost" style="font-size:12px;padding:6px 12px" onclick="PageGlobal._votar('${v.id}','${sanitize(op).replace(/'/g,"\\'")}',this)">${sanitize(op)}</button>`).join('')}</div>`
+                  : `<div style="display:flex;flex-wrap:wrap;gap:6px">${opcoes.map(op=>`<span style="font-size:11px;padding:4px 10px;background:var(--b-2);border-radius:99px;color:var(--c-slate)">${sanitize(op)}</span>`).join('')}</div>`
+                : '<div style="font-size:12px;color:var(--c-slate)">Sem opções cadastradas.</div>'}
+            ${v.expires_at ? `<div style="font-size:10px;color:var(--c-slate);margin-top:8px">⏱ Encerra ${_fmt(v.expires_at)}</div>` : ''}
+          </div>`;
+      }).join('');
+    } catch(e) { el.innerHTML='<div style="padding:16px;color:var(--c-slate)">Erro ao carregar votações.</div>'; }
+  },
+
+  async _votar(votacaoId, opcao, btn) {
+    const uid = window._appProfile?.id;
+    if (!uid || !_sb()) return;
+    btn.disabled = true;
+    try {
+      await _sb().from('votos').insert([{ votacao_id: votacaoId, user_id: uid, opcao }]);
+      mostrarToast(`Voto registrado: "${opcao}"`, 'success');
+      this._carregarVotacoes();
+    } catch(e) {
+      btn.disabled = false;
+      if (e.code === '23505') mostrarToast('Você já votou nesta votação.','warning');
+      else mostrarToast('Erro ao registrar voto.','error');
+    }
+  },
+
+  novaVotacao() {
+    const hoje = new Date().toISOString().split('T')[0];
+    abrirModal({ titulo:'🗳️ Nova Votação', tipo:'info', corpo:`
+      <div class="form-group"><label class="form-label">Título *</label>
+        <input id="nv-titulo" class="form-input" placeholder="Ex: Aprovação do Plano de Gestão 2026"></div>
+      <div class="form-group"><label class="form-label">Descrição</label>
+        <textarea id="nv-desc" class="form-input" rows="2" placeholder="Contexto e instruções para os votantes..."></textarea></div>
+      <div class="form-group"><label class="form-label">Opções (uma por linha) *</label>
+        <textarea id="nv-opcoes" class="form-input" rows="4" placeholder="Sim&#10;Não&#10;Abstenção"></textarea></div>
+      <div class="form-group"><label class="form-label">Data de encerramento</label>
+        <input id="nv-exp" type="date" class="form-input" value="${hoje}"></div>`,
+    botoes:[
+      {texto:'Cancelar',classe:'btn-ghost',acao:fecharModal},
+      {texto:'Criar ✓',classe:'btn-primary',acao:()=>PageGlobal._salvarVotacao()}
+    ]});
+  },
+
+  async _salvarVotacao() {
+    const titulo = document.getElementById('nv-titulo')?.value?.trim();
+    const desc   = document.getElementById('nv-desc')?.value?.trim();
+    const opcoesRaw = document.getElementById('nv-opcoes')?.value || '';
+    const exp    = document.getElementById('nv-exp')?.value;
+    const opcoes = opcoesRaw.split('\n').map(s=>s.trim()).filter(Boolean);
+    if (!titulo) { mostrarToast('Preencha o título!','warning'); return; }
+    if (!opcoes.length) { mostrarToast('Adicione ao menos uma opção!','warning'); return; }
+    fecharModal();
+    try {
+      await _sb().from('votacoes').insert([{
+        titulo, descricao: desc||null,
+        opcoes: opcoes,
+        ativa: true,
+        expires_at: exp ? exp+'T23:59:59' : null,
+      }]);
+      mostrarToast('Votação criada!','success');
+      this._carregarVotacoes();
+    } catch(e) { mostrarToast('Erro ao criar votação.','error'); }
   },
 
   async _carregarAssembleia() {
@@ -3137,6 +3698,51 @@ const PageGlobal = {
             </div>`).join('')
         : '<div style="padding:16px;text-align:center;color:var(--c-slate);font-size:13px">Nenhuma assembleia registrada ainda.</div>';
     } catch(e) { el.innerHTML='<div style="padding:16px;color:var(--c-slate)">Erro ao carregar assembleias.</div>'; }
+  },
+
+  async _renderGestao() {
+    const pg = document.getElementById('page-global_gestao');
+    if (!pg) return;
+    const ct = pg.querySelector('.content') || pg;
+    ct.innerHTML = _sc('Painel Estratégico','📊','<div id="gestao-kpis" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:10px"><div style="text-align:center;color:var(--c-slate);padding:20px;grid-column:1/-1">Carregando...</div></div>') +
+      _sc('Coordenadorias','🏛️','<div id="gestao-coords" style="display:flex;flex-direction:column;gap:8px"><div style="padding:16px;text-align:center;color:var(--c-slate);font-size:13px">Carregando...</div></div>');
+    if (!_sb()) return;
+    try {
+      const hoje = new Date();
+      const mesIni = new Date(hoje.getFullYear(), hoje.getMonth(), 1).toISOString();
+      const [{ count: totalMembros }, { count: eventosMs }, { data: abjMs }, coords] = await Promise.all([
+        _sb().from('users').select('*',{count:'exact',head:true}).eq('ativo',true),
+        _sb().from('eventos').select('*',{count:'exact',head:true}).gte('data_inicio', mesIni),
+        _sb().from('progresso_abj').select('pontos').gte('created_at', mesIni),
+        getCoords(),
+      ]);
+      const pontosMs = (abjMs||[]).reduce((s,r)=>s+(r.pontos||0),0);
+      document.getElementById('gestao-kpis').innerHTML = [
+        { label:'Membros ativos', valor: totalMembros||0, cor:'var(--c-accent)' },
+        { label:'Eventos este mês', valor: eventosMs||0, cor:'var(--green)' },
+        { label:'Pts ABJ este mês', valor: pontosMs, cor:'var(--yellow)' },
+      ].map(k=>`
+        <div class="sum-card" style="padding:14px;text-align:center">
+          <div style="font-size:22px;font-weight:900;color:${k.cor}">${k.valor}</div>
+          <div style="font-size:11px;color:var(--c-slate)">${k.label}</div>
+        </div>`).join('');
+      if (!coords?.length) return;
+      const { data: membPorCoord } = await _sb()
+        .from('users').select('coordenadoria_id').eq('ativo',true);
+      const cntMap = {};
+      (membPorCoord||[]).forEach(u => { if(u.coordenadoria_id) cntMap[u.coordenadoria_id] = (cntMap[u.coordenadoria_id]||0)+1; });
+      document.getElementById('gestao-coords').innerHTML = coords.map(c => `
+        <div style="background:var(--b-1);border:1px solid var(--b-2);border-radius:10px;padding:12px 16px;display:flex;justify-content:space-between;align-items:center">
+          <div style="display:flex;align-items:center;gap:10px">
+            <span style="font-size:18px">${c.icone||'📋'}</span>
+            <div>
+              <div style="font-weight:700;font-size:13px;color:var(--c-white)">${sanitize(c.nome)}</div>
+              <div style="font-size:11px;color:var(--c-slate)">${cntMap[c.id]||0} membro(s)</div>
+            </div>
+          </div>
+          <span style="font-size:11px;padding:3px 8px;border-radius:99px;background:${c.cor||'var(--b-2)'};color:#fff;font-weight:700">${c.sigla}</span>
+        </div>`).join('');
+    } catch(e) { console.warn('[gestao]', e); }
   }
 };
 
@@ -3162,7 +3768,14 @@ const PageNotificacoes = {
         .limit(30);
       const notifs = data || [];
       const naoLidas = notifs.filter(n => !n.lida).length;
-      if (cnt) cnt.textContent = `${naoLidas} não lida${naoLidas !== 1 ? 's' : ''}`;
+      /* Sync todos os badges/contadores */
+      if (cnt) cnt.textContent = notifs.length;
+      const nlb = document.getElementById('notifNaoLidasBadge');
+      if (nlb) { nlb.textContent = naoLidas; nlb.style.display = naoLidas > 0 ? '' : 'none'; }
+      ['topbarNotifBadge','sideNotifBadge'].forEach(id => {
+        const b = document.getElementById(id);
+        if (b) { b.textContent = naoLidas; b.style.display = naoLidas > 0 ? '' : 'none'; }
+      });
       if (!notifs.length) {
         lista.innerHTML = `
           <div style="padding:40px;text-align:center;color:var(--c-slate)">
@@ -3172,17 +3785,24 @@ const PageNotificacoes = {
           </div>`;
         return;
       }
-      const ICON = { sistema:'⚙️', abj:'⭐', demanda:'◬', reuniao:'🤝', financeiro:'◎', padrao:'🔔' };
-      lista.innerHTML = notifs.map(n => `
-        <div class="notif-item${n.lida?'':' unread'}" onclick="PageNotificacoes._marcarLida('${n.id}', this)">
+      const CAT_ICON  = { sistema:'⚙️', abj:'⭐', demanda:'◬', reuniao:'🤝', financeiro:'◎', treinamento:'📚', parceria:'🤝', marketing:'📣', padrao:'🔔' };
+      const TIPO_ICON = { info:'🔔', alerta:'⚠️', sucesso:'✅', erro:'🚨' };
+      const CAT_COORD = { financeiro:'fin', reuniao:'ger', abj:'ger', sistema:'ger', demanda:'ger', treinamento:'prj', parceria:'prj', marketing:'mkt' };
+      lista.innerHTML = notifs.map(n => {
+        const cat   = n.categoria || null;
+        const coord = (cat ? (CAT_COORD[cat]||'ger') : 'ger').toLowerCase();
+        const icon  = cat ? (CAT_ICON[cat]||'🔔') : (TIPO_ICON[n.tipo]||'🔔');
+        const label = cat || n.tipo || 'Sistema';
+        return `<div class="notif-item${n.lida?'':' unread'}" data-tipo="${coord}" onclick="PageNotificacoes._marcarLida('${n.id}', this)">
           <div class="notif-dot${n.lida?' read':''}"></div>
           <div class="notif-body-text">
             <div class="notif-title">${sanitize(n.titulo||'Notificação')}</div>
             <div class="notif-desc">${sanitize(n.mensagem||'')}</div>
             <div class="notif-time">${_fmt(n.created_at)}</div>
           </div>
-          <span class="notif-tag">${ICON[n.tipo||'padrao']} ${sanitize(n.tipo||'Sistema')}</span>
-        </div>`).join('');
+          <span class="notif-tag">${icon} ${sanitize(label)}</span>
+        </div>`;
+      }).join('');
     } catch(e) { console.warn('[Notif]', e); }
   },
   async _marcarLida(id, el) {
@@ -3191,12 +3811,7 @@ const PageNotificacoes = {
     if (!_sb()) return;
     try {
       await _sb().from('notificacoes').update({ lida: true }).eq('id', id);
-      /* Atualiza badge no nav */
-      const cnt = document.getElementById('notifCount');
-      if (cnt) {
-        const atual = parseInt(cnt.textContent)||0;
-        if (atual > 0) cnt.textContent = `${atual-1} não lida${atual-1!==1?'s':''}`;
-      }
+      if (typeof NotifPage !== 'undefined') NotifPage.updateCount();
     } catch(e) {}
   },
 };
@@ -3209,8 +3824,7 @@ window.markAllNotifRead = async function() {
     await _sb().from('notificacoes').update({ lida:true }).eq('user_id', p.id).eq('lida', false);
     document.querySelectorAll('.notif-item.unread').forEach(el => el.classList.remove('unread'));
     document.querySelectorAll('.notif-dot:not(.read)').forEach(el => el.classList.add('read'));
-    const cnt = document.getElementById('notifCount');
-    if (cnt) cnt.textContent = '0 não lidas';
+    if (typeof NotifPage !== 'undefined') NotifPage.updateCount();
     mostrarToast('Todas as notificações marcadas como lidas.','success');
   } catch(e) { mostrarToast('Erro ao atualizar notificações.','error'); }
 };
@@ -3400,17 +4014,21 @@ document.addEventListener('nupi:booted', () => {
       'gp_clima':          () => PagePessoas._renderClima(),
       'gp_tap':            () => PagePessoas._renderTAP(),
       'gp_crm':            () => PagePessoas._renderMembros(),
+      'gp_aniversarios':   () => PagePessoas._renderAniversarios(),
+      'gp_treinamentos':   () => PagePessoas._renderTreinamentosInternos(),
       /* Dev / Admin */
       'dev_usuarios':      () => PageDev.init(),
       /* Projetos sub */
       'prj_enegep':        () => PageProjetos._renderENEGEP(),
       'prj_treinamentos':  () => PageProjetos._renderEventos(),
       'prj_nupicast':      () => PageProjetos._renderEventos(),
+      'prj_parcerias':     () => PageProjetos._renderParcerias(),
       /* Globais */
       'global_visitas':       () => PageGlobal._renderVisitas(),
       'global_apresentacoes': () => PageGlobal._renderApresentacoes(),
       'global_producao':      () => PageGlobal._renderProducao(),
       'global_assembleia':    () => PageGlobal._renderAssembleia(),
+      'global_gestao':        () => PageGlobal._renderGestao(),
     };
     if (mapa[id]) try { mapa[id](); } catch(e) { console.warn('[pages goTo]', id, e); }
   };

@@ -196,11 +196,14 @@ const RelatorioModule = (() => {
     let atvsAbj = [];
     if (window._supabase) {
       try {
-        const mesStr = `${ano}-${String(mes).padStart(2,'0')}`;
+        const mesStr  = `${ano}-${String(mes).padStart(2,'0')}`;
+        const proxMes = mes === 12 ? `${ano+1}-01` : `${ano}-${String(mes+1).padStart(2,'0')}`;
+        const dataIni = `${mesStr}-01`;
+        const dataFim = `${proxMes}-01`;
         const [rv, rd, re, rp] = await Promise.all([
-          window._supabase.from('vendas').select('valor').gte('data_venda', mesStr+'-01').lt('data_venda', mesStr+'-32'),
-          window._supabase.from('despesas').select('valor').gte('data_despesa', mesStr+'-01').lt('data_despesa', mesStr+'-32'),
-          window._supabase.from('eventos').select('id', {count:'exact',head:true}).gte('data_inicio', mesStr+'-01T00:00:00'),
+          window._supabase.from('vendas').select('valor').gte('data_venda', dataIni).lt('data_venda', dataFim),
+          window._supabase.from('despesas').select('valor').gte('data_despesa', dataIni).lt('data_despesa', dataFim),
+          window._supabase.from('eventos').select('id', {count:'exact',head:true}).gte('data_inicio', dataIni+'T00:00:00').lt('data_inicio', dataFim+'T00:00:00'),
           window._supabase.from('progresso_abj').select('pontos, status, atividades_abj(nome)')
         ]);
         totalVendas   = (rv.data||[]).reduce((s,v)=>s+Number(v.valor||0),0);

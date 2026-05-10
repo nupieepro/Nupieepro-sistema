@@ -65,29 +65,37 @@ const ROLE_PAGES = {
     { id: 'ops_arquivo', icon: 'folder', label: 'Arquivo Digital' },
   ],
   'G. Pessoas': [
-    { id: 'dashboard', icon: 'grid', label: 'Painel Central' },
-    { id: 'gp_talentos', icon: 'users', label: 'Banco de Talentos' },
-    { id: 'gp_clima', icon: 'star', label: 'Pesquisa de Clima' },
-    { id: 'gp_tap', icon: 'layout', label: 'Módulo TAP (Inovação)' },
-    { id: 'pessoas', icon: 'users', label: 'Gestão de Membros' },
+    { id: 'dashboard',       icon: 'grid',         label: 'Painel Central' },
+    { id: 'gp_talentos',     icon: 'users',         label: 'Banco de Talentos' },
+    { id: 'gp_clima',        icon: 'thermometer',   label: 'Pesquisa de Clima' },
+    { id: 'gp_tap',          icon: 'layout',        label: 'Módulo TAP (Inovação)' },
+    { id: 'gp_aniversarios', icon: 'gift',          label: 'Aniversários do Núcleo' },
+    { id: 'gp_treinamentos', icon: 'book-open',     label: 'Treinamentos Internos' },
+    { id: 'pessoas',         icon: 'user-check',    label: 'Gestão de Membros' },
   ],
   'Marketing':  [
-    { id: 'dashboard', icon: 'grid', label: 'Painel Central' },
+    { id: 'dashboard',   icon: 'grid',      label: 'Painel Central' },
     { id: 'mkt_tracker', icon: 'megaphone', label: 'Social Media Tracker' },
-    { id: 'mkt_kanban', icon: 'list', label: 'Kanban da Lojinha' },
+    { id: 'mkt_kanban',  icon: 'list',      label: 'Kanban da Lojinha' },
   ],
   'Projetos':   [
-    { id: 'dashboard', icon: 'grid', label: 'Painel Central' },
-    { id: 'prj_eventos', icon: 'star', label: 'Eventos Estaduais' },
-    { id: 'prj_enegep', icon: 'layout', label: 'Momento ENEGEP' },
-    { id: 'prj_treinamentos', icon: 'users', label: 'Treinamentos Externos' },
-    { id: 'prj_nupicast', icon: 'megaphone', label: 'NUPICAST Tracker' },
+    { id: 'dashboard',       icon: 'grid',      label: 'Painel Central' },
+    { id: 'prj_eventos',     icon: 'star',      label: 'Eventos Estaduais' },
+    { id: 'prj_enegep',      icon: 'layout',    label: 'Momento ENEGEP' },
+    { id: 'prj_treinamentos',icon: 'users',     label: 'Treinamentos Externos' },
+    { id: 'prj_nupicast',    icon: 'megaphone', label: 'NUPICAST Tracker' },
+    { id: 'prj_parcerias',   icon: 'handshake', label: 'Parcerias e Patrocínios' },
   ],
   'Finanças':   [
-    { id: 'dashboard', icon: 'grid', label: 'Painel Central' },
-    { id: 'fin_fluxo', icon: 'banknote', label: 'Fluxo de Caixa' },
-    { id: 'fin_abepro', icon: 'users', label: 'Associações ABJ' },
-    { id: 'fin_comercial', icon: 'gem', label: 'Calendário Comercial' },
+    { id: 'dashboard',    icon: 'grid',        label: 'Painel Central' },
+    { id: 'fin_fluxo',    icon: 'banknote',    label: 'Fluxo de Caixa' },
+    { id: 'fin_abepro',   icon: 'users',       label: 'Associações ABJ' },
+    { id: 'fin_comercial',icon: 'gem',         label: 'Calendário Comercial' },
+  ],
+  'Conselheiro': [
+    { id: 'dashboard',         icon: 'grid',  label: 'Painel Central' },
+    { id: 'geral_reunioes',    icon: 'users', label: 'Reuniões e Check-in' },
+    { id: 'global_assembleia', icon: 'check-square', label: 'Assembleia e Votos' },
   ],
 };
 
@@ -387,54 +395,81 @@ const App = {
     if (!nav) return;
 
     const profile = window._appProfile;
-    const cName = coordName || 'Geral';
-    // Sanitização para encontrar a chave correta no ROLE_PAGES (lidar com acentos e case)
-    const roleKey = Object.keys(ROLE_PAGES).find(k => 
-      k.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, "") === 
-      cName.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, "")
-    ) || 'Geral';
-    
-    const GLOBAL_PAGES = [
-      { id: 'global_visitas', icon: 'zap', label: 'Visitas Técnicas' },
-      { id: 'global_apresentacoes', icon: 'star', label: 'Apresentações Inst.' },
-      { id: 'global_producao', icon: 'file', label: 'Produção Científica' },
-      { id: 'global_assembleia', icon: 'users', label: 'Assembleia e Votos' }
-    ];
+    const cName   = coordName || 'Geral';
+    const role    = profile?.role || 'membro';
+    const sigla   = (profile?.coordenadorias?.sigla || '').toUpperCase();
 
-    const isCoordGeral = profile?.role === 'coordenador' && cName.toUpperCase() === 'GERAL';
-    const myPages = (profile?.role === 'admin' || isCoordGeral)
-      ? Object.values(ROLE_PAGES).flat().concat(GLOBAL_PAGES).filter((v,i,a)=>a.findIndex(t=>(t.id === v.id))===i)
-      : (ROLE_PAGES[roleKey] || []).concat(GLOBAL_PAGES);
-
-    let html = '<div class="sidebar-section">Meu painel</div>';
-    html += myPages.map(p => 
+    const _navItem = (p) =>
       `<div class="nav-item" id="nav-${p.id}" onclick="goTo('${p.id}')">
         <span class="nav-icon">${getIcon(p.icon)}</span>
         <span class="nav-label">${p.label}</span>
         ${p.badge ? `<span class="nav-badge">${p.badge}</span>` : ''}
-      </div>`
-    ).join('');
+      </div>`;
 
+    const roleKey = Object.keys(ROLE_PAGES).find(k =>
+      k.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '') ===
+      cName.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
+    ) || 'Geral';
+
+    const GLOBAL_PAGES = [
+      { id: 'demandas',             icon: 'check-square', label: 'Demandas da Coord' },
+      { id: 'calendario',           icon: 'calendar',     label: 'Calendário' },
+      { id: 'global_visitas',       icon: 'zap',          label: 'Visitas Técnicas' },
+      { id: 'global_apresentacoes', icon: 'star',         label: 'Apresentações Inst.' },
+      { id: 'global_producao',      icon: 'file',         label: 'Produção Científica' },
+      { id: 'global_assembleia',    icon: 'users',        label: 'Assembleia e Votos' },
+    ];
+
+    let html = '<div class="sidebar-section">Meu painel</div>';
+
+    /* ── Conselheiro: nav restrita, somente leitura ── */
+    if (role === 'conselheiro') {
+      html += (ROLE_PAGES['Conselheiro'] || []).map(_navItem).join('');
+      html += '<div class="sidebar-section">Colaborativo</div>';
+      html += `<div class="nav-item nav-shared" id="nav-compartilhado" onclick="goTo('compartilhado')">
+        <span class="nav-icon">${getIcon('users')}</span>
+        <span class="nav-label">Compartilhado</span>
+      </div>`;
+      nav.innerHTML = html;
+      if (typeof lucide !== 'undefined') lucide.createIcons();
+      return;
+    }
+
+    /* ── Admin e Coord Geral: acesso total ── */
+    const isCoordGeral = role === 'coordenador' && sigla === 'GER';
+    const myPages = (role === 'admin' || isCoordGeral)
+      ? Object.values(ROLE_PAGES).flat().concat(GLOBAL_PAGES).filter((v,i,a) => a.findIndex(t => t.id === v.id) === i)
+      : (ROLE_PAGES[roleKey] || []).concat(GLOBAL_PAGES);
+
+    html += myPages.map(_navItem).join('');
+
+    /* ── Operacional (ABJ) ── */
     html += '<div class="sidebar-section">Operacional</div>';
-    html += `<div class="nav-item" style="background:var(--orange-dim);border-color:var(--orange-border);color:var(--orange)" onclick="goTo('abj')">
+    html += `<div class="nav-item" style="background:var(--orange-dim);border-color:var(--orange-border);" onclick="goTo('abj')">
       <span class="nav-icon">${getIcon('star')}</span>
       <span class="nav-label" style="color:var(--orange)">Atividades ABJ</span>
     </div>`;
 
-    // Terminal do Dev (Admin only)
-    if (profile?.role === 'admin') {
-      html += '<div class="sidebar-section">Terminal do Dev</div>';
-      html += `<div class="nav-item" style="color:var(--orange); border-left:2px solid var(--orange);" onclick="window.open('https://supabase.com/dashboard/project/quwpyrdxyibcbyzwfilb','_blank')">
-        <span class="nav-icon">${getIcon('settings')}</span>
-        <span class="nav-label">DB Supabase Dashboard</span>
-      </div>`;
+    /* ── Lojinha: admin e coordenação Financeira ── */
+    if (role === 'admin' || sigla === 'FIN') {
+      html += `<div class="sidebar-section">${role === 'admin' ? 'Terminal do Dev' : 'Lojinha NUPIEEPRO'}</div>`;
+      if (role === 'admin') {
+        html += `<div class="nav-item" style="color:var(--orange);border-left:2px solid var(--orange);" onclick="window.open('https://supabase.com/dashboard/project/quwpyrdxyibcbyzwfilb','_blank')">
+          <span class="nav-icon">${getIcon('settings')}</span>
+          <span class="nav-label">DB Supabase Dashboard</span>
+        </div>`;
+      }
       html += `<div class="nav-item" onclick="window.open('https://nupieepro.github.io/Lojinha-Nupieepro/admin.html','_blank')">
         <span class="nav-icon">${getIcon('gem')}</span>
         <span class="nav-label">Admin Lojinha</span>
       </div>`;
+      html += `<div class="nav-item" onclick="window.open('https://nupieepro.github.io/Lojinha-Nupieepro/','_blank')">
+        <span class="nav-icon">${getIcon('external-link')}</span>
+        <span class="nav-label">Ver site da Lojinha</span>
+      </div>`;
     }
 
-    // Shared
+    /* ── Colaborativo ── */
     html += '<div class="sidebar-section">Colaborativo</div>';
     html += `<div class="nav-item nav-shared" id="nav-compartilhado" onclick="goTo('compartilhado')">
       <span class="nav-icon">${getIcon('users')}</span>
@@ -442,6 +477,11 @@ const App = {
     </div>`;
 
     nav.innerHTML = html;
+
+    /* Aplicar cor da coordenadoria como --item-color para o estado active do nav-item */
+    const COORD_COLOR = { GER:'var(--tag-geral)', OPS:'var(--tag-operacoes)', GP:'var(--tag-pessoas)', MKT:'var(--tag-marketing)', PRJ:'var(--tag-projetos)', FIN:'var(--tag-financas)' };
+    nav.style.setProperty('--item-color', COORD_COLOR[sigla] || 'var(--brand-orange)');
+
     if (typeof lucide !== 'undefined') lucide.createIcons();
   },
 
@@ -688,14 +728,22 @@ const ALL_PAGES = [
   'geral_reunioes','geral_planejamento','geral_melhorias','geral_parcerias',
   'mkt_tracker','mkt_kanban',
   'fin_fluxo','fin_abepro','fin_comercial',
-  'prj_eventos','prj_enegep','prj_treinamentos','prj_nupicast',
+  'prj_eventos','prj_enegep','prj_treinamentos','prj_nupicast','prj_parcerias',
   'ops_relatorios','ops_pops','ops_arquivo',
-  'gp_talentos','gp_clima','gp_tap',
-  'global_visitas','global_apresentacoes','global_producao','global_assembleia'
+  'gp_talentos','gp_clima','gp_tap','gp_aniversarios','gp_treinamentos',
+  'global_visitas','global_apresentacoes','global_producao','global_assembleia','global_gestao'
 ];
 
 function goTo(id) {
   haptic();
+  /* Guard de permissão: bloqueia navegação não autorizada após login */
+  const _SEMPRE_VISIVEL = ['config','configuracoes','manu','compartilhado'];
+  if (window._appProfile && typeof Permissoes !== 'undefined' && !_SEMPRE_VISIVEL.includes(id)) {
+    if (!Permissoes.podeVer(id)) {
+      App.toast('Acesso restrito a esta seção.', 'error');
+      return;
+    }
+  }
   ALL_PAGES.forEach(p => {
     const el = document.getElementById('page-' + p);
     if (el) el.classList.remove('active');
@@ -731,6 +779,7 @@ function goTo(id) {
   if (id === 'mkt_tracker')       typeof PageMarketing !== 'undefined' && PageMarketing.init();
   if (id === 'fin_fluxo')         typeof PageFinancas  !== 'undefined' && PageFinancas.init();
   if (id === 'prj_eventos')       typeof PageProjetos  !== 'undefined' && PageProjetos.init();
+  if (id === 'operacoes')         Operacoes.loadHub();
   if (id === 'ops_pops')          typeof PageOperacoes !== 'undefined' && PageOperacoes._renderPops();
   if (id === 'gp_talentos')       typeof PagePessoas   !== 'undefined' && PagePessoas._renderTalentos();
   if (id === 'demandas')          Dem.setView('kanban', document.getElementById('demViewKanban'));
@@ -740,6 +789,10 @@ function goTo(id) {
   if (id === 'projetos')          Projetos.loadSponsors();
   if (id === 'notificacoes')      typeof PageNotificacoes !== 'undefined' && PageNotificacoes.init();
   if (id === 'compartilhado')     typeof PageCompartilhado !== 'undefined' && PageCompartilhado.init();
+  if (id === 'global_gestao')     { typeof Geral !== 'undefined' && Geral.loadMeetings?.(); typeof Assembleia !== 'undefined' && Assembleia.init?.(); }
+  if (id === 'gp_aniversarios')   typeof PagePessoas !== 'undefined' && PagePessoas._renderAniversarios();
+  if (id === 'gp_treinamentos')   typeof PagePessoas !== 'undefined' && PagePessoas._renderTreinamentosInternos();
+  if (id === 'prj_parcerias')     typeof PageProjetos !== 'undefined' && PageProjetos._renderParcerias();
 }
 
 function toggleSidebar() {
@@ -786,6 +839,38 @@ const Dashboard = {
       const saldo = totalVendas - totalDespesas;
 
       Dashboard.setKPIs(totalPts, activeTasks, totalMembers, saldo, totalVendas, totalDespesas);
+
+      // IDN Hero — Índice de Desempenho do Núcleo
+      (function updateHeroIDN() {
+        const abjPct  = Math.round((totalPts / 882) * 100);
+        const demPct  = deliveryPct !== null ? deliveryPct : 0;
+        const mbrPct  = totalMembers > 0 ? Math.min(100, Math.round((totalMembers / 10) * 100)) : 0;
+        const idn     = Math.round((abjPct + demPct + mbrPct) / 3);
+        const g = id => document.getElementById(id);
+        if (g('hero-idn-value'))  g('hero-idn-value').textContent  = idn + '%';
+        if (g('hero-ativ-value')) g('hero-ativ-value').textContent = abjPct + '%';
+        if (g('hero-dem-value'))  g('hero-dem-value').textContent  = demPct + '%';
+        if (g('hero-mbr-value'))  g('hero-mbr-value').textContent  = totalMembers;
+        if (g('hero-ring-text'))  g('hero-ring-text').textContent  = idn;
+        const animRing = (ringId, r, pct) => {
+          const ring = g(ringId); if (!ring) return;
+          const circ = +(2 * Math.PI * r).toFixed(1);
+          ring.setAttribute('stroke-dasharray', circ);
+          ring.setAttribute('stroke-dashoffset', +(circ * (1 - pct / 100)).toFixed(1));
+        };
+        animRing('hero-ring-a', 62, abjPct);
+        animRing('hero-ring-d', 50, demPct);
+        animRing('hero-ring-m', 38, mbrPct);
+      })();
+
+      // Badge de Demandas ativas na sidebar
+      (function updateDemandasBadge() {
+        const badge = document.getElementById('sideDemandasBadge');
+        if (!badge) return;
+        const n = activeTasks;
+        badge.textContent = n;
+        badge.style.display = n > 0 ? '' : 'none';
+      })();
 
       // Taxa de entrega dinâmica
       const elDel = document.getElementById('stat-delivery');
@@ -1684,23 +1769,7 @@ const DashboardExtra = {
   },
 
   async renderAssembleia() {
-    const listEl = document.getElementById('activeVotes');
-    if (!listEl) return;
-    // Mock ou Supabase: Carregar votações ativas
-    listEl.innerHTML = `
-      <div style="background:var(--s2); border:1px solid var(--b-p); padding:1.2rem; border-radius:12px;">
-        <div style="display:flex; justify-content:space-between; align-items:start; margin-bottom:12px;">
-          <strong style="color:var(--white);">Votação: Novo Uniforme 2026</strong>
-          <span class="nav-badge" style="background:var(--p-1); color:var(--c-white);">ABERTA</span>
-        </div>
-        <p style="font-size:12px; color:var(--t-2); margin-bottom:1rem;">Definição do modelo oficial para o ENEGEP 2026.</p>
-        <div style="display:flex; gap:8px;">
-          <button class="btn btn-primary" style="flex:1; font-size:11px;" onclick="Assembleia.votar('Uniforme A')">Opção Alpha</button>
-          <button class="btn btn-ghost" style="flex:1; font-size:11px; border:1px solid var(--b-1);" onclick="Assembleia.votar('Uniforme B')">Opção Beta</button>
-        </div>
-        <div style="font-size:10px; color:var(--t-3); margin-top:12px; font-style:italic;">* Voto 100% secreto e auditado pela Coord. Geral.</div>
-      </div>
-    `;
+    Assembleia.init();
   },
 
   async syncMandates(profile) {
@@ -1762,25 +1831,88 @@ const Projetos = {
 };
 
 const Assembleia = {
-  novaVotacao() {
+  async init() {
+    const el = document.getElementById('activeVotes');
+    if (!el) return;
+    const sb = window._supabase;
+    if (!sb) { el.innerHTML = '<p class="text-muted text-sm">Banco não conectado.</p>'; return; }
+    el.innerHTML = '<p class="text-muted text-sm">Carregando votações...</p>';
+    try {
+      const { data } = await sb.from('votacoes').select('*').eq('status', 'aberta').order('criado_em', { ascending: false });
+      if (!data || data.length === 0) {
+        el.innerHTML = '<p class="text-muted text-sm">Nenhuma votação ativa no momento.</p>';
+        return;
+      }
+      el.innerHTML = data.map(v => `
+        <div style="background:var(--surface-2);border:1px solid var(--border-1);border-radius:10px;padding:14px;margin-bottom:8px;">
+          <div style="font-weight:700;font-size:13px;color:var(--fg-1);margin-bottom:6px;">🗳️ ${v.titulo}</div>
+          ${v.opcoes ? v.opcoes.map(o => `<button class="btn btn-ghost" style="font-size:11px;padding:4px 10px;margin:2px;" onclick="Assembleia.votar(${v.id},'${o}')">Votar: ${o}</button>`).join('') : ''}
+          <button class="btn btn-ghost" style="font-size:11px;padding:4px 10px;margin:2px;float:right;" onclick="Assembleia.verResultados(${v.id})">Resultados →</button>
+        </div>
+      `).join('');
+    } catch(e) {
+      el.innerHTML = '<p class="text-muted text-sm">Erro ao carregar votações.</p>';
+    }
+  },
+  async novaVotacao() {
     abrirModal({
-      titulo: 'Nova Votação',
-      corpo: '<div class="form-group"><label class="form-label">Título da Votação</label><input id="av-titulo" class="form-input" placeholder="Ex: Uniforme Oficial"></div>',
+      titulo: '🗳️ Nova Votação',
+      corpo: `
+        <div class="form-group"><label class="form-label">Título da Votação</label><input id="av-titulo" class="form-input" placeholder="Ex: Definição do uniforme oficial"></div>
+        <div class="form-group"><label class="form-label">Opções (separadas por vírgula)</label><input id="av-opcoes" class="form-input" placeholder="Ex: Modelo A, Modelo B, Modelo C"></div>
+      `,
       botoes: [
         { texto: 'Cancelar', classe: 'btn-ghost', acao: fecharModal },
-        { texto: 'Criar', classe: 'btn-primary', acao: () => {
+        { texto: 'Criar Votação', classe: 'btn-primary', acao: async () => {
           const titulo = document.getElementById('av-titulo')?.value?.trim();
+          const opcoesRaw = document.getElementById('av-opcoes')?.value?.trim();
+          if (!titulo) { App.toast('Informe o título da votação.', 'error'); return; }
+          const opcoes = opcoesRaw ? opcoesRaw.split(',').map(s => s.trim()).filter(Boolean) : [];
           fecharModal();
-          if (titulo) App.toast('Votação criada com sucesso!', 'success');
+          const sb = window._supabase;
+          if (sb) {
+            try {
+              await sb.from('votacoes').insert({ titulo, opcoes, status: 'aberta', criado_em: new Date().toISOString() });
+              App.toast('Votação criada com sucesso!', 'success');
+              Assembleia.init();
+            } catch(e) { App.toast('Erro ao criar votação.', 'error'); }
+          } else {
+            App.toast('Banco não conectado.', 'error');
+          }
         }}
       ]
     });
   },
-  votar(opcao) {
-    App.toast(`Voto secreto em "${opcao}" computado!`, 'success');
+  async votar(votacaoId, opcao) {
+    const sb = window._supabase;
+    if (!sb) { App.toast('Banco não conectado.', 'error'); return; }
+    try {
+      await sb.from('votos').insert({ votacao_id: votacaoId, opcao, registrado_em: new Date().toISOString() });
+      App.toast(`Voto em "${opcao}" computado!`, 'success');
+    } catch(e) {
+      App.toast('Erro ao registrar voto.', 'error');
+    }
   },
-  verResultados() {
-    App.toast('Resultados parciais: Opção Alpha 64% | Opção Beta 36%', 'info');
+  async verResultados(votacaoId) {
+    const sb = window._supabase;
+    if (!sb) { App.toast('Banco não conectado.', 'error'); return; }
+    try {
+      const { data: votos } = await sb.from('votos').select('opcao').eq('votacao_id', votacaoId);
+      if (!votos || votos.length === 0) { App.toast('Nenhum voto registrado ainda.', 'info'); return; }
+      const total = votos.length;
+      const contagem = {};
+      votos.forEach(v => { contagem[v.opcao] = (contagem[v.opcao] || 0) + 1; });
+      const corpo = Object.entries(contagem).map(([opcao, n]) => {
+        const pct = Math.round((n / total) * 100);
+        return `<div style="margin-bottom:10px;">
+          <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px;"><span>${opcao}</span><strong>${pct}% (${n})</strong></div>
+          <div style="height:6px;background:var(--surface-3);border-radius:3px;"><div style="height:6px;background:var(--brand-orange);border-radius:3px;width:${pct}%;"></div></div>
+        </div>`;
+      }).join('');
+      abrirModal({ titulo: '📊 Resultados da Votação', corpo: `<div style="font-size:11px;color:var(--fg-3);margin-bottom:12px;">Total de votos: ${total}</div>${corpo}`, botoes: [{ texto: 'Fechar', classe: 'btn-ghost', acao: fecharModal }] });
+    } catch(e) {
+      App.toast('Erro ao carregar resultados.', 'error');
+    }
   }
 };
 
@@ -1788,48 +1920,169 @@ const Geral = {
   async loadMeetings() {
     const body = document.getElementById('meetingTableBody');
     if (!body) return;
-    // Mock ou Supabase
-    const meetings = [
-      { id: 1, data: '2026-04-15', titulo: 'RGN #04 - Planejamento ENEGEP', presenca: '85%' },
-      { id: 2, data: '2026-03-30', titulo: 'RGN #03 - Alinhamento Operacional', presenca: '92%' }
-    ];
-    body.innerHTML = meetings.map(m => `
-      <tr style="border-bottom:1px solid var(--b-1); font-size:12px;">
-        <td style="padding:12px;">${new Date(m.data+'T12:00:00').toLocaleDateString('pt-BR')}</td>
-        <td style="padding:12px; font-weight:700; color:var(--white);">${m.titulo}</td>
-        <td style="padding:12px;"><span class="nav-badge" style="background:var(--w10);color:var(--green);">${m.presenca}</span></td>
-        <td style="padding:12px;">
-          <button class="btn btn-ghost" style="padding:4px 8px; font-size:10px;" onclick="Geral.gerenciarPresenca(${m.id})">📂 Lista</button>
-        </td>
-      </tr>
-    `).join('');
+    const sb = window._supabase;
+    if (!sb) {
+      body.innerHTML = '<tr><td colspan="4" style="padding:20px;text-align:center;color:var(--fg-3);font-size:12px;">Banco não conectado.</td></tr>';
+      return;
+    }
+    body.innerHTML = '<tr><td colspan="4" style="padding:20px;text-align:center;color:var(--fg-3);font-size:12px;">Carregando reuniões...</td></tr>';
+    try {
+      const { data } = await sb.from('eventos')
+        .select('id, data, titulo, coordenadoria, descricao')
+        .eq('tipo', 'reuniao')
+        .order('data', { ascending: false })
+        .limit(20);
+      if (!data || data.length === 0) {
+        body.innerHTML = '<tr><td colspan="4" style="padding:20px;text-align:center;color:var(--fg-3);font-size:12px;">Nenhuma reunião registrada. Clique em "+ Agendar Reunião" para adicionar.</td></tr>';
+        return;
+      }
+      body.innerHTML = data.map(m => `
+        <tr style="border-bottom:1px solid var(--border-1);font-size:12px;">
+          <td style="padding:12px;">${new Date(m.data+'T12:00:00').toLocaleDateString('pt-BR')}</td>
+          <td style="padding:12px;font-weight:700;color:var(--fg-1);">${m.titulo}</td>
+          <td style="padding:12px;"><span style="font-size:11px;color:var(--fg-3);">${m.coordenadoria || 'Geral'}</span></td>
+          <td style="padding:12px;">
+            <button class="btn btn-ghost" style="padding:4px 8px;font-size:10px;" onclick="Geral.gerenciarPresenca('${m.id}','${m.titulo.replace(/'/g,"\\'")}')">📂 Lista</button>
+          </td>
+        </tr>
+      `).join('');
+    } catch(e) {
+      body.innerHTML = '<tr><td colspan="4" style="padding:20px;text-align:center;color:var(--fg-3);font-size:12px;">Erro ao carregar reuniões.</td></tr>';
+    }
   },
 
   async checkPCD() {
     const list = document.getElementById('pcdAlerts');
     if (!list) return;
-    // Mock: Simular membros com 2 faltas não justificadas
-    const alerts = [
-      { nome: 'Pedro Assis', faltas: 2, coord: 'MKT' },
-      { nome: 'Marina Souza', faltas: 3, coord: 'PRJ' }
-    ];
-    if (alerts.length === 0) {
-      list.innerHTML = '<p class="text-muted text-sm">Nenhum alerta crítico disparado.</p>';
-      return;
-    }
-    list.innerHTML = alerts.map(a => `
-      <div style="background:rgba(247,84,18,0.05); border:1px solid var(--b-a); padding:10px; border-radius:8px; display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-        <div>
-          <div style="font-weight:700; font-size:12px; color:var(--white);">${a.nome}</div>
-          <div style="font-size:10px; color:var(--orange);">⚠️ ${a.faltas} FALTAS NÃO JUSTIFICADAS (${a.coord})</div>
+    const sb = window._supabase;
+    if (!sb) { list.innerHTML = '<p class="text-muted text-sm">Banco não conectado.</p>'; return; }
+    list.innerHTML = '<p class="text-muted text-sm">Verificando faltas...</p>';
+    try {
+      const { data: membros } = await sb.from('users').select('id, nome, coordenadoria').eq('ativo', true);
+      if (!membros || membros.length === 0) {
+        list.innerHTML = '<p class="text-muted text-sm">Nenhum membro ativo cadastrado.</p>';
+        return;
+      }
+      const { data: presencas } = await sb.from('presencas').select('user_id, justificada').eq('presente', false);
+      const faltasPorMembro = {};
+      (presencas || []).forEach(p => {
+        if (!p.justificada) faltasPorMembro[p.user_id] = (faltasPorMembro[p.user_id] || 0) + 1;
+      });
+      const alertas = membros
+        .filter(m => (faltasPorMembro[m.id] || 0) >= 2)
+        .map(m => ({ nome: m.nome, faltas: faltasPorMembro[m.id], coord: m.coordenadoria || '—' }))
+        .sort((a, b) => b.faltas - a.faltas);
+      if (alertas.length === 0) {
+        list.innerHTML = '<p class="text-muted text-sm">Nenhum alerta crítico disparado.</p>';
+        return;
+      }
+      list.innerHTML = alertas.map(a => `
+        <div style="background:rgba(247,84,18,0.05);border:1px solid rgba(247,84,18,0.2);padding:10px;border-radius:8px;display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+          <div>
+            <div style="font-weight:700;font-size:12px;color:var(--fg-1);">${a.nome}</div>
+            <div style="font-size:10px;color:var(--brand-orange);">⚠️ ${a.faltas} FALTAS NÃO JUSTIFICADAS (${a.coord})</div>
+          </div>
+          <button class="btn btn-ghost" style="font-size:10px;padding:4px 8px;" onclick="App.toast('Notificação enviada ao coordenador de ${a.coord}.','info')">Notificar</button>
         </div>
-        <button class="btn btn-ghost" style="font-size:10px; padding:4px 8px;" onclick="App.toast('Notificação enviada ao coordenador.','info')">Notificar</button>
-      </div>
-    `).join('');
+      `).join('');
+    } catch(e) {
+      list.innerHTML = '<p class="text-muted text-sm">Nenhum alerta crítico disparado.</p>';
+    }
   },
 
-  novaReuniao() { abrirModal({ titulo: 'Nova Reunião', corpo: '<p style="color:var(--c-slate);font-size:13px;">Funcionalidade de agendamento disponível em breve.</p>', botoes: [{ texto: 'Fechar', classe: 'btn-ghost', acao: fecharModal }] }); },
-  gerenciarPresenca(id) { App.toast('Abrindo lista de presença para RGN #' + id, 'info'); }
+  novaReuniao() {
+    abrirModal({
+      titulo: '📅 Registrar Reunião',
+      corpo: `
+        <div class="form-group"><label class="form-label">Título</label><input id="rgn-titulo" class="form-input" placeholder="Ex: RGN #05 - Planejamento Ciclo ABJ"></div>
+        <div class="form-group"><label class="form-label">Data</label><input id="rgn-data" class="form-input" type="date"></div>
+        <div class="form-group"><label class="form-label">Coordenadoria</label>
+          <select id="rgn-coord" class="form-input">
+            <option value="Geral">Geral</option>
+            <option value="MKT">Marketing</option>
+            <option value="FIN">Financeiro</option>
+            <option value="PRJ">Projetos</option>
+            <option value="OPS">Operações</option>
+            <option value="GP">Gestão de Pessoas</option>
+          </select>
+        </div>
+        <div class="form-group"><label class="form-label">Observações (opcional)</label><textarea id="rgn-obs" class="form-input" rows="2" placeholder="Pauta, decisões ou link da ata..."></textarea></div>
+      `,
+      botoes: [
+        { texto: 'Cancelar', classe: 'btn-ghost', acao: fecharModal },
+        { texto: 'Salvar Reunião', classe: 'btn-primary', acao: async () => {
+          const titulo = document.getElementById('rgn-titulo')?.value?.trim();
+          const data = document.getElementById('rgn-data')?.value;
+          const coord = document.getElementById('rgn-coord')?.value;
+          const obs = document.getElementById('rgn-obs')?.value?.trim();
+          if (!titulo || !data) { App.toast('Informe título e data.', 'error'); return; }
+          fecharModal();
+          const sb = window._supabase;
+          if (sb) {
+            try {
+              await sb.from('eventos').insert({ titulo, data, tipo: 'reuniao', coordenadoria: coord, descricao: obs || null, criado_em: new Date().toISOString() });
+              App.toast('Reunião registrada com sucesso!', 'success');
+              Geral.loadMeetings();
+            } catch(e) { App.toast('Erro ao salvar reunião.', 'error'); }
+          } else {
+            App.toast('Banco não conectado.', 'error');
+          }
+        }}
+      ]
+    });
+  },
+
+  gerenciarPresenca(id, titulo) {
+    abrirModal({
+      titulo: `📂 ${titulo || 'Lista de Presença'}`,
+      corpo: `<div style="padding:16px;text-align:center;color:var(--fg-3);font-size:13px;">
+        <p>Gestão de presenças individuais por reunião será disponibilizada na fase de backend.</p>
+        <p style="margin-top:8px;font-size:11px;">ID da reunião: ${id}</p>
+      </div>`,
+      botoes: [{ texto: 'Fechar', classe: 'btn-ghost', acao: fecharModal }]
+    });
+  }
+};
+
+const Operacoes = {
+  async loadHub() {
+    const vault = document.getElementById('popVault');
+    if (!vault) return;
+    const sb = window._supabase;
+    if (!sb) {
+      vault.innerHTML = '<p style="color:var(--fg-3);font-size:13px;padding:12px;">Banco não conectado.</p>';
+      return;
+    }
+    vault.innerHTML = '<p style="color:var(--fg-3);font-size:13px;padding:12px;">Carregando POPs...</p>';
+    try {
+      const { data } = await sb.from('pops').select('id, titulo, descricao, revisao_em, ativo').eq('ativo', true).order('titulo');
+      if (!data || data.length === 0) {
+        vault.innerHTML = `
+          <div style="grid-column:1/-1;padding:24px;text-align:center;color:var(--fg-3);font-size:13px;">
+            <div style="font-size:32px;margin-bottom:8px;">📂</div>
+            <p>Nenhum POP cadastrado ainda.</p>
+            <button class="btn btn-primary" style="margin-top:12px;font-size:12px;" onclick="goTo('ops_pops')">Gerenciar POPs →</button>
+          </div>`;
+        return;
+      }
+      const hoje = new Date();
+      vault.innerHTML = data.map(p => {
+        const revisao = p.revisao_em ? new Date(p.revisao_em) : null;
+        const venceDias = revisao ? Math.ceil((revisao - hoje) / (1000 * 60 * 60 * 24)) : null;
+        const venceLabel = venceDias === null ? '' :
+          venceDias < 0 ? `<div style="font-size:10px;color:#f87171;">Vencido há ${Math.abs(venceDias)}d</div>` :
+          venceDias <= 30 ? `<div style="font-size:10px;color:var(--brand-orange);">Vence em ${venceDias}d</div>` :
+          `<div style="font-size:10px;color:var(--fg-3);">Revisão: ${revisao.toLocaleDateString('pt-BR')}</div>`;
+        return `<div style="background:var(--surface-2);border:1px solid var(--border-1);padding:16px;border-radius:12px;cursor:pointer;" onclick="goTo('ops_pops')">
+          <div style="font-size:20px;margin-bottom:8px;">📄</div>
+          <div style="font-weight:700;font-size:13px;color:var(--fg-1);margin-bottom:4px;">${p.titulo}</div>
+          ${venceLabel}
+        </div>`;
+      }).join('');
+    } catch(e) {
+      vault.innerHTML = '<p style="color:var(--fg-3);font-size:13px;padding:12px;">Erro ao carregar POPs.</p>';
+    }
+  }
 };
 
 const Financeiro = {
@@ -1844,7 +2097,8 @@ const Financeiro = {
     }
   },
   loadAbepro() {
-    // Lógica para controle de filiação
+    if (typeof PageFinancas !== 'undefined') PageFinancas._renderABJFin();
+    else goTo('fin_abepro');
   },
   validarPlano() {
     const nome = document.getElementById('comNome')?.value;
@@ -1862,16 +2116,42 @@ const Financeiro = {
     }
   },
   novoLancamento() {
-    // Módulo financeiro integrado ao Supabase — sem aviso desnecessário
+    if (typeof PageFinancas !== 'undefined') PageFinancas.lancar('venda');
+    else mostrarToast('Acesse Finanças › Fluxo de Caixa para registrar.', 'info');
   }
 };
 
 const Marketing = {
   async loadSocialStats() { console.log('Marketing: Stats carregadas.'); },
   async loadKanban() {
-    if (typeof PageMarketing !== 'undefined') { PageMarketing.init(); return; }
-    const el = document.getElementById('marketingKanban');
-    if (el) el.innerHTML = '<p style="color:var(--c-slate);font-size:13px;padding:12px;">Carregando módulo de marketing…</p>';
+    if (typeof PageMarketing !== 'undefined') PageMarketing.init();
+    this._loadHubStats();
+    const kanbanEl = document.getElementById('marketingKanban');
+    if (kanbanEl) kanbanEl.innerHTML = `
+      <div style="display:flex;gap:10px;flex-wrap:wrap;padding:8px 0;">
+        <button class="btn btn-primary" onclick="goTo('mkt_kanban')">Kanban Lojinha →</button>
+        <button class="btn btn-ghost" onclick="goTo('mkt_tracker')">Social Tracker →</button>
+      </div>`;
+  },
+  async _loadHubStats() {
+    const sb = window._supabase; if (!sb) return;
+    try {
+      const { data: demMkt } = await sb.from('demandas')
+        .select('coluna, coordenadorias!inner(sigla)')
+        .eq('coordenadorias.sigla','MKT')
+        .not('coluna','in','(realizada,auditada)');
+      const ativas = demMkt?.length ?? 0;
+      const el = id => document.getElementById(id);
+      if (el('mktDemandasAtivas')) el('mktDemandasAtivas').textContent = ativas + ' ativas';
+      /* Social stats: tenta buscar da tabela tracker_social se existir */
+      try {
+        const { data: tracker } = await sb.from('tracker_social').select('seguidores,posts_semana').order('created_at',{ascending:false}).limit(1);
+        if (tracker?.[0]) {
+          if (el('mktInstaFollows')) el('mktInstaFollows').textContent = tracker[0].seguidores?.toLocaleString('pt-BR') || '—';
+          if (el('mktPostStatus')) el('mktPostStatus').textContent = (tracker[0].posts_semana || 0) + ' esta semana';
+        }
+      } catch(_) {}
+    } catch(e) { console.warn('[Marketing hub]', e); }
   }
 };
 
@@ -2116,10 +2396,18 @@ const Dem = {
     ];
     const PRIO_COR = { alta: '#f87171', media: '#f5c518', baixa: '#2dd4a0' };
     try {
-      const { data } = await sb
+      const _p = window._appProfile;
+      const _isGlobal = !_p || _p.role === 'admin'
+        || _p.coordenadorias?.sigla === 'GER'
+        || _p.coordenadorias?.sigla === 'GP';
+      let query = sb
         .from('demandas')
         .select('*, coordenadorias(sigla), users!responsavel_id(nome)')
         .order('created_at', { ascending: false });
+      if (!_isGlobal && _p?.coordenadoria_id) {
+        query = query.eq('coordenadoria_id', _p.coordenadoria_id);
+      }
+      const { data } = await query;
       const demandas = data || [];
       COLS.forEach(col => {
         const el  = document.getElementById('dem-c-' + col.id);
@@ -2127,20 +2415,21 @@ const Dem = {
         if (!el) return;
         const items = demandas.filter(d => d.coluna === col.id);
         if (cnt) cnt.textContent = items.length;
+        const TAG_CLASS = { GER:'geral', OPS:'operacoes', GP:'pessoas', MKT:'marketing', PRJ:'projetos', FIN:'financas' };
         el.innerHTML = items.length ? items.map(d => {
-          const prioCor = PRIO_COR[d.prioridade] || 'var(--fg-3)';
-          const sigla   = d.coordenadorias?.sigla || 'GER';
-          const prazo   = d.prazo ? new Date(d.prazo + 'T12:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }) : '';
+          const prioCor  = PRIO_COR[d.prioridade] || 'var(--fg-3)';
+          const sigla    = d.coordenadorias?.sigla || 'GER';
+          const tagClass = TAG_CLASS[sigla] || 'geral';
+          const prazo    = d.prazo ? new Date(d.prazo + 'T12:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }) : '';
+          const resp     = d.users?.nome?.split(' ')[0] || '';
           return `<div class="kanban-card" onclick="Dem.abrirDetalhes('${d.id}')">
-            <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:7px;">
               <span style="font-size:9px;font-weight:700;padding:2px 6px;border-radius:4px;background:${prioCor}22;color:${prioCor}">${(d.prioridade || 'media').toUpperCase()}</span>
+              <span class="coord-tag tag-${tagClass}" style="font-size:9px;padding:1px 7px;">${sigla}</span>
             </div>
-            <div style="font-size:13px;font-weight:600;margin-bottom:6px;">${sanitize(d.titulo)}</div>
-            ${d.users?.nome ? `<div style="font-size:11px;color:var(--fg-3);">Resp: ${sanitize(d.users.nome.split(' ')[0])}</div>` : ''}
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px;">
-              <span style="font-size:10px;font-weight:600;background:var(--surface-2);padding:2px 6px;border-radius:4px;">${sigla}</span>
-              ${prazo ? `<span style="font-size:10px;color:var(--fg-3);">${prazo}</span>` : ''}
-            </div>
+            <div style="font-size:13px;font-weight:600;margin-bottom:6px;line-height:1.35">${sanitize(d.titulo)}</div>
+            ${resp ? `<div style="font-size:11px;color:var(--fg-3);margin-bottom:6px;">👤 ${sanitize(resp)}</div>` : ''}
+            ${prazo ? `<div style="font-size:10px;color:var(--fg-3);">📅 ${prazo}</div>` : ''}
           </div>`;
         }).join('') : `<div style="font-size:12px;color:var(--fg-3);text-align:center;padding:16px 0;">Vazio</div>`;
       });
@@ -2168,7 +2457,13 @@ const Dem = {
     }).join('') : `<tr><td colspan="6" style="padding:20px;text-align:center;color:var(--fg-3);">Nenhuma demanda cadastrada ainda. Clique em "+ Nova" para criar.</td></tr>`;
   },
 
-  abrirDetalhes(id) { mostrarToast('Detalhes de demanda — em breve.', 'info'); }
+  abrirDetalhes(id) {
+    /* Delegado ao Kanban que tem a lógica completa com anotações */
+    if (typeof Kanban !== 'undefined') {
+      /* Sincronizar a lista interna do Kanban se ainda não carregada */
+      Kanban.abrirDetalhes(id);
+    }
+  }
 };
 window.Dem = Dem;
 
@@ -2200,7 +2495,12 @@ const NovoCal = {
     }
     grid.innerHTML = html;
 
+    // Atualizar topbar-sub com mês/ano atual
+    const topSub = document.getElementById('calTopbarSub');
+    if (topSub) topSub.textContent = MONTHS_PT[this.month] + ' ' + this.year + ' — Agenda do Núcleo';
+
     this._loadEventos();
+    this._loadProximos();
   },
 
   async _loadEventos() {
@@ -2223,6 +2523,86 @@ const NovoCal = {
         </div>`;
       }).join('');
     } catch(err) { el.innerHTML = '<p style="font-size:12px;color:var(--fg-3);">Erro ao carregar eventos.</p>'; }
+  },
+
+  async _loadProximos() {
+    const el = document.getElementById('novoCalProximos');
+    if (!el) return;
+    const sb = window._supabase;
+    if (!sb) { el.innerHTML = '<p style="font-size:13px;color:var(--fg-3);text-align:center;padding:16px 0;">Sem conexão com banco de dados.</p>'; return; }
+    el.innerHTML = '<p style="font-size:13px;color:var(--fg-3);text-align:center;padding:16px 0;">Carregando...</p>';
+    try {
+      const hoje  = new Date(this.year, this.month, 1).toISOString().split('T')[0];
+      const fim   = new Date(this.year, this.month + 1, 0).toISOString().split('T')[0];
+      const { data } = await sb.from('eventos').select('titulo,data_inicio,tipo,coordenadorias(sigla,icone)').gte('data_inicio', hoje).lte('data_inicio', fim).order('data_inicio').limit(8);
+      if (!data?.length) { el.innerHTML = '<p style="font-size:13px;color:var(--fg-3);text-align:center;padding:16px 0;">Nenhum evento cadastrado neste mês.<br><span style="font-size:11px;">Use o botão abaixo para registrar.</span></p>'; return; }
+      const CORES = { reuniao:'#9b7be8', evento:'var(--brand-orange)', treinamento:'#5b9cf6', enegep:'#f5c518', podcast:'#e85aa8', assembleia:'#2dd4a0' };
+      el.innerHTML = data.map(e => {
+        const cor   = CORES[e.tipo] || 'var(--fg-3)';
+        const d     = e.data_inicio ? new Date(e.data_inicio + 'T12:00:00') : null;
+        const dia   = d ? d.getDate().toString().padStart(2,'0') : '—';
+        const mes   = d ? d.toLocaleDateString('pt-BR',{month:'short'}).toUpperCase() : '';
+        const sigla = e.coordenadorias?.sigla || '';
+        const icone = e.coordenadorias?.icone || '';
+        return `<div style="display:flex;gap:12px;align-items:flex-start;">
+          <div style="min-width:44px;text-align:center;">
+            <div style="font-size:18px;font-weight:800;font-family:var(--font-mono);color:${cor};">${dia}</div>
+            <div style="font-size:9px;color:var(--fg-3);">${mes}</div>
+          </div>
+          <div style="flex:1;padding:10px;background:${cor}0f;border-radius:8px;border-left:3px solid ${cor};">
+            <div style="font-weight:600;font-size:13px;">${sanitize(e.titulo||'Evento')}</div>
+            <div style="font-size:11px;color:var(--fg-3);margin-top:2px;">${icone} ${sigla} · ${e.tipo||'evento'}</div>
+          </div>
+        </div>`;
+      }).join('');
+    } catch(err) { el.innerHTML = '<p style="font-size:12px;color:var(--fg-3);">Erro ao carregar eventos.</p>'; }
+  },
+
+  novoEvento() {
+    abrirModal({ titulo: '📅 Registrar Evento', tipo: 'info', corpo: `
+      <div class="form-group"><label class="form-label">Título do Evento *</label>
+        <input id="nevTitulo" class="form-input" placeholder="Ex: Reunião Geral, Workshop ENEGEP..."></div>
+      <div class="form-group"><label class="form-label">Tipo</label>
+        <select id="nevTipo" class="form-input">
+          <option value="reuniao">Reunião</option>
+          <option value="evento">Evento</option>
+          <option value="treinamento">Treinamento</option>
+          <option value="enegep">ENEGEP</option>
+          <option value="assembleia">Assembleia</option>
+          <option value="podcast">Podcast</option>
+        </select></div>
+      <div class="form-group"><label class="form-label">Data *</label>
+        <input id="nevData" type="date" class="form-input" value="${new Date().toISOString().slice(0,10)}"></div>
+      <div class="form-group"><label class="form-label">Coordenadoria</label>
+        <select id="nevCoord" class="form-input">
+          <option value="">Todas</option>
+          <option value="GER">⬡ Geral</option><option value="OPS">⚙ Operações</option>
+          <option value="MKT">◬ Marketing</option><option value="FIN">◎ Finanças</option>
+          <option value="PRJ">◫ Projetos</option><option value="GP">◒ G. Pessoas</option>
+        </select></div>`,
+      botoes: [
+        { texto: 'Cancelar', classe: 'btn-ghost', acao: fecharModal },
+        { texto: 'Salvar ✓', classe: 'btn-primary', acao: async () => {
+          const titulo = document.getElementById('nevTitulo')?.value?.trim();
+          const tipo   = document.getElementById('nevTipo')?.value;
+          const data   = document.getElementById('nevData')?.value;
+          const sigla  = document.getElementById('nevCoord')?.value;
+          if (!titulo || !data) { mostrarToast('Preencha título e data!', 'warning'); return; }
+          fecharModal();
+          try {
+            const sb = window._supabase; if (!sb) throw new Error('sem conexão');
+            let coordId = null;
+            if (sigla) {
+              const { data: coords } = await sb.from('coordenadorias').select('id').eq('sigla', sigla).limit(1);
+              coordId = coords?.[0]?.id || null;
+            }
+            await sb.from('eventos').insert([{ titulo, tipo, data_inicio: data, ativo: true, coordenadoria_id: coordId, criado_por: window._appProfile?.id }]);
+            mostrarToast('Evento registrado!', 'success');
+            NovoCal._render();
+          } catch(e) { mostrarToast('Erro ao salvar evento.', 'error'); console.warn(e); }
+        }}
+      ]
+    });
   }
 };
 window.NovoCal = NovoCal;
@@ -2238,16 +2618,28 @@ const Kanban = (() => {
     { id: 'concluida', label: 'Concluídas',     coluna: 'auditada' },
   ];
 
+  /* Mapa sigla → classe CSS do design system */
+  const TAG_CLASS = { GER:'geral', OPS:'operacoes', GP:'pessoas', MKT:'marketing', PRJ:'projetos', FIN:'financas' };
+  const PRIO_COR  = { alta:'var(--red)', media:'var(--yellow)', baixa:'var(--green)' };
+
   let _demands = [];
-  let _loaded = false;
+  let _loaded  = false;
 
   async function load() {
     if (!window._supabase) { _renderAll([]); return; }
     try {
-      const { data, error } = await window._supabase
+      const _p = window._appProfile;
+      const _isGlobal = !_p || _p.role === 'admin'
+        || _p.coordenadorias?.sigla === 'GER'
+        || _p.coordenadorias?.sigla === 'GP';
+      let q = window._supabase
         .from('demandas')
-        .select('*, coordenadorias(sigla)')
+        .select('*, coordenadorias(sigla), users!responsavel_id(nome,iniciais)')
         .order('created_at', { ascending: false });
+      if (!_isGlobal && _p?.coordenadoria_id) {
+        q = q.eq('coordenadoria_id', _p.coordenadoria_id);
+      }
+      const { data, error } = await q;
       if (error) throw error;
       _demands = data || [];
     } catch (e) {
@@ -2263,88 +2655,112 @@ const Kanban = (() => {
       const el = document.getElementById('kanban-' + col.id);
       if (!el) return;
       const items = list.filter(d => d.coluna === col.coluna);
-      if (items.length === 0) {
-        el.innerHTML = '<div class="kanban-empty">Vazio.</div>';
-        return;
-      }
-      el.innerHTML = items.map(d => _cardHtml(d)).join('');
+      el.innerHTML = items.length
+        ? items.map(d => _cardHtml(d)).join('')
+        : '<div class="kanban-empty">Vazio.</div>';
     });
   }
 
   function _cardHtml(d) {
-    const prazo = d.prazo ? `<span class="kanban-card-meta">📅 ${new Date(d.prazo).toLocaleDateString('pt-BR')}</span>` : '';
-    const coordSigla = d.coordenadorias?.sigla;
-    const dest  = coordSigla ? `<span class="kanban-card-tag">${coordSigla}</span>` : '';
-
-    // V6.0: Remetente Icon
-    const remSigla = coordSigla || 'GER';
-    const remIcon  = `<span class="kanban-rem-icon" title="Origem: ${remSigla}">${remSigla}</span>`;
-    
-    return `<div class="kanban-card" onclick="Kanban.abrirDetalhes('${d.id}')">
-      <div class="kanban-card-title">${_esc(d.titulo)}</div>
-      <div class="kanban-card-footer">
-        <div style="display:flex; gap:4px; align-items:center;">
-          ${remIcon} ${dest}
-        </div>
-        ${prazo}
-      </div>
-    </div>`;
+    const sigla    = d.coordenadorias?.sigla || 'GER';
+    const tagClass = TAG_CLASS[sigla] || 'geral';
+    const prioCor  = PRIO_COR[d.prioridade] || 'var(--fg-3)';
+    const prio     = (d.prioridade || 'media').toUpperCase();
+    const resp     = d.users?.nome?.split(' ')[0] || null;
+    const prazo    = d.prazo
+      ? '<span class="kanban-card-meta">&#128197; ' + new Date(d.prazo + 'T12:00:00').toLocaleDateString('pt-BR') + '</span>'
+      : '';
+    return '<div class="kanban-card" onclick="Kanban.abrirDetalhes(\'' + d.id + '\')">'
+      + '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px">'
+      + '<span style="font-size:9px;font-weight:700;padding:2px 6px;border-radius:4px;background:' + prioCor + '22;color:' + prioCor + '">' + prio + '</span>'
+      + '<span class="coord-tag tag-' + tagClass + '" style="font-size:9px;padding:1px 7px;">' + sigla + '</span>'
+      + '</div>'
+      + '<div class="kanban-card-title">' + _esc(d.titulo) + '</div>'
+      + (resp ? '<div style="font-size:11px;color:var(--fg-3);margin-top:4px;">👤 ' + _esc(resp) + '</div>' : '')
+      + '<div class="kanban-card-footer">' + prazo + '</div>'
+      + '</div>';
   }
 
   function _esc(s) {
     return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
   }
 
-  function abrirNovaDemanda() {
+  async function abrirNovaDemanda() {
     const m = document.getElementById('kanbanModal');
     if (m) { m.style.display = 'flex'; }
     document.getElementById('ndTitulo')?.focus();
+
+    /* Pre-selecionar coord do usuario logado */
+    const profile = window._appProfile;
+    if (profile?.coordenadorias?.sigla) {
+      const sel = document.getElementById('ndCoord');
+      if (sel) sel.value = profile.coordenadorias.sigla;
+    }
+
+    /* Carregar membros para o select de responsavel */
+    await _onCoordChange(
+      document.getElementById('ndCoord')?.value || profile?.coordenadorias?.sigla || 'GER'
+    );
+  }
+
+  async function _onCoordChange(sigla) {
+    const respSel = document.getElementById('ndResponsavel');
+    if (!respSel || !window._supabase) return;
+    respSel.innerHTML = '<option value="">--- Carregando... ---</option>';
+    try {
+      const { data: coordRow } = await window._supabase
+        .from('coordenadorias').select('id').eq('sigla', sigla).single();
+      const { data: membros } = await window._supabase
+        .from('users').select('id,nome,iniciais')
+        .eq('ativo', true)
+        .eq('coordenadoria_id', coordRow?.id)
+        .order('nome');
+      respSel.innerHTML = '<option value="">--- Sem responsavel ---</option>' +
+        (membros || []).map(u => '<option value="' + u.id + '">' + sanitize(u.nome || u.iniciais || '?') + '</option>').join('');
+    } catch (e) { respSel.innerHTML = '<option value="">--- Sem responsavel ---</option>'; }
   }
 
   function fecharModal() {
     const m = document.getElementById('kanbanModal');
     if (m) m.style.display = 'none';
-    ['ndTitulo','ndCoord','ndPrazo','ndDesc'].forEach(id => {
+    ['ndTitulo','ndCoord','ndPrazo','ndDesc','ndResponsavel','ndPrioridade'].forEach(function(id) {
       const el = document.getElementById(id);
       if (el) el.value = '';
     });
   }
 
   async function salvar() {
-    const titulo = document.getElementById('ndTitulo')?.value?.trim();
-    const coord  = document.getElementById('ndCoord')?.value || 'GER';
-    const prazo  = document.getElementById('ndPrazo')?.value || null;
-    const desc   = document.getElementById('ndDesc')?.value?.trim() || '';
-    if (!titulo) { App.toast('Insira um título para a demanda.', 'warning'); return; }
+    const titulo      = document.getElementById('ndTitulo')?.value?.trim();
+    const coordSigla  = document.getElementById('ndCoord')?.value || 'GER';
+    const prazo       = document.getElementById('ndPrazo')?.value || null;
+    const desc        = document.getElementById('ndDesc')?.value?.trim() || '';
+    const responsavel = document.getElementById('ndResponsavel')?.value || null;
+    const prioridade  = document.getElementById('ndPrioridade')?.value || 'media';
+    if (!titulo) { App.toast('Insira um titulo para a demanda.', 'warning'); return; }
 
-    const now = new Date().toISOString();
-    const demand = { id: 'loc-' + Date.now(), titulo, coordenadoria: coord, prazo, descricao: desc, coluna: 'pendente', created_at: now };
+    const now    = new Date().toISOString();
+    const demand = { id: 'loc-' + Date.now(), titulo, coordenadoria: coordSigla, prazo, descricao: desc, coluna: 'pendente', prioridade, created_at: now };
 
     if (window._supabase) {
       try {
-        const coordRes = await window._supabase.from('coordenadorias').select('id').eq('sigla', coord).single();
+        const { data: coordRow } = await window._supabase.from('coordenadorias').select('id').eq('sigla', coordSigla).single();
         const { data, error } = await window._supabase
           .from('demandas')
           .insert([{
             titulo,
-            coordenadoria_id: coordRes.data?.id || null,
+            coordenadoria_id: coordRow?.id || null,
             prazo,
-            descricao: desc,
+            descricao: desc || null,
+            responsavel_id: responsavel || null,
+            prioridade,
             coluna: 'pendente',
             criado_por: window._appProfile?.id,
           }])
-          .select()
+          .select('*, coordenadorias(sigla), users!responsavel_id(nome,iniciais)')
           .single();
         if (error) throw error;
         _demands.unshift(data);
-        
-        // Trigger Email Notification (EmailJS)
-        await EmailService.send('template_demand', {
-          demand_title: titulo,
-          target_coord: coord,
-          sender_name: window._appProfile?.nome || 'Especialista'
-        });
-
+        if (data) await EmailService.notifyDemand(data, '').catch(function(){});
       } catch (e) {
         console.warn('Kanban: fallback local.', e.message);
         _demands.unshift(demand);
@@ -2357,22 +2773,104 @@ const Kanban = (() => {
 
     _renderAll(_demands);
     fecharModal();
+    App.toast('Demanda criada!', 'success');
   }
 
+  var _SEP = '\n---NOTAS---\n';
+
   function abrirDetalhes(id) {
-    const d = _demands.find(x => x.id == id || x.id == id);
+    var d = _demands.find(function(x) { return String(x.id) === String(id); });
     if (!d) return;
-    // Abre modal de detalhes simples — futuramente expandir
-    const info = `Título: ${d.titulo}\nCoord: ${(d.coordenadoria||'').toUpperCase()}\nColuna: ${d.coluna}\nPrazo: ${d.prazo || '—'}\n\n${d.descricao || ''}`;
-    abrirModal({ titulo: 'Detalhes da Demanda', corpo: `<div style="white-space:pre-wrap;">${info}</div>`, botoes: [{ texto: 'Fechar', classe: 'btn-ghost' }] });
+
+    var COL_LABEL = { pendente:'Backlog', exec:'Execucao', evidencia:'Evidencia', realizada:'Revisao', auditada:'Concluido' };
+    var sigla     = d.coordenadorias?.sigla || 'GER';
+    var tagClass  = TAG_CLASS[sigla] || 'geral';
+    var prioCor   = PRIO_COR[d.prioridade] || 'var(--fg-3)';
+    var resp      = d.users?.nome || '---';
+    var prazo     = d.prazo ? new Date(d.prazo + 'T12:00:00').toLocaleDateString('pt-BR') : '---';
+
+    /* Separar descricao das anotacoes */
+    var parts          = (d.descricao || '').split(_SEP);
+    var descricao      = parts[0].trim();
+    var notasExistentes = parts.slice(1).join(_SEP).trim();
+
+    /* Quem pode anotar: todos menos membro basico */
+    var podeComentar = true;
+    if (typeof Permissoes !== 'undefined' && window._appProfile) {
+      var r = window._appProfile.role;
+      podeComentar = r !== 'membro' && r !== 'conselheiro';
+    }
+
+    var corpo = ''
+      + '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;align-items:center">'
+      + '<span class="coord-tag tag-' + tagClass + '">' + sigla + '</span>'
+      + '<span style="font-size:9px;font-weight:700;padding:2px 8px;border-radius:4px;background:' + prioCor + '22;color:' + prioCor + '">' + (d.prioridade||'media').toUpperCase() + '</span>'
+      + '<span style="font-size:11px;color:var(--fg-3)">' + (COL_LABEL[d.coluna] || d.coluna) + '</span>'
+      + '</div>'
+      + '<div style="font-weight:700;font-size:16px;color:var(--fg-1);margin-bottom:12px;line-height:1.3">' + sanitize(d.titulo) + '</div>'
+      + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">'
+      + '<div><div style="font-size:10px;font-weight:700;color:var(--fg-3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:3px">Responsavel</div>'
+      + '<div style="font-size:13px;color:var(--fg-1)">' + sanitize(resp) + '</div></div>'
+      + '<div><div style="font-size:10px;font-weight:700;color:var(--fg-3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:3px">Prazo</div>'
+      + '<div style="font-size:13px;color:var(--fg-1)">' + prazo + '</div></div>'
+      + '</div>'
+      + (descricao
+        ? '<div style="margin-bottom:14px">'
+          + '<div style="font-size:10px;font-weight:700;color:var(--fg-3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px">Descricao</div>'
+          + '<div style="font-size:13px;color:var(--fg-2);background:var(--surface-3);border-radius:8px;padding:10px 12px;line-height:1.6">' + sanitize(descricao) + '</div>'
+          + '</div>'
+        : '')
+      + (notasExistentes
+        ? '<div style="margin-bottom:14px">'
+          + '<div style="font-size:10px;font-weight:700;color:var(--fg-3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px">Anotacoes</div>'
+          + '<div style="font-size:12px;color:var(--fg-2);background:var(--surface-3);border-radius:8px;padding:10px 12px;line-height:1.7;white-space:pre-wrap">' + sanitize(notasExistentes) + '</div>'
+          + '</div>'
+        : '')
+      + (podeComentar
+        ? '<div>'
+          + '<div style="font-size:10px;font-weight:700;color:var(--fg-3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px">Nova anotacao</div>'
+          + '<textarea id="kanban-nova-nota" class="form-input" rows="3" placeholder="Decisoes, contexto, proximos passos..."></textarea>'
+          + '</div>'
+        : '');
+
+    var botoes = [{ texto:'Fechar', classe:'btn-ghost', acao: fecharModal }];
+    if (podeComentar) {
+      botoes.unshift({ texto:'Salvar nota', classe:'btn-primary', acao: function() { _salvarNota(id); } });
+    }
+    abrirModal({ titulo:'Detalhes da Demanda', corpo: corpo, botoes: botoes });
+  }
+
+  async function _salvarNota(id) {
+    var nota = document.getElementById('kanban-nova-nota')?.value?.trim();
+    if (!nota) return fecharModal();
+    var d = _demands.find(function(x) { return String(x.id) === String(id); });
+    if (!d) return;
+
+    var autor = window._appProfile?.nome?.split(' ')[0] || 'Sistema';
+    var ts    = new Date().toLocaleDateString('pt-BR', { day:'2-digit', month:'2-digit', year:'2-digit' })
+              + ' ' + new Date().toLocaleTimeString('pt-BR', { hour:'2-digit', minute:'2-digit' });
+    var linha = '[' + ts + ' -- ' + sanitize(autor) + '] ' + sanitize(nota);
+
+    var parts    = (d.descricao || '').split(_SEP);
+    var descBase = parts[0];
+    var notas    = parts.slice(1).join(_SEP).trim();
+    var novoDesc = descBase + _SEP + (notas ? notas + '\n' : '') + linha;
+
+    if (window._supabase) {
+      await window._supabase.from('demandas').update({ descricao: novoDesc }).eq('id', id).catch(console.warn);
+    }
+    d.descricao = novoDesc;
+    fecharModal();
+    App.toast('Anotacao salva!', 'success');
   }
 
   function _saveLocal() {
     localStorage.setItem('_kanban_demands', JSON.stringify(_demands));
   }
 
-  return { load, abrirNovaDemanda, fecharModal, salvar, abrirDetalhes };
+  return { load, abrirNovaDemanda, fecharModal, salvar, abrirDetalhes, _onCoordChange };
 })();
+
 
 /* ═══════════════════════════════════════════════════════════════
    FINANCEIRO MODULE — Gestão e Regra dos 60 dias
