@@ -1821,13 +1821,25 @@ const DashboardExtra = {
 
 const Projetos = {
   async loadSponsors() {
-    if (typeof PageProjetos !== 'undefined') { PageProjetos.init(); return; }
+    if (typeof PageProjetos !== 'undefined') { PageProjetos.init(); }
     const grid = document.getElementById('sponsorGrid');
-    if (grid) grid.innerHTML = '<p style="color:var(--c-slate);font-size:13px;padding:12px;">Carregando módulo de projetos…</p>';
+    if (!grid || !window._supabase) return;
+    grid.innerHTML = '<p style="color:var(--c-slate);font-size:13px;padding:12px;">Carregando…</p>';
+    try {
+      const { data } = await window._supabase.from('parcerias').select('*').eq('ativa', true).order('nome');
+      if (!data?.length) {
+        grid.innerHTML = '<p style="color:var(--c-slate);font-size:13px;padding:12px;">Nenhuma parceria cadastrada ainda. Use o menu Projetos → Parcerias.</p>';
+        return;
+      }
+      grid.innerHTML = data.map(p => `
+        <div style="background:var(--b-1);border:1px solid var(--b-2);border-radius:12px;padding:14px;text-align:center;cursor:pointer" onclick="goTo('prj_parcerias')">
+          ${p.logo_url ? `<img src="${sanitize(p.logo_url)}" style="height:40px;object-fit:contain;margin-bottom:8px;display:block;margin:0 auto 8px">` : '<div style="font-size:28px;margin-bottom:8px">🤝</div>'}
+          <div style="font-weight:700;font-size:12px;color:var(--c-white)">${sanitize(p.nome)}</div>
+          <div style="font-size:10px;color:var(--c-slate);text-transform:capitalize">${p.tipo||'parceiro'}</div>
+        </div>`).join('');
+    } catch(e) { grid.innerHTML = '<p style="color:var(--c-slate);font-size:13px;padding:12px;">Erro ao carregar.</p>'; }
   },
-  novoPatrocinador() {
-    abrirModal({ titulo: 'Novo Patrocinador', corpo: '<p style="color:var(--c-slate);font-size:13px;">Funcionalidade disponível em breve.</p>', botoes: [{ texto: 'Fechar', classe: 'btn-ghost', acao: fecharModal }] });
-  }
+  novoPatrocinador() { goTo('prj_parcerias'); }
 };
 
 const Assembleia = {
@@ -2055,7 +2067,7 @@ const Operacoes = {
     }
     vault.innerHTML = '<p style="color:var(--fg-3);font-size:13px;padding:12px;">Carregando POPs...</p>';
     try {
-      const { data } = await sb.from('pops').select('id, titulo, descricao, revisao_em, ativo').eq('ativo', true).order('titulo');
+      const { data } = await sb.from('pops').select('id, titulo, descricao, data_revisao, ativo').eq('ativo', true).order('titulo');
       if (!data || data.length === 0) {
         vault.innerHTML = `
           <div style="grid-column:1/-1;padding:24px;text-align:center;color:var(--fg-3);font-size:13px;">
@@ -2067,7 +2079,7 @@ const Operacoes = {
       }
       const hoje = new Date();
       vault.innerHTML = data.map(p => {
-        const revisao = p.revisao_em ? new Date(p.revisao_em) : null;
+        const revisao = p.data_revisao ? new Date(p.data_revisao+'T12:00:00') : null;
         const venceDias = revisao ? Math.ceil((revisao - hoje) / (1000 * 60 * 60 * 24)) : null;
         const venceLabel = venceDias === null ? '' :
           venceDias < 0 ? `<div style="font-size:10px;color:#f87171;">Vencido há ${Math.abs(venceDias)}d</div>` :
