@@ -104,16 +104,18 @@ const EmailsModule = (() => {
      📩 3. CONVITE (onboarding)
      Chamado ao gerar um convite no sistema
   ════════════════════════════════════════════ */
-  async function enviarConvite({ email, coord, cargo, token, criadoPor }) {
+  async function enviarConvite({ email, coord, cargo, token, criadoPor, nomeConvidado, anoGestao }) {
     const link = `${location.origin}/convite.html?token=${token}`;
     return _send('template_convite', {
-      para_email:   email,
-      email:        email,
-      coord:        coord  || 'NUPIEEPRO',
-      cargo:        cargo  || 'membro',
+      para_email:     email,
+      email:          email,
+      nome_convidado: nomeConvidado || 'Novo membro',
+      coord:          coord  || 'NUPIEEPRO',
+      cargo:          cargo  || 'membro',
+      ano_gestao:     anoGestao || new Date().getFullYear().toString(),
       link,
-      criado_por:   criadoPor || 'Equipe Nupi',
-      assunto: 'Você acaba de dar o primeiro passo para algo incrível! ✨',
+      criado_por:     criadoPor || 'Equipe Nupi',
+      assunto: 'Você acaba de dar o primeiro passo para algo incrível!',
       mensagem: [
         'Olá!',
         '',

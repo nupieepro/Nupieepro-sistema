@@ -2278,6 +2278,8 @@ const PagePessoas = {
     getCoords().then(coords=>{
       this._conviteCoords = coords;
       abrirModal({titulo:'✉️ Convidar Membro',tipo:'info',corpo:`
+        <div class="form-group"><label class="form-label">Nome completo *</label>
+          <input id="inv-nome" class="form-input" placeholder="Nome do novo membro"></div>
         <div class="form-group"><label class="form-label">E-mail *</label>
           <input id="inv-email" type="email" class="form-input" placeholder="email@exemplo.com"></div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
@@ -2307,15 +2309,17 @@ const PagePessoas = {
     });
   },
   async _enviarConvite() {
+    const nome  = document.getElementById('inv-nome')?.value?.trim();
     const email = document.getElementById('inv-email')?.value?.trim();
     const coord = document.getElementById('inv-coord')?.value;
     const cargo = document.getElementById('inv-cargo')?.value;
     const role  = document.getElementById('inv-role')?.value || 'assessor';
+    if (!nome)  { mostrarToast('Insira o nome!', 'warning'); return; }
     if (!email) { mostrarToast('Insira o e-mail!', 'warning'); return; }
     fecharModal();
     try {
       const { data, error } = await _sb().from('convites').insert([{
-        email, coordenadoria_id: coord, cargo, role,
+        email, nome, coordenadoria_id: coord, cargo, role,
         criado_por: window._appProfile?.id,
       }]).select().single();
       if (error) throw error;
@@ -2327,6 +2331,8 @@ const PagePessoas = {
       try {
         await window.EmailsModule?.enviarConvite({
           email, coord: coordInfo?.nome, cargo, token: data.token,
+          nomeConvidado: nome,
+          anoGestao: new Date().getFullYear().toString(),
           criadoPor: window._appProfile?.apelido || window._appProfile?.nome || 'Equipe Nupi'
         });
         emailOk = true;
@@ -2917,6 +2923,8 @@ const PageDev = {
   novoConvite() {
     const coordOpts = this._coords.map(c => `<option value="${c.id}">${c.nome} (${c.sigla})</option>`).join('');
     abrirModal({ titulo:'📩 Enviar Convite', tipo:'info', corpo:`
+      <div class="form-group"><label class="form-label">Nome completo *</label>
+        <input id="nc-nome" class="form-input" placeholder="Nome do novo membro"></div>
       <div class="form-group"><label class="form-label">E-mail *</label>
         <input id="nc-email" type="email" class="form-input" placeholder="email@exemplo.com"></div>
       <div class="form-group"><label class="form-label">Coordenadoria *</label>
@@ -2936,14 +2944,15 @@ const PageDev = {
   },
 
   async _criarConvite() {
+    const nome  = document.getElementById('nc-nome')?.value.trim();
     const email = document.getElementById('nc-email')?.value.trim();
     const coord = document.getElementById('nc-coord')?.value;
     const role  = document.getElementById('nc-role')?.value;
     const cargo = document.getElementById('nc-cargo')?.value.trim() || null;
-    if (!email || !coord) { mostrarToast('Preencha e-mail e coordenadoria.','error'); return; }
+    if (!nome || !email || !coord) { mostrarToast('Preencha nome, e-mail e coordenadoria.','error'); return; }
     try {
       const { data, error } = await _sb().from('convites').insert({
-        email, coordenadoria_id: coord, role, cargo,
+        email, nome, coordenadoria_id: coord, role, cargo,
         criado_por: window._appProfile?.id
       }).select().single();
       if (error) throw error;
@@ -2951,6 +2960,8 @@ const PageDev = {
       const coordInfo = this._coords.find(c => c.id === coord);
       await window.EmailsModule?.enviarConvite({
         email, coord: coordInfo?.nome, cargo, token: data.token,
+        nomeConvidado: nome,
+        anoGestao: new Date().getFullYear().toString(),
         criadoPor: window._appProfile?.apelido || window._appProfile?.nome || 'Equipe Nupi'
       });
       fecharModal();
@@ -2966,7 +2977,9 @@ const PageDev = {
     if (!convite) return;
     await window.EmailsModule?.enviarConvite({
       email, coord: convite.coordenadorias?.nome, cargo: convite.cargo,
-      token, criadoPor: window._appProfile?.apelido || 'Equipe Nupi'
+      token, nomeConvidado: convite.nome || email,
+      anoGestao: new Date().getFullYear().toString(),
+      criadoPor: window._appProfile?.apelido || 'Equipe Nupi'
     });
     mostrarToast('Convite reenviado!','success');
   },
