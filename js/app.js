@@ -1752,20 +1752,9 @@ const DashboardExtra = {
 
 const Projetos = {
   async loadSponsors() {
+    if (typeof PageProjetos !== 'undefined') { PageProjetos.init(); return; }
     const grid = document.getElementById('sponsorGrid');
-    if (!grid) return;
-    // Mock ou Supabase
-    const sponsors = [
-      { nome: 'Empresa Alpha', finalidade: 'Patrocinador Ouro', logo: '🏢' },
-      { nome: 'Studio Beta', finalidade: 'Apoio NUPICAST', logo: '🎙️' }
-    ];
-    grid.innerHTML = sponsors.map(s => `
-      <div class="section-card" style="text-align:center; padding:1.2rem; background:var(--s1); border:1px solid var(--b-1);">
-        <div style="font-size:32px; margin-bottom:8px;">${s.logo}</div>
-        <div style="font-weight:700; color:var(--white); font-size:13px;">${s.nome}</div>
-        <div style="font-size:10px; color:var(--t-3); margin-top:4px;">${s.finalidade}</div>
-      </div>
-    `).join('');
+    if (grid) grid.innerHTML = '<p style="color:var(--c-slate);font-size:13px;padding:12px;">Carregando módulo de projetos…</p>';
   },
   novoPatrocinador() {
     abrirModal({ titulo: 'Novo Patrocinador', corpo: '<p style="color:var(--c-slate);font-size:13px;">Funcionalidade disponível em breve.</p>', botoes: [{ texto: 'Fechar', classe: 'btn-ghost', acao: fecharModal }] });
@@ -1878,39 +1867,18 @@ const Financeiro = {
 };
 
 const Marketing = {
-  async loadSocialStats() {
-    // Integrar com APIs reais no futuro, agora mock premium
-    console.log('Marketing: Stats carregadas.');
-  },
+  async loadSocialStats() { console.log('Marketing: Stats carregadas.'); },
   async loadKanban() {
+    if (typeof PageMarketing !== 'undefined') { PageMarketing.init(); return; }
     const el = document.getElementById('marketingKanban');
-    if (!el) return;
-    el.innerHTML = `
-      <div class="kanban-column" style="flex:1; min-width:250px;">
-        <div class="kanban-header">Fila Lojinha (10 dias)</div>
-        <div class="kanban-card" style="border-left:4px solid var(--orange);">
-           <div style="font-weight:700;">Pedido #2491</div>
-           <div style="font-size:10px; color:var(--orange);">⏰ 3 DIAS RESTANTES</div>
-        </div>
-      </div>
-    `;
+    if (el) el.innerHTML = '<p style="color:var(--c-slate);font-size:13px;padding:12px;">Carregando módulo de marketing…</p>';
   }
 };
 
 const GP = {
   async loadTalentBank() {
-    const grid = document.getElementById('talentGrid');
-    if (!grid) return;
-    // CRM de Membros
-    grid.innerHTML = `
-      <div style="background:var(--s1); padding:10px; border-radius:8px; display:flex; align-items:center; gap:12px;">
-        <div class="side-avatar" style="width:30px;height:30px;font-size:11px;">RB</div>
-        <div>
-          <div style="font-weight:700; font-size:12px;">Rayan Bezerra</div>
-          <div style="font-size:10px; color:var(--t-3);">Habilidade: UI/UX, Fullstack</div>
-        </div>
-      </div>
-    `;
+    if (typeof PagePessoas !== 'undefined') { PagePessoas._renderTalentos(); return; }
+    Pessoas.loadMembers();
   }
 };
 
@@ -2120,6 +2088,8 @@ function _buildNav(role) {
    DEM — Controlador de visão da página Demandas
    ═══════════════════════════════════════════════════════════════ */
 const Dem = {
+  _loaded: false,
+
   setView(view, btn) {
     document.querySelectorAll('.dem-view-btn').forEach(b => {
       b.style.background = 'transparent';
@@ -2131,7 +2101,74 @@ const Dem = {
       const el = document.getElementById(map[v]);
       if (el) el.style.display = (v === view) ? '' : 'none';
     });
-  }
+    if (!this._loaded) { this._loaded = true; this.load(); }
+  },
+
+  async load() {
+    const sb = window._supabase;
+    if (!sb) return;
+    const COLS = [
+      { id: 'pendente',  cor: 'var(--fg-3)'        },
+      { id: 'exec',      cor: 'var(--brand-orange)' },
+      { id: 'evidencia', cor: '#5b9cf6'             },
+      { id: 'realizada', cor: '#f5c518'             },
+      { id: 'auditada',  cor: '#2dd4a0'             },
+    ];
+    const PRIO_COR = { alta: '#f87171', media: '#f5c518', baixa: '#2dd4a0' };
+    try {
+      const { data } = await sb
+        .from('demandas')
+        .select('*, coordenadorias(sigla), users!responsavel_id(nome)')
+        .order('created_at', { ascending: false });
+      const demandas = data || [];
+      COLS.forEach(col => {
+        const el  = document.getElementById('dem-c-' + col.id);
+        const cnt = document.getElementById('dem-n-' + col.id);
+        if (!el) return;
+        const items = demandas.filter(d => d.coluna === col.id);
+        if (cnt) cnt.textContent = items.length;
+        el.innerHTML = items.length ? items.map(d => {
+          const prioCor = PRIO_COR[d.prioridade] || 'var(--fg-3)';
+          const sigla   = d.coordenadorias?.sigla || 'GER';
+          const prazo   = d.prazo ? new Date(d.prazo + 'T12:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }) : '';
+          return `<div class="kanban-card" onclick="Dem.abrirDetalhes('${d.id}')">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;">
+              <span style="font-size:9px;font-weight:700;padding:2px 6px;border-radius:4px;background:${prioCor}22;color:${prioCor}">${(d.prioridade || 'media').toUpperCase()}</span>
+            </div>
+            <div style="font-size:13px;font-weight:600;margin-bottom:6px;">${sanitize(d.titulo)}</div>
+            ${d.users?.nome ? `<div style="font-size:11px;color:var(--fg-3);">Resp: ${sanitize(d.users.nome.split(' ')[0])}</div>` : ''}
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px;">
+              <span style="font-size:10px;font-weight:600;background:var(--surface-2);padding:2px 6px;border-radius:4px;">${sigla}</span>
+              ${prazo ? `<span style="font-size:10px;color:var(--fg-3);">${prazo}</span>` : ''}
+            </div>
+          </div>`;
+        }).join('') : `<div style="font-size:12px;color:var(--fg-3);text-align:center;padding:16px 0;">Vazio</div>`;
+      });
+      this._renderLista(demandas);
+    } catch(e) { console.warn('[Dem.load]', e); }
+  },
+
+  _renderLista(demandas) {
+    const tbody = document.getElementById('dem-lista-tbody');
+    if (!tbody) return;
+    const COL_LABEL = { pendente: 'Backlog', exec: 'Execução', evidencia: 'Evidência', realizada: 'Revisão', auditada: 'Concluído' };
+    tbody.innerHTML = demandas.length ? demandas.map(d => {
+      const sigla = d.coordenadorias?.sigla || '—';
+      const prazo = d.prazo ? new Date(d.prazo + 'T12:00:00').toLocaleDateString('pt-BR') : '—';
+      const resp  = d.users?.nome?.split(' ')[0] || '—';
+      const prioCor = d.prioridade === 'alta' ? '#f87171' : d.prioridade === 'baixa' ? '#2dd4a0' : '#f5c518';
+      return `<tr style="border-bottom:1px solid var(--border-1);">
+        <td style="padding:10px 12px;font-weight:600;">${sanitize(d.titulo)}</td>
+        <td style="padding:10px 12px;font-size:12px;">${sigla}</td>
+        <td style="padding:10px 12px;font-size:12px;color:var(--fg-2);">${resp}</td>
+        <td style="padding:10px 12px;font-family:var(--font-mono);font-size:11px;">${prazo}</td>
+        <td style="padding:10px 12px;font-size:11px;font-weight:700;color:${prioCor}">${(d.prioridade || '—').toUpperCase()}</td>
+        <td style="padding:10px 12px;font-size:12px;">${COL_LABEL[d.coluna] || d.coluna}</td>
+      </tr>`;
+    }).join('') : `<tr><td colspan="6" style="padding:20px;text-align:center;color:var(--fg-3);">Nenhuma demanda cadastrada ainda. Clique em "+ Nova" para criar.</td></tr>`;
+  },
+
+  abrirDetalhes(id) { mostrarToast('Detalhes de demanda — em breve.', 'info'); }
 };
 window.Dem = Dem;
 
