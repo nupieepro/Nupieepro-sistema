@@ -1615,13 +1615,13 @@
   <!-- DEBUG: console mobile (Eruda) — remover depois -->
   <script src="https://cdn.jsdelivr.net/npm/eruda@3"></script>
   <script>try{eruda.init();console.log('[Eruda] console mobile ativo');}catch(e){}</script>
-  <script src="js/permissoes.js?v=41"></script>
-  <script src="js/app.js?v=41"></script>
-  <script src="js/auth.js?v=41"></script>
-  <script src="js/abj.js?v=41"></script>
-  <script src="js/relatorio.js?v=41"></script>
-  <script src="js/emails.js?v=41"></script>
-  <script src="js/pages.js?v=41"></script>
+  <script src="js/permissoes.js?v=42"></script>
+  <script src="js/app.js?v=42"></script>
+  <script src="js/auth.js?v=42"></script>
+  <script src="js/abj.js?v=42"></script>
+  <script src="js/relatorio.js?v=42"></script>
+  <script src="js/emails.js?v=42"></script>
+  <script src="js/pages.js?v=42"></script>
   <script>
     // ── PROFILE DROPDOWN ───────────────────────────────
     function toggleProfileDropdown() {
@@ -1684,6 +1684,24 @@
       var btn = document.getElementById('themeBtn-' + t);
       if (btn) btn.classList.add('active');
     };
+
+    // ── GLOBAL ERROR HANDLER (surface invisible errors as toast) ──
+    window.addEventListener('error', function(e) {
+      var msg = (e.error && e.error.message) || e.message || 'Erro desconhecido';
+      var src = (e.filename || '').split('/').pop();
+      var line = e.lineno || '?';
+      console.error('[GlobalError]', e);
+      if (window.App && typeof window.App.toast === 'function') {
+        window.App.toast('JS Error: ' + msg + ' (' + src + ':' + line + ')', 'error', 8000);
+      }
+    });
+    window.addEventListener('unhandledrejection', function(e) {
+      var msg = (e.reason && (e.reason.message || e.reason)) || 'Promise rejection';
+      console.error('[UnhandledRejection]', e.reason);
+      if (window.App && typeof window.App.toast === 'function') {
+        window.App.toast('Promise error: ' + msg, 'error', 8000);
+      }
+    });
 
     // ── MAIN INIT ──────────────────────────────────────
     (async () => {
