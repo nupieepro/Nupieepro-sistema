@@ -732,6 +732,8 @@ const ALL_PAGES = [
 
 function goTo(id) {
   haptic();
+  /* Alias: 'pessoas' nao tem pagina propria; redireciona pra 'gp' */
+  if (id === 'pessoas') id = 'gp';
   /* Guard de permissão: bloqueia navegação não autorizada após login */
   const _SEMPRE_VISIVEL = ['config','configuracoes','manu','compartilhado'];
   if (window._appProfile && typeof Permissoes !== 'undefined' && !_SEMPRE_VISIVEL.includes(id)) {
@@ -740,18 +742,20 @@ function goTo(id) {
       return;
     }
   }
-  ALL_PAGES.forEach(p => {
-    const el = document.getElementById('page-' + p);
-    if (el) el.classList.remove('active');
+  /* Force-hide TODAS as paginas (nao so as do ALL_PAGES) pra evitar stacking */
+  document.querySelectorAll('[id^="page-"]').forEach(el => {
+    if (el.classList.contains('page')) {
+      el.classList.remove('active');
+      el.style.display = 'none';
+    }
   });
   const pg = document.getElementById('page-' + id);
   if (pg) {
     pg.classList.add('active');
     // Forçar reflow para animação de fade
-    pg.style.display = 'none';
-    pg.offsetHeight; 
+    pg.offsetHeight;
     pg.style.display = 'flex';
-    
+
     const content = pg.querySelector('.content') || pg;
     content.scrollTop = 0;
     window.scrollTo({ top: 0, behavior: 'smooth' });
