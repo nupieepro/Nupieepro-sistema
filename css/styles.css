@@ -1102,6 +1102,17 @@ body { font-family: var(--font-body); }
   .app-shell { overflow: auto; height: auto; min-height: 100vh; }
   .sidebar { position: fixed; transform: translateX(-100%); z-index: 200; height: 100%; box-shadow: none; width: 260px; }
   .sidebar.open { transform: translateX(0); box-shadow: 0 0 0 100vw rgba(0,0,0,0.55); }
+  .sidebar.open .nav-label,
+  .sidebar.open .sidebar-logo-text,
+  .sidebar.open .sidebar-logo-sub,
+  .sidebar.open .nav-section-label,
+  .sidebar.open .sidebar-section,
+  .sidebar.open .nav-badge,
+  .sidebar.open .u-name,
+  .sidebar.open .u-role,
+  .sidebar.open .btn-logout { display: revert !important; }
+  .sidebar.open .nav-item { justify-content: flex-start; padding: 8px 10px; margin: 1px 8px; }
+  .sidebar.open .sidebar-logo { justify-content: flex-start; padding: 14px 16px; }
   .main-area { width: 100%; height: auto; overflow: visible; }
   .topbar-toggle { display: flex; align-items: center; }
   .content { padding: var(--s3) var(--s3); gap: var(--s3); }
