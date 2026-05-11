@@ -796,6 +796,17 @@ function toggleSidebar() {
   App.toggleSidebar();
 }
 
+document.addEventListener('click', function(e) {
+  const navEl = e.target.closest('.nav-item, .mnav-item');
+  if (!navEl) return;
+  const onclickAttr = navEl.getAttribute('onclick') || '';
+  const m = onclickAttr.match(/goTo\(['"]([a-z_]+)['"]\)/i);
+  if (m && typeof window.goTo === 'function') {
+    e.preventDefault();
+    window.goTo(m[1]);
+  }
+});
+
 /* ============================================================
    Dashboard renderer
    ============================================================ */
