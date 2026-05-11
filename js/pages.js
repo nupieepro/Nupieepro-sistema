@@ -2181,7 +2181,7 @@ const PageOperacoes = {
             <option value="cancelado" ${i.status==='cancelado'?'selected':''}>🚫 Cancelado</option>
           </select>
         </div>`).join('');
-    }catch(e){document.getElementById('ins-lista-modal')?.innerHTML='<div style="padding:16px;color:var(--c-slate)">Erro ao carregar.</div>';}
+    }catch(e){const _el=document.getElementById('ins-lista-modal');if(_el)_el.innerHTML='<div style="padding:16px;color:var(--c-slate)">Erro ao carregar.</div>';}
   },
   async _atualizarPresenca(id, status) {
     try {
