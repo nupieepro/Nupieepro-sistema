@@ -2398,6 +2398,52 @@ const Dem = {
       if (el) el.style.display = (v === view) ? '' : 'none';
     });
     if (!this._loaded) { this._loaded = true; this.load(); }
+    if (view === 'heatmap') this.renderHeatmap();
+  },
+
+  async renderHeatmap() {
+    const el = document.getElementById('demHeatContainer');
+    if (!el) return;
+    const sb = window._supabase;
+    if (!sb) { el.innerHTML = '<p style="color:var(--fg-3);font-size:13px;text-align:center;padding:24px 0;">Sem conexão com banco de dados.</p>'; return; }
+    el.innerHTML = '<p style="color:var(--fg-3);font-size:13px;text-align:center;padding:24px 0;">Carregando...</p>';
+    try {
+      const res = await sb.from('demandas').select('coluna, coordenadorias(sigla)').order('created_at', {ascending:false}).limit(200);
+      const demands = res.data || [];
+      if (!demands.length) { el.innerHTML = '<p style="color:var(--fg-3);font-size:13px;text-align:center;padding:24px 0;">Nenhuma demanda cadastrada ainda.</p>'; return; }
+      const COLS = ['pendente','exec','evidencia','realizada','auditada'];
+      const COL_LABELS = { pendente:'Backlog', exec:'Execução', evidencia:'Evidência', realizada:'Revisão', auditada:'Concluído' };
+      const COORDS = [];
+      demands.forEach(d => { const s = d.coordenadorias?.sigla || 'GER'; if (!COORDS.includes(s)) COORDS.push(s); });
+      COORDS.sort();
+      const heatData = {};
+      COORDS.forEach(c => { heatData[c] = {}; COLS.forEach(col => { heatData[c][col] = 0; }); });
+      demands.forEach(d => { const s = d.coordenadorias?.sigla || 'GER'; const col = d.coluna || 'pendente'; if (heatData[s]) heatData[s][col] = (heatData[s][col] || 0) + 1; });
+      let maxVal = 0;
+      COORDS.forEach(c => { COLS.forEach(col => { maxVal = Math.max(maxVal, heatData[c][col]); }); });
+      maxVal = maxVal || 1;
+      let html = '<div style="overflow-x:auto;"><table style="border-collapse:collapse;font-size:12px;min-width:400px;width:100%;">';
+      html += '<thead><tr><th style="padding:8px 12px;color:var(--fg-3);text-align:left;border-bottom:1px solid var(--border-1);">Coord.</th>';
+      COLS.forEach(col => { html += '<th style="padding:8px;color:var(--fg-3);text-align:center;border-bottom:1px solid var(--border-1);">' + COL_LABELS[col] + '</th>'; });
+      html += '</tr></thead><tbody>';
+      COORDS.forEach((c, i) => {
+        html += '<tr' + (i < COORDS.length - 1 ? ' style="border-bottom:1px solid var(--border-1);"' : '') + '>';
+        html += '<td style="padding:8px 12px;color:var(--fg-2);font-weight:700;">' + c + '</td>';
+        COLS.forEach(col => {
+          const n = heatData[c][col];
+          const pct = n / maxVal;
+          const alpha = n > 0 ? Math.max(0.15, pct * 0.8) : 0;
+          const bg = n > 0 ? 'rgba(246,82,20,' + alpha + ')' : 'var(--surface-2)';
+          const color = n > 0 ? 'inherit' : 'var(--fg-4)';
+          html += '<td style="padding:8px;text-align:center;"><div style="width:36px;height:36px;border-radius:6px;background:' + bg + ';display:flex;align-items:center;justify-content:center;font-weight:' + (n > 0 ? '700' : '400') + ';color:' + color + ';margin:auto;">' + n + '</div></td>';
+        });
+        html += '</tr>';
+      });
+      html += '</tbody></table></div>';
+      el.innerHTML = html;
+    } catch(err) {
+      el.innerHTML = '<p style="color:var(--fg-3);font-size:13px;text-align:center;padding:24px 0;">Erro ao carregar heatmap.</p>';
+    }
   },
 
   async load() {
