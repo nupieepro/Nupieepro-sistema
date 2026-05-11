@@ -1,5 +1,5 @@
 'use strict';
-const _sb = () => window._supabase;
+const _sbq = () => window._supabase;
 const _sc = (titulo,icone,html) => `
   <div class="section-card" style="padding:20px 24px;margin-bottom:16px">
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
@@ -23,26 +23,26 @@ function _addDiasUteis(n) {
 
 /* ── Notificação: grava na tabela notificacoes de um usuário ── */
 async function _notificar(userId, titulo, mensagem, tipo = 'info', categoria = null) {
-  if (!_sb() || !userId) return;
+  if (!_sbq() || !userId) return;
   const VALID_TIPOS = ['info', 'alerta', 'sucesso', 'erro'];
   const tipoFinal = VALID_TIPOS.includes(tipo) ? tipo : 'info';
   try {
-    await _sb().from('notificacoes').insert([{ user_id: userId, titulo, mensagem, tipo: tipoFinal, categoria, lida: false }]);
+    await _sbq().from('notificacoes').insert([{ user_id: userId, titulo, mensagem, tipo: tipoFinal, categoria, lida: false }]);
   } catch(e) { console.warn('[notif]', e); }
 }
 
 /* ── Notificação em broadcast: dispara para todos de uma coord ── */
 async function _notificarCoord(sigla, titulo, mensagem, tipo = 'info', categoria = null) {
-  if (!_sb()) return;
+  if (!_sbq()) return;
   const VALID_TIPOS = ['info', 'alerta', 'sucesso', 'erro'];
   const tipoFinal = VALID_TIPOS.includes(tipo) ? tipo : 'info';
   try {
     const coords = await getCoords();
     const coord  = coords.find(c => c.sigla === sigla);
     if (!coord) return;
-    const { data } = await _sb().from('users').select('id').eq('coordenadoria_id', coord.id).eq('ativo', true);
+    const { data } = await _sbq().from('users').select('id').eq('coordenadoria_id', coord.id).eq('ativo', true);
     if (!data?.length) return;
-    await _sb().from('notificacoes').insert(data.map(u => ({ user_id: u.id, titulo, mensagem, tipo: tipoFinal, categoria, lida: false })));
+    await _sbq().from('notificacoes').insert(data.map(u => ({ user_id: u.id, titulo, mensagem, tipo: tipoFinal, categoria, lida: false })));
   } catch(e) { console.warn('[notif coord]', e); }
 }
 
@@ -50,9 +50,9 @@ async function _notificarCoord(sigla, titulo, mensagem, tipo = 'info', categoria
 let _coordsCache = null;
 async function getCoords() {
   if (_coordsCache) return _coordsCache;
-  if (!_sb()) return [];
+  if (!_sbq()) return [];
   try {
-    const { data } = await _sb().from('coordenadorias').select('id,nome,sigla,cor,icone').order('nome');
+    const { data } = await _sbq().from('coordenadorias').select('id,nome,sigla,cor,icone').order('nome');
     _coordsCache = data || [];
     return _coordsCache;
   } catch(e) { console.warn('[pages] getCoords:', e); return []; }
@@ -75,11 +75,11 @@ const PageGeral = {
   /* ── PCD: detecta membros com 2+ meses sem entregas ── */
   async _popularPCD() {
     const el = document.getElementById('pcdAlerts');
-    if (!el || !_sb()) return;
+    if (!el || !_sbq()) return;
     el.innerHTML = '<div style="font-size:12px;color:var(--c-slate)">Verificando…</div>';
     try {
       /* Pega todos os membros ativos */
-      const { data: membros } = await _sb()
+      const { data: membros } = await _sbq()
         .from('users')
         .select('id,nome,coordenadorias(nome)')
         .eq('ativo', true)
@@ -90,7 +90,7 @@ const PageGeral = {
       limite.setMonth(limite.getMonth() - 2);
       const limStr = limite.toISOString().split('T')[0];
       /* Busca última atividade (evento criado_por) de cada membro */
-      const { data: ativos } = await _sb()
+      const { data: ativos } = await _sbq()
         .from('eventos')
         .select('criado_por, created_at')
         .gte('created_at', limStr);
@@ -202,9 +202,9 @@ const PageGeral = {
   },
   async _carregarReunioes() {
     const el = document.getElementById('lista-reunioes');
-    if (!el||!_sb()) return;
+    if (!el||!_sbq()) return;
     try {
-      const { data } = await _sb()
+      const { data } = await _sbq()
         .from('eventos')
         .select('*')
         .eq('tipo','reuniao')
@@ -302,7 +302,7 @@ const PageGeral = {
     try {
       const coords = await getCoords();
       const ger = coords.find(c=>c.sigla==='GER');
-      await _sb().from('eventos').insert([{
+      await _sbq().from('eventos').insert([{
         titulo, tipo:'reuniao', data_inicio:data, ativo:true,
         coordenadoria_id: ger?.id||null,
         criado_por: window._appProfile?.id,
@@ -312,11 +312,11 @@ const PageGeral = {
     } catch(e) { mostrarToast('Erro ao salvar plano.','error'); }
   },
   async verAtividades(semestre) {
-    if (!_sb()) return;
+    if (!_sbq()) return;
     try {
       const coords = await getCoords();
       const ger = coords.find(c => c.sigla === 'GER');
-      const { data } = await _sb()
+      const { data } = await _sbq()
         .from('eventos')
         .select('*, users!criado_por(nome)')
         .eq('tipo','reuniao')
@@ -361,9 +361,9 @@ const PageGeral = {
   },
   async _carregarMelhorias() {
     const el = document.getElementById('melhorias-lista');
-    if (!el||!_sb()) return;
+    if (!el||!_sbq()) return;
     try {
-      const { data } = await _sb()
+      const { data } = await _sbq()
         .from('demandas')
         .select('*,users!responsavel_id(nome)')
         .eq('tipo','melhoria')
@@ -409,9 +409,9 @@ const PageGeral = {
   },
   async _carregarParcerias() {
     const el = document.getElementById('parcerias-lista');
-    if (!el||!_sb()) return;
+    if (!el||!_sbq()) return;
     try {
-      const { data } = await _sb()
+      const { data } = await _sbq()
         .from('demandas')
         .select('*')
         .eq('tipo','parceria')
@@ -469,7 +469,7 @@ const PageGeral = {
     try {
       const coords = await getCoords();
       const ger = coords.find(c=>c.sigla==='GER');
-      await _sb().from('demandas').insert([{
+      await _sbq().from('demandas').insert([{
         titulo, descricao:desc||null, coluna:'pendente', tipo:'melhoria',
         coordenadoria_id:ger?.id||null,
         responsavel_id: window._appProfile?.id,
@@ -511,7 +511,7 @@ const PageGeral = {
     try {
       const coords = await getCoords();
       const ger = coords.find(c=>c.sigla==='GER');
-      await _sb().from('demandas').insert([{
+      await _sbq().from('demandas').insert([{
         titulo: nome,
         descricao: [tipo, contato, obj].filter(Boolean).join(' · ') || null,
         coluna:'pendente', tipo:'parceria',
@@ -532,7 +532,7 @@ const PageGeral = {
     try {
       const coords = await getCoords();
       const ger = coords.find(c=>c.sigla==='GER');
-      await _sb().from('eventos').insert([{
+      await _sbq().from('eventos').insert([{
         titulo, data_inicio:data, tipo:'reuniao',
         vagas, descricao:link||null, ativo:true,
         coordenadoria_id:ger?.id||null,
@@ -543,9 +543,9 @@ const PageGeral = {
     } catch(e){mostrarToast('Erro ao salvar.','error');}
   },
   async verFrequencia() {
-    if (!_sb()) { mostrarToast('Supabase não conectado.','warning'); return; }
+    if (!_sbq()) { mostrarToast('Supabase não conectado.','warning'); return; }
     try {
-      const { data } = await _sb()
+      const { data } = await _sbq()
         .from('frequencia')
         .select('*, users(nome,iniciais), eventos(titulo,data_inicio)')
         .order('created_at',{ascending:false})
@@ -572,9 +572,9 @@ const PageGeral = {
     } catch(e) { mostrarToast('Erro ao carregar frequência.','error'); }
   },
   async abrirCheckin() {
-    if (!_sb()) { mostrarToast('Supabase não conectado.','warning'); return; }
+    if (!_sbq()) { mostrarToast('Supabase não conectado.','warning'); return; }
     try {
-      const { data: eventos } = await _sb()
+      const { data: eventos } = await _sbq()
         .from('eventos').select('id,titulo,data_inicio').eq('ativo',true)
         .order('data_inicio',{ascending:false}).limit(10);
       const opts = (eventos||[]).map(e=>`<option value="${e.id}">${sanitize(e.titulo)} (${_fmt(e.data_inicio)})</option>`).join('');
@@ -595,7 +595,7 @@ const PageGeral = {
     fecharModal();
     try {
       const uid = window._appProfile?.id;
-      await _sb().from('frequencia').upsert([{
+      await _sbq().from('frequencia').upsert([{
         evento_id: eventoId, user_id: uid, presente: true,
         tipo: 'evento', data: new Date().toISOString().split('T')[0],
       }], { onConflict: 'evento_id,user_id' });
@@ -638,11 +638,11 @@ const PageMarketing = {
     this._carregarKanban();
   },
   async _carregarKanban() {
-    if (!_sb()) return;
+    if (!_sbq()) return;
     try {
       const coords = await getCoords();
       const mkt = coords.find(c=>c.sigla==='MKT');
-      const { data } = await _sb()
+      const { data } = await _sbq()
         .from('demandas')
         .select('*,users!responsavel_id(nome,iniciais)')
         .eq('coordenadoria_id', mkt?.id||'')
@@ -726,7 +726,7 @@ const PageMarketing = {
     try {
       const coords = await getCoords();
       const mkt = coords.find(c => c.sigla === 'MKT');
-      await _sb().from('demandas').insert([{
+      await _sbq().from('demandas').insert([{
         titulo, coluna, descricao: desc || null,
         prazo: prazo || null,
         coordenadoria_id: mkt?.id || null,
@@ -798,14 +798,14 @@ const PageMarketing = {
     const el      = document.getElementById('mkt-lista');
     const cnt     = document.getElementById('mkt-mes');
     const semEl   = document.getElementById('mkt-semana');
-    if (!el || !_sb()) return;
+    if (!el || !_sbq()) return;
     try {
       const mesIni = new Date(); mesIni.setDate(1);
       /* Início da semana atual (domingo) */
       const semIni = new Date();
       semIni.setDate(semIni.getDate() - semIni.getDay());
       semIni.setHours(0, 0, 0, 0);
-      const { data } = await _sb()
+      const { data } = await _sbq()
         .from('eventos')
         .select('*')
         .eq('tipo','publicacao')
@@ -865,7 +865,7 @@ const PageMarketing = {
     try {
       const coords = await getCoords();
       const mkt = coords.find(c=>c.sigla==='MKT');
-      await _sb().from('eventos').insert([{
+      await _sbq().from('eventos').insert([{
         titulo:desc, descricao:link||null,
         data_inicio: data+'T12:00:00',
         tipo:'publicacao', ativo:true,
@@ -880,9 +880,9 @@ const PageMarketing = {
   },
   async _carregarMetricas() {
     const el = document.getElementById('mkt-metricas');
-    if (!el || !_sb()) return;
+    if (!el || !_sbq()) return;
     try {
-      const { data } = await _sb()
+      const { data } = await _sbq()
         .from('tracker_social')
         .select('*')
         .order('data_referencia', { ascending: false })
@@ -943,7 +943,7 @@ const PageMarketing = {
     if (!plat) { mostrarToast('Selecione a plataforma!','warning'); return; }
     fecharModal();
     try {
-      await _sb().from('tracker_social').insert([{
+      await _sbq().from('tracker_social').insert([{
         plataforma: plat,
         seguidores:     seg   ? parseInt(seg)       : null,
         posts_mes:      posts ? parseInt(posts)     : null,
@@ -957,9 +957,9 @@ const PageMarketing = {
     } catch(e) { mostrarToast('Erro ao salvar métricas.','error'); }
   },
   async editarDemanda(id) {
-    if (!_sb()) return;
+    if (!_sbq()) return;
     try {
-      const { data } = await _sb()
+      const { data } = await _sbq()
         .from('demandas')
         .select('*,users!responsavel_id(nome)')
         .eq('id', id)
@@ -969,7 +969,7 @@ const PageMarketing = {
       const coords = await getCoords();
       const mkt = coords.find(c => c.sigla === 'MKT');
       const { data: membros } = mkt
-        ? await _sb().from('users').select('id,nome').eq('coordenadoria_id', mkt.id).eq('ativo', true).order('nome')
+        ? await _sbq().from('users').select('id,nome').eq('coordenadoria_id', mkt.id).eq('ativo', true).order('nome')
         : { data: [] };
       const memOpts = (membros||[]).map(m => `<option value="${m.id}" ${d.responsavel_id===m.id?'selected':''}>${sanitize(m.nome)}</option>`).join('');
       abrirModal({ titulo:'✏️ Editar Demanda', tipo:'info', corpo:`
@@ -1010,7 +1010,7 @@ const PageMarketing = {
     if (!titulo) { mostrarToast('Título é obrigatório.','warning'); return; }
     fecharModal();
     try {
-      await _sb().from('demandas').update({
+      await _sbq().from('demandas').update({
         titulo,
         tipo:          document.getElementById('ed-tipo')?.value,
         coluna:        document.getElementById('ed-coluna')?.value,
@@ -1026,7 +1026,7 @@ const PageMarketing = {
   async _excluirDemanda(id) {
     fecharModal();
     try {
-      await _sb().from('demandas').delete().eq('id', id);
+      await _sbq().from('demandas').delete().eq('id', id);
       mostrarToast('Demanda excluída.','info');
       this._carregarKanban();
     } catch(e) { mostrarToast('Erro ao excluir.','error'); }
@@ -1070,9 +1070,9 @@ const PageFinancas = {
   async _carregarCalendario() {
     const el   = document.getElementById('fin-cal-lista');
     const alEl = document.getElementById('fin-alerta-60d');
-    if(!el||!_sb())return;
+    if(!el||!_sbq())return;
     try {
-      const { data } = await _sb()
+      const { data } = await _sbq()
         .from('eventos')
         .select('*')
         .eq('tipo','evento')
@@ -1142,7 +1142,7 @@ const PageFinancas = {
     try {
       const coords=await getCoords();
       const fin=coords.find(c=>c.sigla==='FIN');
-      await _sb().from('eventos').insert([{
+      await _sbq().from('eventos').insert([{
         titulo, tipo:'evento', data_inicio:data+'T12:00:00',
         local:local||null, ativo:true,
         coordenadoria_id:fin?.id||null,
@@ -1176,7 +1176,7 @@ const PageFinancas = {
       const coords=await getCoords();
       const fin=coords.find(c=>c.sigla==='FIN');
       const agora=new Date().toISOString();
-      await _sb().from('vendas').insert([{
+      await _sbq().from('vendas').insert([{
         descricao:`[REPASSE] ${desc}`, valor,
         data_venda:agora.split('T')[0],
         produto:'repasse_transitorio',
@@ -1226,9 +1226,9 @@ const PageFinancas = {
     const tot = document.getElementById('abepro-total');
     const pag = document.getElementById('abepro-pago');
     const pen = document.getElementById('abepro-pendente');
-    if (!el || !_sb()) return;
+    if (!el || !_sbq()) return;
     try {
-      const { data } = await _sb()
+      const { data } = await _sbq()
         .from('demandas')
         .select('*, users!responsavel_id(nome)')
         .eq('tipo','abepro')
@@ -1289,7 +1289,7 @@ const PageFinancas = {
     try {
       const coords = await getCoords();
       const fin = coords.find(c => c.sigla === 'FIN');
-      await _sb().from('demandas').insert([{
+      await _sbq().from('demandas').insert([{
         titulo: nome, descricao: email || null,
         coluna: 'pendente', tipo: 'abepro',
         coordenadoria_id: fin?.id || null,
@@ -1302,7 +1302,7 @@ const PageFinancas = {
   },
   async _confirmarComp(id) {
     try {
-      await _sb().from('demandas').update({ coluna: 'auditada' }).eq('id', id);
+      await _sbq().from('demandas').update({ coluna: 'auditada' }).eq('id', id);
       mostrarToast('Comprovante confirmado!','success');
       this._carregarABEPRO();
     } catch(e) { mostrarToast('Erro ao confirmar.','error'); }
@@ -1354,15 +1354,15 @@ const PageFinancas = {
   },
   async _carregarFluxo() {
     const el=document.getElementById('fin-lista');
-    if(!el||!_sb())return;
+    if(!el||!_sbq())return;
     try {
       const hoje=new Date();
       const mesIniDate=new Date(hoje.getFullYear(),hoje.getMonth(),1);
       const mesStr=mesIniDate.toISOString().split('T')[0];
       const seisAtras=new Date(hoje.getFullYear(),hoje.getMonth()-5,1).toISOString().split('T')[0];
       const [rv,rd]=await Promise.all([
-        _sb().from('vendas').select('*').gte('data_venda',seisAtras).order('data_venda',{ascending:false}),
-        _sb().from('despesas').select('*').gte('data_despesa',seisAtras).order('data_despesa',{ascending:false}),
+        _sbq().from('vendas').select('*').gte('data_venda',seisAtras).order('data_venda',{ascending:false}),
+        _sbq().from('despesas').select('*').gte('data_despesa',seisAtras).order('data_despesa',{ascending:false}),
       ]);
       const vendas   = (rv.data||[]);
       const despesas = (rd.data||[]);
@@ -1425,13 +1425,13 @@ const PageFinancas = {
       const coords=await getCoords();
       const fin=coords.find(c=>c.sigla==='FIN');
       if(tipo==='venda') {
-        await _sb().from('vendas').insert([{
+        await _sbq().from('vendas').insert([{
           descricao:desc,valor,data_venda:data,produto:prod||null,
           coordenadoria_id:fin?.id||null,
           registrado_por:window._appProfile?.id
         }]);
       } else {
-        await _sb().from('despesas').insert([{
+        await _sbq().from('despesas').insert([{
           descricao:desc,valor,data_despesa:data,
           coordenadoria_id:fin?.id||null,
           registrado_por:window._appProfile?.id
@@ -1498,9 +1498,9 @@ const PageProjetos = {
   },
   async _carregar() {
     const el=document.getElementById('prj-lista');
-    if(!el||!_sb())return;
+    if(!el||!_sbq())return;
     try {
-      const {data}=await _sb().from('eventos')
+      const {data}=await _sbq().from('eventos')
         .select('*,coordenadorias(nome)')
         .in('tipo',['evento','visita','treinamento','podcast'])
         .order('data_inicio',{ascending:true});
@@ -1558,7 +1558,7 @@ const PageProjetos = {
     try {
       const coords=await getCoords();
       const prj=coords.find(c=>c.sigla==='PRJ');
-      await _sb().from('eventos').insert([{
+      await _sbq().from('eventos').insert([{
         titulo,tipo,data_inicio:data,local:local||null,vagas,ativo:true,
         coordenadoria_id:prj?.id||null,criado_por:window._appProfile?.id
       }]);
@@ -1591,7 +1591,7 @@ const PageProjetos = {
     try {
       const coords = await getCoords();
       const prj = coords.find(c=>c.sigla==='PRJ');
-      await _sb().from('eventos').insert([{
+      await _sbq().from('eventos').insert([{
         titulo, tipo:'podcast', data_inicio:data, ativo:true,
         coordenadoria_id: prj?.id||null,
         criado_por: window._appProfile?.id,
@@ -1617,9 +1617,9 @@ const PageProjetos = {
   },
   async _carregarNupicast() {
     const el = document.getElementById('nupicast-lista');
-    if (!el || !_sb()) return;
+    if (!el || !_sbq()) return;
     try {
-      const { data } = await _sb().from('eventos')
+      const { data } = await _sbq().from('eventos')
         .select('*').eq('tipo','podcast')
         .order('data_inicio',{ascending:false}).limit(20);
       el.innerHTML = data?.length
@@ -1666,9 +1666,9 @@ const PageProjetos = {
 
   async _carregarENEGEP() {
     const el = document.getElementById('enegep-lista');
-    if (!el || !_sb()) return;
+    if (!el || !_sbq()) return;
     try {
-      const { data } = await _sb()
+      const { data } = await _sbq()
         .from('eventos')
         .select('*')
         .eq('tipo', 'enegep')
@@ -1736,7 +1736,7 @@ const PageProjetos = {
     try {
       const coords = await getCoords();
       const prj = coords.find(c => c.sigla === 'PRJ');
-      await _sb().from('eventos').insert([{
+      await _sbq().from('eventos').insert([{
         titulo, tipo: 'enegep',
         data_inicio: data + 'T08:00:00', ativo: true,
         descricao: JSON.stringify({ fotos, presenca, link_insc: link }),
@@ -1780,7 +1780,7 @@ const PageProjetos = {
     try {
       const coords = await getCoords();
       const prj = coords.find(c=>c.sigla==='PRJ');
-      await _sb().from('eventos').insert([{
+      await _sbq().from('eventos').insert([{
         titulo, tipo:'treinamento', data_inicio:data,
         local:local||null, vagas:vagas||null, ativo:true,
         coordenadoria_id: prj?.id||null,
@@ -1807,9 +1807,9 @@ const PageProjetos = {
   },
   async _carregarTreinamentos() {
     const el = document.getElementById('treinamentos-lista');
-    if (!el || !_sb()) return;
+    if (!el || !_sbq()) return;
     try {
-      const { data } = await _sb().from('eventos')
+      const { data } = await _sbq().from('eventos')
         .select('*').eq('tipo','treinamento')
         .order('data_inicio',{ascending:false}).limit(30);
       el.innerHTML = data?.length
@@ -1844,9 +1844,9 @@ const PageProjetos = {
   },
   async _carregarParcerias() {
     const el = document.getElementById('prj-parcerias-lista');
-    if (!el || !_sb()) return;
+    if (!el || !_sbq()) return;
     try {
-      const { data } = await _sb()
+      const { data } = await _sbq()
         .from('parcerias')
         .select('*')
         .order('nome');
@@ -1900,7 +1900,7 @@ const PageProjetos = {
     if (!nome) { mostrarToast('Informe o nome da parceria!','warning'); return; }
     fecharModal();
     try {
-      await _sb().from('parcerias').insert([{
+      await _sbq().from('parcerias').insert([{
         nome, tipo, site: site||null, logo_url: logo||null,
         descricao: desc||null,
         criado_por: window._appProfile?.id,
@@ -1930,9 +1930,9 @@ const PageOperacoes = {
   },
   async _carregarRelatorios() {
     const el=document.getElementById('ops-relatorios-lista');
-    if(!el||!_sb())return;
+    if(!el||!_sbq())return;
     try {
-      const {data}=await _sb().from('relatorios_mensais').select('*').order('ano',{ascending:false}).order('mes',{ascending:false}).limit(12);
+      const {data}=await _sbq().from('relatorios_mensais').select('*').order('ano',{ascending:false}).order('mes',{ascending:false}).limit(12);
       el.innerHTML=data?.length
         ?data.map(r=>`
           <div style="background:var(--b-1);border:1px solid var(--b-2);border-radius:10px;
@@ -1970,9 +1970,9 @@ const PageOperacoes = {
   },
   async _carregarArquivo() {
     const el = document.getElementById('arquivo-lista');
-    if (!el || !_sb()) return;
+    if (!el || !_sbq()) return;
     try {
-      const { data } = await _sb().from('pops')
+      const { data } = await _sbq().from('pops')
         .select('*').order('created_at',{ascending:false}).limit(40);
       el.innerHTML = data?.length
         ? data.map(d => `<div style="background:var(--b-1);border:1px solid var(--b-2);border-radius:10px;padding:14px 16px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
@@ -2012,7 +2012,7 @@ const PageOperacoes = {
     if (!nome) { mostrarToast('Informe o título do documento.','warning'); return; }
     fecharModal();
     try {
-      await _sb().from('pops').insert([{
+      await _sbq().from('pops').insert([{
         nome, descricao: tipo||null,
         conteudo: link||null,
         criado_por: window._appProfile?.id,
@@ -2038,9 +2038,9 @@ const PageOperacoes = {
   },
   async _carregarEventosInscricao() {
     const el=document.getElementById('ins-eventos-lista');
-    if(!el||!_sb())return;
+    if(!el||!_sbq())return;
     try {
-      const {data}=await _sb().from('eventos_inscricao').select('*').order('data_inicio',{ascending:false});
+      const {data}=await _sbq().from('eventos_inscricao').select('*').order('data_inicio',{ascending:false});
       if(!data?.length){el.innerHTML='<div style="padding:20px;text-align:center;color:var(--c-slate);font-size:13px">Nenhum evento de inscrição cadastrado.</div>';return;}
       el.innerHTML=data.map(e=>{
         const abertas=e.inscricoes_abertas;
@@ -2103,20 +2103,20 @@ const PageOperacoes = {
     if(!nome){mostrarToast('Informe o nome do evento!','warning');return;}
     fecharModal();
     try {
-      await _sb().from('eventos_inscricao').insert([{nome,local:local||null,data_inicio:ini||null,data_fim:fim||null,vagas,icone,inscricoes_abertas:false}]);
+      await _sbq().from('eventos_inscricao').insert([{nome,local:local||null,data_inicio:ini||null,data_fim:fim||null,vagas,icone,inscricoes_abertas:false}]);
       mostrarToast('Evento criado!','success');
       this._carregarEventosInscricao();
     }catch(e){mostrarToast('Erro ao criar evento.','error');}
   },
   async _toggleInscricoes(id, abrir) {
     try {
-      await _sb().from('eventos_inscricao').update({inscricoes_abertas:abrir}).eq('id',id);
+      await _sbq().from('eventos_inscricao').update({inscricoes_abertas:abrir}).eq('id',id);
       mostrarToast(abrir?'Inscrições abertas!':'Inscrições fechadas!','success');
       this._carregarEventosInscricao();
     }catch(e){mostrarToast('Erro ao alterar status.','error');}
   },
   async _editarEventoInscricao(id) {
-    const {data:e}=await _sb().from('eventos_inscricao').select('*').eq('id',id).single();
+    const {data:e}=await _sbq().from('eventos_inscricao').select('*').eq('id',id).single();
     if(!e){mostrarToast('Evento não encontrado.','error');return;}
     const ini=e.data_inicio?new Date(e.data_inicio).toISOString().slice(0,16):'';
     const fim=e.data_fim?new Date(e.data_fim).toISOString().slice(0,16):'';
@@ -2147,7 +2147,7 @@ const PageOperacoes = {
     if(!nome){mostrarToast('Nome obrigatório!','warning');return;}
     fecharModal();
     try {
-      await _sb().from('eventos_inscricao').update({nome,local:local||null,data_inicio:ini||null,data_fim:fim||null,vagas}).eq('id',id);
+      await _sbq().from('eventos_inscricao').update({nome,local:local||null,data_inicio:ini||null,data_fim:fim||null,vagas}).eq('id',id);
       mostrarToast('Evento atualizado!','success');
       this._carregarEventosInscricao();
     }catch(e){mostrarToast('Erro ao atualizar.','error');}
@@ -2162,7 +2162,7 @@ const PageOperacoes = {
       </div>`,
       botoes:[{texto:'Fechar',classe:'btn-ghost',acao:fecharModal}]});
     try {
-      const {data}=await _sb().from('inscricoes_eventos').select('*').eq('evento_id',eventoId).order('created_at');
+      const {data}=await _sbq().from('inscricoes_eventos').select('*').eq('evento_id',eventoId).order('created_at');
       const el=document.getElementById('ins-lista-modal');
       if(!el)return;
       if(!data?.length){el.innerHTML='<div style="padding:16px;text-align:center;color:var(--c-slate)">Nenhum inscrito ainda.</div>';return;}
@@ -2185,13 +2185,13 @@ const PageOperacoes = {
   },
   async _atualizarPresenca(id, status) {
     try {
-      await _sb().from('inscricoes_eventos').update({status}).eq('id',id);
+      await _sbq().from('inscricoes_eventos').update({status}).eq('id',id);
       mostrarToast('Status atualizado!','success');
     }catch(e){mostrarToast('Erro ao atualizar.','error');}
   },
   async _exportarCSV(eventoId, nomeEvento) {
     try {
-      const {data}=await _sb().from('inscricoes_eventos').select('*').eq('evento_id',eventoId).order('created_at');
+      const {data}=await _sbq().from('inscricoes_eventos').select('*').eq('evento_id',eventoId).order('created_at');
       if(!data?.length){mostrarToast('Nenhum inscrito para exportar.','warning');return;}
       const esc=v=>`"${(v||'').replace(/"/g,'""')}"`;
       const header='Nome,Email,CPF,Curso,Instituição,Membro,Status,Inscrito em';
@@ -2208,7 +2208,7 @@ const PageOperacoes = {
     const pg=document.getElementById('page-ops_pops');
     if(!pg)return;
     const ct=pg.querySelector('.content')||pg;
-    const sb=_sb();
+    const sb=_sbq();
     ct.innerHTML=_sc('Cofre de POPs','📁',`
       <p style="font-size:13px;color:var(--fg-3);margin-bottom:14px">
         Procedimentos Operacionais Padrão — atualização semestral obrigatória (Regimento Art. 12º V).
@@ -2268,9 +2268,9 @@ const PageOperacoes = {
         const revisao=document.getElementById('pop-revisao')?.value;
         if(!titulo){mostrarToast('Informe o título do POP.','error');return;}
         fecharModal();
-        if(!_sb()){mostrarToast('Banco não conectado.','error');return;}
+        if(!_sbq()){mostrarToast('Banco não conectado.','error');return;}
         try{
-          await _sb().from('pops').insert({nome:titulo,descricao:desc||null,data_revisao:revisao||null,ativo:true,criado_por:window._appProfile?.id});
+          await _sbq().from('pops').insert({nome:titulo,descricao:desc||null,data_revisao:revisao||null,ativo:true,criado_por:window._appProfile?.id});
           mostrarToast('POP cadastrado com sucesso!','success');
           PageOperacoes._renderPops();
         }catch(e){mostrarToast('Erro ao salvar POP.','error');}
@@ -2287,9 +2287,9 @@ const PageOperacoes = {
         const novoTitulo=document.getElementById('pop-edit-titulo')?.value?.trim();
         if(!novoTitulo){mostrarToast('Informe o título.','error');return;}
         fecharModal();
-        if(!_sb()){mostrarToast('Banco não conectado.','error');return;}
+        if(!_sbq()){mostrarToast('Banco não conectado.','error');return;}
         try{
-          await _sb().from('pops').update({nome:novoTitulo}).eq('id',id);
+          await _sbq().from('pops').update({nome:novoTitulo}).eq('id',id);
           mostrarToast('POP atualizado!','success');
           PageOperacoes._renderPops();
         }catch(e){mostrarToast('Erro ao atualizar POP.','error');}
@@ -2334,9 +2334,9 @@ const PagePessoas = {
   },
   async _carregar() {
     const el=document.getElementById('gp-lista');
-    if(!el||!_sb())return;
+    if(!el||!_sbq())return;
     try {
-      const {data}=await _sb()
+      const {data}=await _sbq()
         .from('users')
         .select('*,coordenadorias(nome,cor,icone)')
         .eq('ativo',true)
@@ -2402,9 +2402,9 @@ const PagePessoas = {
   async _carregarClima() {
     const el  = document.getElementById('clima-lista');
     const tot = document.getElementById('clima-total');
-    if (!el||!_sb()) return;
+    if (!el||!_sbq()) return;
     try {
-      const { data } = await _sb()
+      const { data } = await _sbq()
         .from('eventos')
         .select('*')
         .eq('tipo','pesquisa_clima')
@@ -2432,9 +2432,9 @@ const PagePessoas = {
     } catch(e) { el.innerHTML='<div style="padding:16px;color:var(--c-slate)">Erro ao carregar.</div>'; }
   },
   async historicoPesquisas() {
-    if (!_sb()) return;
+    if (!_sbq()) return;
     try {
-      const { data } = await _sb()
+      const { data } = await _sbq()
         .from('eventos')
         .select('*')
         .eq('tipo','pesquisa_clima')
@@ -2621,12 +2621,12 @@ const PagePessoas = {
       mostrarToast(`Preencha todas as ${this._TAP_SECOES.length} seções! Faltam: ${vazias.map(s=>s.titulo).slice(0,2).join(', ')}…`, 'warning');
       return;
     }
-    if (!_sb()) { mostrarToast('Supabase não conectado.','error'); return; }
+    if (!_sbq()) { mostrarToast('Supabase não conectado.','error'); return; }
     try {
       const coords = await getCoords();
       const gp = coords.find(c => c.sigla === 'GP');
       /* Salva como evento do tipo 'tap' com o JSON das seções no descricao */
-      await _sb().from('eventos').insert([{
+      await _sbq().from('eventos').insert([{
         titulo: `TAP Inovador ${new Date().getFullYear()} — ${window._appProfile?.nome || 'NUPIEEPRO'}`,
         tipo: 'tap', ativo: true,
         data_inicio: new Date().toISOString().split('T')[0],
@@ -2645,9 +2645,9 @@ const PagePessoas = {
   },
   async _carregarTAP() {
     const el=document.getElementById('tap-lista');
-    if(!el||!_sb())return;
+    if(!el||!_sbq())return;
     try {
-      const { data } = await _sb()
+      const { data } = await _sbq()
         .from('eventos')
         .select('*, users!criado_por(nome)')
         .eq('tipo','treinamento')
@@ -2673,9 +2673,9 @@ const PagePessoas = {
     } catch(e) { el.innerHTML='<div style="padding:16px;color:var(--c-slate)">Erro ao carregar.</div>'; }
   },
   async relatorioTAP() {
-    if (!_sb()) return;
+    if (!_sbq()) return;
     try {
-      const { data } = await _sb()
+      const { data } = await _sbq()
         .from('eventos')
         .select('*, users!criado_por(nome, apelido)')
         .eq('tipo','tap')
@@ -2736,7 +2736,7 @@ const PagePessoas = {
     try {
       const coords = await getCoords();
       const gp = coords.find(c=>c.sigla==='GP');
-      await _sb().from('eventos').insert([{
+      await _sbq().from('eventos').insert([{
         titulo, tipo:'treinamento', data_inicio:data,
         vagas:vagas||null, local:local||null, ativo:true,
         coordenadoria_id:gp?.id||null,
@@ -2790,7 +2790,7 @@ const PagePessoas = {
     if (!email) { mostrarToast('Insira o e-mail!', 'warning'); return; }
     fecharModal();
     try {
-      const { data, error } = await _sb().from('convites').insert([{
+      const { data, error } = await _sbq().from('convites').insert([{
         email, nome, coordenadoria_id: coord, cargo, role,
         criado_por: window._appProfile?.id,
       }]).select().single();
@@ -2850,7 +2850,7 @@ const PagePessoas = {
     try {
       const coords = await getCoords();
       const gp = coords.find(c=>c.sigla==='GP');
-      await _sb().from('eventos').insert([{
+      await _sbq().from('eventos').insert([{
         titulo, tipo:'pesquisa_clima',
         data_inicio: data+'T08:00:00',
         descricao: link||null, ativo:true,
@@ -2894,7 +2894,7 @@ const PagePessoas = {
     try {
       const coords = await getCoords();
       const gp = coords.find(c=>c.sigla==='GP');
-      await _sb().from('demandas').insert([{
+      await _sbq().from('demandas').insert([{
         titulo: nome, coluna:'pendente',
         descricao: JSON.stringify({ tipo:'talento', habilidades, universidade:univ||null, contato:contato||null }),
         coordenadoria_id: gp?.id||null,
@@ -2932,9 +2932,9 @@ const PagePessoas = {
   },
   async _carregarTalentos() {
     const el = document.getElementById('talentosGrid');
-    if (!el || !_sb()) return;
+    if (!el || !_sbq()) return;
     try {
-      const { data } = await _sb().from('demandas')
+      const { data } = await _sbq().from('demandas')
         .select('titulo, descricao, created_at')
         .ilike('descricao','%"tipo":"talento"%')
         .order('created_at',{ascending:false}).limit(50);
@@ -2980,9 +2980,9 @@ const PagePessoas = {
   async _carregarAniversarios() {
     const elEste = document.getElementById('aniv-este-lista');
     const elProx = document.getElementById('aniv-prox-lista');
-    if (!elEste || !_sb()) return;
+    if (!elEste || !_sbq()) return;
     try {
-      const { data } = await _sb()
+      const { data } = await _sbq()
         .from('users')
         .select('nome,email,aniversario,avatar_url,iniciais,coordenadorias(nome)')
         .eq('ativo', true)
@@ -3039,9 +3039,9 @@ const PagePessoas = {
   },
   async _carregarTreinamentosInternos() {
     const el = document.getElementById('gp-trein-lista');
-    if (!el || !_sb()) return;
+    if (!el || !_sbq()) return;
     try {
-      const { data } = await _sb()
+      const { data } = await _sbq()
         .from('eventos')
         .select('*,coordenadorias(nome)')
         .eq('tipo','treinamento_interno')
@@ -3089,7 +3089,7 @@ const PagePessoas = {
     try {
       const coords = await getCoords();
       const gp = coords.find(c=>c.sigla==='GP');
-      await _sb().from('eventos').insert([{
+      await _sbq().from('eventos').insert([{
         titulo, tipo:'treinamento_interno', data_inicio:data,
         local:local||null, vagas:vagas||null, ativo:true,
         coordenadoria_id: gp?.id || window._appProfile?.coordenadoria_id || null,
@@ -3113,8 +3113,8 @@ const PageDev = {
   /* ── Entry point ── */
   async init() {
     /* Pré-carrega coordenadorias para selects */
-    if (_sb() && !this._coords.length) {
-      const { data } = await _sb().from('coordenadorias').select('id,nome,sigla').order('nome');
+    if (_sbq() && !this._coords.length) {
+      const { data } = await _sbq().from('coordenadorias').select('id,nome,sigla').order('nome');
       this._coords = data || [];
     }
     this._render();
@@ -3205,9 +3205,9 @@ const PageDev = {
 
   async _carregarUsuarios() {
     const el = document.getElementById('devListaUsuarios');
-    if (!el || !_sb()) return;
+    if (!el || !_sbq()) return;
     try {
-      const { data } = await _sb()
+      const { data } = await _sbq()
         .from('users')
         .select('*,coordenadorias(nome,sigla,cor)')
         .order('created_at', { ascending: false });
@@ -3320,7 +3320,7 @@ const PageDev = {
     const ativo  = document.getElementById('eu-ativo')?.value === 'true';
     if (!nome) { mostrarToast('Nome é obrigatório.','error'); return; }
     try {
-      await _sb().from('users').update({ nome, apelido, cargo, role, coordenadoria_id: coordId, aniversario: aniv, ativo })
+      await _sbq().from('users').update({ nome, apelido, cargo, role, coordenadoria_id: coordId, aniversario: aniv, ativo })
         .eq('id', userId);
       fecharModal();
       mostrarToast('Usuário atualizado!', 'success');
@@ -3349,9 +3349,9 @@ const PageDev = {
 
   async _carregarConvites() {
     const el = document.getElementById('devConvites');
-    if (!el || !_sb()) return;
+    if (!el || !_sbq()) return;
     try {
-      const { data } = await _sb()
+      const { data } = await _sbq()
         .from('convites')
         .select('*,coordenadorias(nome,sigla)')
         .order('created_at', { ascending: false })
@@ -3418,7 +3418,7 @@ const PageDev = {
     const cargo = document.getElementById('nc-cargo')?.value.trim() || null;
     if (!nome || !email || !coord) { mostrarToast('Preencha nome, e-mail e coordenadoria.','error'); return; }
     try {
-      const { data, error } = await _sb().from('convites').insert({
+      const { data, error } = await _sbq().from('convites').insert({
         email, nome, coordenadoria_id: coord, role, cargo,
         criado_por: window._appProfile?.id
       }).select().single();
@@ -3440,7 +3440,7 @@ const PageDev = {
   _novoConviteRapido() { this._switchTab('convites'); this.novoConvite(); },
 
   async _reenviarConvite(id, email, token) {
-    const convite = (await _sb().from('convites').select('*,coordenadorias(nome)').eq('id',id).single()).data;
+    const convite = (await _sbq().from('convites').select('*,coordenadorias(nome)').eq('id',id).single()).data;
     if (!convite) return;
     await window.EmailsModule?.enviarConvite({
       email, coord: convite.coordenadorias?.nome, cargo: convite.cargo,
@@ -3452,7 +3452,7 @@ const PageDev = {
   },
 
   async _revogarConvite(id) {
-    await _sb().from('convites').update({ expires_at: new Date().toISOString() }).eq('id', id);
+    await _sbq().from('convites').update({ expires_at: new Date().toISOString() }).eq('id', id);
     mostrarToast('Convite revogado.','info');
     this._carregarConvites();
   },
@@ -3536,9 +3536,9 @@ const PageDev = {
 
   async _carregarLogs() {
     const el = document.getElementById('devLogs');
-    if (!el || !_sb()) return;
+    if (!el || !_sbq()) return;
     try {
-      const { data } = await _sb()
+      const { data } = await _sbq()
         .from('historico_demandas')
         .select('*,users!user_id(nome,apelido),demandas(titulo)')
         .order('created_at', { ascending: false })
@@ -3571,7 +3571,7 @@ const PageDev = {
     const el = document.getElementById('devTabContent');
     if (!el) return;
     const online = navigator.onLine;
-    const sb     = !!_sb();
+    const sb     = !!_sbq();
     el.innerHTML = `
       ${_sc('Status do Sistema','🔖',`
         <div style="display:flex;flex-direction:column;gap:8px;font-size:13px">
@@ -3620,7 +3620,7 @@ const PageDev = {
     const R = window.Permissoes?.REGRAS;
     if (!R) { el.innerHTML = '<span style="color:var(--c-slate)">permissoes.js não carregado.</span>'; return; }
     const relatorio = R.relatorioABJBloqueado(false);
-    const extincao  = await R.alertaExtincao(_sb());
+    const extincao  = await R.alertaExtincao(_sbq());
     el.innerHTML = [
       { label:'Relatório ABJ',         info: relatorio.noUltimoDia ? '⚠️ Último dia hoje!' : relatorio.desconto ? '🔴 Fora do prazo (-2pts)' : '✅ Dentro do prazo' },
       { label:'Risco de extinção',      info: extincao?.risco ? `🚨 ${extincao.mensagem}` : `✅ ${extincao?.mesesSemAtividade||0} meses de atividade` },
@@ -3747,7 +3747,7 @@ const PageGlobal = {
         fotos, solicita, confirm,
         participantes,
       });
-      await _sb().from('eventos').insert([{
+      await _sbq().from('eventos').insert([{
         titulo: `Visita Técnica — ${empresa}`,
         tipo: 'visita', data_inicio: data + 'T08:00:00',
         local: empresa, vagas: participantes.length,
@@ -3800,7 +3800,7 @@ const PageGlobal = {
     if (!fotos) { mostrarToast('O link das fotos é obrigatório para comprovar a apresentação!','warning'); return; }
     fecharModal();
     try {
-      await _sb().from('eventos').insert([{
+      await _sbq().from('eventos').insert([{
         titulo, tipo: 'apresentacao',
         data_inicio: data + 'T08:00:00', local,
         descricao: JSON.stringify({ fotos, modalidade: modal }), ativo: true,
@@ -3870,7 +3870,7 @@ const PageGlobal = {
     if (!link)   { mostrarToast('O link DOI/PDF é obrigatório!','warning'); return; }
     fecharModal();
     try {
-      await _sb().from('eventos').insert([{
+      await _sbq().from('eventos').insert([{
         titulo, tipo: 'producao_cientifica',
         data_inicio: new Date().toISOString().split('T')[0],
         descricao: JSON.stringify({ tipo_trabalho: tipo, autores, link, comprovante: comp, bonus_enegep: enegep }),
@@ -3903,9 +3903,9 @@ const PageGlobal = {
   },
   async _carregarVisitas() {
     const el = document.getElementById('visitas-lista');
-    if (!el || !_sb()) return;
+    if (!el || !_sbq()) return;
     try {
-      const { data } = await _sb().from('eventos')
+      const { data } = await _sbq().from('eventos')
         .select('*').eq('tipo','visita')
         .order('data_inicio',{ascending:false}).limit(10);
       el.innerHTML = data?.length
@@ -3949,10 +3949,10 @@ const PageGlobal = {
   },
   async _carregarApresentacoes() {
     const el = document.getElementById('apres-lista');
-    if (!el || !_sb()) return;
+    if (!el || !_sbq()) return;
     try {
       const mesIni = new Date(); mesIni.setMonth(mesIni.getMonth() - 6);
-      const { data } = await _sb().from('eventos')
+      const { data } = await _sbq().from('eventos')
         .select('*').eq('tipo','apresentacao')
         .order('data_inicio',{ascending:false}).limit(10);
       const semestre = (data||[]).filter(e => new Date(e.data_inicio) >= mesIni).length;
@@ -4001,9 +4001,9 @@ const PageGlobal = {
   },
   async _carregarProducao() {
     const el = document.getElementById('prod-lista');
-    if (!el || !_sb()) return;
+    if (!el || !_sbq()) return;
     try {
-      const { data } = await _sb().from('eventos')
+      const { data } = await _sbq().from('eventos')
         .select('*').in('tipo',['producao_cientifica'])
         .order('data_inicio',{ascending:false}).limit(12);
       el.innerHTML = (data||[]).length
@@ -4055,7 +4055,7 @@ const PageGlobal = {
     try {
       const coords = await getCoords();
       const ger = coords.find(c=>c.sigla==='GER');
-      await _sb().from('eventos').insert([{
+      await _sbq().from('eventos').insert([{
         titulo, tipo:'assembleia', data_inicio:data,
         local:local||null, descricao:desc||null, ativo:true,
         coordenadoria_id: ger?.id||null,
@@ -4093,12 +4093,12 @@ const PageGlobal = {
 
   async _carregarVotacoes() {
     const el = document.getElementById('votacoes-lista');
-    if (!el || !_sb()) return;
+    if (!el || !_sbq()) return;
     const uid = window._appProfile?.id;
     try {
       const [{ data: vots }, { data: mVotos }] = await Promise.all([
-        _sb().from('votacoes').select('*').order('criada_em', { ascending: false }).limit(20),
-        uid ? _sb().from('votos').select('votacao_id,opcao').eq('user_id', uid) : { data: [] },
+        _sbq().from('votacoes').select('*').order('criada_em', { ascending: false }).limit(20),
+        uid ? _sbq().from('votos').select('votacao_id,opcao').eq('user_id', uid) : { data: [] },
       ]);
       if (!vots?.length) {
         el.innerHTML = '<div style="padding:16px;text-align:center;color:var(--c-slate);font-size:13px">Nenhuma votação registrada.</div>';
@@ -4134,10 +4134,10 @@ const PageGlobal = {
 
   async _votar(votacaoId, opcao, btn) {
     const uid = window._appProfile?.id;
-    if (!uid || !_sb()) return;
+    if (!uid || !_sbq()) return;
     btn.disabled = true;
     try {
-      await _sb().from('votos').insert([{ votacao_id: votacaoId, user_id: uid, opcao }]);
+      await _sbq().from('votos').insert([{ votacao_id: votacaoId, user_id: uid, opcao }]);
       mostrarToast(`Voto registrado: "${opcao}"`, 'success');
       this._carregarVotacoes();
     } catch(e) {
@@ -4174,7 +4174,7 @@ const PageGlobal = {
     if (!opcoes.length) { mostrarToast('Adicione ao menos uma opção!','warning'); return; }
     fecharModal();
     try {
-      await _sb().from('votacoes').insert([{
+      await _sbq().from('votacoes').insert([{
         titulo, descricao: desc||null,
         opcoes: opcoes,
         ativa: true,
@@ -4187,9 +4187,9 @@ const PageGlobal = {
 
   async _carregarAssembleia() {
     const el = document.getElementById('assembleia-lista');
-    if (!el || !_sb()) return;
+    if (!el || !_sbq()) return;
     try {
-      const { data } = await _sb().from('eventos')
+      const { data } = await _sbq().from('eventos')
         .select('*').eq('tipo','assembleia')
         .order('data_inicio', {ascending:false}).limit(20);
       el.innerHTML = (data||[]).length
@@ -4213,14 +4213,14 @@ const PageGlobal = {
     ct.innerHTML = _sc('Painel Estratégico','📊','<div id="gestao-kpis" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:10px"><div style="text-align:center;color:var(--c-slate);padding:20px;grid-column:1/-1">Carregando...</div></div>') +
       _sc('Membros por Coordenadoria','📈','<div style="position:relative;height:180px"><canvas id="gestao-chart"></canvas></div>') +
       _sc('Coordenadorias','🏛️','<div id="gestao-coords" style="display:flex;flex-direction:column;gap:8px"><div style="padding:16px;text-align:center;color:var(--c-slate);font-size:13px">Carregando...</div></div>');
-    if (!_sb()) return;
+    if (!_sbq()) return;
     try {
       const hoje = new Date();
       const mesIni = new Date(hoje.getFullYear(), hoje.getMonth(), 1).toISOString();
       const [{ count: totalMembros }, { count: eventosMs }, { data: abjMs }, coords] = await Promise.all([
-        _sb().from('users').select('*',{count:'exact',head:true}).eq('ativo',true),
-        _sb().from('eventos').select('*',{count:'exact',head:true}).gte('data_inicio', mesIni),
-        _sb().from('progresso_abj').select('pontos').gte('created_at', mesIni),
+        _sbq().from('users').select('*',{count:'exact',head:true}).eq('ativo',true),
+        _sbq().from('eventos').select('*',{count:'exact',head:true}).gte('data_inicio', mesIni),
+        _sbq().from('progresso_abj').select('pontos').gte('created_at', mesIni),
         getCoords(),
       ]);
       const pontosMs = (abjMs||[]).reduce((s,r)=>s+(r.pontos||0),0);
@@ -4234,7 +4234,7 @@ const PageGlobal = {
           <div style="font-size:11px;color:var(--c-slate)">${k.label}</div>
         </div>`).join('');
       if (!coords?.length) return;
-      const { data: membPorCoord } = await _sb()
+      const { data: membPorCoord } = await _sbq()
         .from('users').select('coordenadoria_id').eq('ativo',true);
       const cntMap = {};
       (membPorCoord||[]).forEach(u => { if(u.coordenadoria_id) cntMap[u.coordenadoria_id] = (cntMap[u.coordenadoria_id]||0)+1; });
@@ -4284,11 +4284,11 @@ const PageNotificacoes = {
   async _carregar() {
     const lista = document.getElementById('notifList');
     const cnt   = document.getElementById('notifCount');
-    if (!lista || !_sb()) return;
+    if (!lista || !_sbq()) return;
     try {
       const p = window._appProfile;
       if (!p) return;
-      const { data } = await _sb()
+      const { data } = await _sbq()
         .from('notificacoes')
         .select('*')
         .eq('user_id', p.id)
@@ -4336,9 +4336,9 @@ const PageNotificacoes = {
   async _marcarLida(id, el) {
     el?.classList.remove('unread');
     el?.querySelector('.notif-dot')?.classList.add('read');
-    if (!_sb()) return;
+    if (!_sbq()) return;
     try {
-      await _sb().from('notificacoes').update({ lida: true }).eq('id', id);
+      await _sbq().from('notificacoes').update({ lida: true }).eq('id', id);
       if (typeof NotifPage !== 'undefined') NotifPage.updateCount();
     } catch(e) {}
   },
@@ -4347,9 +4347,9 @@ const PageNotificacoes = {
 /* Sobrescreve markAllNotifRead() já declarado no HTML */
 window.markAllNotifRead = async function() {
   const p = window._appProfile;
-  if (!_sb()||!p) return;
+  if (!_sbq()||!p) return;
   try {
-    await _sb().from('notificacoes').update({ lida:true }).eq('user_id', p.id).eq('lida', false);
+    await _sbq().from('notificacoes').update({ lida:true }).eq('user_id', p.id).eq('lida', false);
     document.querySelectorAll('.notif-item.unread').forEach(el => el.classList.remove('unread'));
     document.querySelectorAll('.notif-dot:not(.read)').forEach(el => el.classList.add('read'));
     if (typeof NotifPage !== 'undefined') NotifPage.updateCount();
@@ -4373,7 +4373,7 @@ const PageCompartilhado = {
   async _carregarProximos() {
     /* Injeta section-card abaixo do calendário com lista de próximos eventos */
     const pg = document.getElementById('page-compartilhado');
-    if (!pg||!_sb()) return;
+    if (!pg||!_sbq()) return;
     /* Remove lista antiga se já existir */
     document.getElementById('shared-proximos')?.remove();
     const container = pg.querySelector('.content');
@@ -4395,7 +4395,7 @@ const PageCompartilhado = {
     container.appendChild(div);
     try {
       const hoje = new Date().toISOString().split('T')[0];
-      const { data } = await _sb()
+      const { data } = await _sbq()
         .from('eventos')
         .select('*, coordenadorias(nome,sigla,cor,icone)')
         .gte('data_inicio', hoje)
@@ -4476,7 +4476,7 @@ const PageCompartilhado = {
     if (!titulo||!data) { mostrarToast('Preencha título e data!','warning'); return; }
     fecharModal();
     try {
-      await _sb().from('eventos').insert([{
+      await _sbq().from('eventos').insert([{
         titulo, tipo, data_inicio:data,
         vagas:vagas||null, local:local||null, ativo:true,
         coordenadoria_id: window._appProfile?.coordenadoria_id||null,
