@@ -383,12 +383,30 @@ const PageGeral = {
               </span>
             </div>
             <div style="font-size:12px;color:var(--c-slate)">${sanitize(d.descricao||'—')}</div>
-            <div style="font-size:11px;color:var(--c-slate);margin-top:6px">
-              👤 ${sanitize(d.users?.nome||'Anônimo')} · 📅 ${_fmt(d.created_at)}
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px;gap:8px">
+              <div style="font-size:11px;color:var(--c-slate)">
+                👤 ${sanitize(d.users?.nome||'Anônimo')} · 📅 ${_fmt(d.created_at)}
+              </div>
+              <div style="display:flex;gap:4px">
+                <button class="btn btn-ghost" style="padding:3px 7px;font-size:11px" title="Marcar como concluída" onclick="PageGeral._marcarMelhoria('${d.id}','auditada')">✓</button>
+                <button class="btn btn-ghost" style="padding:3px 7px;font-size:11px;color:var(--red)" title="Excluir" onclick="PageGeral._excluirMelhoria('${d.id}')">🗑️</button>
+              </div>
             </div>
           </div>`).join('')
         : '<div style="padding:16px;text-align:center;color:var(--c-slate);font-size:13px">Nenhuma sugestão ainda. Seja o primeiro!</div>';
     } catch(e) { el.innerHTML='<div style="padding:16px;color:var(--c-slate)">Erro ao carregar.</div>'; }
+  },
+  async _marcarMelhoria(id, coluna) {
+    if (!_sbq()) return;
+    await _sbq().from('demandas').update({ coluna }).eq('id', id);
+    mostrarToast('Status atualizado!','success');
+    PageGeral._carregarMelhorias();
+  },
+  async _excluirMelhoria(id) {
+    if (!confirm('Excluir esta sugestão?')) return;
+    await _sbq().from('demandas').delete().eq('id', id);
+    mostrarToast('Excluída!','success');
+    PageGeral._carregarMelhorias();
   },
   _renderParcerias() {
     const pg = document.getElementById('page-geral_parcerias');
@@ -420,17 +438,33 @@ const PageGeral = {
         ? data.map(d=>`
           <div style="background:var(--b-1);border:1px solid var(--b-2);border-radius:10px;
                       padding:14px 16px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
-            <div>
+            <div style="flex:1;min-width:0">
               <div style="font-weight:700;font-size:13px;color:var(--c-white)">${sanitize(d.titulo)}</div>
               <div style="font-size:12px;color:var(--c-slate)">${sanitize(d.descricao||'—')} · ${_fmt(d.created_at)}</div>
             </div>
-            <span style="font-size:11px;font-weight:700;padding:3px 9px;border-radius:99px;
-                         background:${['realizada','auditada'].includes(d.coluna)?'var(--green)22':'var(--yellow)22'};color:${['realizada','auditada'].includes(d.coluna)?'var(--green)':'var(--yellow)'};border:1px solid ${['realizada','auditada'].includes(d.coluna)?'var(--green)44':'var(--yellow)44'}">
-              ${['realizada','auditada'].includes(d.coluna)?'✓ Concluída':'⏳ Em andamento'}
-            </span>
+            <div style="display:flex;align-items:center;gap:6px">
+              <span style="font-size:11px;font-weight:700;padding:3px 9px;border-radius:99px;
+                           background:${['realizada','auditada'].includes(d.coluna)?'var(--green)22':'var(--yellow)22'};color:${['realizada','auditada'].includes(d.coluna)?'var(--green)':'var(--yellow)'};border:1px solid ${['realizada','auditada'].includes(d.coluna)?'var(--green)44':'var(--yellow)44'}">
+                ${['realizada','auditada'].includes(d.coluna)?'✓ Concluída':'⏳ Em andamento'}
+              </span>
+              <button class="btn btn-ghost" style="padding:3px 7px;font-size:11px" title="Marcar concluída" onclick="PageGeral._marcarParceria('${d.id}')">✓</button>
+              <button class="btn btn-ghost" style="padding:3px 7px;font-size:11px;color:var(--red)" title="Excluir" onclick="PageGeral._excluirParceria('${d.id}')">🗑️</button>
+            </div>
           </div>`).join('')
         : '<div style="padding:16px;text-align:center;color:var(--c-slate);font-size:13px">Nenhuma parceria registrada ainda.</div>';
     } catch(e) { el.innerHTML='<div style="padding:16px;color:var(--c-slate)">Erro ao carregar.</div>'; }
+  },
+  async _marcarParceria(id) {
+    if (!_sbq()) return;
+    await _sbq().from('demandas').update({ coluna: 'auditada' }).eq('id', id);
+    mostrarToast('Marcada como concluída','success');
+    PageGeral._carregarParcerias();
+  },
+  async _excluirParceria(id) {
+    if (!confirm('Excluir esta parceria?')) return;
+    await _sbq().from('demandas').delete().eq('id', id);
+    mostrarToast('Excluída!','success');
+    PageGeral._carregarParcerias();
   },
   novaReuniao() {
     const hoje = new Date().toISOString().slice(0,16);
@@ -1384,16 +1418,57 @@ const PageFinancas = {
         ?tudo.map(r=>`
           <div style="background:var(--b-1);border:1px solid var(--b-2);border-radius:10px;
                       padding:12px 16px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
-            <div>
+            <div style="flex:1;min-width:0">
               <div style="font-weight:600;font-size:13px;color:var(--c-white)">${sanitize(r.descricao)}</div>
               <div style="font-size:12px;color:var(--c-slate)">📅 ${_fmt(r._data)} · ${r.categoria||r.produto||'—'}</div>
             </div>
-            <span style="font-size:14px;font-weight:800;color:${r._tipo==='venda'?'var(--green)':'var(--red)'}">
-              ${r._tipo==='venda'?'+':'-'} R$ ${Number(r.valor||0).toFixed(2)}
-            </span>
+            <div style="display:flex;align-items:center;gap:8px">
+              <span style="font-size:14px;font-weight:800;color:${r._tipo==='venda'?'var(--green)':'var(--red)'}">
+                ${r._tipo==='venda'?'+':'-'} R$ ${Number(r.valor||0).toFixed(2)}
+              </span>
+              <button class="btn btn-ghost" style="padding:4px 8px;font-size:12px" title="Editar" onclick="PageFinancas._editarLancamento('${r._tipo}','${r.id}')">✏️</button>
+              <button class="btn btn-ghost" style="padding:4px 8px;font-size:12px;color:var(--red)" title="Excluir" onclick="PageFinancas._excluirLancamento('${r._tipo}','${r.id}')">🗑️</button>
+            </div>
           </div>`).join('')
         :'<div style="padding:16px;text-align:center;color:var(--c-slate)">Nenhum registro ainda.</div>';
     }catch(e){el.innerHTML='<div style="padding:16px;color:var(--c-slate)">Erro ao carregar.</div>';}
+  },
+  async _editarLancamento(tipo, id) {
+    if (!_sbq()) return;
+    const tabela = tipo === 'venda' ? 'vendas' : 'despesas';
+    const dataField = tipo === 'venda' ? 'data_venda' : 'data_despesa';
+    const { data: r } = await _sbq().from(tabela).select('*').eq('id', id).single();
+    if (!r) { mostrarToast('Lançamento não encontrado','error'); return; }
+    abrirModal({ titulo: tipo === 'venda' ? '💚 Editar Venda' : '🔴 Editar Despesa', corpo: `
+      <div class="form-group"><label class="form-label">Descrição *</label>
+        <input id="ed-desc" class="form-input" value="${sanitize(r.descricao||'')}"></div>
+      <div class="form-group"><label class="form-label">Valor *</label>
+        <input id="ed-valor" type="number" step="0.01" class="form-input" value="${r.valor||0}"></div>
+      <div class="form-group"><label class="form-label">Data</label>
+        <input id="ed-data" type="date" class="form-input" value="${r[dataField]||''}"></div>
+      <div class="form-group"><label class="form-label">Categoria</label>
+        <input id="ed-cat" class="form-input" value="${sanitize(r.categoria||'')}"></div>`,
+    botoes: [
+      { texto: 'Cancelar', classe: 'btn-ghost', acao: fecharModal },
+      { texto: 'Salvar', classe: 'btn-primary', acao: async () => {
+        const desc = document.getElementById('ed-desc')?.value?.trim();
+        const valor = parseFloat(document.getElementById('ed-valor')?.value);
+        const data = document.getElementById('ed-data')?.value;
+        const cat = document.getElementById('ed-cat')?.value?.trim();
+        if (!desc || isNaN(valor)) { mostrarToast('Preencha descrição e valor','warning'); return; }
+        await _sbq().from(tabela).update({ descricao:desc, valor, [dataField]:data, categoria:cat }).eq('id', id);
+        fecharModal();
+        mostrarToast('Atualizado!','success');
+        PageFinancas._carregarFluxo();
+      }}
+    ]});
+  },
+  async _excluirLancamento(tipo, id) {
+    if (!confirm('Excluir este lançamento? Esta ação não pode ser desfeita.')) return;
+    const tabela = tipo === 'venda' ? 'vendas' : 'despesas';
+    await _sbq().from(tabela).delete().eq('id', id);
+    mostrarToast('Excluído!','success');
+    PageFinancas._carregarFluxo();
   },
   lancar(tipo) {
     const hoje=new Date().toISOString().split('T')[0];
@@ -1509,10 +1584,13 @@ const PageProjetos = {
           <div style="background:var(--b-1);border:1px solid var(--b-2);border-radius:10px;padding:14px 16px">
             <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:8px">
               <div style="font-weight:700;font-size:14px;color:var(--c-white)">${sanitize(e.titulo)}</div>
-              <span style="font-size:11px;font-weight:700;padding:3px 9px;border-radius:99px;
-                           background:var(--c-accent)22;color:var(--c-accent);border:1px solid var(--c-accent)44">
-                ${e.tipo}
-              </span>
+              <div style="display:flex;align-items:center;gap:6px">
+                <span style="font-size:11px;font-weight:700;padding:3px 9px;border-radius:99px;
+                             background:var(--c-accent)22;color:var(--c-accent);border:1px solid var(--c-accent)44">
+                  ${e.tipo}
+                </span>
+                <button class="btn btn-ghost" style="padding:3px 7px;font-size:11px;color:var(--red)" title="Excluir" onclick="PageProjetos._excluirEvento('${e.id}')">🗑️</button>
+              </div>
             </div>
             <div style="font-size:12px;color:var(--c-slate)">
               📅 ${_fmt(e.data_inicio)} · 📍 ${sanitize(e.local||'A definir')}
@@ -1521,6 +1599,12 @@ const PageProjetos = {
           </div>`).join('')
         :'<div style="padding:16px;text-align:center;color:var(--c-slate);font-size:13px">Nenhum evento cadastrado.</div>';
     }catch(e){el.innerHTML='<div style="padding:16px;color:var(--c-slate)">Erro ao carregar.</div>';}
+  },
+  async _excluirEvento(id) {
+    if (!confirm('Excluir este evento?')) return;
+    await _sbq().from('eventos').delete().eq('id', id);
+    mostrarToast('Excluído!','success');
+    PageProjetos._carregar?.();
   },
   novoEvento() {
     const hoje=new Date().toISOString().slice(0,16);
@@ -1816,15 +1900,24 @@ const PageProjetos = {
         ? data.map(e => {
             let extra = {}; try { extra = JSON.parse(e.descricao||'{}'); } catch(_){}
             return `<div style="background:var(--b-1);border:1px solid var(--b-2);border-radius:10px;padding:14px 16px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
-              <div>
+              <div style="flex:1;min-width:0">
                 <div style="font-weight:700;font-size:13px;color:var(--c-white)">${sanitize(e.titulo)}</div>
                 <div style="font-size:12px;color:var(--c-slate)">📅 ${_fmt(e.data_inicio)}${e.local?` · 📍 ${sanitize(e.local)}`:''}${e.vagas?` · 👥 ${e.vagas} vagas`:''}</div>
               </div>
-              ${extra.link?`<a href="${sanitize(extra.link)}" target="_blank" class="btn btn-ghost" style="font-size:11px;padding:6px 12px;text-decoration:none">Inscrição ↗</a>`:''}
+              <div style="display:flex;gap:6px;align-items:center">
+                ${extra.link?`<a href="${sanitize(extra.link)}" target="_blank" class="btn btn-ghost" style="font-size:11px;padding:6px 12px;text-decoration:none">Inscrição ↗</a>`:''}
+                <button class="btn btn-ghost" style="padding:3px 7px;font-size:11px;color:var(--red)" title="Excluir" onclick="PageProjetos._excluirCapacitacao('${e.id}')">🗑️</button>
+              </div>
             </div>`;
           }).join('')
         : `<div style="padding:30px;text-align:center"><div style="font-size:36px;margin-bottom:12px">📚</div><div style="font-size:14px;font-weight:700;color:var(--c-white)">Nenhuma capacitação registrada</div></div>`;
     } catch(e) { el.innerHTML='<div style="padding:16px;color:var(--c-slate)">Erro ao carregar.</div>'; }
+  },
+  async _excluirCapacitacao(id) {
+    if (!confirm('Excluir esta capacitação?')) return;
+    await _sbq().from('eventos').delete().eq('id', id);
+    mostrarToast('Excluída!','success');
+    PageProjetos._carregarTreinamentos();
   },
 
   /* ─── Parcerias e Patrocínios ─────────────────────────────── */
@@ -3916,11 +4009,14 @@ const PageGlobal = {
               <div style="background:var(--b-1);border:1px solid ${ok?'var(--green)44':'var(--yellow)44'};border-radius:10px;padding:14px 16px">
                 <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:6px">
                   <div style="font-weight:700;font-size:13px;color:var(--c-white)">${sanitize(e.titulo)}</div>
-                  <span style="font-size:10px;font-weight:700;padding:3px 9px;border-radius:99px;white-space:nowrap;
-                               background:${ok?'var(--green)22':'var(--yellow)22'};color:${ok?'var(--green)':'var(--yellow)'};
-                               border:1px solid ${ok?'var(--green)44':'var(--yellow)44'}">
-                    ${ok?'✓ Completa':'⏳ Pendente'}
-                  </span>
+                  <div style="display:flex;align-items:center;gap:6px">
+                    <span style="font-size:10px;font-weight:700;padding:3px 9px;border-radius:99px;white-space:nowrap;
+                                 background:${ok?'var(--green)22':'var(--yellow)22'};color:${ok?'var(--green)':'var(--yellow)'};
+                                 border:1px solid ${ok?'var(--green)44':'var(--yellow)44'}">
+                      ${ok?'✓ Completa':'⏳ Pendente'}
+                    </span>
+                    <button class="btn btn-ghost" style="padding:3px 7px;font-size:11px;color:var(--red)" title="Excluir" onclick="PageGlobal._excluirEvento('${e.id}', 'visitas')">🗑️</button>
+                  </div>
                 </div>
                 <div style="font-size:12px;color:var(--c-slate)">
                   📅 ${_fmt(e.data_inicio)} · 👥 ${e.vagas||0} participantes
@@ -3930,6 +4026,14 @@ const PageGlobal = {
           }).join('')
         : '<div style="padding:16px;text-align:center;color:var(--c-slate);font-size:13px">Nenhuma visita técnica registrada ainda.</div>';
     } catch(e) { el.innerHTML='<div style="padding:16px;color:var(--c-slate)">Erro ao carregar.</div>'; }
+  },
+
+  async _excluirEvento(id, recarregarTipo) {
+    if (!confirm('Excluir este registro?')) return;
+    await _sbq().from('eventos').delete().eq('id', id);
+    mostrarToast('Excluído!','success');
+    const map = { visitas: '_carregarVisitas', apresentacoes: '_carregarApresentacoes', producao: '_carregarProducao' };
+    PageGlobal[map[recarregarTipo]]?.();
   },
 
   _renderApresentacoes() {
@@ -3966,12 +4070,15 @@ const PageGlobal = {
           ? (data||[]).map(e => {
               let extra = {}; try { extra = JSON.parse(e.descricao||'{}'); } catch(_){}
               return `
-                <div style="background:var(--b-1);border:1px solid var(--b-2);border-radius:10px;padding:12px 16px">
-                  <div style="font-weight:700;font-size:13px;color:var(--c-white);margin-bottom:4px">${sanitize(e.titulo)}</div>
-                  <div style="font-size:12px;color:var(--c-slate)">
-                    📅 ${_fmt(e.data_inicio)} · 📍 ${sanitize(e.local||'—')} · ${extra.modalidade||'presencial'}
-                    ${extra.fotos?` · <a href="${sanitize(extra.fotos)}" target="_blank" style="color:var(--c-accent)">Fotos ↗</a>`:''}
+                <div style="background:var(--b-1);border:1px solid var(--b-2);border-radius:10px;padding:12px 16px;display:flex;justify-content:space-between;align-items:flex-start;gap:8px">
+                  <div style="flex:1;min-width:0">
+                    <div style="font-weight:700;font-size:13px;color:var(--c-white);margin-bottom:4px">${sanitize(e.titulo)}</div>
+                    <div style="font-size:12px;color:var(--c-slate)">
+                      📅 ${_fmt(e.data_inicio)} · 📍 ${sanitize(e.local||'—')} · ${extra.modalidade||'presencial'}
+                      ${extra.fotos?` · <a href="${sanitize(extra.fotos)}" target="_blank" style="color:var(--c-accent)">Fotos ↗</a>`:''}
+                    </div>
                   </div>
+                  <button class="btn btn-ghost" style="padding:3px 7px;font-size:11px;color:var(--red)" title="Excluir" onclick="PageGlobal._excluirEvento('${e.id}', 'apresentacoes')">🗑️</button>
                 </div>`;
             }).join('')
           : '<div style="padding:16px;text-align:center;color:var(--c-slate);font-size:13px">Nenhuma apresentação registrada.</div>');
@@ -4012,13 +4119,16 @@ const PageGlobal = {
             return `
               <div style="background:var(--b-1);border:1px solid var(--b-2);border-radius:10px;padding:14px 16px">
                 <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:6px">
-                  <div>
+                  <div style="flex:1;min-width:0">
                     <div style="font-size:10px;font-weight:700;color:var(--c-accent);text-transform:uppercase;letter-spacing:.06em">${extra.tipo_trabalho||'artigo'}</div>
                     <div style="font-weight:700;font-size:13px;color:var(--c-white)">${sanitize(e.titulo)}</div>
                     ${extra.autores?`<div style="font-size:12px;color:var(--c-slate)">👤 ${sanitize(extra.autores)}</div>`:''}
                   </div>
-                  ${extra.bonus_enegep ? `<span style="font-size:11px;font-weight:800;padding:3px 9px;border-radius:99px;
-                    background:var(--green)22;color:var(--green);border:1px solid var(--green)44;white-space:nowrap">+25 pts ENEGEP</span>` : ''}
+                  <div style="display:flex;align-items:center;gap:6px">
+                    ${extra.bonus_enegep ? `<span style="font-size:11px;font-weight:800;padding:3px 9px;border-radius:99px;
+                      background:var(--green)22;color:var(--green);border:1px solid var(--green)44;white-space:nowrap">+25 pts ENEGEP</span>` : ''}
+                    <button class="btn btn-ghost" style="padding:3px 7px;font-size:11px;color:var(--red)" title="Excluir" onclick="PageGlobal._excluirEvento('${e.id}', 'producao')">🗑️</button>
+                  </div>
                 </div>
                 <div style="font-size:12px;color:var(--c-slate)">
                   📅 ${_fmt(e.data_inicio)}
