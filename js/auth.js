@@ -24,6 +24,12 @@ const Auth = {
     const sb = this._db();
     if (!sb) throw new Error('Sistema offline. Verifique a conexão.');
 
+    /* IMPORTANTE: Faz logout de qualquer session ativa pra evitar que o user
+       seja redirecionado pra dashboard do session anterior (ex: admin que
+       gerou o convite e tem o PWA aberto). Senao, mesmo cadastrando outro
+       usuario, o sistema entra no perfil antigo. */
+    try { await sb.auth.signOut(); } catch(_) {}
+
     const { data: convite, error: tokenErr } = await sb
       .from('convites')
       .select('*, coordenadorias(nome, sigla)')
@@ -345,7 +351,9 @@ async function doConviteRegister() {
     const timer = setInterval(() => {
       count--;
       if (cdEl) cdEl.textContent = count;
-      if (count <= 0) { clearInterval(timer); window.location.href = 'dashboard.html'; }
+      /* Vai pro index pra forcar login com a NOVA conta (evita pegar session
+         do user que enviou o convite). */
+      if (count <= 0) { clearInterval(timer); window.location.href = 'index.html'; }
     }, 1000);
   } catch (err) {
     showAlert(err.message || 'Erro ao criar conta. Tente novamente.', 'error', 'conviteAlert');
