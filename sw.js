@@ -1,9 +1,11 @@
 /* ============================================================
-   NUPIEEPRO — Service Worker v15
-   Network-first com fallback para cache offline
+   NUPIEEPRO — Service Worker v57
+   Network-first com fallback para cache offline.
+   ATENCAO: Versionar CACHE_NAME a cada deploy importante senao
+   browsers continuam servindo assets antigos do cache do SW.
    ============================================================ */
 
-const CACHE_NAME = 'nupieepro-v15';
+const CACHE_NAME = 'nupieepro-v57';
 const ASSETS = [
   './',
   './index.html',
