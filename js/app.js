@@ -1560,6 +1560,33 @@ const Pessoas = {
     if (outro) outro.style.display = value === '__outro__' ? '' : 'none';
   },
 
+  /* Mapa coord -> cargos disponíveis. Filtra dropdown função ao escolher coord. */
+  _CARGOS_POR_COORD: {
+    GER: ['Coordenador Geral', 'Conselheiro', 'Trainee'],
+    OPS: ['Coordenador de Operações', 'Assessor de Operações', 'Trainee'],
+    GP:  ['Coordenador de Gestão de Pessoas', 'Assessor de Gestão de Pessoas', 'Trainee'],
+    MKT: ['Coordenador de Marketing', 'Assessor de Marketing', 'Designer', 'Social Media', 'Trainee'],
+    PRJ: ['Coordenador de Projetos', 'Assessor de Projetos', 'Trainee'],
+    FIN: ['Coordenador Financeiro', 'Assessor Financeiro', 'Trainee'],
+  },
+
+  filtrarCargoPorCoord(coordSigla) {
+    const sel = document.getElementById('inviteCargo');
+    if (!sel) return;
+    const lista = this._CARGOS_POR_COORD[coordSigla] || [];
+    const atualValue = sel.value;
+    sel.innerHTML = '<option value="">Selecionar...</option>'
+      + lista.map(c => `<option value="${c}">${c}</option>`).join('')
+      + '<option value="__outro__">Outro (digitar)</option>';
+    /* Mantém valor se ainda for válido pra nova coord */
+    if (atualValue && (lista.includes(atualValue) || atualValue === '__outro__')) {
+      sel.value = atualValue;
+    } else {
+      sel.value = '';
+    }
+    this.toggleCargoOutro(sel.value);
+  },
+
   _getCargo() {
     const sel = document.getElementById('inviteCargo')?.value;
     if (sel === '__outro__') {
