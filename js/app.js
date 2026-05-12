@@ -732,8 +732,6 @@ const ALL_PAGES = [
 
 function goTo(id) {
   haptic();
-  /* Alias: 'pessoas' nao tem pagina propria; redireciona pra 'gp' */
-  if (id === 'pessoas') id = 'gp';
   /* Guard de permissão: bloqueia navegação não autorizada após login */
   const _SEMPRE_VISIVEL = ['config','configuracoes','manu','compartilhado'];
   if (window._appProfile && typeof Permissoes !== 'undefined' && !_SEMPRE_VISIVEL.includes(id)) {
