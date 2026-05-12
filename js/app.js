@@ -1555,9 +1555,23 @@ const Pessoas = {
     `).join('');
   },
 
+  toggleCargoOutro(value) {
+    const outro = document.getElementById('inviteCargoOutro');
+    if (outro) outro.style.display = value === '__outro__' ? '' : 'none';
+  },
+
+  _getCargo() {
+    const sel = document.getElementById('inviteCargo')?.value;
+    if (sel === '__outro__') {
+      return document.getElementById('inviteCargoOutro')?.value.trim() || '';
+    }
+    return sel || '';
+  },
+
   async gerarConvite() {
     const email = document.getElementById('inviteEmail')?.value.trim();
-    const cargo = document.getElementById('inviteCargo')?.value.trim();
+    const nome = document.getElementById('inviteNome')?.value.trim();
+    const cargo = this._getCargo();
     const coordSigla = document.getElementById('inviteCoord')?.value;
     const role = document.getElementById('inviteRole')?.value;
     const alertEl = document.getElementById('inviteAlert');
@@ -1571,9 +1585,11 @@ const Pessoas = {
     const token = 'NUPI-' + Math.random().toString(36).slice(2,10).toUpperCase() + '-' + Date.now().toString(36).toUpperCase();
     const expires = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
 
+    let coordNome = coordSigla;
     if (_sb) {
-      const { data: coordData } = await _sb.from('coordenadorias').select('id').eq('sigla', coordSigla).single();
-        const { error } = await _sb.from('convites').insert({
+      const { data: coordData } = await _sb.from('coordenadorias').select('id,nome').eq('sigla', coordSigla).single();
+      coordNome = coordData?.nome || coordSigla;
+      const { error } = await _sb.from('convites').insert({
         token, email, cargo, role,
         coordenadoria_id: coordData?.id,
         usado: false,
@@ -1591,8 +1607,21 @@ const Pessoas = {
     if (input) input.value = link;
     const card = document.getElementById('inviteLinkCard');
     if (card) card.style.display = '';
+
+    // Enviar email automaticamente via EmailJS
+    let emailEnviado = false;
+    if (window.EmailsModule?.enviarConvite) {
+      try {
+        emailEnviado = await window.EmailsModule.enviarConvite({
+          email, coord: coordNome, cargo, token,
+          nomeConvidado: nome || email.split('@')[0],
+          criadoPor: window._appProfile?.nome || 'Equipe NUPIEEPRO'
+        });
+      } catch(e) { console.warn('[Convite] Falha EmailJS', e); }
+    }
+
     if (alertEl) { alertEl.textContent = 'Convite criado com sucesso!'; alertEl.className = 'alert-box success'; }
-    App.toast('Link de convite gerado!', 'success');
+    App.toast(emailEnviado ? 'Convite criado e enviado por email!' : 'Link gerado — email não enviado (envie manualmente).', emailEnviado ? 'success' : 'warning');
   },
 
   copiarLink() {
@@ -1627,7 +1656,7 @@ const Pessoas = {
   async addMemberDirect() {
     const email = document.getElementById('inviteEmail')?.value.trim();
     const nome = document.getElementById('inviteNome')?.value.trim();
-    const cargo = document.getElementById('inviteCargo')?.value.trim();
+    const cargo = this._getCargo();
     const coordSigla = document.getElementById('inviteCoord')?.value;
     const role = document.getElementById('inviteRole')?.value;
     const bday = document.getElementById('inviteBday')?.value;

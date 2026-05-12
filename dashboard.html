@@ -1437,7 +1437,24 @@
                 </div>
                 <div class="field">
                   <label>Função / Especialidade</label>
-                  <input type="text" id="inviteCargo" placeholder="Ex: Assessor de MKT">
+                  <select id="inviteCargo" onchange="Pessoas.toggleCargoOutro && Pessoas.toggleCargoOutro(this.value)">
+                    <option value="">Selecionar...</option>
+                    <option value="Coordenador Geral">Coordenador Geral</option>
+                    <option value="Coordenador de Operações">Coordenador de Operações</option>
+                    <option value="Coordenador de Gestão de Pessoas">Coordenador de Gestão de Pessoas</option>
+                    <option value="Coordenador de Marketing">Coordenador de Marketing</option>
+                    <option value="Coordenador de Projetos">Coordenador de Projetos</option>
+                    <option value="Coordenador Financeiro">Coordenador Financeiro</option>
+                    <option value="Assessor de Operações">Assessor de Operações</option>
+                    <option value="Assessor de Gestão de Pessoas">Assessor de Gestão de Pessoas</option>
+                    <option value="Assessor de Marketing">Assessor de Marketing</option>
+                    <option value="Assessor de Projetos">Assessor de Projetos</option>
+                    <option value="Assessor Financeiro">Assessor Financeiro</option>
+                    <option value="Trainee">Trainee</option>
+                    <option value="Conselheiro">Conselheiro</option>
+                    <option value="__outro__">Outro (digitar)</option>
+                  </select>
+                  <input type="text" id="inviteCargoOutro" placeholder="Digite a função..." style="display:none;margin-top:8px;">
                 </div>
                 <div class="field">
                   <label>Coordenadoria</label>
@@ -1629,13 +1646,13 @@
   <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/lucide@0.452.0/dist/umd/lucide.min.js"></script>
-  <script src="js/permissoes.js?v=46"></script>
-  <script src="js/app.js?v=46"></script>
-  <script src="js/auth.js?v=46"></script>
-  <script src="js/abj.js?v=46"></script>
-  <script src="js/relatorio.js?v=46"></script>
-  <script src="js/emails.js?v=46"></script>
-  <script src="js/pages.js?v=46"></script>
+  <script src="js/permissoes.js?v=47"></script>
+  <script src="js/app.js?v=47"></script>
+  <script src="js/auth.js?v=47"></script>
+  <script src="js/abj.js?v=47"></script>
+  <script src="js/relatorio.js?v=47"></script>
+  <script src="js/emails.js?v=47"></script>
+  <script src="js/pages.js?v=47"></script>
   <script>
     // ── PROFILE DROPDOWN ───────────────────────────────
     function toggleProfileDropdown() {
