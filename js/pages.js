@@ -1710,11 +1710,14 @@ const PageProjetos = {
         ? data.map(e => {
             let extra = {}; try { extra = JSON.parse(e.descricao||'{}'); } catch(_){}
             return `<div style="background:var(--b-1);border:1px solid var(--b-2);border-radius:10px;padding:14px 16px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
-              <div>
+              <div style="flex:1;min-width:0">
                 <div style="font-weight:700;font-size:13px;color:var(--c-white)">${sanitize(e.titulo)}</div>
                 <div style="font-size:12px;color:var(--c-slate)">📅 ${_fmt(e.data_inicio)}${extra.convidados?` · 🎤 ${sanitize(extra.convidados)}`:''}</div>
               </div>
-              ${extra.link?`<a href="${sanitize(extra.link)}" target="_blank" class="btn btn-ghost" style="font-size:11px;padding:6px 12px;text-decoration:none">▶ Ouvir ↗</a>`:'<span style="font-size:11px;color:var(--c-slate)">Sem link</span>'}
+              <div style="display:flex;gap:6px;align-items:center">
+                ${extra.link?`<a href="${sanitize(extra.link)}" target="_blank" class="btn btn-ghost" style="font-size:11px;padding:6px 12px;text-decoration:none">▶ Ouvir ↗</a>`:'<span style="font-size:11px;color:var(--c-slate)">Sem link</span>'}
+                <button class="btn btn-ghost" style="padding:3px 7px;font-size:11px;color:var(--red)" title="Excluir" onclick="PageProjetos._excluirEpisodio('${e.id}')">🗑️</button>
+              </div>
             </div>`;
           }).join('')
         : `<div style="padding:30px;text-align:center"><div style="font-size:36px;margin-bottom:12px">🎙️</div><div style="font-size:14px;font-weight:700;color:var(--c-white)">Nenhum episódio registrado</div></div>`;
@@ -1763,7 +1766,10 @@ const PageProjetos = {
             try { extra = JSON.parse(e.descricao || '{}'); } catch(_){}
             return `
               <div style="background:var(--b-1);border:1px solid var(--b-2);border-radius:12px;padding:16px">
-                <div style="font-weight:700;font-size:14px;color:var(--c-white);margin-bottom:8px">${sanitize(e.titulo)}</div>
+                <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:8px">
+                  <div style="font-weight:700;font-size:14px;color:var(--c-white)">${sanitize(e.titulo)}</div>
+                  <button class="btn btn-ghost" style="padding:3px 7px;font-size:11px;color:var(--red)" title="Excluir" onclick="PageProjetos._excluirENEGEP('${e.id}')">🗑️</button>
+                </div>
                 <div style="display:flex;flex-direction:column;gap:6px;font-size:12px">
                   ${extra.fotos    ? `<div>📸 <a href="${sanitize(extra.fotos)}"    target="_blank" style="color:var(--c-accent)">Ver fotos ↗</a></div>` : '<div style="color:var(--red)">📸 Fotos: não enviado</div>'}
                   ${extra.presenca ? `<div>📋 <a href="${sanitize(extra.presenca)}" target="_blank" style="color:var(--c-accent)">Lista de presença ↗</a></div>` : '<div style="color:var(--red)">📋 Lista de presença: não enviado</div>'}
@@ -1919,6 +1925,24 @@ const PageProjetos = {
     mostrarToast('Excluída!','success');
     PageProjetos._carregarTreinamentos();
   },
+  async _excluirEpisodio(id) {
+    if (!confirm('Excluir este episódio?')) return;
+    await _sbq().from('eventos').delete().eq('id', id);
+    mostrarToast('Excluído!','success');
+    PageProjetos._carregarNupicast();
+  },
+  async _excluirENEGEP(id) {
+    if (!confirm('Excluir este registro do ENEGEP?')) return;
+    await _sbq().from('eventos').delete().eq('id', id);
+    mostrarToast('Excluído!','success');
+    PageProjetos._carregarENEGEP();
+  },
+  async _excluirParceria(id) {
+    if (!confirm('Excluir esta parceria?')) return;
+    await _sbq().from('parcerias').delete().eq('id', id);
+    mostrarToast('Excluída!','success');
+    PageProjetos._carregarParcerias?.();
+  },
 
   /* ─── Parcerias e Patrocínios ─────────────────────────────── */
   _renderParcerias() {
@@ -1948,7 +1972,8 @@ const PageProjetos = {
         return;
       }
       el.innerHTML = data.map(p => `
-        <div style="background:var(--b-1);border:1px solid var(--b-2);border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:10px;align-items:center;text-align:center">
+        <div style="background:var(--b-1);border:1px solid var(--b-2);border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:10px;align-items:center;text-align:center;position:relative">
+          <button class="btn btn-ghost" style="position:absolute;top:6px;right:6px;padding:3px 7px;font-size:11px;color:var(--red)" title="Excluir" onclick="PageProjetos._excluirParceria('${p.id}')">🗑️</button>
           ${p.logo_url
             ? `<img src="${sanitize(p.logo_url)}" alt="${sanitize(p.nome)}" style="max-height:52px;max-width:120px;object-fit:contain;border-radius:6px;">`
             : `<div style="width:52px;height:52px;border-radius:50%;background:var(--c-s5);display:flex;align-items:center;justify-content:center;font-size:20px;">🤝</div>`}
@@ -3145,7 +3170,10 @@ const PagePessoas = {
             return `<div style="background:var(--b-1);border:1px solid var(--b-2);border-radius:10px;padding:14px 16px">
               <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:6px">
                 <div style="font-weight:700;font-size:14px;color:var(--c-white)">${sanitize(e.titulo)}</div>
-                <span style="font-size:10px;padding:2px 8px;border-radius:99px;background:var(--b-2);color:var(--c-slate)">📅 ${dt}</span>
+                <div style="display:flex;align-items:center;gap:6px">
+                  <span style="font-size:10px;padding:2px 8px;border-radius:99px;background:var(--b-2);color:var(--c-slate)">📅 ${dt}</span>
+                  <button class="btn btn-ghost" style="padding:3px 7px;font-size:11px;color:var(--red)" title="Excluir" onclick="PagePessoas._excluirTreinamentoInterno('${e.id}')">🗑️</button>
+                </div>
               </div>
               ${e.local?`<div style="font-size:12px;color:var(--c-slate)">📍 ${sanitize(e.local)}</div>`:''}
               ${e.vagas?`<div style="font-size:12px;color:var(--c-slate)">👥 ${e.vagas} vagas</div>`:''}
@@ -3153,6 +3181,12 @@ const PagePessoas = {
           }).join('')
         : '<div style="padding:16px;text-align:center;color:var(--c-slate);font-size:13px">Nenhum treinamento interno cadastrado.</div>';
     } catch(e) { el.innerHTML='<div style="padding:16px;color:var(--c-slate)">Erro ao carregar.</div>'; }
+  },
+  async _excluirTreinamentoInterno(id) {
+    if (!confirm('Excluir este treinamento?')) return;
+    await _sbq().from('eventos').delete().eq('id', id);
+    mostrarToast('Excluído!','success');
+    PagePessoas._carregarTreinamentosInternos();
   },
   novoTreinamentoInterno() {
     const hoje = new Date().toISOString().slice(0,16);
