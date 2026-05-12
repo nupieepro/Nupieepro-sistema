@@ -716,8 +716,48 @@ const PageGeral = {
     } catch(e) { mostrarToast('Erro ao registrar check-in.','error'); }
   },
 };
+/* ──────────────────────────────────────────────────────────────
+   Helper: renderiza iframe de app externa em uma sub-page.
+   Bloqueia se user nao tem permissao (cargo/role).
+   ────────────────────────────────────────────────────────────── */
+function _renderAppEmbed(opts) {
+  const { pageId, titulo, icon, url, descricao, rolesPermitidas, cargosPermitidos } = opts;
+  const pg = document.getElementById(pageId);
+  if (!pg) return;
+  const ct = pg.querySelector('.content') || pg;
+  const role = window._appProfile?.role;
+  const cargo = (window._appProfile?.cargo || '').toLowerCase();
+  const podeVer = role === 'admin'
+    || (rolesPermitidas && rolesPermitidas.includes(role))
+    || (cargosPermitidos && cargosPermitidos.some(c => cargo.includes(c.toLowerCase())));
+  if (!podeVer) {
+    ct.innerHTML = `<div style="padding:60px;text-align:center">
+      <div style="font-size:48px;margin-bottom:16px">🔒</div>
+      <div style="font-size:15px;font-weight:700;color:var(--c-white)">Acesso Restrito</div>
+      <div style="font-size:13px;color:var(--c-slate);margin-top:8px">${sanitize(descricao || 'Você não tem permissão para acessar este módulo.')}</div>
+    </div>`;
+    return;
+  }
+  ct.innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:12px">
+      <div style="font-size:13px;color:var(--c-slate)">${icon} <strong style="color:var(--c-white)">${titulo}</strong> — app integrada</div>
+      <a href="${url}" target="_blank" class="btn btn-ghost" style="font-size:11px;padding:6px 12px;text-decoration:none">Abrir em nova aba ↗</a>
+    </div>
+    <iframe src="${url}" style="width:100%;height:calc(100vh - 220px);min-height:500px;border:1px solid var(--b-2);border-radius:12px;background:var(--b-1)" loading="lazy" referrerpolicy="no-referrer"></iframe>`;
+}
+
 const PageMarketing = {
   async init() { this._renderTracker(); this._renderKanban(); },
+  _renderLojinhaAdmin() {
+    _renderAppEmbed({
+      pageId: 'page-mkt_lojinha_admin',
+      titulo: 'Lojinha NUPIEEPRO',
+      icon: '🛍️',
+      url: 'https://nupieepro.github.io/Lojinha-Nupieepro/',
+      descricao: 'Apenas Coord. Marketing, Coord. Financeiro, Coord. Geral e Admin podem gerenciar a Lojinha.',
+      cargosPermitidos: ['coordenador de marketing', 'assessor de marketing', 'coordenador financeiro', 'assessor financeiro', 'coordenador geral', 'desenvolvedor'],
+    });
+  },
   _renderKanban() {
     const pg = document.getElementById('page-mkt_kanban');
     if (!pg) return;
@@ -2113,6 +2153,16 @@ const PageProjetos = {
 };
 const PageOperacoes = {
   async init() { this._renderPops(); this._renderRelatorios(); },
+  _renderEventosAdmin() {
+    _renderAppEmbed({
+      pageId: 'page-ops_eventos_admin',
+      titulo: 'Nupi-Eventos',
+      icon: '🎟️',
+      url: 'https://nupieepro.github.io/nupi-eventos/',
+      descricao: 'Apenas Coord. Operações, Coord. Geral e Admin podem gerenciar Eventos.',
+      cargosPermitidos: ['coordenador de operações', 'assessor de operações', 'coordenador geral', 'desenvolvedor'],
+    });
+  },
   _renderRelatorios() {
     if (typeof RelatorioModule !== 'undefined') { RelatorioModule.renderPagina(); return; }
     const pg=document.getElementById('page-ops_relatorios');
@@ -2641,18 +2691,21 @@ const PagePessoas = {
         ? data.map(p=>`
           <div style="background:var(--b-1);border:1px solid var(--b-2);border-radius:10px;
                       padding:14px 16px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
-            <div>
+            <div style="flex:1;min-width:0">
               <div style="font-weight:700;font-size:13px;color:var(--c-white)">${sanitize(p.titulo)}</div>
               <div style="font-size:12px;color:var(--c-slate)">📅 ${_fmt(p.data_inicio)}
                 ${p.descricao?` · <a href="${sanitize(p.descricao)}" target="_blank" style="color:var(--c-accent)">Link ↗</a>`:''}
               </div>
             </div>
-            <span style="font-size:11px;font-weight:700;padding:3px 9px;border-radius:99px;
-                         background:${p.ativo?'var(--c-accent)22':'var(--green)22'};
-                         color:${p.ativo?'var(--c-accent)':'var(--green)'};
-                         border:1px solid ${p.ativo?'var(--c-accent)44':'var(--green)44'}">
-              ${p.ativo?'🟠 Aberta':'✓ Encerrada'}
-            </span>
+            <div style="display:flex;align-items:center;gap:6px">
+              <span style="font-size:11px;font-weight:700;padding:3px 9px;border-radius:99px;
+                           background:${p.ativo?'var(--c-accent)22':'var(--green)22'};
+                           color:${p.ativo?'var(--c-accent)':'var(--green)'};
+                           border:1px solid ${p.ativo?'var(--c-accent)44':'var(--green)44'}">
+                ${p.ativo?'🟠 Aberta':'✓ Encerrada'}
+              </span>
+              <button class="btn btn-ghost" style="padding:3px 7px;font-size:11px;color:var(--red)" title="Excluir" onclick="PagePessoas._excluirPesquisaClima('${p.id}')">🗑️</button>
+            </div>
           </div>`).join('')
         : '<div style="padding:16px;text-align:center;color:var(--c-slate);font-size:13px">Nenhuma pesquisa registrada ainda.</div>';
     } catch(e) { el.innerHTML='<div style="padding:16px;color:var(--c-slate)">Erro ao carregar.</div>'; }
@@ -2851,14 +2904,21 @@ const PagePessoas = {
     try {
       const coords = await getCoords();
       const gp = coords.find(c => c.sigla === 'GP');
-      /* Salva como evento do tipo 'tap' com o JSON das seções no descricao */
-      await _sbq().from('eventos').insert([{
-        titulo: `TAP Inovador ${new Date().getFullYear()} — ${window._appProfile?.nome || 'NUPIEEPRO'}`,
-        tipo: 'tap', ativo: true,
-        data_inicio: new Date().toISOString().split('T')[0],
-        descricao: JSON.stringify(this._tapData),
+      const d = this._tapData;
+      /* Mapeia secoes do wizard para colunas da tabela taps */
+      await _sbq().from('taps').insert([{
+        nome_projeto: (d.identificacao || `TAP ${new Date().getFullYear()}`).slice(0, 200),
+        objetivo: d.objetivo || null,
+        justificativa: d.justificativa || null,
+        escopo: d.escopo || null,
+        riscos: d.riscos || null,
+        partes_interessadas: d.stakeholders || null,
+        entregas_principais: d.cronograma || null,
+        criterios_aceitacao: d.metricas || null,
+        premissas: d.limitadores || null,
         coordenadoria_id: gp?.id || null,
         criado_por: window._appProfile?.id,
+        status: 'rascunho',
       }]);
       localStorage.removeItem('nupi_tap_rascunho');
       this._tapData = {}; this._tapStep = 0;
@@ -2902,10 +2962,9 @@ const PagePessoas = {
     if (!_sbq()) return;
     try {
       const { data } = await _sbq()
-        .from('eventos')
+        .from('taps')
         .select('*, users!criado_por(nome, apelido)')
-        .eq('tipo','tap')
-        .order('data_inicio',{ascending:false});
+        .order('created_at',{ascending:false});
       if (!data?.length) {
         abrirModal({ titulo:'💡 TAPs Submetidos', tipo:'info',
           corpo:'<div style="padding:24px;text-align:center;color:var(--c-slate);font-size:13px">Nenhum TAP submetido ainda.</div>',
@@ -2913,26 +2972,43 @@ const PagePessoas = {
         return;
       }
       const html = data.map(t => {
-        let s={}; try { s=JSON.parse(t.descricao||'{}'); } catch {}
         const autor = t.users?.apelido||t.users?.nome||'Desconhecido';
+        const corStatus = { rascunho:'var(--c-slate)', aprovado:'var(--green)', em_andamento:'var(--c-accent)', concluido:'var(--green)', cancelado:'var(--red)' };
         return `
           <div style="background:var(--b-1);border:1px solid var(--b-2);border-radius:12px;padding:16px;margin-bottom:10px">
             <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:8px;margin-bottom:10px">
-              <div>
-                <div style="font-weight:700;font-size:14px;color:var(--c-white)">${sanitize(t.titulo)}</div>
-                <div style="font-size:12px;color:var(--c-slate);margin-top:2px">📅 ${_fmt(t.data_inicio)} · 👤 ${sanitize(autor)}</div>
+              <div style="flex:1;min-width:0">
+                <div style="font-weight:700;font-size:14px;color:var(--c-white)">${sanitize(t.nome_projeto)}</div>
+                <div style="font-size:12px;color:var(--c-slate);margin-top:2px">📅 ${_fmt(t.created_at)} · 👤 ${sanitize(autor)}</div>
               </div>
-              <span style="font-size:10px;font-weight:800;padding:4px 10px;border-radius:99px;
-                           background:var(--c-accent)22;color:var(--c-accent);border:1px solid var(--c-accent)44;
-                           text-transform:uppercase;letter-spacing:.05em;white-space:nowrap">TAP Inovador</span>
+              <div style="display:flex;gap:6px;align-items:center">
+                <span style="font-size:10px;font-weight:800;padding:4px 10px;border-radius:99px;
+                             background:${corStatus[t.status]||'var(--c-slate)'}22;color:${corStatus[t.status]||'var(--c-slate)'};
+                             border:1px solid ${corStatus[t.status]||'var(--c-slate)'}44;
+                             text-transform:uppercase;letter-spacing:.05em;white-space:nowrap">${t.status||'rascunho'}</span>
+                <button class="btn btn-ghost" style="padding:3px 7px;font-size:11px;color:var(--red)" title="Excluir" onclick="PagePessoas._excluirTAP('${t.id}')">🗑️</button>
+              </div>
             </div>
-            ${s.identificacao?`<div style="margin-bottom:6px;font-size:13px;color:var(--c-white)"><strong style="color:var(--c-accent)">Identificação:</strong> ${sanitize(s.identificacao.slice(0,220))}${s.identificacao.length>220?'…':''}</div>`:''}
-            ${s.objetivo?`<div style="font-size:13px;color:var(--c-slate)"><strong style="color:var(--c-white)">Objetivo:</strong> ${sanitize(s.objetivo.slice(0,220))}${s.objetivo.length>220?'…':''}</div>`:''}
+            ${t.objetivo?`<div style="margin-bottom:6px;font-size:13px;color:var(--c-white)"><strong style="color:var(--c-accent)">Objetivo:</strong> ${sanitize(t.objetivo.slice(0,220))}${t.objetivo.length>220?'…':''}</div>`:''}
+            ${t.justificativa?`<div style="font-size:13px;color:var(--c-slate)"><strong style="color:var(--c-white)">Justificativa:</strong> ${sanitize(t.justificativa.slice(0,220))}${t.justificativa.length>220?'…':''}</div>`:''}
           </div>`;
       }).join('');
       abrirModal({ titulo:`💡 TAPs Submetidos (${data.length})`, tipo:'info', corpo:html,
         botoes:[{texto:'Fechar',classe:'btn-ghost',acao:fecharModal}]});
     } catch(e) { mostrarToast('Erro ao carregar TAPs.','error'); }
+  },
+  async _excluirTAP(id) {
+    if (!confirm('Excluir este TAP? Esta ação não pode ser desfeita.')) return;
+    await _sbq().from('taps').delete().eq('id', id);
+    mostrarToast('TAP excluído!','success');
+    fecharModal();
+    PagePessoas.relatorioTAP?.();
+  },
+  async _excluirPesquisaClima(id) {
+    if (!confirm('Excluir esta pesquisa?')) return;
+    await _sbq().from('eventos').delete().eq('id', id);
+    mostrarToast('Pesquisa excluída!','success');
+    PagePessoas._carregarClima();
   },
   novoTreinamento() {
     const hoje=new Date().toISOString().slice(0,16);
@@ -3099,36 +3175,64 @@ const PagePessoas = {
     abrirModal({ titulo:'👤 Registrar no Banco de Talentos', tipo:'info', corpo:`
       <div class="form-group"><label class="form-label">Nome Completo *</label>
         <input id="nt-nome" class="form-input" placeholder="Ex: Maria Silva"></div>
-      <div class="form-group"><label class="form-label">Habilidades / Área *</label>
-        <input id="nt-habilidades" class="form-input" placeholder="Ex: Design, Gestão de Projetos, Python"></div>
-      <div class="form-group"><label class="form-label">Universidade / Instituição</label>
-        <input id="nt-univ" class="form-input" placeholder="Ex: UESPI, IFPI"></div>
-      <div class="form-group"><label class="form-label">Contato (e-mail ou @)</label>
-        <input id="nt-contato" class="form-input" placeholder="email@exemplo.com ou @instagram"></div>`,
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div class="form-group"><label class="form-label">E-mail</label>
+          <input id="nt-email" type="email" class="form-input" placeholder="email@exemplo.com"></div>
+        <div class="form-group"><label class="form-label">Telefone</label>
+          <input id="nt-telefone" class="form-input" placeholder="(86) 9..."></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div class="form-group"><label class="form-label">Curso</label>
+          <input id="nt-curso" class="form-input" placeholder="Eng. de Produção"></div>
+        <div class="form-group"><label class="form-label">Período/Semestre</label>
+          <input id="nt-semestre" class="form-input" placeholder="6º"></div>
+      </div>
+      <div class="form-group"><label class="form-label">Área de interesse</label>
+        <input id="nt-area" class="form-input" placeholder="Ex: Operações, Marketing, Projetos"></div>
+      <div class="form-group"><label class="form-label">Habilidades / Skills *</label>
+        <input id="nt-habilidades" class="form-input" placeholder="Ex: Design, Excel, Python"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div class="form-group"><label class="form-label">LinkedIn</label>
+          <input id="nt-linkedin" class="form-input" placeholder="https://linkedin.com/in/..."></div>
+        <div class="form-group"><label class="form-label">Lattes</label>
+          <input id="nt-lattes" class="form-input" placeholder="http://lattes.cnpq.br/..."></div>
+      </div>
+      <div class="form-group"><label class="form-label">Observações</label>
+        <textarea id="nt-obs" class="form-input" rows="2" placeholder="Notas internas..."></textarea></div>`,
     botoes:[
       {texto:'Cancelar',classe:'btn-ghost',acao:fecharModal},
       {texto:'Registrar',classe:'btn-primary',acao:()=>PagePessoas._salvarTalento()}
     ]});
   },
   async _salvarTalento() {
-    const nome        = document.getElementById('nt-nome')?.value?.trim();
-    const habilidades = document.getElementById('nt-habilidades')?.value?.trim();
-    const univ        = document.getElementById('nt-univ')?.value?.trim();
-    const contato     = document.getElementById('nt-contato')?.value?.trim();
+    const v = id => document.getElementById(id)?.value?.trim() || null;
+    const nome = v('nt-nome');
+    const habilidades = v('nt-habilidades');
     if (!nome || !habilidades) { mostrarToast('Preencha nome e habilidades!','warning'); return; }
     fecharModal();
     try {
-      const coords = await getCoords();
-      const gp = coords.find(c=>c.sigla==='GP');
-      await _sbq().from('demandas').insert([{
-        titulo: nome, coluna:'pendente',
-        descricao: JSON.stringify({ tipo:'talento', habilidades, universidade:univ||null, contato:contato||null }),
-        coordenadoria_id: gp?.id||null,
-        criado_por: window._appProfile?.id,
+      await _sbq().from('talentos').insert([{
+        nome, email: v('nt-email'), telefone: v('nt-telefone'),
+        curso: v('nt-curso'), semestre: v('nt-semestre'),
+        area_interesse: v('nt-area'), habilidades,
+        link_linkedin: v('nt-linkedin'), link_lattes: v('nt-lattes'),
+        observacoes: v('nt-obs'),
+        cadastrado_por: window._appProfile?.id,
       }]);
-      mostrarToast('Talento registrado com sucesso!','success');
+      mostrarToast('Talento registrado!','success');
       PagePessoas._carregarTalentos?.();
-    } catch(e) { mostrarToast('Erro ao registrar talento.','error'); }
+    } catch(e) { console.warn(e); mostrarToast('Erro ao registrar talento.','error'); }
+  },
+  async _atualizarStatusTalento(id, status) {
+    await _sbq().from('talentos').update({ status }).eq('id', id);
+    mostrarToast('Status atualizado!','success');
+    PagePessoas._carregarTalentos();
+  },
+  async _excluirTalento(id) {
+    if (!confirm('Excluir este talento?')) return;
+    await _sbq().from('talentos').delete().eq('id', id);
+    mostrarToast('Excluído!','success');
+    PagePessoas._carregarTalentos();
   },
   _renderTalentos() {
     const pg = document.getElementById('page-gp_talentos');
@@ -3136,48 +3240,53 @@ const PagePessoas = {
     const ct = pg.querySelector('.content') || pg;
     ct.innerHTML = _sc('Banco de Talentos','👥',`
       <p style="font-size:13px;color:var(--c-slate);margin-bottom:14px">
-        CRM de candidatos e membros com habilidades estratégicas para recrutamento e formação de equipes.
+        CRM de candidatos com habilidades estratégicas para recrutamento e formação de equipes.
       </p>
       ${_btn('+ Registrar Talento','PagePessoas.novoTalento()')}
-      <div style="margin-top:16px;overflow-x:auto;">
-        <table style="width:100%;text-align:left;border-collapse:collapse;">
-          <thead>
-            <tr style="color:var(--c-slate);border-bottom:1px solid var(--b-1);">
-              <th style="padding:10px 12px;font-size:12px;font-weight:600;">Nome</th>
-              <th style="padding:10px 12px;font-size:12px;font-weight:600;">Habilidades</th>
-              <th style="padding:10px 12px;font-size:12px;font-weight:600;">Instituição</th>
-              <th style="padding:10px 12px;font-size:12px;font-weight:600;">Contato</th>
-            </tr>
-          </thead>
-          <tbody id="talentosGrid">
-            <tr><td colspan="4" style="padding:20px;text-align:center;color:var(--c-slate);font-size:13px">Carregando...</td></tr>
-          </tbody>
-        </table>
+      <div id="talentos-lista" style="margin-top:16px;display:flex;flex-direction:column;gap:8px">
+        <div style="padding:20px;text-align:center;color:var(--c-slate);font-size:13px">Carregando...</div>
       </div>`);
     this._carregarTalentos();
   },
   async _carregarTalentos() {
-    const el = document.getElementById('talentosGrid');
+    const el = document.getElementById('talentos-lista');
     if (!el || !_sbq()) return;
     try {
-      const { data } = await _sbq().from('demandas')
-        .select('titulo, descricao, created_at')
-        .ilike('descricao','%"tipo":"talento"%')
-        .order('created_at',{ascending:false}).limit(50);
+      const { data } = await _sbq().from('talentos')
+        .select('*').order('created_at',{ascending:false}).limit(50);
       if (!data?.length) {
-        el.innerHTML = '<tr><td colspan="4" style="padding:20px;text-align:center;color:var(--c-slate);font-size:13px">Nenhum talento cadastrado ainda.</td></tr>';
+        el.innerHTML = '<div style="padding:24px;text-align:center;color:var(--c-slate);font-size:13px">Nenhum talento cadastrado ainda.</div>';
         return;
       }
-      el.innerHTML = data.map(d => {
-        let info = {}; try { info = JSON.parse(d.descricao||'{}'); } catch(_){}
-        return `<tr style="border-bottom:1px solid var(--b-1);">
-          <td style="padding:10px 12px;font-size:13px;font-weight:600;color:var(--c-white)">${sanitize(d.titulo)}</td>
-          <td style="padding:10px 12px;font-size:12px;color:var(--c-slate)">${sanitize(info.habilidades||'—')}</td>
-          <td style="padding:10px 12px;font-size:12px;color:var(--c-slate)">${sanitize(info.universidade||'—')}</td>
-          <td style="padding:10px 12px;font-size:12px;color:var(--c-slate)">${sanitize(info.contato||'—')}</td>
-        </tr>`;
-      }).join('');
-    } catch(e) { el.innerHTML='<tr><td colspan="4" style="padding:16px;color:var(--c-slate)">Erro ao carregar.</td></tr>'; }
+      const STATUS_COR = { novo:'var(--c-accent)', contato:'var(--yellow)', entrevista:'var(--c-accent)', aprovado:'var(--green)', reprovado:'var(--red)', arquivado:'var(--c-slate)' };
+      el.innerHTML = data.map(t => `
+        <div style="background:var(--b-1);border:1px solid var(--b-2);border-radius:10px;padding:14px 16px">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:6px;flex-wrap:wrap">
+            <div style="flex:1;min-width:0">
+              <div style="font-weight:700;font-size:14px;color:var(--c-white)">${sanitize(t.nome)}</div>
+              <div style="font-size:12px;color:var(--c-slate);margin-top:2px">
+                ${t.curso?`🎓 ${sanitize(t.curso)}${t.semestre?` · ${sanitize(t.semestre)}`:''} · `:''}${t.area_interesse?`🎯 ${sanitize(t.area_interesse)}`:''}
+              </div>
+            </div>
+            <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+              <select onchange="PagePessoas._atualizarStatusTalento('${t.id}', this.value)"
+                style="background:var(--b-2);border:1px solid var(--b-3);border-radius:6px;padding:4px 8px;color:var(--c-white);font-size:11px;font-weight:700">
+                ${['novo','contato','entrevista','aprovado','reprovado','arquivado'].map(s => `<option value="${s}" ${t.status===s?'selected':''}>${s}</option>`).join('')}
+              </select>
+              <button class="btn btn-ghost" style="padding:3px 7px;font-size:11px;color:var(--red)" title="Excluir" onclick="PagePessoas._excluirTalento('${t.id}')">🗑️</button>
+            </div>
+          </div>
+          <div style="font-size:12px;color:var(--c-slate);margin-top:6px">
+            ${t.email?`📧 ${sanitize(t.email)}`:''}${t.telefone?` · 📱 ${sanitize(t.telefone)}`:''}
+          </div>
+          ${t.habilidades?`<div style="font-size:12px;color:var(--c-white);margin-top:6px"><strong style="color:var(--c-accent)">Skills:</strong> ${sanitize(t.habilidades)}</div>`:''}
+          ${t.observacoes?`<div style="font-size:11px;color:var(--c-slate);margin-top:6px;font-style:italic">${sanitize(t.observacoes)}</div>`:''}
+          <div style="display:flex;gap:10px;margin-top:8px">
+            ${t.link_linkedin?`<a href="${sanitize(t.link_linkedin)}" target="_blank" style="font-size:11px;color:var(--c-accent);text-decoration:none">LinkedIn ↗</a>`:''}
+            ${t.link_lattes?`<a href="${sanitize(t.link_lattes)}" target="_blank" style="font-size:11px;color:var(--c-accent);text-decoration:none">Lattes ↗</a>`:''}
+          </div>
+        </div>`).join('');
+    } catch(e) { console.warn('[talentos]', e); el.innerHTML='<div style="padding:16px;color:var(--c-slate)">Erro ao carregar.</div>'; }
   },
 
   /* ─── Aniversários do Núcleo ──────────────────────────────── */
@@ -4827,6 +4936,7 @@ document.addEventListener('nupi:booted', () => {
       /* Marketing sub */
       'mkt_tracker':       () => PageMarketing._renderTracker(),
       'mkt_kanban':        () => PageMarketing._renderKanban(),
+      'mkt_lojinha_admin': () => PageMarketing._renderLojinhaAdmin(),
       /* Financeiro */
       'fin_fluxo':         () => PageFinancas._renderFluxo(),
       'fin_abepro':        () => PageFinancas._renderABJFin(),
@@ -4836,6 +4946,7 @@ document.addEventListener('nupi:booted', () => {
       'ops_pops':          () => PageOperacoes._renderPops(),
       'ops_arquivo':       () => PageOperacoes._renderArquivo(),
       'ops_inscricoes':    () => PageOperacoes._renderInscricoes(),
+      'ops_eventos_admin': () => PageOperacoes._renderEventosAdmin(),
       /* Gestão de Pessoas */
       'gp_talentos':       () => PagePessoas._renderTalentos(),
       'gp_clima':          () => PagePessoas._renderClima(),
