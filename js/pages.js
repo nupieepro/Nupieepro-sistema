@@ -46,6 +46,41 @@ async function _notificarCoord(sigla, titulo, mensagem, tipo = 'info', categoria
   } catch(e) { console.warn('[notif coord]', e); }
 }
 
+/* ── Alerta para devs: notifica TODOS os admins/devs (mudancas do sistema) ── */
+async function _notificarDevs(titulo, mensagem, categoria = 'sistema') {
+  if (!_sbq()) return;
+  try {
+    /* Pega admins + qualquer cargo contendo "desenvolvedor" */
+    const { data } = await _sbq().from('users').select('id,cargo,role').eq('ativo', true);
+    if (!data?.length) return;
+    const devs = data.filter(u => u.role === 'admin' || (u.cargo || '').toLowerCase().includes('desenvolvedor'));
+    if (!devs.length) return;
+    await _sbq().from('notificacoes').insert(devs.map(u => ({
+      user_id: u.id, titulo, mensagem, tipo: 'info', categoria, lida: false
+    })));
+  } catch(e) { console.warn('[notif devs]', e); }
+}
+
+/* ── Notifica responsavel da demanda criada (in-app + email via EmailJS) ── */
+async function _notificarResponsavelDemanda({ responsavelId, titulo, tipo, prazo, criadoPor }) {
+  if (!_sbq() || !responsavelId) return;
+  /* Nao notifica se o proprio criador atribuiu pra si */
+  if (responsavelId === window._appProfile?.id) return;
+  try {
+    const { data: resp } = await _sbq().from('users').select('nome,email,coordenadorias(sigla)').eq('id', responsavelId).single();
+    if (!resp) return;
+    await _notificar(responsavelId, `📌 Nova demanda: ${titulo}`,
+      `Você foi designado como responsável.${prazo ? ` Prazo: ${prazo}.` : ''}`, 'info', 'demanda');
+    if (resp.email && window.EmailsModule?.enviarDemandaCadastrada) {
+      window.EmailsModule.enviarDemandaCadastrada({
+        email: resp.email, nome: resp.nome,
+        titulo, tipo, coord: resp.coordenadorias?.sigla,
+        prazo, criadoPor: criadoPor || window._appProfile?.nome
+      }).catch(e => console.warn('[notif demanda email]', e));
+    }
+  } catch(e) { console.warn('[notif resp demanda]', e); }
+}
+
 /* ── Helper global: busca coordenadorias com cache ── */
 let _coordsCache = null;
 async function getCoords() {
@@ -887,6 +922,13 @@ const PageMarketing = {
       /* Notifica coordenadores de Marketing (in-app) */
       _notificarCoord('MKT', `Nova demanda: ${titulo}`,
         `Uma nova demanda de ${tipo} foi aberta${prazo ? ` com prazo em ${_fmt(prazo)}.` : '.'}`, 'info', 'demanda');
+      /* Notifica responsavel (in-app + email se for outra pessoa) */
+      _notificarResponsavelDemanda({
+        responsavelId: window._appProfile?.id, titulo, tipo,
+        prazo: prazo ? _fmt(prazo) : null, criadoPor: window._appProfile?.nome
+      });
+      /* Alerta dev */
+      _notificarDevs('📝 Nova demanda', `${titulo} (${tipo}) criada por ${window._appProfile?.nome || 'membro'}.`, 'demandas');
       /* Email de confirmação para o responsável */
       if (window._appProfile?.email) {
         EmailsModule?.enviarDemandaCadastrada({
@@ -1255,17 +1297,26 @@ const PageFinancas = {
           const cor=dias<60?'var(--red)':dias<90?'var(--yellow)':'var(--green)';
           return `<div style="background:var(--b-1);border:1px solid var(--b-2);border-radius:10px;
                       padding:14px 16px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
-            <div>
+            <div style="flex:1;min-width:0">
               <div style="font-weight:700;font-size:13px;color:var(--c-white)">${sanitize(e.titulo)}</div>
               <div style="font-size:12px;color:var(--c-slate)">📅 ${_fmt(e.data_inicio)} · ${sanitize(e.local||'A definir')}</div>
             </div>
-            <span style="font-size:12px;font-weight:800;color:${cor}">
-              ${dias>0?`${dias}d`:'Hoje'}
-            </span>
+            <div style="display:flex;align-items:center;gap:6px">
+              <span style="font-size:12px;font-weight:800;color:${cor}">
+                ${dias>0?`${dias}d`:'Hoje'}
+              </span>
+              <button class="btn btn-ghost" style="padding:3px 7px;font-size:11px;color:var(--red)" title="Excluir" onclick="PageFinancas._excluirEventoComercial('${e.id}')">🗑️</button>
+            </div>
           </div>`;
         }).join('')
         :'<div style="padding:16px;text-align:center;color:var(--c-slate);font-size:13px">Nenhum evento cadastrado.</div>';
     }catch(e){el.innerHTML='<div style="padding:16px;color:var(--c-slate)">Erro ao carregar.</div>';}
+  },
+  async _excluirEventoComercial(id) {
+    if (!confirm('Excluir este evento comercial?')) return;
+    await _sbq().from('eventos').delete().eq('id', id);
+    mostrarToast('Evento excluído!','success');
+    PageFinancas._carregarCalendario();
   },
   novoEventoComercial() {
     const hoje=new Date().toISOString().split('T')[0];
@@ -1399,7 +1450,7 @@ const PageFinancas = {
         ? lista.map(d => `
           <div style="background:var(--b-1);border:1px solid var(--b-2);border-radius:10px;
                       padding:12px 16px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
-            <div>
+            <div style="flex:1;min-width:0">
               <div style="font-weight:700;font-size:13px;color:var(--c-white)">${sanitize(d.titulo)}</div>
               <div style="font-size:12px;color:var(--c-slate)">
                 👤 ${sanitize(d.users?.nome || 'Sem responsável')} · 📅 ${_fmt(d.created_at)}
@@ -1416,10 +1467,17 @@ const PageFinancas = {
                 ? `<button class="btn btn-ghost" style="font-size:11px;padding:4px 10px"
                            onclick="PageFinancas._confirmarComp('${d.id}')">Confirmar ✓</button>`
                 : ''}
+              <button class="btn btn-ghost" style="padding:3px 7px;font-size:11px;color:var(--red)" title="Excluir" onclick="PageFinancas._excluirAssociacao('${d.id}')">🗑️</button>
             </div>
           </div>`).join('')
         : '<div style="padding:16px;text-align:center;color:var(--c-slate);font-size:13px">Nenhum membro inscrito ainda.</div>';
     } catch(e) { el.innerHTML = '<div style="padding:16px;color:var(--c-slate)">Erro ao carregar.</div>'; }
+  },
+  async _excluirAssociacao(id) {
+    if (!confirm('Excluir esta associação ABEPRO?')) return;
+    await _sbq().from('demandas').delete().eq('id', id);
+    mostrarToast('Associação excluída!','success');
+    PageFinancas._carregarABEPRO();
   },
   novaAssociacao() {
     abrirModal({ titulo:'🏅 Registrar Associado ABEPRO', tipo:'info', corpo:`
@@ -3698,6 +3756,10 @@ const PageDev = {
       fecharModal();
       mostrarToast('Usuário atualizado!', 'success');
       this._carregarUsuarios();
+      /* Alerta dev/admin: usuario editado */
+      _notificarDevs(`✏️ Membro atualizado: ${nome}`,
+        `Cargo: ${cargo || '—'} · Role: ${role} · Ativo: ${ativo ? 'sim' : 'não'}`,
+        'membros');
     } catch(e) {
       mostrarToast('Erro ao salvar: ' + e.message, 'error');
     }
@@ -4496,6 +4558,7 @@ const PageGlobal = {
       }
       const meuVotoMap = {};
       (mVotos||[]).forEach(v => { meuVotoMap[v.votacao_id] = v.opcao; });
+      const podeGerenciar = Permissoes.pode('podeCriarEvento');
       el.innerHTML = vots.map(v => {
         const opcoes  = Array.isArray(v.opcoes) ? v.opcoes : (v.opcoes ? JSON.parse(v.opcoes) : []);
         const jáVotei = meuVotoMap[v.id];
@@ -4505,8 +4568,12 @@ const PageGlobal = {
         return `
           <div style="background:var(--b-1);border:1px solid ${v.ativa&&!expirou?'var(--b-2)':'var(--b-3)'};border-radius:12px;padding:16px">
             <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:8px">
-              <div style="font-weight:700;font-size:14px;color:var(--c-white)">${sanitize(v.titulo)}</div>
-              <span style="font-size:10px;white-space:nowrap">${status}</span>
+              <div style="font-weight:700;font-size:14px;color:var(--c-white);flex:1;min-width:0">${sanitize(v.titulo)}</div>
+              <div style="display:flex;align-items:center;gap:6px">
+                <span style="font-size:10px;white-space:nowrap">${status}</span>
+                ${podeGerenciar && v.ativa && !expirou ? `<button class="btn btn-ghost" style="padding:3px 7px;font-size:11px" title="Encerrar" onclick="PageGlobal._encerrarVotacao('${v.id}')">🔒</button>` : ''}
+                ${podeGerenciar ? `<button class="btn btn-ghost" style="padding:3px 7px;font-size:11px;color:var(--red)" title="Excluir" onclick="PageGlobal._excluirVotacao('${v.id}')">🗑️</button>` : ''}
+              </div>
             </div>
             ${v.descricao ? `<div style="font-size:12px;color:var(--c-slate);margin-bottom:10px">${sanitize(v.descricao)}</div>` : ''}
             ${jáVotei
@@ -4585,7 +4652,10 @@ const PageGlobal = {
       el.innerHTML = (data||[]).length
         ? data.map(e => `
             <div style="background:var(--b-1);border:1px solid var(--b-2);border-radius:10px;padding:14px 16px">
-              <div style="font-weight:700;font-size:13px;color:var(--c-white);margin-bottom:4px">${sanitize(e.titulo)}</div>
+              <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:4px">
+                <div style="font-weight:700;font-size:13px;color:var(--c-white);flex:1;min-width:0">${sanitize(e.titulo)}</div>
+                <button class="btn btn-ghost" style="padding:3px 7px;font-size:11px;color:var(--red)" title="Excluir" onclick="PageGlobal._excluirAssembleia('${e.id}')">🗑️</button>
+              </div>
               <div style="font-size:12px;color:var(--c-slate)">
                 📅 ${_fmt(e.data_inicio)}
                 ${e.local ? ` · 📍 ${sanitize(e.local)}` : ''}
@@ -4594,6 +4664,25 @@ const PageGlobal = {
             </div>`).join('')
         : '<div style="padding:16px;text-align:center;color:var(--c-slate);font-size:13px">Nenhuma assembleia registrada ainda.</div>';
     } catch(e) { el.innerHTML='<div style="padding:16px;color:var(--c-slate)">Erro ao carregar assembleias.</div>'; }
+  },
+  async _excluirAssembleia(id) {
+    if (!confirm('Excluir esta assembleia?')) return;
+    await _sbq().from('eventos').delete().eq('id', id);
+    mostrarToast('Assembleia excluída!','success');
+    PageGlobal._carregarAssembleia();
+  },
+  async _excluirVotacao(id) {
+    if (!confirm('Excluir esta votação? Todos os votos serão perdidos.')) return;
+    await _sbq().from('votos').delete().eq('votacao_id', id);
+    await _sbq().from('votacoes').delete().eq('id', id);
+    mostrarToast('Votação excluída!','success');
+    PageGlobal._carregarVotacoes();
+  },
+  async _encerrarVotacao(id) {
+    if (!confirm('Encerrar esta votação? Ela não poderá receber mais votos.')) return;
+    await _sbq().from('votacoes').update({ ativa: false }).eq('id', id);
+    mostrarToast('Votação encerrada!','success');
+    PageGlobal._carregarVotacoes();
   },
 
   async _renderGestao() {
