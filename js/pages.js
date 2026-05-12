@@ -868,13 +868,20 @@ const PageMarketing = {
         ? posts.map(p=>`
           <div style="background:var(--b-1);border:1px solid var(--b-2);border-radius:10px;
                       padding:12px 16px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
-            <div>
+            <div style="flex:1;min-width:0">
               <div style="font-weight:600;font-size:13px;color:var(--c-white)">${sanitize(p.titulo)}</div>
               <div style="font-size:12px;color:var(--c-slate)">📅 ${_fmt(p.data_inicio)}</div>
             </div>
+            <button class="btn btn-ghost" style="padding:3px 7px;font-size:11px;color:var(--red)" title="Excluir" onclick="PageMarketing._excluirPost('${p.id}')">🗑️</button>
           </div>`).join('')
         : '<div style="padding:16px;text-align:center;color:var(--c-slate);font-size:13px">Nenhum registro ainda.</div>';
     } catch(e) { el.innerHTML='<div style="padding:16px;color:var(--c-slate)">Erro ao carregar.</div>'; }
+  },
+  async _excluirPost(id) {
+    if (!confirm('Excluir este post?')) return;
+    await _sbq().from('eventos').delete().eq('id', id);
+    mostrarToast('Excluído!','success');
+    PageMarketing._carregarPosts();
   },
   registrarPost() {
     const hoje = new Date().toISOString().split('T')[0];
@@ -2358,13 +2365,14 @@ const PageOperacoes = {
           `<span style="font-size:10px;color:var(--fg-3);margin-left:8px;">Revisão: ${revisao.toLocaleDateString('pt-BR')}</span>`;
         const ativoIcon=p.ativo!==false?'🟢':'🔴';
         return `<div style="background:var(--surface-2);border:1px solid var(--border-1);border-radius:10px;padding:12px 16px;display:flex;justify-content:space-between;align-items:center">
-          <div>
+          <div style="flex:1;min-width:0">
             <span style="font-size:13px;color:var(--fg-1);font-weight:600;">📄 ${p.nome}</span>${tag}
             ${p.descricao?`<div style="font-size:11px;color:var(--fg-3);margin-top:3px;">${p.descricao}</div>`:''}
           </div>
           <div style="display:flex;gap:6px;align-items:center;">
             <span title="${p.ativo!==false?'Ativo':'Inativo'}">${ativoIcon}</span>
             <button class="btn btn-ghost" style="font-size:11px;padding:4px 8px;" onclick="PageOperacoes.editarPop('${p.id}','${(p.nome||'').replace(/'/g,"\\'")}')">Editar</button>
+            <button class="btn btn-ghost" style="font-size:11px;padding:4px 8px;color:var(--red)" onclick="PageOperacoes._excluirPop('${p.id}')">🗑️</button>
           </div>
         </div>`;
       }).join('');
@@ -2413,6 +2421,13 @@ const PageOperacoes = {
         }catch(e){mostrarToast('Erro ao atualizar POP.','error');}
       }}
     ]});
+  },
+  async _excluirPop(id) {
+    if (!confirm('Excluir este POP? Esta ação não pode ser desfeita.')) return;
+    if (!_sbq()) return;
+    await _sbq().from('pops').delete().eq('id', id);
+    mostrarToast('POP excluído!','success');
+    PageOperacoes._renderPops();
   },
   gerarRelatorio() {
     mostrarToast('Iniciando geração de PDF ABJ...','info');
