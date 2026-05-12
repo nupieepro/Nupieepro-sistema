@@ -214,17 +214,59 @@ const PageGeral = {
         ? data.map(r=>`
           <div style="background:var(--b-1);border:1px solid var(--b-2);border-radius:10px;
                       padding:12px 16px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
-            <div>
+            <div style="flex:1;min-width:0">
               <div style="font-weight:700;font-size:13px;color:var(--c-white)">${sanitize(r.titulo)}</div>
               <div style="font-size:12px;color:var(--c-slate)">📅 ${_fmt(r.data_inicio)} · ${r.vagas||0} vagas</div>
             </div>
-            <span style="font-size:11px;font-weight:700;padding:3px 9px;border-radius:99px;
-                         background:var(--green)22;color:var(--green);border:1px solid var(--green)44">
-              ${r.ativo?'Ativa':'Encerrada'}
-            </span>
+            <div style="display:flex;align-items:center;gap:6px">
+              <span style="font-size:11px;font-weight:700;padding:3px 9px;border-radius:99px;
+                           background:var(--green)22;color:var(--green);border:1px solid var(--green)44">
+                ${r.ativo?'Ativa':'Encerrada'}
+              </span>
+              <button class="btn btn-ghost" style="padding:3px 7px;font-size:11px" title="Editar" onclick="PageGeral._editarReuniao('${r.id}')">✏️</button>
+              <button class="btn btn-ghost" style="padding:3px 7px;font-size:11px;color:var(--red)" title="Excluir" onclick="PageGeral._excluirReuniao('${r.id}')">🗑️</button>
+            </div>
           </div>`).join('')
         : '<div style="padding:16px;text-align:center;color:var(--c-slate);font-size:13px">Nenhuma reunião registrada ainda.</div>';
     } catch(e) { el.innerHTML='<div style="padding:16px;color:var(--c-slate)">Erro ao carregar.</div>'; }
+  },
+  async _editarReuniao(id) {
+    if (!_sbq()) return;
+    const { data: r } = await _sbq().from('eventos').select('*').eq('id', id).single();
+    if (!r) { mostrarToast('Reunião não encontrada','error'); return; }
+    const dataIso = r.data_inicio ? new Date(r.data_inicio).toISOString().slice(0,16) : '';
+    abrirModal({ titulo: '✏️ Editar Reunião', corpo: `
+      <div class="form-group"><label class="form-label">Título *</label>
+        <input id="er-titulo" class="form-input" value="${sanitize(r.titulo||'')}"></div>
+      <div class="form-group"><label class="form-label">Data/Hora *</label>
+        <input id="er-data" type="datetime-local" class="form-input" value="${dataIso}"></div>
+      <div class="form-group"><label class="form-label">Vagas</label>
+        <input id="er-vagas" type="number" class="form-input" value="${r.vagas||0}"></div>
+      <div class="form-group"><label class="form-label">Status</label>
+        <select id="er-ativo" class="form-select">
+          <option value="true" ${r.ativo?'selected':''}>Ativa</option>
+          <option value="false" ${!r.ativo?'selected':''}>Encerrada</option>
+        </select></div>`,
+    botoes: [
+      { texto:'Cancelar', classe:'btn-ghost', acao: fecharModal },
+      { texto:'Salvar', classe:'btn-primary', acao: async() => {
+        const titulo = document.getElementById('er-titulo')?.value?.trim();
+        const data = document.getElementById('er-data')?.value;
+        const vagas = parseInt(document.getElementById('er-vagas')?.value) || null;
+        const ativo = document.getElementById('er-ativo')?.value === 'true';
+        if (!titulo || !data) { mostrarToast('Preencha título e data','warning'); return; }
+        await _sbq().from('eventos').update({ titulo, data_inicio: data, vagas, ativo }).eq('id', id);
+        fecharModal();
+        mostrarToast('Reunião atualizada!','success');
+        PageGeral._carregarReunioes();
+      }}
+    ]});
+  },
+  async _excluirReuniao(id) {
+    if (!confirm('Excluir esta reunião? As frequências relacionadas serão preservadas.')) return;
+    await _sbq().from('eventos').delete().eq('id', id);
+    mostrarToast('Reunião excluída!','success');
+    PageGeral._carregarReunioes();
   },
   _renderPlanejamento() {
     const pg = document.getElementById('page-geral_planejamento');
@@ -334,9 +376,18 @@ const PageGeral = {
       }
       const html = planos.map(e => {
         let d={}; try { d=JSON.parse(e.descricao); } catch {}
-        return `<div style="background:var(--b-1);border:1px solid var(--b-2);border-radius:10px;padding:16px;margin-bottom:10px">
-          <div style="font-weight:700;font-size:14px;color:var(--c-white);margin-bottom:4px">${sanitize(e.titulo)}</div>
-          <div style="font-size:11px;color:var(--c-slate);margin-bottom:10px">📅 Aprovado em ${_fmt(e.data_inicio)}${e.users?.nome?` · Por: ${sanitize(e.users.nome)}`:''}</div>
+        const concluido = d.concluido === true;
+        return `<div style="background:var(--b-1);border:1px solid ${concluido?'var(--green)44':'var(--b-2)'};border-radius:10px;padding:16px;margin-bottom:10px">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:4px">
+            <div style="font-weight:700;font-size:14px;color:var(--c-white)">${sanitize(e.titulo)}</div>
+            <div style="display:flex;gap:6px;align-items:center">
+              ${concluido
+                ? `<span style="font-size:10px;font-weight:700;padding:3px 9px;border-radius:99px;background:var(--green)22;color:var(--green);border:1px solid var(--green)44">✓ Concluído</span>`
+                : `<button class="btn btn-ghost" style="padding:3px 8px;font-size:11px;color:var(--green)" onclick="PageGeral._marcarPlanoConcluido('${e.id}', ${semestre})">✓ Marcar concluído</button>`}
+              <button class="btn btn-ghost" style="padding:3px 7px;font-size:11px;color:var(--red)" title="Excluir" onclick="PageGeral._excluirPlano('${e.id}', ${semestre})">🗑️</button>
+            </div>
+          </div>
+          <div style="font-size:11px;color:var(--c-slate);margin-bottom:10px">📅 Aprovado em ${_fmt(e.data_inicio)}${e.users?.nome?` · Por: ${sanitize(e.users.nome)}`:''}${d.concluido_em?` · ✓ Concluído em ${_fmt(d.concluido_em)}`:''}</div>
           ${d.objetivos?`<div style="margin-bottom:8px"><div style="font-size:11px;font-weight:700;color:var(--c-accent);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">Objetivos</div><div style="font-size:13px;color:var(--c-white);white-space:pre-wrap">${sanitize(d.objetivos)}</div></div>`:''}
           ${d.acoes_abj?`<div><div style="font-size:11px;font-weight:700;color:var(--green);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">Ações ABJ</div><div style="font-size:13px;color:var(--c-white);white-space:pre-wrap">${sanitize(d.acoes_abj)}</div></div>`:''}
         </div>`;
@@ -344,6 +395,31 @@ const PageGeral = {
       abrirModal({ titulo:`📅 Planos ${semestre}º Semestre (${planos.length})`, tipo:'info', corpo:html,
         botoes:[{texto:'Fechar',classe:'btn-ghost',acao:fecharModal}]});
     } catch(e) { mostrarToast('Erro ao carregar planos.','error'); }
+  },
+  async _marcarPlanoConcluido(id, semestre) {
+    if (!_sbq()) return;
+    const role = window._appProfile?.role;
+    const cargo = (window._appProfile?.cargo || '').toLowerCase();
+    if (role !== 'admin' && !cargo.includes('coordenador geral') && !cargo.includes('desenvolvedor')) {
+      mostrarToast('Apenas Coordenação Geral ou Admin pode marcar planos como concluídos.','warning');
+      return;
+    }
+    const { data: r } = await _sbq().from('eventos').select('descricao').eq('id', id).single();
+    let d = {}; try { d = JSON.parse(r?.descricao || '{}'); } catch {}
+    d.concluido = true;
+    d.concluido_em = new Date().toISOString();
+    d.concluido_por = window._appProfile?.id;
+    await _sbq().from('eventos').update({ descricao: JSON.stringify(d) }).eq('id', id);
+    mostrarToast('Plano marcado como concluído!','success');
+    fecharModal();
+    PageGeral.verAtividades(semestre);
+  },
+  async _excluirPlano(id, semestre) {
+    if (!confirm('Excluir este plano? Esta ação não pode ser desfeita.')) return;
+    await _sbq().from('eventos').delete().eq('id', id);
+    mostrarToast('Plano excluído!','success');
+    fecharModal();
+    PageGeral.verAtividades(semestre);
   },
   _renderMelhorias() {
     const pg = document.getElementById('page-geral_melhorias');
@@ -674,12 +750,12 @@ const PageMarketing = {
   async _carregarKanban() {
     if (!_sbq()) return;
     try {
-      const coords = await getCoords();
-      const mkt = coords.find(c=>c.sigla==='MKT');
+      /* Kanban da Lojinha: apenas demandas tipo='lojinha'.
+         User reclamou de "demandas estranhas" — eram outras categorias MKT misturadas. */
       const { data } = await _sbq()
         .from('demandas')
         .select('*,users!responsavel_id(nome,iniciais)')
-        .eq('coordenadoria_id', mkt?.id||'')
+        .eq('tipo', 'lojinha')
         .order('created_at',{ascending:false});
       const cols = { pendente:[], exec:[], realizada:[], auditada:[] };
       (data||[]).forEach(d => { if (cols[d.coluna]) cols[d.coluna].push(d); });
@@ -3113,6 +3189,9 @@ const PagePessoas = {
       <p style="font-size:13px;color:var(--c-slate);margin-bottom:14px">
         Membros com aniversário neste mês e no próximo. O sistema envia e-mail automático no dia.
       </p>
+      <div style="margin-bottom:16px">
+        ${_btn('+ Cadastrar aniversário','PagePessoas.cadastrarAniversario()')}
+      </div>
       <div id="aniv-este-mes">
         <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--c-slate);margin-bottom:8px">Este mês</div>
         <div id="aniv-este-lista" style="display:flex;flex-direction:column;gap:8px">
@@ -3126,6 +3205,32 @@ const PagePessoas = {
         </div>
       </div>`);
     this._carregarAniversarios();
+  },
+  async cadastrarAniversario() {
+    if (!_sbq()) { mostrarToast('Banco não conectado','warning'); return; }
+    const { data: membros } = await _sbq().from('users').select('id,nome,email,aniversario').eq('ativo', true).order('nome');
+    const opts = (membros||[]).map(m =>
+      `<option value="${m.id}" data-current="${m.aniversario||''}">${sanitize(m.nome || m.email)}${m.aniversario?' (já tem)':''}</option>`
+    ).join('');
+    abrirModal({ titulo:'🎂 Cadastrar Aniversário', corpo: `
+      <div class="form-group"><label class="form-label">Membro *</label>
+        <select id="aniv-membro" class="form-select" onchange="(()=>{const o=this.options[this.selectedIndex];const d=o?.dataset?.current;document.getElementById('aniv-data').value=d||'';})()">
+          <option value="">Selecionar membro...</option>${opts}
+        </select></div>
+      <div class="form-group"><label class="form-label">Data de aniversário *</label>
+        <input id="aniv-data" type="date" class="form-input"></div>`,
+    botoes: [
+      { texto:'Cancelar', classe:'btn-ghost', acao: fecharModal },
+      { texto:'Salvar', classe:'btn-primary', acao: async() => {
+        const uid = document.getElementById('aniv-membro')?.value;
+        const data = document.getElementById('aniv-data')?.value;
+        if (!uid || !data) { mostrarToast('Selecione membro e data','warning'); return; }
+        await _sbq().from('users').update({ aniversario: data }).eq('id', uid);
+        fecharModal();
+        mostrarToast('Aniversário cadastrado!','success');
+        PagePessoas._carregarAniversarios();
+      }}
+    ]});
   },
   async _carregarAniversarios() {
     const elEste = document.getElementById('aniv-este-lista');
@@ -4682,6 +4787,18 @@ window.PageCompartilhado  = PageCompartilhado;
    (PageProjetos.init), ops_pops (PageOperacoes._renderPops)
    ─────────────────────────────────────────────────────────────── */
 document.addEventListener('nupi:booted', () => {
+  /* Injeta botão hamburger (☰) nas .topbar das sub-pages que nao tem.
+     Garante que toda pagina tem como abrir o menu lateral. */
+  document.querySelectorAll('[id^="page-"] .topbar').forEach(tb => {
+    if (tb.querySelector('.topbar-toggle, .topbar-hamburger')) return;
+    const btn = document.createElement('button');
+    btn.className = 'topbar-toggle';
+    btn.setAttribute('aria-label', 'Menu');
+    btn.setAttribute('onclick', 'toggleSidebar()');
+    btn.textContent = '☰';
+    tb.insertBefore(btn, tb.firstChild);
+  });
+
   const _goToOriginal = window.goTo;
   window.goTo = function(id) {
     // Garante que TODAS as páginas (incluindo as fora do ALL_PAGES) sejam ocultadas antes de navegar
