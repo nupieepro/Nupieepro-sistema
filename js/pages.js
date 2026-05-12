@@ -383,12 +383,30 @@ const PageGeral = {
               </span>
             </div>
             <div style="font-size:12px;color:var(--c-slate)">${sanitize(d.descricao||'—')}</div>
-            <div style="font-size:11px;color:var(--c-slate);margin-top:6px">
-              👤 ${sanitize(d.users?.nome||'Anônimo')} · 📅 ${_fmt(d.created_at)}
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px;gap:8px">
+              <div style="font-size:11px;color:var(--c-slate)">
+                👤 ${sanitize(d.users?.nome||'Anônimo')} · 📅 ${_fmt(d.created_at)}
+              </div>
+              <div style="display:flex;gap:4px">
+                <button class="btn btn-ghost" style="padding:3px 7px;font-size:11px" title="Marcar como concluída" onclick="PageGeral._marcarMelhoria('${d.id}','auditada')">✓</button>
+                <button class="btn btn-ghost" style="padding:3px 7px;font-size:11px;color:var(--red)" title="Excluir" onclick="PageGeral._excluirMelhoria('${d.id}')">🗑️</button>
+              </div>
             </div>
           </div>`).join('')
         : '<div style="padding:16px;text-align:center;color:var(--c-slate);font-size:13px">Nenhuma sugestão ainda. Seja o primeiro!</div>';
     } catch(e) { el.innerHTML='<div style="padding:16px;color:var(--c-slate)">Erro ao carregar.</div>'; }
+  },
+  async _marcarMelhoria(id, coluna) {
+    if (!_sbq()) return;
+    await _sbq().from('demandas').update({ coluna }).eq('id', id);
+    mostrarToast('Status atualizado!','success');
+    PageGeral._carregarMelhorias();
+  },
+  async _excluirMelhoria(id) {
+    if (!confirm('Excluir esta sugestão?')) return;
+    await _sbq().from('demandas').delete().eq('id', id);
+    mostrarToast('Excluída!','success');
+    PageGeral._carregarMelhorias();
   },
   _renderParcerias() {
     const pg = document.getElementById('page-geral_parcerias');
@@ -420,17 +438,33 @@ const PageGeral = {
         ? data.map(d=>`
           <div style="background:var(--b-1);border:1px solid var(--b-2);border-radius:10px;
                       padding:14px 16px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
-            <div>
+            <div style="flex:1;min-width:0">
               <div style="font-weight:700;font-size:13px;color:var(--c-white)">${sanitize(d.titulo)}</div>
               <div style="font-size:12px;color:var(--c-slate)">${sanitize(d.descricao||'—')} · ${_fmt(d.created_at)}</div>
             </div>
-            <span style="font-size:11px;font-weight:700;padding:3px 9px;border-radius:99px;
-                         background:${['realizada','auditada'].includes(d.coluna)?'var(--green)22':'var(--yellow)22'};color:${['realizada','auditada'].includes(d.coluna)?'var(--green)':'var(--yellow)'};border:1px solid ${['realizada','auditada'].includes(d.coluna)?'var(--green)44':'var(--yellow)44'}">
-              ${['realizada','auditada'].includes(d.coluna)?'✓ Concluída':'⏳ Em andamento'}
-            </span>
+            <div style="display:flex;align-items:center;gap:6px">
+              <span style="font-size:11px;font-weight:700;padding:3px 9px;border-radius:99px;
+                           background:${['realizada','auditada'].includes(d.coluna)?'var(--green)22':'var(--yellow)22'};color:${['realizada','auditada'].includes(d.coluna)?'var(--green)':'var(--yellow)'};border:1px solid ${['realizada','auditada'].includes(d.coluna)?'var(--green)44':'var(--yellow)44'}">
+                ${['realizada','auditada'].includes(d.coluna)?'✓ Concluída':'⏳ Em andamento'}
+              </span>
+              <button class="btn btn-ghost" style="padding:3px 7px;font-size:11px" title="Marcar concluída" onclick="PageGeral._marcarParceria('${d.id}')">✓</button>
+              <button class="btn btn-ghost" style="padding:3px 7px;font-size:11px;color:var(--red)" title="Excluir" onclick="PageGeral._excluirParceria('${d.id}')">🗑️</button>
+            </div>
           </div>`).join('')
         : '<div style="padding:16px;text-align:center;color:var(--c-slate);font-size:13px">Nenhuma parceria registrada ainda.</div>';
     } catch(e) { el.innerHTML='<div style="padding:16px;color:var(--c-slate)">Erro ao carregar.</div>'; }
+  },
+  async _marcarParceria(id) {
+    if (!_sbq()) return;
+    await _sbq().from('demandas').update({ coluna: 'auditada' }).eq('id', id);
+    mostrarToast('Marcada como concluída','success');
+    PageGeral._carregarParcerias();
+  },
+  async _excluirParceria(id) {
+    if (!confirm('Excluir esta parceria?')) return;
+    await _sbq().from('demandas').delete().eq('id', id);
+    mostrarToast('Excluída!','success');
+    PageGeral._carregarParcerias();
   },
   novaReuniao() {
     const hoje = new Date().toISOString().slice(0,16);
@@ -834,13 +868,20 @@ const PageMarketing = {
         ? posts.map(p=>`
           <div style="background:var(--b-1);border:1px solid var(--b-2);border-radius:10px;
                       padding:12px 16px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
-            <div>
+            <div style="flex:1;min-width:0">
               <div style="font-weight:600;font-size:13px;color:var(--c-white)">${sanitize(p.titulo)}</div>
               <div style="font-size:12px;color:var(--c-slate)">📅 ${_fmt(p.data_inicio)}</div>
             </div>
+            <button class="btn btn-ghost" style="padding:3px 7px;font-size:11px;color:var(--red)" title="Excluir" onclick="PageMarketing._excluirPost('${p.id}')">🗑️</button>
           </div>`).join('')
         : '<div style="padding:16px;text-align:center;color:var(--c-slate);font-size:13px">Nenhum registro ainda.</div>';
     } catch(e) { el.innerHTML='<div style="padding:16px;color:var(--c-slate)">Erro ao carregar.</div>'; }
+  },
+  async _excluirPost(id) {
+    if (!confirm('Excluir este post?')) return;
+    await _sbq().from('eventos').delete().eq('id', id);
+    mostrarToast('Excluído!','success');
+    PageMarketing._carregarPosts();
   },
   registrarPost() {
     const hoje = new Date().toISOString().split('T')[0];
@@ -1384,16 +1425,57 @@ const PageFinancas = {
         ?tudo.map(r=>`
           <div style="background:var(--b-1);border:1px solid var(--b-2);border-radius:10px;
                       padding:12px 16px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
-            <div>
+            <div style="flex:1;min-width:0">
               <div style="font-weight:600;font-size:13px;color:var(--c-white)">${sanitize(r.descricao)}</div>
               <div style="font-size:12px;color:var(--c-slate)">📅 ${_fmt(r._data)} · ${r.categoria||r.produto||'—'}</div>
             </div>
-            <span style="font-size:14px;font-weight:800;color:${r._tipo==='venda'?'var(--green)':'var(--red)'}">
-              ${r._tipo==='venda'?'+':'-'} R$ ${Number(r.valor||0).toFixed(2)}
-            </span>
+            <div style="display:flex;align-items:center;gap:8px">
+              <span style="font-size:14px;font-weight:800;color:${r._tipo==='venda'?'var(--green)':'var(--red)'}">
+                ${r._tipo==='venda'?'+':'-'} R$ ${Number(r.valor||0).toFixed(2)}
+              </span>
+              <button class="btn btn-ghost" style="padding:4px 8px;font-size:12px" title="Editar" onclick="PageFinancas._editarLancamento('${r._tipo}','${r.id}')">✏️</button>
+              <button class="btn btn-ghost" style="padding:4px 8px;font-size:12px;color:var(--red)" title="Excluir" onclick="PageFinancas._excluirLancamento('${r._tipo}','${r.id}')">🗑️</button>
+            </div>
           </div>`).join('')
         :'<div style="padding:16px;text-align:center;color:var(--c-slate)">Nenhum registro ainda.</div>';
     }catch(e){el.innerHTML='<div style="padding:16px;color:var(--c-slate)">Erro ao carregar.</div>';}
+  },
+  async _editarLancamento(tipo, id) {
+    if (!_sbq()) return;
+    const tabela = tipo === 'venda' ? 'vendas' : 'despesas';
+    const dataField = tipo === 'venda' ? 'data_venda' : 'data_despesa';
+    const { data: r } = await _sbq().from(tabela).select('*').eq('id', id).single();
+    if (!r) { mostrarToast('Lançamento não encontrado','error'); return; }
+    abrirModal({ titulo: tipo === 'venda' ? '💚 Editar Venda' : '🔴 Editar Despesa', corpo: `
+      <div class="form-group"><label class="form-label">Descrição *</label>
+        <input id="ed-desc" class="form-input" value="${sanitize(r.descricao||'')}"></div>
+      <div class="form-group"><label class="form-label">Valor *</label>
+        <input id="ed-valor" type="number" step="0.01" class="form-input" value="${r.valor||0}"></div>
+      <div class="form-group"><label class="form-label">Data</label>
+        <input id="ed-data" type="date" class="form-input" value="${r[dataField]||''}"></div>
+      <div class="form-group"><label class="form-label">Categoria</label>
+        <input id="ed-cat" class="form-input" value="${sanitize(r.categoria||'')}"></div>`,
+    botoes: [
+      { texto: 'Cancelar', classe: 'btn-ghost', acao: fecharModal },
+      { texto: 'Salvar', classe: 'btn-primary', acao: async () => {
+        const desc = document.getElementById('ed-desc')?.value?.trim();
+        const valor = parseFloat(document.getElementById('ed-valor')?.value);
+        const data = document.getElementById('ed-data')?.value;
+        const cat = document.getElementById('ed-cat')?.value?.trim();
+        if (!desc || isNaN(valor)) { mostrarToast('Preencha descrição e valor','warning'); return; }
+        await _sbq().from(tabela).update({ descricao:desc, valor, [dataField]:data, categoria:cat }).eq('id', id);
+        fecharModal();
+        mostrarToast('Atualizado!','success');
+        PageFinancas._carregarFluxo();
+      }}
+    ]});
+  },
+  async _excluirLancamento(tipo, id) {
+    if (!confirm('Excluir este lançamento? Esta ação não pode ser desfeita.')) return;
+    const tabela = tipo === 'venda' ? 'vendas' : 'despesas';
+    await _sbq().from(tabela).delete().eq('id', id);
+    mostrarToast('Excluído!','success');
+    PageFinancas._carregarFluxo();
   },
   lancar(tipo) {
     const hoje=new Date().toISOString().split('T')[0];
@@ -1509,10 +1591,13 @@ const PageProjetos = {
           <div style="background:var(--b-1);border:1px solid var(--b-2);border-radius:10px;padding:14px 16px">
             <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:8px">
               <div style="font-weight:700;font-size:14px;color:var(--c-white)">${sanitize(e.titulo)}</div>
-              <span style="font-size:11px;font-weight:700;padding:3px 9px;border-radius:99px;
-                           background:var(--c-accent)22;color:var(--c-accent);border:1px solid var(--c-accent)44">
-                ${e.tipo}
-              </span>
+              <div style="display:flex;align-items:center;gap:6px">
+                <span style="font-size:11px;font-weight:700;padding:3px 9px;border-radius:99px;
+                             background:var(--c-accent)22;color:var(--c-accent);border:1px solid var(--c-accent)44">
+                  ${e.tipo}
+                </span>
+                <button class="btn btn-ghost" style="padding:3px 7px;font-size:11px;color:var(--red)" title="Excluir" onclick="PageProjetos._excluirEvento('${e.id}')">🗑️</button>
+              </div>
             </div>
             <div style="font-size:12px;color:var(--c-slate)">
               📅 ${_fmt(e.data_inicio)} · 📍 ${sanitize(e.local||'A definir')}
@@ -1521,6 +1606,12 @@ const PageProjetos = {
           </div>`).join('')
         :'<div style="padding:16px;text-align:center;color:var(--c-slate);font-size:13px">Nenhum evento cadastrado.</div>';
     }catch(e){el.innerHTML='<div style="padding:16px;color:var(--c-slate)">Erro ao carregar.</div>';}
+  },
+  async _excluirEvento(id) {
+    if (!confirm('Excluir este evento?')) return;
+    await _sbq().from('eventos').delete().eq('id', id);
+    mostrarToast('Excluído!','success');
+    PageProjetos._carregar?.();
   },
   novoEvento() {
     const hoje=new Date().toISOString().slice(0,16);
@@ -1626,11 +1717,14 @@ const PageProjetos = {
         ? data.map(e => {
             let extra = {}; try { extra = JSON.parse(e.descricao||'{}'); } catch(_){}
             return `<div style="background:var(--b-1);border:1px solid var(--b-2);border-radius:10px;padding:14px 16px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
-              <div>
+              <div style="flex:1;min-width:0">
                 <div style="font-weight:700;font-size:13px;color:var(--c-white)">${sanitize(e.titulo)}</div>
                 <div style="font-size:12px;color:var(--c-slate)">📅 ${_fmt(e.data_inicio)}${extra.convidados?` · 🎤 ${sanitize(extra.convidados)}`:''}</div>
               </div>
-              ${extra.link?`<a href="${sanitize(extra.link)}" target="_blank" class="btn btn-ghost" style="font-size:11px;padding:6px 12px;text-decoration:none">▶ Ouvir ↗</a>`:'<span style="font-size:11px;color:var(--c-slate)">Sem link</span>'}
+              <div style="display:flex;gap:6px;align-items:center">
+                ${extra.link?`<a href="${sanitize(extra.link)}" target="_blank" class="btn btn-ghost" style="font-size:11px;padding:6px 12px;text-decoration:none">▶ Ouvir ↗</a>`:'<span style="font-size:11px;color:var(--c-slate)">Sem link</span>'}
+                <button class="btn btn-ghost" style="padding:3px 7px;font-size:11px;color:var(--red)" title="Excluir" onclick="PageProjetos._excluirEpisodio('${e.id}')">🗑️</button>
+              </div>
             </div>`;
           }).join('')
         : `<div style="padding:30px;text-align:center"><div style="font-size:36px;margin-bottom:12px">🎙️</div><div style="font-size:14px;font-weight:700;color:var(--c-white)">Nenhum episódio registrado</div></div>`;
@@ -1679,7 +1773,10 @@ const PageProjetos = {
             try { extra = JSON.parse(e.descricao || '{}'); } catch(_){}
             return `
               <div style="background:var(--b-1);border:1px solid var(--b-2);border-radius:12px;padding:16px">
-                <div style="font-weight:700;font-size:14px;color:var(--c-white);margin-bottom:8px">${sanitize(e.titulo)}</div>
+                <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:8px">
+                  <div style="font-weight:700;font-size:14px;color:var(--c-white)">${sanitize(e.titulo)}</div>
+                  <button class="btn btn-ghost" style="padding:3px 7px;font-size:11px;color:var(--red)" title="Excluir" onclick="PageProjetos._excluirENEGEP('${e.id}')">🗑️</button>
+                </div>
                 <div style="display:flex;flex-direction:column;gap:6px;font-size:12px">
                   ${extra.fotos    ? `<div>📸 <a href="${sanitize(extra.fotos)}"    target="_blank" style="color:var(--c-accent)">Ver fotos ↗</a></div>` : '<div style="color:var(--red)">📸 Fotos: não enviado</div>'}
                   ${extra.presenca ? `<div>📋 <a href="${sanitize(extra.presenca)}" target="_blank" style="color:var(--c-accent)">Lista de presença ↗</a></div>` : '<div style="color:var(--red)">📋 Lista de presença: não enviado</div>'}
@@ -1799,7 +1896,7 @@ const PageProjetos = {
       <p style="font-size:13px;color:var(--c-slate);margin-bottom:14px">
         Capacitações externas e treinamentos realizados pelos membros do Núcleo.
       </p>
-      ${_btn('+ Registrar capacitação','PageProjetos.novaCapacitacao()')}
+      ${_btn('+ Registrar capacitação','PageProjetos.novoTreinamento()')}
       <div id="treinamentos-lista" style="margin-top:14px;display:flex;flex-direction:column;gap:8px">
         <div style="padding:20px;text-align:center;color:var(--c-slate);font-size:13px">Carregando...</div>
       </div>`);
@@ -1816,15 +1913,42 @@ const PageProjetos = {
         ? data.map(e => {
             let extra = {}; try { extra = JSON.parse(e.descricao||'{}'); } catch(_){}
             return `<div style="background:var(--b-1);border:1px solid var(--b-2);border-radius:10px;padding:14px 16px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
-              <div>
+              <div style="flex:1;min-width:0">
                 <div style="font-weight:700;font-size:13px;color:var(--c-white)">${sanitize(e.titulo)}</div>
                 <div style="font-size:12px;color:var(--c-slate)">📅 ${_fmt(e.data_inicio)}${e.local?` · 📍 ${sanitize(e.local)}`:''}${e.vagas?` · 👥 ${e.vagas} vagas`:''}</div>
               </div>
-              ${extra.link?`<a href="${sanitize(extra.link)}" target="_blank" class="btn btn-ghost" style="font-size:11px;padding:6px 12px;text-decoration:none">Inscrição ↗</a>`:''}
+              <div style="display:flex;gap:6px;align-items:center">
+                ${extra.link?`<a href="${sanitize(extra.link)}" target="_blank" class="btn btn-ghost" style="font-size:11px;padding:6px 12px;text-decoration:none">Inscrição ↗</a>`:''}
+                <button class="btn btn-ghost" style="padding:3px 7px;font-size:11px;color:var(--red)" title="Excluir" onclick="PageProjetos._excluirCapacitacao('${e.id}')">🗑️</button>
+              </div>
             </div>`;
           }).join('')
         : `<div style="padding:30px;text-align:center"><div style="font-size:36px;margin-bottom:12px">📚</div><div style="font-size:14px;font-weight:700;color:var(--c-white)">Nenhuma capacitação registrada</div></div>`;
     } catch(e) { el.innerHTML='<div style="padding:16px;color:var(--c-slate)">Erro ao carregar.</div>'; }
+  },
+  async _excluirCapacitacao(id) {
+    if (!confirm('Excluir esta capacitação?')) return;
+    await _sbq().from('eventos').delete().eq('id', id);
+    mostrarToast('Excluída!','success');
+    PageProjetos._carregarTreinamentos();
+  },
+  async _excluirEpisodio(id) {
+    if (!confirm('Excluir este episódio?')) return;
+    await _sbq().from('eventos').delete().eq('id', id);
+    mostrarToast('Excluído!','success');
+    PageProjetos._carregarNupicast();
+  },
+  async _excluirENEGEP(id) {
+    if (!confirm('Excluir este registro do ENEGEP?')) return;
+    await _sbq().from('eventos').delete().eq('id', id);
+    mostrarToast('Excluído!','success');
+    PageProjetos._carregarENEGEP();
+  },
+  async _excluirParceria(id) {
+    if (!confirm('Excluir esta parceria?')) return;
+    await _sbq().from('parcerias').delete().eq('id', id);
+    mostrarToast('Excluída!','success');
+    PageProjetos._carregarParcerias?.();
   },
 
   /* ─── Parcerias e Patrocínios ─────────────────────────────── */
@@ -1855,7 +1979,8 @@ const PageProjetos = {
         return;
       }
       el.innerHTML = data.map(p => `
-        <div style="background:var(--b-1);border:1px solid var(--b-2);border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:10px;align-items:center;text-align:center">
+        <div style="background:var(--b-1);border:1px solid var(--b-2);border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:10px;align-items:center;text-align:center;position:relative">
+          <button class="btn btn-ghost" style="position:absolute;top:6px;right:6px;padding:3px 7px;font-size:11px;color:var(--red)" title="Excluir" onclick="PageProjetos._excluirParceria('${p.id}')">🗑️</button>
           ${p.logo_url
             ? `<img src="${sanitize(p.logo_url)}" alt="${sanitize(p.nome)}" style="max-height:52px;max-width:120px;object-fit:contain;border-radius:6px;">`
             : `<div style="width:52px;height:52px;border-radius:50%;background:var(--c-s5);display:flex;align-items:center;justify-content:center;font-size:20px;">🤝</div>`}
@@ -1976,14 +2101,23 @@ const PageOperacoes = {
         .select('*').order('created_at',{ascending:false}).limit(40);
       el.innerHTML = data?.length
         ? data.map(d => `<div style="background:var(--b-1);border:1px solid var(--b-2);border-radius:10px;padding:14px 16px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
-            <div>
+            <div style="flex:1;min-width:0">
               <div style="font-weight:700;font-size:13px;color:var(--c-white)">${sanitize(d.nome||'Documento')}</div>
               <div style="font-size:12px;color:var(--c-slate)">${d.descricao?`📂 ${sanitize(d.descricao)} · `:''}📅 ${_fmt(d.created_at)}</div>
             </div>
-            ${d.conteudo?`<a href="${sanitize(d.conteudo)}" target="_blank" class="btn btn-ghost" style="font-size:11px;padding:6px 12px;text-decoration:none">Abrir ↗</a>`:'<span style="font-size:11px;color:var(--c-slate)">Sem link</span>'}
+            <div style="display:flex;gap:6px;align-items:center">
+              ${d.conteudo?`<a href="${sanitize(d.conteudo)}" target="_blank" class="btn btn-ghost" style="font-size:11px;padding:6px 12px;text-decoration:none">Abrir ↗</a>`:'<span style="font-size:11px;color:var(--c-slate)">Sem link</span>'}
+              <button class="btn btn-ghost" style="padding:3px 7px;font-size:11px;color:var(--red)" title="Excluir" onclick="PageOperacoes._excluirArquivo('${d.id}')">🗑️</button>
+            </div>
           </div>`).join('')
         : `<div style="padding:30px;text-align:center"><div style="font-size:36px;margin-bottom:12px">🗂️</div><div style="font-size:14px;font-weight:700;color:var(--c-white)">Nenhum documento cadastrado</div></div>`;
     } catch(e) { el.innerHTML='<div style="padding:16px;color:var(--c-slate)">Erro ao carregar.</div>'; }
+  },
+  async _excluirArquivo(id) {
+    if (!confirm('Excluir este documento?')) return;
+    await _sbq().from('pops').delete().eq('id', id);
+    mostrarToast('Documento excluído!','success');
+    PageOperacoes._carregarArquivo();
   },
   novoArquivo() {
     const corpo = `
@@ -2066,10 +2200,18 @@ const PageOperacoes = {
                 `PageOperacoes._toggleInscricoes('${e.id}',${!abertas})`,abertas?'btn-ghost':'btn-primary')}
               ${_btn('👥 Ver inscritos',`PageOperacoes._verInscritos('${e.id}','${sanitize(e.nome).replace(/'/g,"\\'")}')`, 'btn-ghost')}
               ${_btn('✏️ Editar',`PageOperacoes._editarEventoInscricao('${e.id}')`, 'btn-ghost')}
+              ${_btn('🗑️ Excluir',`PageOperacoes._excluirEventoInscricao('${e.id}')`, 'btn-ghost')}
             </div>
           </div>`;
       }).join('');
     }catch(e){el.innerHTML='<div style="padding:16px;color:var(--c-slate)">Erro ao carregar.</div>';}
+  },
+  async _excluirEventoInscricao(id) {
+    if (!confirm('Excluir este evento de inscrição? Todas as inscrições serão perdidas!')) return;
+    await _sbq().from('inscricoes_eventos').delete().eq('evento_id', id);
+    await _sbq().from('eventos_inscricao').delete().eq('id', id);
+    mostrarToast('Evento excluído!','success');
+    PageOperacoes._carregarEventosInscricao();
   },
   novoEventoInscricao() {
     const hoje=new Date().toISOString().slice(0,16);
@@ -2240,13 +2382,14 @@ const PageOperacoes = {
           `<span style="font-size:10px;color:var(--fg-3);margin-left:8px;">Revisão: ${revisao.toLocaleDateString('pt-BR')}</span>`;
         const ativoIcon=p.ativo!==false?'🟢':'🔴';
         return `<div style="background:var(--surface-2);border:1px solid var(--border-1);border-radius:10px;padding:12px 16px;display:flex;justify-content:space-between;align-items:center">
-          <div>
+          <div style="flex:1;min-width:0">
             <span style="font-size:13px;color:var(--fg-1);font-weight:600;">📄 ${p.nome}</span>${tag}
             ${p.descricao?`<div style="font-size:11px;color:var(--fg-3);margin-top:3px;">${p.descricao}</div>`:''}
           </div>
           <div style="display:flex;gap:6px;align-items:center;">
             <span title="${p.ativo!==false?'Ativo':'Inativo'}">${ativoIcon}</span>
             <button class="btn btn-ghost" style="font-size:11px;padding:4px 8px;" onclick="PageOperacoes.editarPop('${p.id}','${(p.nome||'').replace(/'/g,"\\'")}')">Editar</button>
+            <button class="btn btn-ghost" style="font-size:11px;padding:4px 8px;color:var(--red)" onclick="PageOperacoes._excluirPop('${p.id}')">🗑️</button>
           </div>
         </div>`;
       }).join('');
@@ -2295,6 +2438,13 @@ const PageOperacoes = {
         }catch(e){mostrarToast('Erro ao atualizar POP.','error');}
       }}
     ]});
+  },
+  async _excluirPop(id) {
+    if (!confirm('Excluir este POP? Esta ação não pode ser desfeita.')) return;
+    if (!_sbq()) return;
+    await _sbq().from('pops').delete().eq('id', id);
+    mostrarToast('POP excluído!','success');
+    PageOperacoes._renderPops();
   },
   gerarRelatorio() {
     mostrarToast('Iniciando geração de PDF ABJ...','info');
@@ -3052,7 +3202,10 @@ const PagePessoas = {
             return `<div style="background:var(--b-1);border:1px solid var(--b-2);border-radius:10px;padding:14px 16px">
               <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:6px">
                 <div style="font-weight:700;font-size:14px;color:var(--c-white)">${sanitize(e.titulo)}</div>
-                <span style="font-size:10px;padding:2px 8px;border-radius:99px;background:var(--b-2);color:var(--c-slate)">📅 ${dt}</span>
+                <div style="display:flex;align-items:center;gap:6px">
+                  <span style="font-size:10px;padding:2px 8px;border-radius:99px;background:var(--b-2);color:var(--c-slate)">📅 ${dt}</span>
+                  <button class="btn btn-ghost" style="padding:3px 7px;font-size:11px;color:var(--red)" title="Excluir" onclick="PagePessoas._excluirTreinamentoInterno('${e.id}')">🗑️</button>
+                </div>
               </div>
               ${e.local?`<div style="font-size:12px;color:var(--c-slate)">📍 ${sanitize(e.local)}</div>`:''}
               ${e.vagas?`<div style="font-size:12px;color:var(--c-slate)">👥 ${e.vagas} vagas</div>`:''}
@@ -3060,6 +3213,12 @@ const PagePessoas = {
           }).join('')
         : '<div style="padding:16px;text-align:center;color:var(--c-slate);font-size:13px">Nenhum treinamento interno cadastrado.</div>';
     } catch(e) { el.innerHTML='<div style="padding:16px;color:var(--c-slate)">Erro ao carregar.</div>'; }
+  },
+  async _excluirTreinamentoInterno(id) {
+    if (!confirm('Excluir este treinamento?')) return;
+    await _sbq().from('eventos').delete().eq('id', id);
+    mostrarToast('Excluído!','success');
+    PagePessoas._carregarTreinamentosInternos();
   },
   novoTreinamentoInterno() {
     const hoje = new Date().toISOString().slice(0,16);
@@ -3916,11 +4075,14 @@ const PageGlobal = {
               <div style="background:var(--b-1);border:1px solid ${ok?'var(--green)44':'var(--yellow)44'};border-radius:10px;padding:14px 16px">
                 <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:6px">
                   <div style="font-weight:700;font-size:13px;color:var(--c-white)">${sanitize(e.titulo)}</div>
-                  <span style="font-size:10px;font-weight:700;padding:3px 9px;border-radius:99px;white-space:nowrap;
-                               background:${ok?'var(--green)22':'var(--yellow)22'};color:${ok?'var(--green)':'var(--yellow)'};
-                               border:1px solid ${ok?'var(--green)44':'var(--yellow)44'}">
-                    ${ok?'✓ Completa':'⏳ Pendente'}
-                  </span>
+                  <div style="display:flex;align-items:center;gap:6px">
+                    <span style="font-size:10px;font-weight:700;padding:3px 9px;border-radius:99px;white-space:nowrap;
+                                 background:${ok?'var(--green)22':'var(--yellow)22'};color:${ok?'var(--green)':'var(--yellow)'};
+                                 border:1px solid ${ok?'var(--green)44':'var(--yellow)44'}">
+                      ${ok?'✓ Completa':'⏳ Pendente'}
+                    </span>
+                    <button class="btn btn-ghost" style="padding:3px 7px;font-size:11px;color:var(--red)" title="Excluir" onclick="PageGlobal._excluirEvento('${e.id}', 'visitas')">🗑️</button>
+                  </div>
                 </div>
                 <div style="font-size:12px;color:var(--c-slate)">
                   📅 ${_fmt(e.data_inicio)} · 👥 ${e.vagas||0} participantes
@@ -3930,6 +4092,14 @@ const PageGlobal = {
           }).join('')
         : '<div style="padding:16px;text-align:center;color:var(--c-slate);font-size:13px">Nenhuma visita técnica registrada ainda.</div>';
     } catch(e) { el.innerHTML='<div style="padding:16px;color:var(--c-slate)">Erro ao carregar.</div>'; }
+  },
+
+  async _excluirEvento(id, recarregarTipo) {
+    if (!confirm('Excluir este registro?')) return;
+    await _sbq().from('eventos').delete().eq('id', id);
+    mostrarToast('Excluído!','success');
+    const map = { visitas: '_carregarVisitas', apresentacoes: '_carregarApresentacoes', producao: '_carregarProducao' };
+    PageGlobal[map[recarregarTipo]]?.();
   },
 
   _renderApresentacoes() {
@@ -3966,12 +4136,15 @@ const PageGlobal = {
           ? (data||[]).map(e => {
               let extra = {}; try { extra = JSON.parse(e.descricao||'{}'); } catch(_){}
               return `
-                <div style="background:var(--b-1);border:1px solid var(--b-2);border-radius:10px;padding:12px 16px">
-                  <div style="font-weight:700;font-size:13px;color:var(--c-white);margin-bottom:4px">${sanitize(e.titulo)}</div>
-                  <div style="font-size:12px;color:var(--c-slate)">
-                    📅 ${_fmt(e.data_inicio)} · 📍 ${sanitize(e.local||'—')} · ${extra.modalidade||'presencial'}
-                    ${extra.fotos?` · <a href="${sanitize(extra.fotos)}" target="_blank" style="color:var(--c-accent)">Fotos ↗</a>`:''}
+                <div style="background:var(--b-1);border:1px solid var(--b-2);border-radius:10px;padding:12px 16px;display:flex;justify-content:space-between;align-items:flex-start;gap:8px">
+                  <div style="flex:1;min-width:0">
+                    <div style="font-weight:700;font-size:13px;color:var(--c-white);margin-bottom:4px">${sanitize(e.titulo)}</div>
+                    <div style="font-size:12px;color:var(--c-slate)">
+                      📅 ${_fmt(e.data_inicio)} · 📍 ${sanitize(e.local||'—')} · ${extra.modalidade||'presencial'}
+                      ${extra.fotos?` · <a href="${sanitize(extra.fotos)}" target="_blank" style="color:var(--c-accent)">Fotos ↗</a>`:''}
+                    </div>
                   </div>
+                  <button class="btn btn-ghost" style="padding:3px 7px;font-size:11px;color:var(--red)" title="Excluir" onclick="PageGlobal._excluirEvento('${e.id}', 'apresentacoes')">🗑️</button>
                 </div>`;
             }).join('')
           : '<div style="padding:16px;text-align:center;color:var(--c-slate);font-size:13px">Nenhuma apresentação registrada.</div>');
@@ -4012,13 +4185,16 @@ const PageGlobal = {
             return `
               <div style="background:var(--b-1);border:1px solid var(--b-2);border-radius:10px;padding:14px 16px">
                 <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:6px">
-                  <div>
+                  <div style="flex:1;min-width:0">
                     <div style="font-size:10px;font-weight:700;color:var(--c-accent);text-transform:uppercase;letter-spacing:.06em">${extra.tipo_trabalho||'artigo'}</div>
                     <div style="font-weight:700;font-size:13px;color:var(--c-white)">${sanitize(e.titulo)}</div>
                     ${extra.autores?`<div style="font-size:12px;color:var(--c-slate)">👤 ${sanitize(extra.autores)}</div>`:''}
                   </div>
-                  ${extra.bonus_enegep ? `<span style="font-size:11px;font-weight:800;padding:3px 9px;border-radius:99px;
-                    background:var(--green)22;color:var(--green);border:1px solid var(--green)44;white-space:nowrap">+25 pts ENEGEP</span>` : ''}
+                  <div style="display:flex;align-items:center;gap:6px">
+                    ${extra.bonus_enegep ? `<span style="font-size:11px;font-weight:800;padding:3px 9px;border-radius:99px;
+                      background:var(--green)22;color:var(--green);border:1px solid var(--green)44;white-space:nowrap">+25 pts ENEGEP</span>` : ''}
+                    <button class="btn btn-ghost" style="padding:3px 7px;font-size:11px;color:var(--red)" title="Excluir" onclick="PageGlobal._excluirEvento('${e.id}', 'producao')">🗑️</button>
+                  </div>
                 </div>
                 <div style="font-size:12px;color:var(--c-slate)">
                   📅 ${_fmt(e.data_inicio)}
@@ -4521,6 +4697,8 @@ document.addEventListener('nupi:booted', () => {
       /* Gerais */
       'notificacoes':      () => PageNotificacoes.init(),
       'compartilhado':     () => PageCompartilhado.init(),
+      'geral_reunioes':    () => PageGeral._renderReuniao(),
+      'geral_planejamento':() => PageGeral._renderPlanejamento(),
       'geral_melhorias':   () => PageGeral._renderMelhorias(),
       'geral_parcerias':   () => PageGeral._renderParcerias(),
       /* Páginas top-level do menu lateral */
@@ -4530,13 +4708,17 @@ document.addEventListener('nupi:booted', () => {
       'marketing':         () => typeof Marketing !== 'undefined' && Marketing.loadKanban(),
       'projetos':          () => typeof Projetos !== 'undefined' && Projetos.loadSponsors(),
       /* Marketing sub */
+      'mkt_tracker':       () => PageMarketing._renderTracker(),
       'mkt_kanban':        () => PageMarketing._renderKanban(),
-      /* Financeiro — IDs corretos conforme HTML */
+      /* Financeiro */
+      'fin_fluxo':         () => PageFinancas._renderFluxo(),
       'fin_abepro':        () => PageFinancas._renderABJFin(),
       'fin_comercial':     () => PageFinancas._renderCalendario(),
       /* Operações */
       'ops_relatorios':    () => PageOperacoes._renderRelatorios(),
+      'ops_pops':          () => PageOperacoes._renderPops(),
       'ops_arquivo':       () => PageOperacoes._renderArquivo(),
+      'ops_inscricoes':    () => PageOperacoes._renderInscricoes(),
       /* Gestão de Pessoas */
       'gp_talentos':       () => PagePessoas._renderTalentos(),
       'gp_clima':          () => PagePessoas._renderClima(),
@@ -4547,6 +4729,7 @@ document.addEventListener('nupi:booted', () => {
       /* Dev / Admin */
       'dev_usuarios':      () => PageDev.init(),
       /* Projetos sub */
+      'prj_eventos':       () => PageProjetos._renderEventos(),
       'prj_enegep':        () => PageProjetos._renderENEGEP(),
       'prj_treinamentos':  () => PageProjetos._renderTreinamentos(),
       'prj_nupicast':      () => PageProjetos._renderNupicast(),

@@ -1555,9 +1555,23 @@ const Pessoas = {
     `).join('');
   },
 
+  toggleCargoOutro(value) {
+    const outro = document.getElementById('inviteCargoOutro');
+    if (outro) outro.style.display = value === '__outro__' ? '' : 'none';
+  },
+
+  _getCargo() {
+    const sel = document.getElementById('inviteCargo')?.value;
+    if (sel === '__outro__') {
+      return document.getElementById('inviteCargoOutro')?.value.trim() || '';
+    }
+    return sel || '';
+  },
+
   async gerarConvite() {
     const email = document.getElementById('inviteEmail')?.value.trim();
-    const cargo = document.getElementById('inviteCargo')?.value.trim();
+    const nome = document.getElementById('inviteNome')?.value.trim();
+    const cargo = this._getCargo();
     const coordSigla = document.getElementById('inviteCoord')?.value;
     const role = document.getElementById('inviteRole')?.value;
     const alertEl = document.getElementById('inviteAlert');
@@ -1571,9 +1585,11 @@ const Pessoas = {
     const token = 'NUPI-' + Math.random().toString(36).slice(2,10).toUpperCase() + '-' + Date.now().toString(36).toUpperCase();
     const expires = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
 
+    let coordNome = coordSigla;
     if (_sb) {
-      const { data: coordData } = await _sb.from('coordenadorias').select('id').eq('sigla', coordSigla).single();
-        const { error } = await _sb.from('convites').insert({
+      const { data: coordData } = await _sb.from('coordenadorias').select('id,nome').eq('sigla', coordSigla).single();
+      coordNome = coordData?.nome || coordSigla;
+      const { error } = await _sb.from('convites').insert({
         token, email, cargo, role,
         coordenadoria_id: coordData?.id,
         usado: false,
@@ -1586,13 +1602,26 @@ const Pessoas = {
       }
     }
 
-    const link = `${window.location.origin}${window.location.pathname.replace('dashboard.html','')}convite.html?token=${token}`;
+    const link = `${window.location.origin}/convite.html?token=${token}`;
     const input = document.getElementById('inviteLinkInput');
     if (input) input.value = link;
     const card = document.getElementById('inviteLinkCard');
     if (card) card.style.display = '';
+
+    // Enviar email automaticamente via EmailJS
+    let emailEnviado = false;
+    if (window.EmailsModule?.enviarConvite) {
+      try {
+        emailEnviado = await window.EmailsModule.enviarConvite({
+          email, coord: coordNome, cargo, token,
+          nomeConvidado: nome || email.split('@')[0],
+          criadoPor: window._appProfile?.nome || 'Equipe NUPIEEPRO'
+        });
+      } catch(e) { console.warn('[Convite] Falha EmailJS', e); }
+    }
+
     if (alertEl) { alertEl.textContent = 'Convite criado com sucesso!'; alertEl.className = 'alert-box success'; }
-    App.toast('Link de convite gerado!', 'success');
+    App.toast(emailEnviado ? 'Convite criado e enviado por email!' : 'Link gerado — email não enviado (envie manualmente).', emailEnviado ? 'success' : 'warning');
   },
 
   copiarLink() {
@@ -1627,7 +1656,7 @@ const Pessoas = {
   async addMemberDirect() {
     const email = document.getElementById('inviteEmail')?.value.trim();
     const nome = document.getElementById('inviteNome')?.value.trim();
-    const cargo = document.getElementById('inviteCargo')?.value.trim();
+    const cargo = this._getCargo();
     const coordSigla = document.getElementById('inviteCoord')?.value;
     const role = document.getElementById('inviteRole')?.value;
     const bday = document.getElementById('inviteBday')?.value;
@@ -2532,12 +2561,76 @@ const Dem = {
     }).join('') : `<tr><td colspan="6" style="padding:20px;text-align:center;color:var(--fg-3);">Nenhuma demanda cadastrada ainda. Clique em "+ Nova" para criar.</td></tr>`;
   },
 
-  abrirDetalhes(id) {
-    /* Delegado ao Kanban que tem a lógica completa com anotações */
-    if (typeof Kanban !== 'undefined') {
-      /* Sincronizar a lista interna do Kanban se ainda não carregada */
-      Kanban.abrirDetalhes(id);
-    }
+  async abrirDetalhes(id) {
+    /* Busca demanda fresca do DB, mostra modal com botoes pra mudar status */
+    if (!_sb) return;
+    const { data: d } = await _sb
+      .from('demandas')
+      .select('*, coordenadorias(sigla), users!responsavel_id(nome)')
+      .eq('id', id)
+      .single();
+    if (!d) { App.toast('Demanda não encontrada', 'error'); return; }
+
+    const COL_LABEL = { pendente:'Backlog', exec:'Execução', evidencia:'Evidência', realizada:'Revisão', auditada:'Concluída' };
+    const sigla     = d.coordenadorias?.sigla || 'GER';
+    const prioCor   = ({ alta:'#f87171', media:'#f5c518', baixa:'#2dd4a0' })[d.prioridade] || 'var(--fg-3)';
+    const resp      = d.users?.nome || '—';
+    const prazo     = d.prazo ? new Date(d.prazo + 'T12:00:00').toLocaleDateString('pt-BR') : '—';
+
+    const corpo =
+      `<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;align-items:center">
+        <span class="coord-tag tag-${sigla.toLowerCase()}">${sigla}</span>
+        <span style="font-size:9px;font-weight:700;padding:2px 8px;border-radius:4px;background:${prioCor}22;color:${prioCor}">${(d.prioridade||'media').toUpperCase()}</span>
+        <span style="font-size:11px;color:var(--fg-3)">${COL_LABEL[d.coluna]||d.coluna}</span>
+      </div>
+      <div style="font-weight:700;font-size:16px;color:var(--fg-1);margin-bottom:12px;line-height:1.3">${sanitize(d.titulo)}</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+        <div><div style="font-size:10px;font-weight:700;color:var(--fg-3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:3px">Responsavel</div>
+          <div style="font-size:13px;color:var(--fg-1)">${sanitize(resp)}</div></div>
+        <div><div style="font-size:10px;font-weight:700;color:var(--fg-3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:3px">Prazo</div>
+          <div style="font-size:13px;color:var(--fg-1)">${prazo}</div></div>
+      </div>
+      ${d.descricao ? `<div style="margin-bottom:14px">
+        <div style="font-size:10px;font-weight:700;color:var(--fg-3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px">Descrição</div>
+        <div style="font-size:13px;color:var(--fg-2);background:var(--surface-3);border-radius:8px;padding:10px 12px;line-height:1.6">${sanitize(d.descricao)}</div>
+      </div>` : ''}
+      <div style="margin-bottom:14px">
+        <div style="font-size:10px;font-weight:700;color:var(--fg-3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px">Mudar status</div>
+        <select id="dem-status-${id}" class="form-input" style="width:100%">
+          ${Object.keys(COL_LABEL).map(k=>`<option value="${k}" ${k===d.coluna?'selected':''}>${COL_LABEL[k]}</option>`).join('')}
+        </select>
+      </div>`;
+
+    abrirModal({ titulo: 'Detalhes da Demanda', corpo, botoes: [
+      { texto: 'Marcar Concluída', classe: 'btn-primary', acao: () => Dem._setStatus(id, 'auditada') },
+      { texto: 'Excluir', classe: 'btn-ghost', acao: () => Dem._excluir(id) },
+      { texto: 'Salvar status', classe: 'btn-primary', acao: () => {
+        const novo = document.getElementById('dem-status-' + id)?.value;
+        if (novo) Dem._setStatus(id, novo);
+      } },
+      { texto: 'Fechar', classe: 'btn-ghost', acao: fecharModal },
+    ]});
+  },
+
+  async _setStatus(id, coluna) {
+    if (!_sb) return;
+    const { error } = await _sb.from('demandas').update({ coluna }).eq('id', id);
+    if (error) { App.toast('Erro ao atualizar: ' + error.message, 'error'); return; }
+    fecharModal();
+    App.toast('Status atualizado!', 'success');
+    Dem._loaded = false;
+    Dem.load();
+  },
+
+  async _excluir(id) {
+    if (!confirm('Tem certeza que deseja EXCLUIR esta demanda? Esta acao nao pode ser desfeita.')) return;
+    if (!_sb) return;
+    const { error } = await _sb.from('demandas').delete().eq('id', id);
+    if (error) { App.toast('Erro ao excluir: ' + error.message, 'error'); return; }
+    fecharModal();
+    App.toast('Demanda excluída!', 'success');
+    Dem._loaded = false;
+    Dem.load();
   }
 };
 window.Dem = Dem;
@@ -2609,23 +2702,33 @@ const NovoCal = {
     try {
       const hoje  = new Date(this.year, this.month, 1).toISOString().split('T')[0];
       const fim   = new Date(this.year, this.month + 1, 0).toISOString().split('T')[0];
-      const { data } = await sb.from('eventos').select('titulo,data_inicio,tipo,coordenadorias(sigla,icone)').gte('data_inicio', hoje).lte('data_inicio', fim).order('data_inicio').limit(8);
-      if (!data?.length) { el.innerHTML = '<p style="font-size:13px;color:var(--fg-3);text-align:center;padding:16px 0;">Nenhum evento cadastrado neste mês.<br><span style="font-size:11px;">Use o botão abaixo para registrar.</span></p>'; return; }
-      const CORES = { reuniao:'#9b7be8', evento:'var(--brand-orange)', treinamento:'#5b9cf6', enegep:'#f5c518', podcast:'#e85aa8', assembleia:'#2dd4a0', publicacao:'#f75412' };
+      const [evRes, demRes] = await Promise.all([
+        sb.from('eventos').select('titulo,data_inicio,tipo,coordenadorias(sigla,icone)').gte('data_inicio', hoje).lte('data_inicio', fim).order('data_inicio').limit(20),
+        sb.from('demandas').select('titulo,prazo,coluna,coordenadorias(sigla,icone)').gte('prazo', hoje).lte('prazo', fim).order('prazo').limit(20)
+      ]);
+      const eventos = (evRes.data || []).map(e => ({ titulo: e.titulo, data: e.data_inicio, tipo: e.tipo, coordenadorias: e.coordenadorias, _kind: 'evento' }));
+      const demandas = (demRes.data || [])
+        .filter(d => !['realizada','auditada'].includes(d.coluna))
+        .map(d => ({ titulo: d.titulo, data: d.prazo, tipo: 'prazo', coordenadorias: d.coordenadorias, _kind: 'demanda' }));
+      const data = eventos.concat(demandas).sort((a,b) => (a.data||'').localeCompare(b.data||'')).slice(0, 10);
+      if (!data.length) { el.innerHTML = '<p style="font-size:13px;color:var(--fg-3);text-align:center;padding:16px 0;">Nenhum evento ou prazo neste mês.<br><span style="font-size:11px;">Use o botão abaixo para registrar.</span></p>'; return; }
+      const CORES = { reuniao:'#9b7be8', evento:'var(--brand-orange)', treinamento:'#5b9cf6', enegep:'#f5c518', podcast:'#e85aa8', assembleia:'#2dd4a0', publicacao:'#f75412', prazo:'#f87171' };
       el.innerHTML = data.map(e => {
         const cor   = CORES[e.tipo] || 'var(--fg-3)';
-        const d     = e.data_inicio ? new Date(e.data_inicio + 'T12:00:00') : null;
-        const dia   = d ? d.getDate().toString().padStart(2,'0') : '—';
-        const mes   = d ? d.toLocaleDateString('pt-BR',{month:'short'}).toUpperCase() : '';
+        const d     = e.data ? new Date(e.data + 'T12:00:00') : null;
+        const dValid = d && !isNaN(d.getTime());
+        const dia   = dValid ? d.getDate().toString().padStart(2,'0') : '—';
+        const mes   = dValid ? d.toLocaleDateString('pt-BR',{month:'short'}).replace('.','').toUpperCase() : '';
         const sigla = e.coordenadorias?.sigla || '';
         const icone = e.coordenadorias?.icone || '';
+        const kindIcon = e._kind === 'demanda' ? '🎯 ' : '';
         return `<div style="display:flex;gap:12px;align-items:flex-start;">
           <div style="min-width:44px;text-align:center;">
             <div style="font-size:18px;font-weight:800;font-family:var(--font-mono);color:${cor};">${dia}</div>
             <div style="font-size:9px;color:var(--fg-3);">${mes}</div>
           </div>
           <div style="flex:1;padding:10px;background:${cor}0f;border-radius:8px;border-left:3px solid ${cor};">
-            <div style="font-weight:600;font-size:13px;">${sanitize(e.titulo||'Evento')}</div>
+            <div style="font-weight:600;font-size:13px;">${kindIcon}${sanitize(e.titulo||'Evento')}</div>
             <div style="font-size:11px;color:var(--fg-3);margin-top:2px;">${icone} ${sigla} · ${e.tipo||'evento'}</div>
           </div>
         </div>`;
