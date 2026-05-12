@@ -1651,6 +1651,12 @@ const Pessoas = {
 
     if (alertEl) { alertEl.textContent = 'Convite criado com sucesso!'; alertEl.className = 'alert-box success'; }
     App.toast(emailEnviado ? 'Convite criado e enviado por email!' : 'Link gerado — email não enviado (envie manualmente).', emailEnviado ? 'success' : 'warning');
+    /* Alerta dev/admin: convite criado */
+    if (typeof _notificarDevs === 'function') {
+      _notificarDevs('📩 Novo convite gerado',
+        `${nome || email} convidado como ${cargo} (${coordSigla}). ${emailEnviado ? 'Email enviado.' : 'Email NÃO enviado.'}`,
+        'convites');
+    }
   },
 
   copiarLink() {
@@ -1714,6 +1720,10 @@ const Pessoas = {
       // Trigger Welcome/Access Email
       const magic = await MagicLink.generate(email);
       await EmailService.notifyInvite({ nome, email }, magic);
+      /* Alerta dev/admin: membro novo cadastrado */
+      if (typeof _notificarDevs === 'function') {
+        _notificarDevs('🆕 Novo membro adicionado', `${nome} (${cargo} · ${coordSigla}) foi adicionado como ${role}.`, 'membros');
+      }
     }
     Pessoas.loadMembers();
   },
@@ -1783,6 +1793,12 @@ const PessoasExt = {
     const { error } = await q;
     if (error) { window.App?.toast?.('Erro ao atualizar: ' + error.message, 'error'); return; }
     window.App?.toast?.('Função atualizada com sucesso!', 'success');
+    /* Alerta dev/admin: role mudou */
+    if (typeof _notificarDevs === 'function') {
+      _notificarDevs('🔑 Função alterada',
+        `${identifier} agora é ${newRole}. Alterado por ${window._appProfile?.nome || 'desconhecido'}.`,
+        'permissoes');
+    }
   }
 };
 
