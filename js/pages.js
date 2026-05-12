@@ -246,12 +246,21 @@ const PageGeral = {
         .order('data_inicio',{ascending:false})
         .limit(8);
       el.innerHTML = data?.length
-        ? data.map(r=>`
+        ? data.map(r=>{
+          let extra = {};
+          let linkMeet = '';
+          /* descricao pode ser url direto OU JSON com {link, ...} */
+          if (r.descricao) {
+            if (r.descricao.startsWith('http')) linkMeet = r.descricao;
+            else { try { extra = JSON.parse(r.descricao); linkMeet = extra.link || ''; } catch {} }
+          }
+          return `
           <div style="background:var(--b-1);border:1px solid var(--b-2);border-radius:10px;
                       padding:12px 16px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
             <div style="flex:1;min-width:0">
               <div style="font-weight:700;font-size:13px;color:var(--c-white)">${sanitize(r.titulo)}</div>
               <div style="font-size:12px;color:var(--c-slate)">📅 ${_fmt(r.data_inicio)} · ${r.vagas||0} vagas</div>
+              ${linkMeet?`<div style="font-size:11px;margin-top:4px"><a href="${sanitize(linkMeet)}" target="_blank" style="color:var(--c-accent);text-decoration:none">🎥 Entrar na reunião ↗</a></div>`:''}
             </div>
             <div style="display:flex;align-items:center;gap:6px">
               <span style="font-size:11px;font-weight:700;padding:3px 9px;border-radius:99px;
@@ -261,7 +270,8 @@ const PageGeral = {
               <button class="btn btn-ghost" style="padding:3px 7px;font-size:11px" title="Editar" onclick="PageGeral._editarReuniao('${r.id}')">✏️</button>
               <button class="btn btn-ghost" style="padding:3px 7px;font-size:11px;color:var(--red)" title="Excluir" onclick="PageGeral._excluirReuniao('${r.id}')">🗑️</button>
             </div>
-          </div>`).join('')
+          </div>`;
+        }).join('')
         : '<div style="padding:16px;text-align:center;color:var(--c-slate);font-size:13px">Nenhuma reunião registrada ainda.</div>';
     } catch(e) { el.innerHTML='<div style="padding:16px;color:var(--c-slate)">Erro ao carregar.</div>'; }
   },
@@ -685,6 +695,19 @@ const PageGeral = {
       }]);
       mostrarToast('Reunião criada!','success');
       this._carregarReunioes();
+      /* Notifica todos os membros ativos sobre a nova reuniao */
+      if (_sbq()) {
+        const { data: membros } = await _sbq().from('users').select('id').eq('ativo', true);
+        if (membros?.length) {
+          const linkHint = link ? ` Link: ${link}` : '';
+          const msg = `${_fmt(data)} · ${vagas} vagas.${linkHint}`;
+          await _sbq().from('notificacoes').insert(membros.map(m => ({
+            user_id: m.id, titulo: `📅 Nova reunião: ${titulo}`, mensagem: msg,
+            tipo: 'info', categoria: 'reuniao', lida: false
+          })));
+        }
+      }
+      _notificarDevs('📅 Reunião criada', `${titulo} em ${_fmt(data)}.`, 'reuniao');
     } catch(e){mostrarToast('Erro ao salvar.','error');}
   },
   async verFrequencia() {
@@ -4045,8 +4068,46 @@ const PageDev = {
           </button>
         </div>`)}
       ${_sc('Regras de Negócio Ativas','📐',`
-        <div id="devRegras">Calculando…</div>`)}`;
+        <div id="devRegras">Calculando…</div>`)}
+      ${_sc('Atenção: Membros sem entrega 2+ meses (Art. 9)','⚠️',`
+        <p style="font-size:12px;color:var(--c-slate);margin-bottom:10px">
+          Membros que aparecem como criadores OU responsáveis de zero demandas nos últimos 60 dias.
+        </p>
+        <div id="devInatividade" style="display:flex;flex-direction:column;gap:6px;font-size:13px">
+          <div style="color:var(--c-slate);padding:8px">Calculando...</div>
+        </div>`)}`;
     this._renderRegras();
+    this._renderInatividade();
+  },
+
+  async _renderInatividade() {
+    const el = document.getElementById('devInatividade');
+    if (!el || !_sbq()) return;
+    try {
+      const ago60d = new Date(Date.now() - 60*86400000).toISOString();
+      const [{ data: users }, { data: ativos }] = await Promise.all([
+        _sbq().from('users').select('id,nome,email,cargo,role,coordenadorias(sigla)').eq('ativo', true),
+        _sbq().from('demandas').select('responsavel_id,criado_por,created_at').gte('created_at', ago60d),
+      ]);
+      const ativosSet = new Set();
+      (ativos || []).forEach(d => {
+        if (d.responsavel_id) ativosSet.add(d.responsavel_id);
+        if (d.criado_por)     ativosSet.add(d.criado_por);
+      });
+      const inativos = (users || []).filter(u => !ativosSet.has(u.id) && u.role !== 'admin');
+      if (!inativos.length) {
+        el.innerHTML = '<div style="color:var(--green);padding:8px;font-size:13px">✅ Todos os membros ativos têm atividade nos últimos 60 dias.</div>';
+        return;
+      }
+      el.innerHTML = inativos.map(u => `
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px;background:var(--yellow)18;border:1px solid var(--yellow)44;border-radius:8px">
+          <div>
+            <div style="font-weight:700;color:var(--c-white)">${sanitize(u.nome || u.email)}</div>
+            <div style="font-size:11px;color:var(--c-slate)">${sanitize(u.cargo || '—')} · ${sanitize(u.coordenadorias?.sigla || '—')}</div>
+          </div>
+          <span style="font-size:10px;color:var(--yellow);font-weight:700;padding:3px 8px;border-radius:99px;background:var(--yellow)22;border:1px solid var(--yellow)44">⚠️ 60+ dias</span>
+        </div>`).join('');
+    } catch(e) { el.innerHTML = '<div style="color:var(--red);padding:8px">Erro ao calcular.</div>'; console.warn('[inatividade]', e); }
   },
 
   async _renderRegras() {
