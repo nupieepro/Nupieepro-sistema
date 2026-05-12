@@ -59,11 +59,12 @@ const ROLE_PAGES = {
     { id: 'tarefas', icon: 'list', label: 'Kanban Geral' },
   ],
   'Operações':  [
-    { id: 'dashboard',      icon: 'grid',      label: 'Painel Central' },
-    { id: 'ops_relatorios', icon: 'file',      label: 'Relatórios ABJ' },
-    { id: 'ops_pops',       icon: 'folder',    label: 'Cofre de POPs' },
-    { id: 'ops_arquivo',    icon: 'folder',    label: 'Arquivo Digital' },
-    { id: 'ops_inscricoes', icon: 'ticket',    label: 'Gestão de Inscrições' },
+    { id: 'dashboard',         icon: 'grid',      label: 'Painel Central' },
+    { id: 'ops_relatorios',    icon: 'file',      label: 'Relatórios ABJ' },
+    { id: 'ops_pops',          icon: 'folder',    label: 'Cofre de POPs' },
+    { id: 'ops_arquivo',       icon: 'folder',    label: 'Arquivo Digital' },
+    { id: 'ops_inscricoes',    icon: 'ticket',    label: 'Gestão de Inscrições' },
+    { id: 'ops_eventos_admin', icon: 'calendar',  label: 'Nupi-Eventos (App)' },
   ],
   'G. Pessoas': [
     { id: 'dashboard',       icon: 'grid',         label: 'Painel Central' },
@@ -75,9 +76,10 @@ const ROLE_PAGES = {
     { id: 'pessoas',         icon: 'user-check',    label: 'Gestão de Membros' },
   ],
   'Marketing':  [
-    { id: 'dashboard',   icon: 'grid',      label: 'Painel Central' },
-    { id: 'mkt_tracker', icon: 'megaphone', label: 'Social Media Tracker' },
-    { id: 'mkt_kanban',  icon: 'list',      label: 'Kanban da Lojinha' },
+    { id: 'dashboard',          icon: 'grid',         label: 'Painel Central' },
+    { id: 'mkt_tracker',        icon: 'megaphone',    label: 'Social Media Tracker' },
+    { id: 'mkt_kanban',         icon: 'list',         label: 'Kanban da Lojinha' },
+    { id: 'mkt_lojinha_admin',  icon: 'shopping-bag', label: 'Lojinha (App)' },
   ],
   'Projetos':   [
     { id: 'dashboard',       icon: 'grid',      label: 'Painel Central' },
