@@ -1586,7 +1586,7 @@ const Pessoas = {
       }
     }
 
-    const link = `${window.location.origin}${window.location.pathname.replace('dashboard.html','')}convite.html?token=${token}`;
+    const link = `${window.location.origin}/convite.html?token=${token}`;
     const input = document.getElementById('inviteLinkInput');
     if (input) input.value = link;
     const card = document.getElementById('inviteLinkCard');
@@ -2615,8 +2615,9 @@ const NovoCal = {
       el.innerHTML = data.map(e => {
         const cor   = CORES[e.tipo] || 'var(--fg-3)';
         const d     = e.data_inicio ? new Date(e.data_inicio + 'T12:00:00') : null;
-        const dia   = d ? d.getDate().toString().padStart(2,'0') : '—';
-        const mes   = d ? d.toLocaleDateString('pt-BR',{month:'short'}).toUpperCase() : '';
+        const dValid = d && !isNaN(d.getTime());
+        const dia   = dValid ? d.getDate().toString().padStart(2,'0') : '—';
+        const mes   = dValid ? d.toLocaleDateString('pt-BR',{month:'short'}).replace('.','').toUpperCase() : '';
         const sigla = e.coordenadorias?.sigla || '';
         const icone = e.coordenadorias?.icone || '';
         return `<div style="display:flex;gap:12px;align-items:flex-start;">

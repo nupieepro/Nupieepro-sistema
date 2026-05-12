@@ -1799,7 +1799,7 @@ const PageProjetos = {
       <p style="font-size:13px;color:var(--c-slate);margin-bottom:14px">
         Capacitações externas e treinamentos realizados pelos membros do Núcleo.
       </p>
-      ${_btn('+ Registrar capacitação','PageProjetos.novaCapacitacao()')}
+      ${_btn('+ Registrar capacitação','PageProjetos.novoTreinamento()')}
       <div id="treinamentos-lista" style="margin-top:14px;display:flex;flex-direction:column;gap:8px">
         <div style="padding:20px;text-align:center;color:var(--c-slate);font-size:13px">Carregando...</div>
       </div>`);
