@@ -811,7 +811,7 @@ const PageMarketing = {
       pageId: 'page-mkt_lojinha_admin',
       titulo: 'Lojinha NUPIEEPRO',
       icon: '🛍️',
-      url: 'https://nupieepro.github.io/Lojinha-Nupieepro/',
+      url: 'https://nupieepro.github.io/Lojinha-Nupieepro/admin.html',
       descricao: 'Apenas Coord. Marketing, Coord. Financeiro, Coord. Geral e Admin podem gerenciar a Lojinha.',
       cargosPermitidos: ['coordenador de marketing', 'assessor de marketing', 'coordenador financeiro', 'assessor financeiro', 'coordenador geral', 'desenvolvedor'],
     });
@@ -2239,7 +2239,7 @@ const PageOperacoes = {
       pageId: 'page-ops_eventos_admin',
       titulo: 'Nupi-Eventos',
       icon: '🎟️',
-      url: 'https://nupieepro.github.io/nupi-eventos/',
+      url: 'https://nupieepro.github.io/nupi-eventos/admin.html',
       descricao: 'Apenas Coord. Operações, Coord. Geral e Admin podem gerenciar Eventos.',
       cargosPermitidos: ['coordenador de operações', 'assessor de operações', 'coordenador geral', 'desenvolvedor'],
     });

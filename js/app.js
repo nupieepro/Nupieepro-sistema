@@ -1558,6 +1558,7 @@ const Pessoas = {
 
         <!-- V6.0 Decision Console (Admin Only) -->
         <div style="display:flex; gap:6px; margin-left:auto;">
+          <button class="btn btn-ghost" title="Editar perfil" onclick="(function(){ goTo('dev_usuarios'); setTimeout(function(){ if (typeof PageDev !== 'undefined' && PageDev.editarUsuario) PageDev.editarUsuario('${m.id}'); }, 300); })()" style="padding:4px 8px; font-size:14px; border:1px solid var(--b-1);">✏️</button>
           <button class="btn btn-ghost" title="Gerar Magic Link (2 min)" onclick="Pessoas.sendMagicLink('${m.email}')" style="padding:4px 8px; font-size:14px; border:1px solid var(--b-1);">🪄</button>
           <button class="btn btn-ghost" title="Redefinir Senha" onclick="Pessoas.resetPassword('${m.email}')" style="padding:4px 8px; font-size:14px; border:1px solid var(--b-1);">🔑</button>
           <button class="btn btn-ghost" title="APAGAR DEFINITIVAMENTE" onclick="Pessoas.deleteMember('${m.id}','${m.email}')" style="padding:4px 8px; font-size:14px; border:1px solid var(--b-1); color:var(--red);">🔥</button>
@@ -2656,6 +2657,7 @@ const Dem = {
       </div>`;
 
     abrirModal({ titulo: 'Detalhes da Demanda', corpo, botoes: [
+      { texto: '✏️ Editar', classe: 'btn-ghost', acao: () => Dem._editar(id, d) },
       { texto: 'Marcar Concluída', classe: 'btn-primary', acao: () => Dem._setStatus(id, 'auditada') },
       { texto: 'Excluir', classe: 'btn-ghost', acao: () => Dem._excluir(id) },
       { texto: 'Salvar status', classe: 'btn-primary', acao: () => {
@@ -2664,6 +2666,49 @@ const Dem = {
       } },
       { texto: 'Fechar', classe: 'btn-ghost', acao: fecharModal },
     ]});
+  },
+
+  async _editar(id, dOriginal) {
+    fecharModal();
+    setTimeout(() => {
+      abrirModal({
+        titulo: '✏️ Editar Demanda',
+        corpo: `
+          <div class="form-group"><label class="form-label">Título *</label>
+            <input id="ed-dem-titulo" class="form-input" value="${sanitize(dOriginal.titulo || '')}"></div>
+          <div class="form-group"><label class="form-label">Descrição</label>
+            <textarea id="ed-dem-desc" class="form-input" rows="3">${sanitize(dOriginal.descricao || '')}</textarea></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+            <div class="form-group"><label class="form-label">Prioridade</label>
+              <select id="ed-dem-prio" class="form-input">
+                <option value="baixa" ${dOriginal.prioridade==='baixa'?'selected':''}>Baixa</option>
+                <option value="media" ${dOriginal.prioridade==='media'?'selected':''}>Média</option>
+                <option value="alta" ${dOriginal.prioridade==='alta'?'selected':''}>Alta</option>
+              </select></div>
+            <div class="form-group"><label class="form-label">Prazo</label>
+              <input id="ed-dem-prazo" type="date" class="form-input" value="${dOriginal.prazo || ''}"></div>
+          </div>`,
+        botoes: [
+          { texto: 'Cancelar', classe: 'btn-ghost' },
+          { texto: 'Salvar', classe: 'btn-primary', acao: async () => {
+            const titulo = document.getElementById('ed-dem-titulo')?.value?.trim();
+            const desc   = document.getElementById('ed-dem-desc')?.value?.trim() || null;
+            const prio   = document.getElementById('ed-dem-prio')?.value;
+            const prazo  = document.getElementById('ed-dem-prazo')?.value || null;
+            if (!titulo) { App.toast('Título é obrigatório.', 'error'); return; }
+            try {
+              await window._supabase.from('demandas').update({
+                titulo, descricao: desc, prioridade: prio, prazo, updated_at: new Date().toISOString()
+              }).eq('id', id);
+              fecharModal();
+              App.toast('Demanda atualizada!', 'success');
+              Dem._loaded = false;
+              Dem.load();
+            } catch(e) { App.toast('Erro: ' + e.message, 'error'); }
+          }}
+        ]
+      });
+    }, 100);
   },
 
   async _setStatus(id, coluna) {
