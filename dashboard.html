@@ -769,7 +769,7 @@
             </button>
             <div class="topbar-title-group">
               <div class="topbar-title">Demandas</div>
-              <div class="topbar-sub">Central de demandas do núcleo</div>
+              <div class="topbar-sub" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:60vw;">Central de demandas do núcleo</div>
             </div>
           </div>
           <div class="topbar-right">
@@ -1635,13 +1635,13 @@
   <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/lucide@0.452.0/dist/umd/lucide.min.js"></script>
-  <script src="js/permissoes.js?v=56"></script>
-  <script src="js/app.js?v=56"></script>
-  <script src="js/auth.js?v=56"></script>
-  <script src="js/abj.js?v=56"></script>
-  <script src="js/relatorio.js?v=56"></script>
-  <script src="js/emails.js?v=56"></script>
-  <script src="js/pages.js?v=56"></script>
+  <script src="js/permissoes.js?v=57"></script>
+  <script src="js/app.js?v=57"></script>
+  <script src="js/auth.js?v=57"></script>
+  <script src="js/abj.js?v=57"></script>
+  <script src="js/relatorio.js?v=57"></script>
+  <script src="js/emails.js?v=57"></script>
+  <script src="js/pages.js?v=57"></script>
   <script>
     // ── PROFILE DROPDOWN ───────────────────────────────
     function toggleProfileDropdown() {
@@ -1756,5 +1756,7 @@
       }, 800);
     })();
   </script>
+  <!-- Version badge fixo no canto pra debug. Confirma versao carregada. -->
+  <div id="nupi-version-badge" style="position:fixed;bottom:6px;right:6px;z-index:9999;background:rgba(0,0,0,.6);color:#F07820;font-size:10px;font-family:monospace;padding:3px 6px;border-radius:4px;pointer-events:none;letter-spacing:.5px">v57</div>
 </body>
 </html>
