@@ -4521,6 +4521,8 @@ document.addEventListener('nupi:booted', () => {
       /* Gerais */
       'notificacoes':      () => PageNotificacoes.init(),
       'compartilhado':     () => PageCompartilhado.init(),
+      'geral_reunioes':    () => PageGeral._renderReuniao(),
+      'geral_planejamento':() => PageGeral._renderPlanejamento(),
       'geral_melhorias':   () => PageGeral._renderMelhorias(),
       'geral_parcerias':   () => PageGeral._renderParcerias(),
       /* Páginas top-level do menu lateral */
@@ -4530,13 +4532,17 @@ document.addEventListener('nupi:booted', () => {
       'marketing':         () => typeof Marketing !== 'undefined' && Marketing.loadKanban(),
       'projetos':          () => typeof Projetos !== 'undefined' && Projetos.loadSponsors(),
       /* Marketing sub */
+      'mkt_tracker':       () => PageMarketing._renderTracker(),
       'mkt_kanban':        () => PageMarketing._renderKanban(),
-      /* Financeiro — IDs corretos conforme HTML */
+      /* Financeiro */
+      'fin_fluxo':         () => PageFinancas._renderFluxo(),
       'fin_abepro':        () => PageFinancas._renderABJFin(),
       'fin_comercial':     () => PageFinancas._renderCalendario(),
       /* Operações */
       'ops_relatorios':    () => PageOperacoes._renderRelatorios(),
+      'ops_pops':          () => PageOperacoes._renderPops(),
       'ops_arquivo':       () => PageOperacoes._renderArquivo(),
+      'ops_inscricoes':    () => PageOperacoes._renderInscricoes(),
       /* Gestão de Pessoas */
       'gp_talentos':       () => PagePessoas._renderTalentos(),
       'gp_clima':          () => PagePessoas._renderClima(),
@@ -4547,6 +4553,7 @@ document.addEventListener('nupi:booted', () => {
       /* Dev / Admin */
       'dev_usuarios':      () => PageDev.init(),
       /* Projetos sub */
+      'prj_eventos':       () => PageProjetos._renderEventos(),
       'prj_enegep':        () => PageProjetos._renderENEGEP(),
       'prj_treinamentos':  () => PageProjetos._renderTreinamentos(),
       'prj_nupicast':      () => PageProjetos._renderNupicast(),
