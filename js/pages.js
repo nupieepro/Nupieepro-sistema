@@ -2101,14 +2101,23 @@ const PageOperacoes = {
         .select('*').order('created_at',{ascending:false}).limit(40);
       el.innerHTML = data?.length
         ? data.map(d => `<div style="background:var(--b-1);border:1px solid var(--b-2);border-radius:10px;padding:14px 16px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
-            <div>
+            <div style="flex:1;min-width:0">
               <div style="font-weight:700;font-size:13px;color:var(--c-white)">${sanitize(d.nome||'Documento')}</div>
               <div style="font-size:12px;color:var(--c-slate)">${d.descricao?`📂 ${sanitize(d.descricao)} · `:''}📅 ${_fmt(d.created_at)}</div>
             </div>
-            ${d.conteudo?`<a href="${sanitize(d.conteudo)}" target="_blank" class="btn btn-ghost" style="font-size:11px;padding:6px 12px;text-decoration:none">Abrir ↗</a>`:'<span style="font-size:11px;color:var(--c-slate)">Sem link</span>'}
+            <div style="display:flex;gap:6px;align-items:center">
+              ${d.conteudo?`<a href="${sanitize(d.conteudo)}" target="_blank" class="btn btn-ghost" style="font-size:11px;padding:6px 12px;text-decoration:none">Abrir ↗</a>`:'<span style="font-size:11px;color:var(--c-slate)">Sem link</span>'}
+              <button class="btn btn-ghost" style="padding:3px 7px;font-size:11px;color:var(--red)" title="Excluir" onclick="PageOperacoes._excluirArquivo('${d.id}')">🗑️</button>
+            </div>
           </div>`).join('')
         : `<div style="padding:30px;text-align:center"><div style="font-size:36px;margin-bottom:12px">🗂️</div><div style="font-size:14px;font-weight:700;color:var(--c-white)">Nenhum documento cadastrado</div></div>`;
     } catch(e) { el.innerHTML='<div style="padding:16px;color:var(--c-slate)">Erro ao carregar.</div>'; }
+  },
+  async _excluirArquivo(id) {
+    if (!confirm('Excluir este documento?')) return;
+    await _sbq().from('pops').delete().eq('id', id);
+    mostrarToast('Documento excluído!','success');
+    PageOperacoes._carregarArquivo();
   },
   novoArquivo() {
     const corpo = `
@@ -2191,10 +2200,18 @@ const PageOperacoes = {
                 `PageOperacoes._toggleInscricoes('${e.id}',${!abertas})`,abertas?'btn-ghost':'btn-primary')}
               ${_btn('👥 Ver inscritos',`PageOperacoes._verInscritos('${e.id}','${sanitize(e.nome).replace(/'/g,"\\'")}')`, 'btn-ghost')}
               ${_btn('✏️ Editar',`PageOperacoes._editarEventoInscricao('${e.id}')`, 'btn-ghost')}
+              ${_btn('🗑️ Excluir',`PageOperacoes._excluirEventoInscricao('${e.id}')`, 'btn-ghost')}
             </div>
           </div>`;
       }).join('');
     }catch(e){el.innerHTML='<div style="padding:16px;color:var(--c-slate)">Erro ao carregar.</div>';}
+  },
+  async _excluirEventoInscricao(id) {
+    if (!confirm('Excluir este evento de inscrição? Todas as inscrições serão perdidas!')) return;
+    await _sbq().from('inscricoes_eventos').delete().eq('evento_id', id);
+    await _sbq().from('eventos_inscricao').delete().eq('id', id);
+    mostrarToast('Evento excluído!','success');
+    PageOperacoes._carregarEventosInscricao();
   },
   novoEventoInscricao() {
     const hoje=new Date().toISOString().slice(0,16);
