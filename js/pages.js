@@ -3750,6 +3750,16 @@ const PageDev = {
         <select id="eu-coord" class="form-select"><option value="">— Sem coord —</option>${coordOpts}</select></div>
       <div class="form-group"><label class="form-label">Aniversário</label>
         <input id="eu-aniv" type="date" class="form-input" value="${u.aniversario||''}"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div class="form-group"><label class="form-label">Instituição</label>
+          <input id="eu-inst" class="form-input" placeholder="Ex: UESPI, IFPI, UFPI" value="${sanitize(u.instituicao||'')}"></div>
+        <div class="form-group"><label class="form-label">Curso</label>
+          <input id="eu-curso" class="form-input" placeholder="Ex: Eng. de Produção" value="${sanitize(u.curso||'')}"></div>
+      </div>
+      <div class="form-group"><label class="form-label">Previsão de conclusão (Art. 10)</label>
+        <input id="eu-concl" type="date" class="form-input" value="${u.data_conclusao||''}">
+        <p style="font-size:10px;color:var(--c-slate);margin-top:4px">Quando vencida, sistema sugere desativação automática.</p>
+      </div>
       <div class="form-group"><label class="form-label">Status</label>
         <select id="eu-ativo" class="form-select">
           <option value="true"  ${u.ativo?'selected':''}>● Ativo</option>
@@ -3771,11 +3781,16 @@ const PageDev = {
     const role   = document.getElementById('eu-role')?.value;
     const coordId= document.getElementById('eu-coord')?.value || null;
     const aniv   = document.getElementById('eu-aniv')?.value || null;
+    const inst   = document.getElementById('eu-inst')?.value.trim() || null;
+    const curso  = document.getElementById('eu-curso')?.value.trim() || null;
+    const concl  = document.getElementById('eu-concl')?.value || null;
     const ativo  = document.getElementById('eu-ativo')?.value === 'true';
     if (!nome) { mostrarToast('Nome é obrigatório.','error'); return; }
     try {
-      await _sbq().from('users').update({ nome, apelido, cargo, role, coordenadoria_id: coordId, aniversario: aniv, ativo })
-        .eq('id', userId);
+      await _sbq().from('users').update({
+        nome, apelido, cargo, role, coordenadoria_id: coordId,
+        aniversario: aniv, instituicao: inst, curso, data_conclusao: concl, ativo
+      }).eq('id', userId);
       fecharModal();
       mostrarToast('Usuário atualizado!', 'success');
       this._carregarUsuarios();
@@ -4075,9 +4090,21 @@ const PageDev = {
         </p>
         <div id="devInatividade" style="display:flex;flex-direction:column;gap:6px;font-size:13px">
           <div style="color:var(--c-slate);padding:8px">Calculando...</div>
-        </div>`)}`;
+        </div>`)}
+      ${_sc('Concluintes do curso (Art. 10)','🎓',`
+        <p style="font-size:12px;color:var(--c-slate);margin-bottom:10px">
+          Membros com data de conclusão prevista nos próximos 60 dias ou já vencida.
+          Botão 🚪 desativa o membro (egresso automático).
+        </p>
+        <div id="devConcluintes" style="display:flex;flex-direction:column;gap:6px;font-size:13px">
+          <div style="color:var(--c-slate);padding:8px">Calculando...</div>
+        </div>`)}
+      ${_sc('Reunião Geral mensal (Art. 12)','📅',`
+        <div id="devReuniaoStatus"><div style="color:var(--c-slate);padding:8px">Verificando...</div></div>`)}`;
     this._renderRegras();
     this._renderInatividade();
+    this._renderConcluintes();
+    this._renderReuniaoStatus();
   },
 
   async _renderInatividade() {
@@ -4108,6 +4135,72 @@ const PageDev = {
           <span style="font-size:10px;color:var(--yellow);font-weight:700;padding:3px 8px;border-radius:99px;background:var(--yellow)22;border:1px solid var(--yellow)44">⚠️ 60+ dias</span>
         </div>`).join('');
     } catch(e) { el.innerHTML = '<div style="color:var(--red);padding:8px">Erro ao calcular.</div>'; console.warn('[inatividade]', e); }
+  },
+
+  async _renderConcluintes() {
+    const el = document.getElementById('devConcluintes');
+    if (!el || !_sbq()) return;
+    try {
+      const hoje = new Date().toISOString().slice(0, 10);
+      const proximo60d = new Date(Date.now() + 60*86400000).toISOString().slice(0, 10);
+      const { data } = await _sbq().from('users')
+        .select('id,nome,email,cargo,data_conclusao,coordenadorias(sigla),ativo')
+        .not('data_conclusao', 'is', null)
+        .eq('ativo', true)
+        .lte('data_conclusao', proximo60d)
+        .order('data_conclusao');
+      if (!data?.length) {
+        el.innerHTML = '<div style="color:var(--green);padding:8px;font-size:13px">✅ Nenhum membro com conclusão prevista nos próximos 60 dias.</div>';
+        return;
+      }
+      el.innerHTML = data.map(u => {
+        const dias = Math.ceil((new Date(u.data_conclusao) - new Date()) / 86400000);
+        const cor = dias < 0 ? 'var(--red)' : dias < 30 ? 'var(--yellow)' : 'var(--c-accent)';
+        const status = dias < 0 ? '🚪 Concluiu — sugerir desativação (Art. 10)' : `⏱ Conclui em ${dias}d`;
+        return `
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px;background:${cor}18;border:1px solid ${cor}44;border-radius:8px">
+          <div>
+            <div style="font-weight:700;color:var(--c-white)">${sanitize(u.nome || u.email)}</div>
+            <div style="font-size:11px;color:var(--c-slate)">${sanitize(u.cargo || '—')} · ${sanitize(u.coordenadorias?.sigla || '—')} · ${_fmt(u.data_conclusao)}</div>
+          </div>
+          <div style="display:flex;gap:6px;align-items:center">
+            <span style="font-size:10px;color:${cor};font-weight:700;padding:3px 8px;border-radius:99px;background:${cor}22;border:1px solid ${cor}44">${status}</span>
+            ${dias < 0 ? `<button class="btn btn-ghost" style="padding:3px 7px;font-size:11px;color:var(--red)" title="Desativar membro" onclick="PageDev._desativarConcluinte('${u.id}','${sanitize(u.nome || u.email).replace(/'/g,"\\'")}')">🚪</button>` : ''}
+          </div>
+        </div>`;
+      }).join('');
+    } catch(e) { el.innerHTML = '<div style="color:var(--red);padding:8px">Erro ao calcular.</div>'; console.warn('[concluintes]', e); }
+  },
+
+  async _desativarConcluinte(id, nome) {
+    if (!confirm(`Desativar ${nome}? Membro concluinte sai do quadro automaticamente (Regimento Art. 10).`)) return;
+    await _sbq().from('users').update({ ativo: false }).eq('id', id);
+    mostrarToast(`${nome} desativado(a).`,'success');
+    _notificarDevs('🚪 Membro egresso', `${nome} foi desativado(a) (concluiu o curso — Art. 10).`, 'membros');
+    PageDev._renderConcluintes();
+    PageDev._renderInatividade();
+  },
+
+  async _renderReuniaoStatus() {
+    const el = document.getElementById('devReuniaoStatus');
+    if (!el || !_sbq()) return;
+    try {
+      const inicio = new Date(); inicio.setDate(1);
+      const fim = new Date(inicio.getFullYear(), inicio.getMonth() + 1, 0);
+      const { data: reunioes } = await _sbq().from('eventos')
+        .select('id,titulo,data_inicio').eq('tipo', 'reuniao')
+        .gte('data_inicio', inicio.toISOString())
+        .lte('data_inicio', fim.toISOString());
+      const mesNome = inicio.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
+      const temReuniao = (reunioes?.length || 0) > 0;
+      el.innerHTML = temReuniao
+        ? `<div style="color:var(--green);padding:8px;font-size:13px">✅ Reunião Geral agendada em <strong>${mesNome}</strong> (${reunioes.length} reuniões).</div>`
+        : `<div style="background:var(--yellow)18;border:1px solid var(--yellow)44;border-radius:8px;padding:12px;font-size:13px">
+            <div style="color:var(--yellow);font-weight:700;margin-bottom:6px">⚠️ Nenhuma reunião agendada em ${mesNome}</div>
+            <div style="font-size:12px;color:var(--c-slate)">Regimento Art. 12 (Coord. Geral) — reunião geral mensal obrigatória.</div>
+            <button class="btn btn-primary" style="margin-top:10px;font-size:12px;padding:6px 12px" onclick="goTo('geral_reunioes');setTimeout(()=>PageGeral.novaReuniao(),300)">+ Agendar agora</button>
+          </div>`;
+    } catch(e) { el.innerHTML = '<div style="color:var(--red);padding:8px">Erro.</div>'; }
   },
 
   async _renderRegras() {
