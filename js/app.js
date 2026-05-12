@@ -156,15 +156,24 @@ const RateLimiter = {
 const _EMAIL_SENDER = 'NUPIEEPRO Sistema';
 
 const EmailService = {
+  _inited: false,
   init() {
+    if (this._inited) return;
     if (typeof emailjs !== 'undefined') {
-      emailjs.init(_EMAILJS_PUB_KEY);
-      console.log('EmailService: V6.7 Active | Sender:', _EMAIL_SENDER);
+      /* SDK v4 do EmailJS exige formato {publicKey: ...} */
+      try {
+        emailjs.init({ publicKey: _EMAILJS_PUB_KEY });
+        this._inited = true;
+        console.log('EmailService: V6.7 Active | Sender:', _EMAIL_SENDER);
+      } catch(e) {
+        console.error('EmailService init falhou:', e);
+      }
     }
   },
 
   async send(templateId, params) {
     if (typeof emailjs === 'undefined') return;
+    if (!this._inited) this.init();
     try {
       params.from_name = _EMAIL_SENDER;
       await emailjs.send(_EMAILJS_SERVICE, templateId, params);
@@ -3211,6 +3220,10 @@ window.Dashboard    = Dashboard;
 window.Auth         = typeof Auth !== 'undefined' ? Auth : null;
 window.Financeiro   = Financeiro;
 window.CyberSecurity = CyberSecurity;
+window.EmailService = EmailService;
 window._sb          = window._sb || _sb;
+
+/* Inicializa EmailService — sem isso o SDK do EmailJS nao tem publicKey. */
+try { EmailService.init(); } catch(e) { console.warn('EmailService.init failed:', e); }
 
 console.log('NUPIEEPRO V6.2: Todos os módulos globais registrados.');

@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="theme-color" content="#000000">
   <!-- SEGURANÇA: CSP + Anti-Clickjacking + Anti-XSS -->
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://cdn.emailjs.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://*.supabase.co https://api.emailjs.com; img-src 'self' data: blob: https:;">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://cdn.emailjs.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://*.supabase.co https://api.emailjs.com https://cdn.jsdelivr.net; img-src 'self' data: blob: https:; frame-src 'self' https://nupieepro.github.io https://*.pages.dev;">
   <meta http-equiv="X-Content-Type-Options" content="nosniff">
   <meta http-equiv="X-Frame-Options" content="DENY">
   <meta name="referrer" content="strict-origin-when-cross-origin">
@@ -1635,13 +1635,13 @@
   <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/lucide@0.452.0/dist/umd/lucide.min.js"></script>
-  <script src="js/permissoes.js?v=62"></script>
-  <script src="js/app.js?v=62"></script>
-  <script src="js/auth.js?v=62"></script>
-  <script src="js/abj.js?v=62"></script>
-  <script src="js/relatorio.js?v=62"></script>
-  <script src="js/emails.js?v=62"></script>
-  <script src="js/pages.js?v=62"></script>
+  <script src="js/permissoes.js?v=63"></script>
+  <script src="js/app.js?v=63"></script>
+  <script src="js/auth.js?v=63"></script>
+  <script src="js/abj.js?v=63"></script>
+  <script src="js/relatorio.js?v=63"></script>
+  <script src="js/emails.js?v=63"></script>
+  <script src="js/pages.js?v=63"></script>
   <script>
     // ── PROFILE DROPDOWN ───────────────────────────────
     function toggleProfileDropdown() {
@@ -1757,10 +1757,10 @@
     })();
   </script>
   <!-- Version badge fixo + painel de diagnostico clicavel. -->
-  <div id="nupi-version-badge" onclick="window.NupiDiagnostico && window.NupiDiagnostico.toggle()" style="position:fixed;bottom:6px;right:6px;z-index:9999;background:rgba(0,0,0,.6);color:#F07820;font-size:10px;font-family:monospace;padding:3px 6px;border-radius:4px;cursor:pointer;letter-spacing:.5px;user-select:none" title="Clique para diagnostico">v62 🔧</div>
+  <div id="nupi-version-badge" onclick="window.NupiDiagnostico && window.NupiDiagnostico.toggle()" style="position:fixed;bottom:6px;right:6px;z-index:9999;background:rgba(0,0,0,.6);color:#F07820;font-size:10px;font-family:monospace;padding:3px 6px;border-radius:4px;cursor:pointer;letter-spacing:.5px;user-select:none" title="Clique para diagnostico">v63 🔧</div>
   <div id="nupi-diag-panel" style="display:none;position:fixed;bottom:32px;right:6px;left:6px;max-width:560px;margin-left:auto;z-index:9998;background:#0f1216;color:#e2e8f0;border:1px solid #F07820;border-radius:8px;padding:14px;font-family:monospace;font-size:11px;max-height:70vh;overflow-y:auto;box-shadow:0 8px 32px rgba(0,0,0,.6)">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;font-weight:700;color:#F07820;font-size:13px">
-      <span>🔧 NUPIEEPRO Diagnostico v62</span>
+      <span>🔧 NUPIEEPRO Diagnostico v63</span>
       <button onclick="window.NupiDiagnostico.toggle()" style="background:none;border:1px solid #444;color:#fff;cursor:pointer;padding:2px 6px;border-radius:4px">✕</button>
     </div>
     <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px">
@@ -1796,7 +1796,7 @@
         if (!el) return;
         const items = [];
         items.push(`<b style="color:#F07820">⚙️ Sistema</b>`);
-        items.push(`HTML: v62 ${navigator.onLine ? '🟢 online' : '🔴 offline'}`);
+        items.push(`HTML: v63 ${navigator.onLine ? '🟢 online' : '🔴 offline'}`);
         items.push(`Service Worker: ${'serviceWorker' in navigator ? '🟢' : '❌'} ${(await navigator.serviceWorker?.getRegistration())?.active?.scriptURL?.split('/').pop() || '—'}`);
         items.push(`Supabase: ${window._supabase ? '🟢 conectado' : '❌ falhou'}`);
         items.push(`Profile: ${window._appProfile ? '🟢 ' + window._appProfile.nome + ' (' + window._appProfile.role + ')' : '❌ não carregado'}`);
