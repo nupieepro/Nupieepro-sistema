@@ -73,8 +73,8 @@ const PushModule = (() => {
     if (Notification.permission !== 'granted') return;
     const n = new Notification(titulo, {
       body:  corpo,
-      icon:  '/assets/icon.svg',
-      badge: '/assets/icon.svg',
+      icon:  '/assets/icon-192.png',
+      badge: '/assets/icon-192.png',
       data:  { url }
     });
     n.onclick = () => { window.focus(); App.navigate('dashboard'); n.close(); };
