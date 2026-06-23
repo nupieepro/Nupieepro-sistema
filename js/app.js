@@ -44,7 +44,7 @@ const COORDENADORIAS = [
 
 function getIcon(name) {
   // Retorna um placeholder que o Lucide irá transformar em SVG real
-  return `<i data-lucide="${name}" class="nav-icon-i" style="width:18px; height:18px; stroke-width:1.8px;"></i>`;
+  return `<i data-lucide="${name}" class="nav-icon-i" style="width:20px; height:20px; stroke-width:1.8px;"></i>`;
 }
 
 // Pages each coord can access
@@ -500,7 +500,7 @@ const App = {
     const myPages = (ROLE_PAGES[coordName] || []).slice(0, 5);
     mobileNav.innerHTML = myPages.map(p =>
       `<div class="mnav-item" onclick="goTo('${p.id}')">
-        <span class="mnav-icon">${getIcon(p.icon).replace('width="18" height="18"', 'width="20" height="20"')}</span>
+        <span class="mnav-icon">${getIcon(p.icon).replace('width:20px; height:20px;', 'width:22px; height:22px;')}</span>
         <span>${p.label}</span>
       </div>`
     ).join('');
