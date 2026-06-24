@@ -772,7 +772,10 @@ function goTo(id) {
 
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   const navEl = document.getElementById('nav-' + id);
-  if (navEl) navEl.classList.add('active');
+  if (navEl) {
+    navEl.classList.add('active');
+    navEl.scrollIntoView({ block: 'nearest' });
+  }
 
   const sidebar = document.getElementById('sidebar');
   const overlay = document.getElementById('sidebarOverlay');
