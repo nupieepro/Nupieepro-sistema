@@ -1081,7 +1081,8 @@ code, kbd, .mono { font: var(--t-mono); }
 /* ════ MOBILE ════ */
 .mobile-nav { display: none; position: fixed; bottom: 0; left: 0; right: 0; background: var(--surface-1); border-top: 1px solid var(--border-1); padding: var(--s1) 0; padding-bottom: calc(var(--s1) + env(safe-area-inset-bottom)); z-index: 100; justify-content: space-around; backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); }
 .mnav-item { display: flex; flex-direction: column; align-items: center; gap: 3px; padding: var(--s1) var(--s3); font-size: 10px; color: var(--fg-3); cursor: pointer; transition: color var(--dur-1) var(--ease); min-width: 48px; }
-.mnav-item .mnav-icon { font-size: 20px; line-height: 1; }
+.mnav-item .mnav-icon { display: flex; align-items: center; justify-content: center; width: 22px; height: 22px; flex-shrink: 0; }
+.mnav-item .mnav-icon svg { width: 100%; height: 100%; }
 .mnav-item.active, .mnav-item:active { color: var(--brand-purple-l); }
 .sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.6); z-index: 90; backdrop-filter: blur(4px); }
 .sidebar-overlay.visible { display: block; }
