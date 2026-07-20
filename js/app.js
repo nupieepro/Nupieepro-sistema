@@ -2758,7 +2758,7 @@ const NovoCal = {
     for (let i = 0; i < firstDay; i++) html += '<div></div>';
     for (let d = 1; d <= days; d++) {
       const isToday = d === today.getDate() && this.month === today.getMonth() && this.year === today.getFullYear();
-      html += `<div style="aspect-ratio:1;border-radius:6px;border:1px solid var(--border-1);padding:4px;font-size:11px;font-family:var(--font-mono);${isToday ? 'background:rgba(246,82,20,0.15);border-color:var(--brand-orange);font-weight:700;color:var(--brand-orange);' : ''}">${d}</div>`;
+      html += `<div onclick="NovoCal.abrirDia(${this.year}, ${this.month}, ${d})" style="cursor:pointer;aspect-ratio:1;border-radius:6px;border:1px solid var(--border-1);padding:4px;font-size:11px;font-family:var(--font-mono);${isToday ? 'background:rgba(246,82,20,0.15);border-color:var(--brand-orange);font-weight:700;color:var(--brand-orange);' : ''}">${d}</div>`;
     }
     grid.innerHTML = html;
 
@@ -2785,15 +2785,15 @@ const NovoCal = {
     try {
       const inicio = new Date(this.year, this.month, 1).toISOString().split('T')[0];
       const fim    = new Date(this.year, this.month + 1, 0).toISOString().split('T')[0];
-      const { data } = await sb.from('eventos').select('titulo,data_inicio,tipo,coordenadorias(sigla)').gte('data_inicio', inicio).lte('data_inicio', fim).order('data_inicio');
+      const { data } = await sb.from('eventos').select('id,titulo,data_inicio,tipo,coordenadorias(sigla)').gte('data_inicio', inicio).lte('data_inicio', fim).order('data_inicio');
       if (!data?.length) { el.innerHTML = '<p style="font-size:12px;color:var(--fg-3);text-align:center;padding:1rem;">Nenhum evento neste mês.</p>'; return; }
       const CORES = { reuniao:'#9b7be8', evento:'var(--brand-orange)', treinamento:'#5b9cf6', enegep:'#f5c518', podcast:'#e85aa8', assembleia:'#2dd4a0', publicacao:'#f75412' };
       el.innerHTML = data.map(e => {
         const cor = CORES[e.tipo] || 'var(--fg-3)';
         const dia = e.data_inicio ? new Date(e.data_inicio + 'T12:00:00').toLocaleDateString('pt-BR', { day:'2-digit', month:'short' }) : '—';
-        return `<div style="display:flex;gap:10px;align-items:flex-start;padding:10px;background:${cor}18;border-radius:8px;border-left:3px solid ${cor};">
+        return `<div onclick="NovoCal.editarEvento('${e.id}')" style="cursor:pointer;display:flex;gap:10px;align-items:flex-start;padding:10px;background:${cor}18;border-radius:8px;border-left:3px solid ${cor};">
           <div style="min-width:44px;text-align:center;font-size:11px;font-weight:700;color:${cor};">${dia}</div>
-          <div><div style="font-weight:600;font-size:13px;">${e.titulo||'—'}</div><div style="font-size:11px;color:var(--fg-3);">${e.coordenadorias?.sigla||''} · ${e.tipo||''}</div></div>
+          <div><div style="font-weight:600;font-size:13px;">${sanitize(e.titulo)||'—'}</div><div style="font-size:11px;color:var(--fg-3);">${e.coordenadorias?.sigla||''} · ${e.tipo||''}</div></div>
         </div>`;
       }).join('');
     } catch(err) { el.innerHTML = '<p style="font-size:12px;color:var(--fg-3);">Erro ao carregar eventos.</p>'; }
@@ -2809,13 +2809,13 @@ const NovoCal = {
       const hoje  = new Date(this.year, this.month, 1).toISOString().split('T')[0];
       const fim   = new Date(this.year, this.month + 1, 0).toISOString().split('T')[0];
       const [evRes, demRes] = await Promise.all([
-        sb.from('eventos').select('titulo,data_inicio,tipo,coordenadorias(sigla,icone)').gte('data_inicio', hoje).lte('data_inicio', fim).order('data_inicio').limit(20),
-        sb.from('demandas').select('titulo,prazo,coluna,coordenadorias(sigla,icone)').gte('prazo', hoje).lte('prazo', fim).order('prazo').limit(20)
+        sb.from('eventos').select('id,titulo,data_inicio,tipo,coordenadorias(sigla,icone)').gte('data_inicio', hoje).lte('data_inicio', fim).order('data_inicio').limit(20),
+        sb.from('demandas').select('id,titulo,prazo,coluna,coordenadorias(sigla,icone)').gte('prazo', hoje).lte('prazo', fim).order('prazo').limit(20)
       ]);
-      const eventos = (evRes.data || []).map(e => ({ titulo: e.titulo, data: e.data_inicio, tipo: e.tipo, coordenadorias: e.coordenadorias, _kind: 'evento' }));
+      const eventos = (evRes.data || []).map(e => ({ id: e.id, titulo: e.titulo, data: e.data_inicio, tipo: e.tipo, coordenadorias: e.coordenadorias, _kind: 'evento' }));
       const demandas = (demRes.data || [])
         .filter(d => !['realizada','auditada'].includes(d.coluna))
-        .map(d => ({ titulo: d.titulo, data: d.prazo, tipo: 'prazo', coordenadorias: d.coordenadorias, _kind: 'demanda' }));
+        .map(d => ({ id: d.id, titulo: d.titulo, data: d.prazo, tipo: 'prazo', coordenadorias: d.coordenadorias, _kind: 'demanda' }));
       const data = eventos.concat(demandas).sort((a,b) => (a.data||'').localeCompare(b.data||'')).slice(0, 10);
       if (!data.length) { el.innerHTML = '<p style="font-size:13px;color:var(--fg-3);text-align:center;padding:16px 0;">Nenhum evento ou prazo neste mês.<br><span style="font-size:11px;">Use o botão abaixo para registrar.</span></p>'; return; }
       const CORES = { reuniao:'#9b7be8', evento:'var(--brand-orange)', treinamento:'#5b9cf6', enegep:'#f5c518', podcast:'#e85aa8', assembleia:'#2dd4a0', publicacao:'#f75412', prazo:'#f87171' };
@@ -2828,7 +2828,10 @@ const NovoCal = {
         const sigla = e.coordenadorias?.sigla || '';
         const icone = e.coordenadorias?.icone || '';
         const kindIcon = e._kind === 'demanda' ? '🎯 ' : '';
-        return `<div style="display:flex;gap:12px;align-items:flex-start;">
+        const onclick = e._kind === 'demanda'
+          ? (typeof Dem !== 'undefined' ? `Dem.abrirDetalhes('${e.id}')` : '')
+          : `NovoCal.editarEvento('${e.id}')`;
+        return `<div onclick="${onclick}" style="cursor:pointer;display:flex;gap:12px;align-items:flex-start;">
           <div style="min-width:44px;text-align:center;">
             <div style="font-size:18px;font-weight:800;font-family:var(--font-mono);color:${cor};">${dia}</div>
             <div style="font-size:9px;color:var(--fg-3);">${mes}</div>
@@ -2842,28 +2845,57 @@ const NovoCal = {
     } catch(err) { el.innerHTML = '<p style="font-size:12px;color:var(--fg-3);">Erro ao carregar eventos.</p>'; }
   },
 
-  novoEvento() {
-    abrirModal({ titulo: '📅 Registrar Evento', tipo: 'info', corpo: `
+  /* Lista os eventos de um dia especifico, com opcao de editar/excluir/adicionar */
+  async abrirDia(y, m, d) {
+    const dataStr = `${y}-${String(m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+    const sb = window._supabase;
+    const podeCriar = typeof Permissoes === 'undefined' || Permissoes.pode('podeCriarEvento') || Permissoes.isAdmin();
+    let eventos = [];
+    if (sb) {
+      const { data } = await sb.from('eventos').select('id,titulo,tipo,coordenadorias(sigla)').eq('data_inicio', dataStr).order('titulo');
+      eventos = data || [];
+    }
+    const dataLabel = new Date(y, m, d, 12).toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' });
+    const lista = eventos.length ? eventos.map(e => `
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding:10px;background:var(--surface-3);border-radius:8px;margin-bottom:8px;">
+        <div><div style="font-weight:600;font-size:13px;">${sanitize(e.titulo)}</div><div style="font-size:11px;color:var(--fg-3);">${e.coordenadorias?.sigla || 'Todas'} · ${e.tipo || ''}</div></div>
+        ${podeCriar ? `<div style="display:flex;gap:6px;flex-shrink:0;">
+          <button class="btn btn-ghost" style="font-size:11px;padding:4px 8px;" onclick="NovoCal.editarEvento('${e.id}')">✏️</button>
+          <button class="btn btn-ghost" style="font-size:11px;padding:4px 8px;" onclick="NovoCal.excluirEvento('${e.id}')">🗑️</button>
+        </div>` : ''}
+      </div>`).join('') : `<p style="font-size:12px;color:var(--fg-3);text-align:center;padding:12px 0;">Nenhum evento neste dia.</p>`;
+
+    abrirModal({
+      titulo: `📅 ${dataLabel}`, tipo: 'info', corpo: lista,
+      botoes: [
+        ...(podeCriar ? [{ texto: '+ Novo evento', classe: 'btn-primary', acao: () => this.novoEvento(dataStr) }] : []),
+        { texto: 'Fechar', classe: 'btn-ghost', acao: fecharModal },
+      ],
+    });
+  },
+
+  _formEvento(preset = {}) {
+    const tipos = ['reuniao', 'evento', 'treinamento', 'enegep', 'assembleia', 'podcast'];
+    const siglas = ['GER', 'OPS', 'MKT', 'FIN', 'PRJ', 'GP'];
+    const label = { GER: '⬡ Geral', OPS: '⚙ Operações', MKT: '◬ Marketing', FIN: '◎ Finanças', PRJ: '◫ Projetos', GP: '◒ G. Pessoas' };
+    return `
       <div class="form-group"><label class="form-label">Título do Evento *</label>
-        <input id="nevTitulo" class="form-input" placeholder="Ex: Reunião Geral, Workshop ENEGEP..."></div>
+        <input id="nevTitulo" class="form-input" placeholder="Ex: Reunião Geral, Workshop ENEGEP..." value="${sanitize(preset.titulo || '')}"></div>
       <div class="form-group"><label class="form-label">Tipo</label>
         <select id="nevTipo" class="form-input">
-          <option value="reuniao">Reunião</option>
-          <option value="evento">Evento</option>
-          <option value="treinamento">Treinamento</option>
-          <option value="enegep">ENEGEP</option>
-          <option value="assembleia">Assembleia</option>
-          <option value="podcast">Podcast</option>
+          ${tipos.map(t => `<option value="${t}" ${preset.tipo === t ? 'selected' : ''}>${t[0].toUpperCase() + t.slice(1)}</option>`).join('')}
         </select></div>
       <div class="form-group"><label class="form-label">Data *</label>
-        <input id="nevData" type="date" class="form-input" value="${new Date().toISOString().slice(0,10)}"></div>
+        <input id="nevData" type="date" class="form-input" value="${preset.data || new Date().toISOString().slice(0, 10)}"></div>
       <div class="form-group"><label class="form-label">Coordenadoria</label>
         <select id="nevCoord" class="form-input">
-          <option value="">Todas</option>
-          <option value="GER">⬡ Geral</option><option value="OPS">⚙ Operações</option>
-          <option value="MKT">◬ Marketing</option><option value="FIN">◎ Finanças</option>
-          <option value="PRJ">◫ Projetos</option><option value="GP">◒ G. Pessoas</option>
-        </select></div>`,
+          <option value="" ${!preset.sigla ? 'selected' : ''}>Todas</option>
+          ${siglas.map(s => `<option value="${s}" ${preset.sigla === s ? 'selected' : ''}>${label[s]}</option>`).join('')}
+        </select></div>`;
+  },
+
+  novoEvento(dataPreset) {
+    abrirModal({ titulo: '📅 Registrar Evento', tipo: 'info', corpo: this._formEvento({ data: dataPreset }),
       botoes: [
         { texto: 'Cancelar', classe: 'btn-ghost', acao: fecharModal },
         { texto: 'Salvar ✓', classe: 'btn-primary', acao: async () => {
@@ -2887,6 +2919,53 @@ const NovoCal = {
         }}
       ]
     });
+  },
+
+  async editarEvento(id) {
+    fecharModal();
+    const sb = window._supabase;
+    if (!sb) { mostrarToast('Sistema offline.', 'error'); return; }
+    const { data: e } = await sb.from('eventos').select('*, coordenadorias(sigla)').eq('id', id).single();
+    if (!e) { mostrarToast('Evento não encontrado.', 'error'); return; }
+    setTimeout(() => {
+      abrirModal({ titulo: '✏️ Editar Evento', tipo: 'info',
+        corpo: this._formEvento({ titulo: e.titulo, tipo: e.tipo, data: e.data_inicio, sigla: e.coordenadorias?.sigla }),
+        botoes: [
+          { texto: 'Cancelar', classe: 'btn-ghost', acao: fecharModal },
+          { texto: 'Excluir', classe: 'btn-ghost', acao: () => this.excluirEvento(id) },
+          { texto: 'Salvar ✓', classe: 'btn-primary', acao: async () => {
+            const titulo = document.getElementById('nevTitulo')?.value?.trim();
+            const tipo   = document.getElementById('nevTipo')?.value;
+            const data   = document.getElementById('nevData')?.value;
+            const sigla  = document.getElementById('nevCoord')?.value;
+            if (!titulo || !data) { mostrarToast('Preencha título e data!', 'warning'); return; }
+            try {
+              let coordId = null;
+              if (sigla) {
+                const { data: coords } = await sb.from('coordenadorias').select('id').eq('sigla', sigla).limit(1);
+                coordId = coords?.[0]?.id || null;
+              }
+              const { error } = await sb.from('eventos').update({ titulo, tipo, data_inicio: data, coordenadoria_id: coordId }).eq('id', id);
+              if (error) throw error;
+              fecharModal();
+              mostrarToast('Evento atualizado!', 'success');
+              NovoCal._render();
+            } catch(err) { mostrarToast('Erro ao salvar: ' + err.message, 'error'); }
+          }}
+        ]
+      });
+    }, 100);
+  },
+
+  async excluirEvento(id) {
+    if (!confirm('Excluir este evento? Essa ação não pode ser desfeita.')) return;
+    const sb = window._supabase;
+    if (!sb) { mostrarToast('Sistema offline.', 'error'); return; }
+    const { error } = await sb.from('eventos').delete().eq('id', id);
+    fecharModal();
+    if (error) { mostrarToast('Erro ao excluir: ' + error.message, 'error'); return; }
+    mostrarToast('Evento excluído!', 'success');
+    this._render();
   }
 };
 window.NovoCal = NovoCal;
