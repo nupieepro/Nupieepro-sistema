@@ -500,7 +500,7 @@ const App = {
     const myPages = (ROLE_PAGES[coordName] || []).slice(0, 5);
     mobileNav.innerHTML = myPages.map(p =>
       `<div class="mnav-item" onclick="goTo('${p.id}')">
-        <span class="mnav-icon">${getIcon(p.icon).replace('width:20px; height:20px;', 'width:22px; height:22px;')}</span>
+        <span class="mnav-icon">${getIcon(p.icon)}</span>
         <span>${p.label}</span>
       </div>`
     ).join('');
