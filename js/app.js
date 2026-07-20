@@ -3165,6 +3165,13 @@ const Kanban = (() => {
       podeComentar = r !== 'membro' && r !== 'conselheiro';
     }
 
+    /* Quem pode editar/mudar status: coordenador+/admin ou o responsavel.
+       Quem pode excluir: os mesmos + quem criou (mesmo criterio da policy demandas_delete). */
+    var uid = window._appProfile?.id;
+    var isCoordOuAdmin = typeof Permissoes !== 'undefined' && (Permissoes.isAdmin() || Permissoes.pode('podeEditarDemanda'));
+    var podeGerenciar = isCoordOuAdmin || (uid && d.responsavel_id === uid);
+    var podeExcluir   = podeGerenciar || (uid && d.criado_por === uid);
+
     var corpo = ''
       + '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;align-items:center">'
       + '<span class="coord-tag tag-' + tagClass + '">' + sigla + '</span>'
@@ -3190,6 +3197,13 @@ const Kanban = (() => {
           + '<div style="font-size:12px;color:var(--fg-2);background:var(--surface-3);border-radius:8px;padding:10px 12px;line-height:1.7;white-space:pre-wrap">' + sanitize(notasExistentes) + '</div>'
           + '</div>'
         : '')
+      + (podeGerenciar
+        ? '<div style="margin-bottom:14px">'
+          + '<div style="font-size:10px;font-weight:700;color:var(--fg-3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px">Mudar status</div>'
+          + '<select id="kanban-status-' + id + '" class="form-input" style="width:100%">'
+          + Object.keys(COL_LABEL).map(function(k) { return '<option value="' + k + '"' + (k === d.coluna ? ' selected' : '') + '>' + COL_LABEL[k] + '</option>'; }).join('')
+          + '</select></div>'
+        : '')
       + (podeComentar
         ? '<div>'
           + '<div style="font-size:10px;font-weight:700;color:var(--fg-3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px">Nova anotacao</div>'
@@ -3198,10 +3212,84 @@ const Kanban = (() => {
         : '');
 
     var botoes = [{ texto:'Fechar', classe:'btn-ghost', acao: fecharModal }];
+    if (podeExcluir)   botoes.unshift({ texto:'Excluir', classe:'btn-ghost', acao: function() { _excluir(id); } });
+    if (podeGerenciar) botoes.unshift({ texto:'Editar', classe:'btn-ghost', acao: function() { _editar(id, d); } });
+    if (podeGerenciar) botoes.unshift({ texto:'Salvar status', classe:'btn-primary', acao: function() {
+      var novo = document.getElementById('kanban-status-' + id)?.value;
+      if (novo) _mudarStatus(id, novo);
+    } });
     if (podeComentar) {
       botoes.unshift({ texto:'Salvar nota', classe:'btn-primary', acao: function() { _salvarNota(id); } });
     }
     abrirModal({ titulo:'Detalhes da Demanda', corpo: corpo, botoes: botoes });
+  }
+
+  async function _mudarStatus(id, coluna) {
+    if (!window._supabase) return;
+    var d = _demands.find(function(x) { return String(x.id) === String(id); });
+    var { error } = await window._supabase.from('demandas').update({ coluna: coluna }).eq('id', id);
+    if (error) { App.toast('Erro ao atualizar: ' + error.message, 'error'); return; }
+    if (d) d.coluna = coluna;
+    fecharModal();
+    App.toast('Status atualizado!', 'success');
+    _renderAll(_demands);
+  }
+
+  function _editar(id, dOriginal) {
+    fecharModal();
+    setTimeout(function() {
+      abrirModal({
+        titulo: '✏️ Editar Demanda',
+        corpo: ''
+          + '<div class="form-group"><label class="form-label">Titulo *</label>'
+          + '<input id="ked-titulo" class="form-input" value="' + sanitize(dOriginal.titulo || '') + '"></div>'
+          + '<div class="form-group"><label class="form-label">Descricao</label>'
+          + '<textarea id="ked-desc" class="form-input" rows="3">' + sanitize((dOriginal.descricao || '').split(_SEP)[0].trim()) + '</textarea></div>'
+          + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">'
+          + '<div class="form-group"><label class="form-label">Prioridade</label>'
+          + '<select id="ked-prio" class="form-input">'
+          + '<option value="baixa"' + (dOriginal.prioridade === 'baixa' ? ' selected' : '') + '>Baixa</option>'
+          + '<option value="media"' + (dOriginal.prioridade === 'media' ? ' selected' : '') + '>Media</option>'
+          + '<option value="alta"' + (dOriginal.prioridade === 'alta' ? ' selected' : '') + '>Alta</option>'
+          + '</select></div>'
+          + '<div class="form-group"><label class="form-label">Prazo</label>'
+          + '<input id="ked-prazo" type="date" class="form-input" value="' + (dOriginal.prazo || '') + '"></div>'
+          + '</div>',
+        botoes: [
+          { texto: 'Cancelar', classe: 'btn-ghost', acao: fecharModal },
+          { texto: 'Salvar', classe: 'btn-primary', acao: async function() {
+            var titulo   = document.getElementById('ked-titulo')?.value?.trim();
+            var descBase = document.getElementById('ked-desc')?.value?.trim() || '';
+            var prio     = document.getElementById('ked-prio')?.value;
+            var prazo    = document.getElementById('ked-prazo')?.value || null;
+            if (!titulo) { App.toast('Titulo e obrigatorio.', 'error'); return; }
+            var notas = (dOriginal.descricao || '').split(_SEP).slice(1).join(_SEP);
+            var novaDescricao = notas ? (descBase + _SEP + notas) : (descBase || null);
+            try {
+              await window._supabase.from('demandas').update({
+                titulo: titulo, descricao: novaDescricao, prioridade: prio, prazo: prazo, updated_at: new Date().toISOString()
+              }).eq('id', id);
+              fecharModal();
+              App.toast('Demanda atualizada!', 'success');
+              var d = _demands.find(function(x) { return String(x.id) === String(id); });
+              if (d) { d.titulo = titulo; d.descricao = novaDescricao; d.prioridade = prio; d.prazo = prazo; }
+              _renderAll(_demands);
+            } catch (e) { App.toast('Erro: ' + e.message, 'error'); }
+          } }
+        ]
+      });
+    }, 100);
+  }
+
+  async function _excluir(id) {
+    if (!confirm('Tem certeza que deseja EXCLUIR esta demanda? Esta acao nao pode ser desfeita.')) return;
+    if (!window._supabase) return;
+    var { error } = await window._supabase.from('demandas').delete().eq('id', id);
+    if (error) { App.toast('Erro ao excluir: ' + error.message, 'error'); return; }
+    fecharModal();
+    App.toast('Demanda excluida!', 'success');
+    _demands = _demands.filter(function(x) { return String(x.id) !== String(id); });
+    _renderAll(_demands);
   }
 
   async function _salvarNota(id) {
