@@ -442,6 +442,15 @@ body, .themed { transition: background-color 350ms var(--ease), color 200ms var(
   .full-mobile { width: 100% !important; }
   .grid-mobile-1 { grid-template-columns: 1fr !important; }
 }
+
+/* ════ ZOOM GERAL — telas ficavam pequenas demais, principalmente
+   na faixa 641–1024px (sidebar de ícone / "site de desktop" no celular) ════ */
+@media (max-width: 640px) {
+  html { zoom: 1.05; }
+}
+@media (min-width: 641px) {
+  html { zoom: 1.12; }
+}
 @media (min-width: 641px) { .show-mobile { display: none !important; } }
 
 /* ════ RESET + BASE ════ */
