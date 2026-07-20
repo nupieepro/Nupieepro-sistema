@@ -2766,6 +2766,13 @@ const NovoCal = {
     const topSub = document.getElementById('calTopbarSub');
     if (topSub) topSub.textContent = MONTHS_PT[this.month] + ' ' + this.year + ' — Agenda do Núcleo';
 
+    // Esconde "+ Evento" pra quem não tem permissão de criar (evita erro confuso)
+    const podeCriar = typeof Permissoes === 'undefined' || Permissoes.pode('podeCriarEvento') || Permissoes.isAdmin();
+    ['btnNovoEventoTop', 'btnNovoEventoSide'].forEach(id => {
+      const btn = document.getElementById(id);
+      if (btn) btn.style.display = podeCriar ? '' : 'none';
+    });
+
     this._loadEventos();
     this._loadProximos();
   },
@@ -2892,6 +2899,7 @@ const Kanban = (() => {
     { id: 'afazer',    label: 'A Fazer',       coluna: 'pendente' },
     { id: 'producao',  label: 'Em Produção',    coluna: 'exec' },
     { id: 'evidencia', label: 'Evidência',      coluna: 'evidencia' },
+    { id: 'revisao',   label: 'Revisão',        coluna: 'realizada' },
     { id: 'concluida', label: 'Concluídas',     coluna: 'auditada' },
   ];
 

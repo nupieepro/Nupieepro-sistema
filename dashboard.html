@@ -876,7 +876,7 @@
             </div>
           </div>
           <div class="topbar-right">
-            <button class="btn btn-primary" style="font-size:12px;" onclick="NovoCal.novoEvento()">+ Evento</button>
+            <button id="btnNovoEventoTop" class="btn btn-primary" style="font-size:12px;" onclick="NovoCal.novoEvento()">+ Evento</button>
           </div>
         </div>
         <div class="content">
@@ -912,7 +912,7 @@
               <div id="novoCalProximos" style="display:flex;flex-direction:column;gap:10px;">
                 <p style="color:var(--fg-3);font-size:13px;text-align:center;padding:24px 0;">Carregando eventos...</p>
               </div>
-              <button class="btn btn-ghost" style="width:100%;margin-top:12px;font-size:12px;" onclick="NovoCal.novoEvento()">+ Registrar evento neste mês</button>
+              <button id="btnNovoEventoSide" class="btn btn-ghost" style="width:100%;margin-top:12px;font-size:12px;" onclick="NovoCal.novoEvento()">+ Registrar evento neste mês</button>
             </section>
           </div>
         </div>
@@ -1031,6 +1031,15 @@
               </div>
               <div class="kanban-col-body" id="kanban-evidencia">
                 <div class="kanban-empty">Aguardando evidências.</div>
+              </div>
+            </div>
+            <div class="kanban-col">
+              <div class="kanban-col-header" style="border-color:#5b9cf6;">
+                <span class="pill-dot" style="background:#5b9cf6;width:8px;height:8px;border-radius:50%;display:inline-block;"></span>
+                Revisão
+              </div>
+              <div class="kanban-col-body" id="kanban-revisao">
+                <div class="kanban-empty">Nada em revisão.</div>
               </div>
             </div>
             <div class="kanban-col">
