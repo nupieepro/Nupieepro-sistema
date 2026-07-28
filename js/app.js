@@ -2758,7 +2758,7 @@ const NovoCal = {
     for (let i = 0; i < firstDay; i++) html += '<div></div>';
     for (let d = 1; d <= days; d++) {
       const isToday = d === today.getDate() && this.month === today.getMonth() && this.year === today.getFullYear();
-      html += `<div onclick="NovoCal.abrirDia(${this.year}, ${this.month}, ${d})" style="cursor:pointer;aspect-ratio:1;border-radius:6px;border:1px solid var(--border-1);padding:4px;font-size:11px;font-family:var(--font-mono);${isToday ? 'background:rgba(246,82,20,0.15);border-color:var(--brand-orange);font-weight:700;color:var(--brand-orange);' : ''}">${d}</div>`;
+      html += `<div onclick="NovoCal.abrirDia(${this.year}, ${this.month}, ${d})" style="cursor:pointer;aspect-ratio:1;border-radius:6px;border:1px solid var(--border-1);padding:4px;font-size:11px;font-family:var(--font-mono);display:flex;flex-direction:column;justify-content:space-between;${isToday ? 'background:rgba(246,82,20,0.15);border-color:var(--brand-orange);font-weight:700;color:var(--brand-orange);' : ''}"><span>${d}</span><span id="calMark-${d}" style="display:flex;gap:2px;flex-wrap:wrap;"></span></div>`;
     }
     grid.innerHTML = html;
 
@@ -2775,6 +2775,38 @@ const NovoCal = {
 
     this._loadEventos();
     this._loadProximos();
+    this._loadDayMarks();
+  },
+
+  /* Marca no grid do calendário os dias que têm evento ou prazo de demanda,
+     incluindo demandas em produção/evidência/revisão/concluídas — não só as pendentes. */
+  async _loadDayMarks() {
+    const sb = window._supabase;
+    if (!sb) return;
+    const inicio = new Date(this.year, this.month, 1).toISOString().split('T')[0];
+    const fim    = new Date(this.year, this.month + 1, 0).toISOString().split('T')[0];
+    const CORES  = { reuniao:'#9b7be8', evento:'var(--brand-orange)', treinamento:'#5b9cf6', enegep:'#f5c518', podcast:'#e85aa8', assembleia:'#2dd4a0', publicacao:'#f75412', prazo:'#f87171' };
+    try {
+      const [evRes, demRes] = await Promise.all([
+        sb.from('eventos').select('data_inicio,tipo').gte('data_inicio', inicio).lte('data_inicio', fim),
+        sb.from('demandas').select('prazo,coluna').gte('prazo', inicio).lte('prazo', fim),
+      ]);
+      const porDia = {};
+      (evRes.data || []).forEach(e => {
+        const d = parseInt(e.data_inicio.split('-')[2], 10);
+        (porDia[d] = porDia[d] || []).push(CORES[e.tipo] || 'var(--fg-3)');
+      });
+      (demRes.data || []).forEach(dm => {
+        const d = parseInt(dm.prazo.split('-')[2], 10);
+        (porDia[d] = porDia[d] || []).push(CORES.prazo);
+      });
+      Object.keys(porDia).forEach(d => {
+        const el = document.getElementById('calMark-' + d);
+        if (!el) return;
+        const cores = [...new Set(porDia[d])].slice(0, 4);
+        el.innerHTML = cores.map(c => `<span style="width:5px;height:5px;border-radius:50%;background:${c};display:inline-block;"></span>`).join('');
+      });
+    } catch (err) { console.warn('[NovoCal._loadDayMarks]', err); }
   },
 
   async _loadEventos() {
@@ -2813,12 +2845,14 @@ const NovoCal = {
         sb.from('demandas').select('id,titulo,prazo,coluna,coordenadorias(sigla,icone)').gte('prazo', hoje).lte('prazo', fim).order('prazo').limit(20)
       ]);
       const eventos = (evRes.data || []).map(e => ({ id: e.id, titulo: e.titulo, data: e.data_inicio, tipo: e.tipo, coordenadorias: e.coordenadorias, _kind: 'evento' }));
+      /* Mantém demandas em produção/evidência/revisão/concluídas visíveis (e editáveis por aqui),
+         em vez de sumirem do calendário assim que saem do "A Fazer". */
       const demandas = (demRes.data || [])
-        .filter(d => !['realizada','auditada'].includes(d.coluna))
-        .map(d => ({ id: d.id, titulo: d.titulo, data: d.prazo, tipo: 'prazo', coordenadorias: d.coordenadorias, _kind: 'demanda' }));
+        .map(d => ({ id: d.id, titulo: d.titulo, data: d.prazo, tipo: 'prazo', coordenadorias: d.coordenadorias, _kind: 'demanda', _coluna: d.coluna }));
       const data = eventos.concat(demandas).sort((a,b) => (a.data||'').localeCompare(b.data||'')).slice(0, 10);
       if (!data.length) { el.innerHTML = '<p style="font-size:13px;color:var(--fg-3);text-align:center;padding:16px 0;">Nenhum evento ou prazo neste mês.<br><span style="font-size:11px;">Use o botão abaixo para registrar.</span></p>'; return; }
       const CORES = { reuniao:'#9b7be8', evento:'var(--brand-orange)', treinamento:'#5b9cf6', enegep:'#f5c518', podcast:'#e85aa8', assembleia:'#2dd4a0', publicacao:'#f75412', prazo:'#f87171' };
+      const COL_LABEL = { pendente:'A Fazer', exec:'Em Produção', evidencia:'Evidência', realizada:'Revisão', auditada:'Concluída' };
       el.innerHTML = data.map(e => {
         const cor   = CORES[e.tipo] || 'var(--fg-3)';
         const d     = e.data ? new Date(e.data + 'T12:00:00') : null;
@@ -2827,18 +2861,20 @@ const NovoCal = {
         const mes   = dValid ? d.toLocaleDateString('pt-BR',{month:'short'}).replace('.','').toUpperCase() : '';
         const sigla = e.coordenadorias?.sigla || '';
         const icone = e.coordenadorias?.icone || '';
-        const kindIcon = e._kind === 'demanda' ? '🎯 ' : '';
+        const concluida = e._kind === 'demanda' && e._coluna === 'auditada';
+        const kindIcon = e._kind === 'demanda' ? (concluida ? '✅ ' : '🎯 ') : '';
+        const statusLbl = e._kind === 'demanda' ? ' · ' + (COL_LABEL[e._coluna] || e._coluna) : '';
         const onclick = e._kind === 'demanda'
           ? (typeof Dem !== 'undefined' ? `Dem.abrirDetalhes('${e.id}')` : '')
           : `NovoCal.editarEvento('${e.id}')`;
-        return `<div onclick="${onclick}" style="cursor:pointer;display:flex;gap:12px;align-items:flex-start;">
+        return `<div onclick="${onclick}" style="cursor:pointer;display:flex;gap:12px;align-items:flex-start;${concluida ? 'opacity:0.65;' : ''}">
           <div style="min-width:44px;text-align:center;">
             <div style="font-size:18px;font-weight:800;font-family:var(--font-mono);color:${cor};">${dia}</div>
             <div style="font-size:9px;color:var(--fg-3);">${mes}</div>
           </div>
           <div style="flex:1;padding:10px;background:${cor}0f;border-radius:8px;border-left:3px solid ${cor};">
-            <div style="font-weight:600;font-size:13px;">${kindIcon}${sanitize(e.titulo||'Evento')}</div>
-            <div style="font-size:11px;color:var(--fg-3);margin-top:2px;">${icone} ${sigla} · ${e.tipo||'evento'}</div>
+            <div style="font-weight:600;font-size:13px;${concluida ? 'text-decoration:line-through;' : ''}">${kindIcon}${sanitize(e.titulo||'Evento')}</div>
+            <div style="font-size:11px;color:var(--fg-3);margin-top:2px;">${icone} ${sigla} · ${e.tipo||'evento'}${statusLbl}</div>
           </div>
         </div>`;
       }).join('');
