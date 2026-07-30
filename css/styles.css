@@ -75,7 +75,7 @@
   --tag-financas:  #2dd4a0;
   --tag-projetos:  #f65214;
   --tag-pessoas:   #f5c518;
-  --tag-marketing: #e85aa8;
+  --tag-marketing: #e11d48;
   --tag-conselho:  #b9a0ff;
 
   --tag-geral-dim:     rgba(155,123,232,0.12);
@@ -83,7 +83,7 @@
   --tag-financas-dim:  rgba(45,212,160,0.10);
   --tag-projetos-dim:  rgba(246,82,20,0.13);
   --tag-pessoas-dim:   rgba(245,197,24,0.10);
-  --tag-marketing-dim: rgba(232,90,168,0.12);
+  --tag-marketing-dim: rgba(225,29,72,0.12);
 
   /* ── 10 áreas ABEPRO ── */
   --area-operacoes:     #5b9cf6;
@@ -340,7 +340,7 @@
   --tag-financas:  #059669;
   --tag-projetos:  #ea580c;
   --tag-pessoas:   #ca8a04;
-  --tag-marketing: #db2777;
+  --tag-marketing: #be123c;
   --tag-conselho:  #213248;
   --green: #059669; --red: #dc2626;
   --sh-accent: 0 8px 32px rgba(155,123,232,0.20);
@@ -944,7 +944,7 @@ code, kbd, .mono { font: var(--t-mono); }
 .tag-financas  { background: var(--tag-financas-dim);  color: var(--tag-financas);  border: 1px solid var(--green-border); }
 .tag-pessoas   { background: var(--tag-pessoas-dim);   color: var(--tag-pessoas);   border: 1px solid var(--yellow-border); }
 .tag-projetos  { background: var(--tag-projetos-dim);  color: var(--tag-projetos);  border: 1px solid var(--border-orange); }
-.tag-marketing { background: var(--tag-marketing-dim); color: var(--tag-marketing); border: 1px solid rgba(232,90,168,0.28); }
+.tag-marketing { background: var(--tag-marketing-dim); color: var(--tag-marketing); border: 1px solid rgba(225,29,72,0.28); }
 
 /* ════ PROGRESS BAR ════ */
 .progress-track { height: 10px; background: var(--border-1); border-radius: var(--r-full); overflow: hidden; }
