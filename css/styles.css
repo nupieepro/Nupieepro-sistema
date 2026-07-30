@@ -75,7 +75,7 @@
   --tag-financas:  #2dd4a0;
   --tag-projetos:  #f65214;
   --tag-pessoas:   #f5c518;
-  --tag-marketing: #e85aa8;
+  --tag-marketing: #e11d48;
   --tag-conselho:  #b9a0ff;
 
   --tag-geral-dim:     rgba(155,123,232,0.12);
@@ -83,7 +83,18 @@
   --tag-financas-dim:  rgba(45,212,160,0.10);
   --tag-projetos-dim:  rgba(246,82,20,0.13);
   --tag-pessoas-dim:   rgba(245,197,24,0.10);
-  --tag-marketing-dim: rgba(232,90,168,0.12);
+  --tag-marketing-dim: rgba(225,29,72,0.12);
+
+  /* Bordas dedicadas por coordenadoria (antes algumas usavam var(--blue-border) etc.,
+     que são cores de status compartilhadas e não mudam nos temas noite/violet/papel —
+     isso deixava o contorno/fundo do pill preso na cor do tema padrão mesmo quando o
+     texto já tinha virado outra cor). */
+  --tag-geral-border:     rgba(155,123,232,0.28);
+  --tag-operacoes-border: rgba(91,156,246,0.28);
+  --tag-financas-border:  rgba(45,212,160,0.28);
+  --tag-projetos-border:  rgba(246,82,20,0.28);
+  --tag-pessoas-border:   rgba(245,197,24,0.28);
+  --tag-marketing-border: rgba(225,29,72,0.28);
 
   /* ── 10 áreas ABEPRO ── */
   --area-operacoes:     #5b9cf6;
@@ -251,6 +262,18 @@
   --tag-pessoas:   #ffc870;
   --tag-marketing: #ff5c2a;
   --tag-conselho:  #ffae6a;
+  --tag-geral-dim:     rgba(255,154,74,0.14);
+  --tag-operacoes-dim: rgba(255,182,39,0.14);
+  --tag-financas-dim:  rgba(255,122,61,0.14);
+  --tag-projetos-dim:  rgba(246,82,20,0.14);
+  --tag-pessoas-dim:   rgba(255,200,112,0.14);
+  --tag-marketing-dim: rgba(255,92,42,0.14);
+  --tag-geral-border:     rgba(255,154,74,0.35);
+  --tag-operacoes-border: rgba(255,182,39,0.35);
+  --tag-financas-border:  rgba(255,122,61,0.35);
+  --tag-projetos-border:  rgba(246,82,20,0.35);
+  --tag-pessoas-border:   rgba(255,200,112,0.35);
+  --tag-marketing-border: rgba(255,92,42,0.35);
   --sh-purple: 0 8px 32px rgba(246,82,20,0.25);
   /* Legacy */
   --c-bg: #000; --c-s1: #060300; --c-s2: #0e0805; --c-s3: #15100a; --c-s4: #1f1610;
@@ -283,6 +306,18 @@
   --tag-pessoas:   #d4c2ff;
   --tag-marketing: #8a6dd9;
   --tag-conselho:  #e4d6ff;
+  --tag-geral-dim:     rgba(185,160,255,0.14);
+  --tag-operacoes-dim: rgba(155,123,232,0.14);
+  --tag-financas-dim:  rgba(197,168,255,0.14);
+  --tag-projetos-dim:  rgba(111,77,211,0.18);
+  --tag-pessoas-dim:   rgba(212,194,255,0.14);
+  --tag-marketing-dim: rgba(138,109,217,0.16);
+  --tag-geral-border:     rgba(185,160,255,0.35);
+  --tag-operacoes-border: rgba(155,123,232,0.35);
+  --tag-financas-border:  rgba(197,168,255,0.35);
+  --tag-projetos-border:  rgba(111,77,211,0.40);
+  --tag-pessoas-border:   rgba(212,194,255,0.35);
+  --tag-marketing-border: rgba(138,109,217,0.38);
   --area-operacoes:    #9b7be8;
   --area-logistica:    #c5a8ff;
   --area-pesqop:       #6f4dd3;
@@ -340,8 +375,20 @@
   --tag-financas:  #059669;
   --tag-projetos:  #ea580c;
   --tag-pessoas:   #ca8a04;
-  --tag-marketing: #db2777;
+  --tag-marketing: #be123c;
   --tag-conselho:  #213248;
+  --tag-geral-dim:     rgba(155,123,232,0.12);
+  --tag-operacoes-dim: rgba(37,99,235,0.10);
+  --tag-financas-dim:  rgba(5,150,105,0.10);
+  --tag-projetos-dim:  rgba(234,88,12,0.10);
+  --tag-pessoas-dim:   rgba(202,138,4,0.10);
+  --tag-marketing-dim: rgba(190,18,60,0.10);
+  --tag-geral-border:     rgba(155,123,232,0.30);
+  --tag-operacoes-border: rgba(37,99,235,0.30);
+  --tag-financas-border:  rgba(5,150,105,0.30);
+  --tag-projetos-border:  rgba(234,88,12,0.30);
+  --tag-pessoas-border:   rgba(202,138,4,0.30);
+  --tag-marketing-border: rgba(190,18,60,0.30);
   --green: #059669; --red: #dc2626;
   --sh-accent: 0 8px 32px rgba(155,123,232,0.20);
   --sh-md:     0 4px 14px rgba(33,50,72,0.08);
@@ -939,12 +986,12 @@ code, kbd, .mono { font: var(--t-mono); }
 
 /* ════ COORD TAGS ════ */
 .coord-tag { font-size: 10px; font-weight: 600; padding: 3px 9px; border-radius: var(--r-full); letter-spacing: 0.04em; display: inline-flex; }
-.tag-geral     { background: var(--tag-geral-dim);     color: var(--tag-geral);     border: 1px solid rgba(155,123,232,0.28); }
-.tag-operacoes { background: var(--tag-operacoes-dim); color: var(--tag-operacoes); border: 1px solid var(--blue-border); }
-.tag-financas  { background: var(--tag-financas-dim);  color: var(--tag-financas);  border: 1px solid var(--green-border); }
-.tag-pessoas   { background: var(--tag-pessoas-dim);   color: var(--tag-pessoas);   border: 1px solid var(--yellow-border); }
-.tag-projetos  { background: var(--tag-projetos-dim);  color: var(--tag-projetos);  border: 1px solid var(--border-orange); }
-.tag-marketing { background: var(--tag-marketing-dim); color: var(--tag-marketing); border: 1px solid rgba(232,90,168,0.28); }
+.tag-geral     { background: var(--tag-geral-dim);     color: var(--tag-geral);     border: 1px solid var(--tag-geral-border); }
+.tag-operacoes { background: var(--tag-operacoes-dim); color: var(--tag-operacoes); border: 1px solid var(--tag-operacoes-border); }
+.tag-financas  { background: var(--tag-financas-dim);  color: var(--tag-financas);  border: 1px solid var(--tag-financas-border); }
+.tag-pessoas   { background: var(--tag-pessoas-dim);   color: var(--tag-pessoas);   border: 1px solid var(--tag-pessoas-border); }
+.tag-projetos  { background: var(--tag-projetos-dim);  color: var(--tag-projetos);  border: 1px solid var(--tag-projetos-border); }
+.tag-marketing { background: var(--tag-marketing-dim); color: var(--tag-marketing); border: 1px solid var(--tag-marketing-border); }
 
 /* ════ PROGRESS BAR ════ */
 .progress-track { height: 10px; background: var(--border-1); border-radius: var(--r-full); overflow: hidden; }

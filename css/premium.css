@@ -486,7 +486,7 @@ h3[style*="font-weight: 700"] {
 .tag-financas  { box-shadow: 0 0 8px rgba(45,212,160,.2)  !important; }
 .tag-pessoas   { box-shadow: 0 0 8px rgba(245,197,24,.2)  !important; }
 .tag-projetos  { box-shadow: 0 0 8px rgba(247,84,18,.2)   !important; }
-.tag-marketing { box-shadow: 0 0 8px rgba(240,112,112,.2) !important; }
+.tag-marketing { box-shadow: 0 0 8px rgba(225,29,72,.2)   !important; }
 .form-card {
   background: rgba(8,6,20,.92) !important;
   backdrop-filter: blur(32px) saturate(180%) !important;

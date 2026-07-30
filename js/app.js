@@ -921,10 +921,11 @@ const Dashboard = {
           recentEl.innerHTML = '<p style="color:var(--fg-3);font-size:13px;text-align:center;padding:16px 0;">Nenhuma atividade registrada.</p>';
         } else {
           const colLabel = {pendente:'Pendente',exec:'Em execução',realizada:'Realizada',auditada:'Auditada'};
+          const tagClassMap = { GER:'geral', OPS:'operacoes', GP:'pessoas', MKT:'marketing', PRJ:'projetos', FIN:'financas' };
           recentEl.innerHTML = '<div style="display:flex;flex-direction:column;gap:6px;">' +
             items.map(d => {
               const sigla = d.coordenadorias?.sigla || 'GER';
-              const tag = sigla.toLowerCase();
+              const tag = tagClassMap[sigla] || 'geral';
               const dt = d.updated_at ? new Date(d.updated_at).toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'}) : '—';
               return `<div style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--surface-2);border-radius:8px;font-size:13px;">
                 <span class="coord-tag tag-${tag}" style="flex-shrink:0;">${sigla}</span>
@@ -1034,7 +1035,7 @@ const Dashboard = {
     }
     const counts = {};
     active.forEach(d => { const s = d.coordenadorias?.sigla||'GER'; counts[s]=(counts[s]||0)+1; });
-    const COR = {GER:'var(--tag-geral,#f97316)',OPS:'var(--blue,#5b9cf6)',GP:'var(--yellow,#f5c518)',MKT:'var(--red,#ef4444)',PRJ:'var(--brand-orange,#f97316)',FIN:'var(--green,#2dd4a0)'};
+    const COR = {GER:'var(--tag-geral,#9b7be8)',OPS:'var(--tag-operacoes,#5b9cf6)',GP:'var(--tag-pessoas,#f5c518)',MKT:'var(--tag-marketing,#e11d48)',PRJ:'var(--tag-projetos,#f65214)',FIN:'var(--tag-financas,#2dd4a0)'};
     const sorted = Object.entries(counts).sort((a,b)=>b[1]-a[1]);
     const max = sorted[0]?.[1]||1;
     el.innerHTML = sorted.map(([s,c])=>`
@@ -1162,7 +1163,7 @@ const Dashboard = {
     }
     const counts={};
     all.forEach(d=>{ const s=d.coordenadorias?.sigla||'GER'; counts[s]=(counts[s]||0)+1; });
-    const COR={GER:'var(--tag-geral,#f97316)',OPS:'var(--blue,#5b9cf6)',GP:'var(--yellow,#f5c518)',MKT:'var(--red,#ef4444)',PRJ:'var(--brand-orange,#f97316)',FIN:'var(--green,#2dd4a0)'};
+    const COR={GER:'var(--tag-geral,#9b7be8)',OPS:'var(--tag-operacoes,#5b9cf6)',GP:'var(--tag-pessoas,#f5c518)',MKT:'var(--tag-marketing,#e11d48)',PRJ:'var(--tag-projetos,#f65214)',FIN:'var(--tag-financas,#2dd4a0)'};
     const sorted=Object.entries(counts).sort((a,b)=>b[1]-a[1]);
     const max=sorted[0]?.[1]||1;
     el.innerHTML=sorted.map(([s,c])=>`
@@ -2626,15 +2627,17 @@ const Dem = {
       .single();
     if (!d) { App.toast('Demanda não encontrada', 'error'); return; }
 
+    const TAG_CLASS = { GER:'geral', OPS:'operacoes', GP:'pessoas', MKT:'marketing', PRJ:'projetos', FIN:'financas' };
     const COL_LABEL = { pendente:'Backlog', exec:'Execução', evidencia:'Evidência', realizada:'Revisão', auditada:'Concluída' };
     const sigla     = d.coordenadorias?.sigla || 'GER';
+    const tagClass  = TAG_CLASS[sigla] || 'geral';
     const prioCor   = ({ alta:'#f87171', media:'#f5c518', baixa:'#2dd4a0' })[d.prioridade] || 'var(--fg-3)';
     const resp      = d.users?.nome || '—';
     const prazo     = d.prazo ? new Date(d.prazo + 'T12:00:00').toLocaleDateString('pt-BR') : '—';
 
     const corpo =
       `<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;align-items:center">
-        <span class="coord-tag tag-${sigla.toLowerCase()}">${sigla}</span>
+        <span class="coord-tag tag-${tagClass}">${sigla}</span>
         <span style="font-size:9px;font-weight:700;padding:2px 8px;border-radius:4px;background:${prioCor}22;color:${prioCor}">${(d.prioridade||'media').toUpperCase()}</span>
         <span style="font-size:11px;color:var(--fg-3)">${COL_LABEL[d.coluna]||d.coluna}</span>
       </div>
@@ -3048,6 +3051,50 @@ const Kanban = (() => {
     }
     _loaded = true;
     _renderAll(_demands);
+    _initDnD();
+  }
+
+  /* ---- Drag-and-drop entre colunas ---- */
+  let _draggingId = null;
+  let _dndReady = false;
+
+  function _initDnD() {
+    if (_dndReady) return; // as colunas (elementos) sao fixas no HTML, so precisa ligar uma vez
+    _dndReady = true;
+    COLS.forEach(col => {
+      const zone = document.getElementById('kanban-' + col.id);
+      if (!zone) return;
+      zone.addEventListener('dragover', e => {
+        if (!_draggingId) return;
+        e.preventDefault();
+        zone.style.background = 'var(--surface-3)';
+        zone.style.outline = '1px dashed var(--brand-orange)';
+      });
+      zone.addEventListener('dragleave', () => {
+        zone.style.background = '';
+        zone.style.outline = '';
+      });
+      zone.addEventListener('drop', e => {
+        e.preventDefault();
+        zone.style.background = '';
+        zone.style.outline = '';
+        const id = _draggingId || e.dataTransfer.getData('text/plain');
+        const d  = id && _demands.find(x => String(x.id) === String(id));
+        if (d && d.coluna !== col.coluna) _mudarStatus(id, col.coluna);
+      });
+    });
+  }
+
+  function _onDragStart(e, id) {
+    _draggingId = id;
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', id);
+    e.currentTarget.style.opacity = '0.5';
+  }
+
+  function _onDragEnd(e) {
+    _draggingId = null;
+    e.currentTarget.style.opacity = '';
   }
 
   function _renderAll(list) {
@@ -3061,6 +3108,14 @@ const Kanban = (() => {
     });
   }
 
+  /* Quem pode mudar a coluna de uma demanda: coordenador+/admin ou o proprio responsavel
+     (mesmo criterio usado em abrirDetalhes para mostrar "Mudar status"). */
+  function _podeMover(d) {
+    const uid = window._appProfile?.id;
+    const isCoordOuAdmin = typeof Permissoes !== 'undefined' && (Permissoes.isAdmin() || Permissoes.pode('podeEditarDemanda'));
+    return isCoordOuAdmin || !!(uid && d.responsavel_id === uid);
+  }
+
   function _cardHtml(d) {
     const sigla    = d.coordenadorias?.sigla || 'GER';
     const tagClass = TAG_CLASS[sigla] || 'geral';
@@ -3070,7 +3125,10 @@ const Kanban = (() => {
     const prazo    = d.prazo
       ? '<span class="kanban-card-meta">&#128197; ' + new Date(d.prazo + 'T12:00:00').toLocaleDateString('pt-BR') + '</span>'
       : '';
-    return '<div class="kanban-card" onclick="Kanban.abrirDetalhes(\'' + d.id + '\')">'
+    const podeMover = _podeMover(d);
+    return '<div class="kanban-card" data-id="' + d.id + '" onclick="Kanban.abrirDetalhes(\'' + d.id + '\')"'
+      + (podeMover ? ' draggable="true" ondragstart="Kanban._onDragStart(event,\'' + d.id + '\')" ondragend="Kanban._onDragEnd(event)" style="cursor:grab"' : '')
+      + '>'
       + '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px">'
       + '<span style="font-size:9px;font-weight:700;padding:2px 6px;border-radius:4px;background:' + prioCor + '22;color:' + prioCor + '">' + prio + '</span>'
       + '<span class="coord-tag tag-' + tagClass + '" style="font-size:9px;padding:1px 7px;">' + sigla + '</span>'
@@ -3356,7 +3414,7 @@ const Kanban = (() => {
     localStorage.setItem('_kanban_demands', JSON.stringify(_demands));
   }
 
-  return { load, abrirNovaDemanda, fecharModal, salvar, abrirDetalhes, _onCoordChange };
+  return { load, abrirNovaDemanda, fecharModal, salvar, abrirDetalhes, _onCoordChange, _onDragStart, _onDragEnd };
 })();
 
 
