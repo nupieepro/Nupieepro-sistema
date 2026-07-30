@@ -255,25 +255,29 @@
   --border-purple: rgba(246,82,20,0.30);
   --purple-1: rgba(246,82,20,0.10);
   --purple-2: rgba(246,82,20,0.22);
-  --tag-geral:     #ff9a4a;
-  --tag-operacoes: #ffb627;
-  --tag-financas:  #ff7a3d;
+  /* Cores por coordenadoria distintas mesmo no Noite (antes eram todas variações
+     de laranja, mesma paleta monocromática do tema — impossível diferenciar as
+     pastas da sidebar/legenda do Kanban de relance). Reusa os mesmos 6 tons do
+     tema nucleo, que já leem bem em fundo escuro. */
+  --tag-geral:     #9b7be8;
+  --tag-operacoes: #5b9cf6;
+  --tag-financas:  #2dd4a0;
   --tag-projetos:  #f65214;
-  --tag-pessoas:   #ffc870;
-  --tag-marketing: #ff5c2a;
+  --tag-pessoas:   #f5c518;
+  --tag-marketing: #e11d48;
   --tag-conselho:  #ffae6a;
-  --tag-geral-dim:     rgba(255,154,74,0.14);
-  --tag-operacoes-dim: rgba(255,182,39,0.14);
-  --tag-financas-dim:  rgba(255,122,61,0.14);
+  --tag-geral-dim:     rgba(155,123,232,0.14);
+  --tag-operacoes-dim: rgba(91,156,246,0.14);
+  --tag-financas-dim:  rgba(45,212,160,0.14);
   --tag-projetos-dim:  rgba(246,82,20,0.14);
-  --tag-pessoas-dim:   rgba(255,200,112,0.14);
-  --tag-marketing-dim: rgba(255,92,42,0.14);
-  --tag-geral-border:     rgba(255,154,74,0.35);
-  --tag-operacoes-border: rgba(255,182,39,0.35);
-  --tag-financas-border:  rgba(255,122,61,0.35);
+  --tag-pessoas-dim:   rgba(245,197,24,0.14);
+  --tag-marketing-dim: rgba(225,29,72,0.14);
+  --tag-geral-border:     rgba(155,123,232,0.35);
+  --tag-operacoes-border: rgba(91,156,246,0.35);
+  --tag-financas-border:  rgba(45,212,160,0.35);
   --tag-projetos-border:  rgba(246,82,20,0.35);
-  --tag-pessoas-border:   rgba(255,200,112,0.35);
-  --tag-marketing-border: rgba(255,92,42,0.35);
+  --tag-pessoas-border:   rgba(245,197,24,0.35);
+  --tag-marketing-border: rgba(225,29,72,0.35);
   --sh-purple: 0 8px 32px rgba(246,82,20,0.25);
   /* Legacy */
   --c-bg: #000; --c-s1: #060300; --c-s2: #0e0805; --c-s3: #15100a; --c-s4: #1f1610;
@@ -299,25 +303,28 @@
   --surface-3: #110a1a;
   --surface-4: #1a1226;
   --surface-5: #2f1d70;
-  --tag-geral:     #b9a0ff;
-  --tag-operacoes: #9b7be8;
-  --tag-financas:  #c5a8ff;
-  --tag-projetos:  #6f4dd3;
-  --tag-pessoas:   #d4c2ff;
-  --tag-marketing: #8a6dd9;
+  /* Mesmo motivo do tema Noite: antes eram todas variações de roxo (paleta do
+     tema), agora reusa os 6 tons distintos do nucleo para dar pra diferenciar
+     as pastas/coordenadorias de relance. */
+  --tag-geral:     #9b7be8;
+  --tag-operacoes: #5b9cf6;
+  --tag-financas:  #2dd4a0;
+  --tag-projetos:  #f65214;
+  --tag-pessoas:   #f5c518;
+  --tag-marketing: #e11d48;
   --tag-conselho:  #e4d6ff;
-  --tag-geral-dim:     rgba(185,160,255,0.14);
-  --tag-operacoes-dim: rgba(155,123,232,0.14);
-  --tag-financas-dim:  rgba(197,168,255,0.14);
-  --tag-projetos-dim:  rgba(111,77,211,0.18);
-  --tag-pessoas-dim:   rgba(212,194,255,0.14);
-  --tag-marketing-dim: rgba(138,109,217,0.16);
-  --tag-geral-border:     rgba(185,160,255,0.35);
-  --tag-operacoes-border: rgba(155,123,232,0.35);
-  --tag-financas-border:  rgba(197,168,255,0.35);
-  --tag-projetos-border:  rgba(111,77,211,0.40);
-  --tag-pessoas-border:   rgba(212,194,255,0.35);
-  --tag-marketing-border: rgba(138,109,217,0.38);
+  --tag-geral-dim:     rgba(155,123,232,0.14);
+  --tag-operacoes-dim: rgba(91,156,246,0.14);
+  --tag-financas-dim:  rgba(45,212,160,0.14);
+  --tag-projetos-dim:  rgba(246,82,20,0.14);
+  --tag-pessoas-dim:   rgba(245,197,24,0.14);
+  --tag-marketing-dim: rgba(225,29,72,0.14);
+  --tag-geral-border:     rgba(155,123,232,0.35);
+  --tag-operacoes-border: rgba(91,156,246,0.35);
+  --tag-financas-border:  rgba(45,212,160,0.35);
+  --tag-projetos-border:  rgba(246,82,20,0.35);
+  --tag-pessoas-border:   rgba(245,197,24,0.35);
+  --tag-marketing-border: rgba(225,29,72,0.35);
   --area-operacoes:    #9b7be8;
   --area-logistica:    #c5a8ff;
   --area-pesqop:       #6f4dd3;
