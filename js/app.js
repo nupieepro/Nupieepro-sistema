@@ -3048,6 +3048,50 @@ const Kanban = (() => {
     }
     _loaded = true;
     _renderAll(_demands);
+    _initDnD();
+  }
+
+  /* ---- Drag-and-drop entre colunas ---- */
+  let _draggingId = null;
+  let _dndReady = false;
+
+  function _initDnD() {
+    if (_dndReady) return; // as colunas (elementos) sao fixas no HTML, so precisa ligar uma vez
+    _dndReady = true;
+    COLS.forEach(col => {
+      const zone = document.getElementById('kanban-' + col.id);
+      if (!zone) return;
+      zone.addEventListener('dragover', e => {
+        if (!_draggingId) return;
+        e.preventDefault();
+        zone.style.background = 'var(--surface-3)';
+        zone.style.outline = '1px dashed var(--brand-orange)';
+      });
+      zone.addEventListener('dragleave', () => {
+        zone.style.background = '';
+        zone.style.outline = '';
+      });
+      zone.addEventListener('drop', e => {
+        e.preventDefault();
+        zone.style.background = '';
+        zone.style.outline = '';
+        const id = _draggingId || e.dataTransfer.getData('text/plain');
+        const d  = id && _demands.find(x => String(x.id) === String(id));
+        if (d && d.coluna !== col.coluna) _mudarStatus(id, col.coluna);
+      });
+    });
+  }
+
+  function _onDragStart(e, id) {
+    _draggingId = id;
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', id);
+    e.currentTarget.style.opacity = '0.5';
+  }
+
+  function _onDragEnd(e) {
+    _draggingId = null;
+    e.currentTarget.style.opacity = '';
   }
 
   function _renderAll(list) {
@@ -3061,6 +3105,14 @@ const Kanban = (() => {
     });
   }
 
+  /* Quem pode mudar a coluna de uma demanda: coordenador+/admin ou o proprio responsavel
+     (mesmo criterio usado em abrirDetalhes para mostrar "Mudar status"). */
+  function _podeMover(d) {
+    const uid = window._appProfile?.id;
+    const isCoordOuAdmin = typeof Permissoes !== 'undefined' && (Permissoes.isAdmin() || Permissoes.pode('podeEditarDemanda'));
+    return isCoordOuAdmin || !!(uid && d.responsavel_id === uid);
+  }
+
   function _cardHtml(d) {
     const sigla    = d.coordenadorias?.sigla || 'GER';
     const tagClass = TAG_CLASS[sigla] || 'geral';
@@ -3070,7 +3122,10 @@ const Kanban = (() => {
     const prazo    = d.prazo
       ? '<span class="kanban-card-meta">&#128197; ' + new Date(d.prazo + 'T12:00:00').toLocaleDateString('pt-BR') + '</span>'
       : '';
-    return '<div class="kanban-card" onclick="Kanban.abrirDetalhes(\'' + d.id + '\')">'
+    const podeMover = _podeMover(d);
+    return '<div class="kanban-card" data-id="' + d.id + '" onclick="Kanban.abrirDetalhes(\'' + d.id + '\')"'
+      + (podeMover ? ' draggable="true" ondragstart="Kanban._onDragStart(event,\'' + d.id + '\')" ondragend="Kanban._onDragEnd(event)" style="cursor:grab"' : '')
+      + '>'
       + '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px">'
       + '<span style="font-size:9px;font-weight:700;padding:2px 6px;border-radius:4px;background:' + prioCor + '22;color:' + prioCor + '">' + prio + '</span>'
       + '<span class="coord-tag tag-' + tagClass + '" style="font-size:9px;padding:1px 7px;">' + sigla + '</span>'
@@ -3356,7 +3411,7 @@ const Kanban = (() => {
     localStorage.setItem('_kanban_demands', JSON.stringify(_demands));
   }
 
-  return { load, abrirNovaDemanda, fecharModal, salvar, abrirDetalhes, _onCoordChange };
+  return { load, abrirNovaDemanda, fecharModal, salvar, abrirDetalhes, _onCoordChange, _onDragStart, _onDragEnd };
 })();
 
 
