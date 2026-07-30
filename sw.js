@@ -5,7 +5,7 @@
    browsers continuam servindo assets antigos do cache do SW.
    ============================================================ */
 
-const CACHE_NAME = 'nupieepro-v65';
+const CACHE_NAME = 'nupieepro-v66';
 const ASSETS = [
   './',
   './index.html',
