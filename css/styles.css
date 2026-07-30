@@ -77,6 +77,7 @@
   --tag-pessoas:   #f5c518;
   --tag-marketing: #e11d48;
   --tag-conselho:  #b9a0ff;
+  --tag-institucional: #22d3ee;
 
   --tag-geral-dim:     rgba(155,123,232,0.12);
   --tag-operacoes-dim: rgba(91,156,246,0.10);
@@ -266,6 +267,7 @@
   --tag-pessoas:   #f5c518;
   --tag-marketing: #e11d48;
   --tag-conselho:  #ffae6a;
+  --tag-institucional: #22d3ee;
   --tag-geral-dim:     rgba(155,123,232,0.14);
   --tag-operacoes-dim: rgba(91,156,246,0.14);
   --tag-financas-dim:  rgba(45,212,160,0.14);
@@ -313,6 +315,7 @@
   --tag-pessoas:   #f5c518;
   --tag-marketing: #e11d48;
   --tag-conselho:  #e4d6ff;
+  --tag-institucional: #22d3ee;
   --tag-geral-dim:     rgba(155,123,232,0.14);
   --tag-operacoes-dim: rgba(91,156,246,0.14);
   --tag-financas-dim:  rgba(45,212,160,0.14);
@@ -384,6 +387,7 @@
   --tag-pessoas:   #ca8a04;
   --tag-marketing: #be123c;
   --tag-conselho:  #213248;
+  --tag-institucional: #0891b2;
   --tag-geral-dim:     rgba(155,123,232,0.12);
   --tag-operacoes-dim: rgba(37,99,235,0.10);
   --tag-financas-dim:  rgba(5,150,105,0.10);

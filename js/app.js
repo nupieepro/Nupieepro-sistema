@@ -459,12 +459,12 @@ const App = {
       Object.keys(ROLE_PAGES).filter(k => k !== 'Conselheiro').forEach(nome => {
         html += _folderHtml(nome, ROLE_PAGES[nome], nome === cName);
       });
-      html += _folderHtml('Institucional', GLOBAL_PAGES, false, 'brand-orange');
+      html += _folderHtml('Institucional', GLOBAL_PAGES, false, 'tag-institucional');
     } else {
       /* ── Coordenador/assessor/membro de UMA coordenadoria: só a pasta dela ── */
       html += '<div class="sidebar-section">Minha coordenadoria</div>';
       html += _folderHtml(roleKey, ROLE_PAGES[roleKey] || [], true);
-      html += _folderHtml('Institucional', GLOBAL_PAGES, false, 'brand-orange');
+      html += _folderHtml('Institucional', GLOBAL_PAGES, false, 'tag-institucional');
     }
 
     /* ── Operacional (ABJ) ── */
