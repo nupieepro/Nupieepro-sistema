@@ -15,14 +15,26 @@ const PushModule = (() => {
     try {
       const reg = await navigator.serviceWorker.register('/sw.js', { scope: '/' });
       console.log('[SW] Registrado:', reg.scope);
-      reg.addEventListener('updatefound', () => {
-        const novo = reg.installing;
-        novo.addEventListener('statechange', () => {
-          if (novo.state === 'installed' && navigator.serviceWorker.controller) {
-            mostrarToast('Nova versão disponível! Recarregue para atualizar.', 'info', 0);
-          }
-        });
+
+      /* Auto-update: quando uma versão nova assume o controle da página, recarrega
+         sozinho (sem depender do usuário perceber um toast e clicar em algo) —
+         assim quem já tem o app instalado recebe as atualizações sem precisar
+         desinstalar/instalar de novo. Guard evita loop caso o SW troque mais de uma vez. */
+      let _atualizando = false;
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        if (_atualizando) return;
+        _atualizando = true;
+        mostrarToast('Atualizando para a versão mais recente...', 'info', 1500);
+        setTimeout(() => window.location.reload(), 600);
       });
+
+      // Checa por atualizações sempre que a aba volta a ficar visível, e a cada 30min
+      // com a aba aberta — em vez de depender só do intervalo padrão do navegador.
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') reg.update().catch(() => {});
+      });
+      setInterval(() => reg.update().catch(() => {}), 30 * 60 * 1000);
+
       navigator.serviceWorker.addEventListener('message', e => {
         if (e.data?.type === 'navigate') App.navigate(e.data.url.replace('/dashboard.html','') || 'dashboard');
         if (e.data?.type === 'sync-abj') ABJModule?.carregar();

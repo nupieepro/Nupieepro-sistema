@@ -3027,9 +3027,50 @@ const Kanban = (() => {
 
   let _demands = [];
   let _loaded  = false;
+  let _filtroCoord = '';
+  let _filtroResp  = '';
+
+  function _filtrar(list) {
+    return list.filter(d =>
+      (!_filtroCoord || (d.coordenadorias?.sigla || 'GER') === _filtroCoord) &&
+      (!_filtroResp || String(d.responsavel_id) === _filtroResp)
+    );
+  }
+
+  function _rerender() { _renderAll(_filtrar(_demands)); }
+
+  function _popularFiltroResp() {
+    const sel = document.getElementById('kanbanFiltroResp');
+    if (!sel) return;
+    const atual = sel.value;
+    const vistos = new Map();
+    _demands.forEach(d => {
+      if (d.responsavel_id && d.users?.nome && !vistos.has(String(d.responsavel_id))) {
+        vistos.set(String(d.responsavel_id), d.users.nome);
+      }
+    });
+    const opcoes = [...vistos.entries()].sort((a, b) => a[1].localeCompare(b[1], 'pt-BR'));
+    sel.innerHTML = '<option value="">Todos responsáveis</option>' +
+      opcoes.map(([id, nome]) => '<option value="' + id + '">' + sanitize(nome) + '</option>').join('');
+    if (opcoes.some(([id]) => id === atual)) sel.value = atual;
+  }
+
+  function aplicarFiltros() {
+    _filtroCoord = document.getElementById('kanbanFiltroCoord')?.value || '';
+    _filtroResp  = document.getElementById('kanbanFiltroResp')?.value || '';
+    _rerender();
+  }
+
+  function limparFiltros() {
+    _filtroCoord = '';
+    _filtroResp  = '';
+    const c = document.getElementById('kanbanFiltroCoord'); if (c) c.value = '';
+    const r = document.getElementById('kanbanFiltroResp');  if (r) r.value = '';
+    _rerender();
+  }
 
   async function load() {
-    if (!window._supabase) { _renderAll([]); return; }
+    if (!window._supabase) { _demands = []; _rerender(); return; }
     try {
       const _p = window._appProfile;
       const _isGlobal = !_p || _p._isDev || _p.role === 'admin'
@@ -3050,7 +3091,8 @@ const Kanban = (() => {
       _demands = JSON.parse(localStorage.getItem('_kanban_demands') || '[]');
     }
     _loaded = true;
-    _renderAll(_demands);
+    _popularFiltroResp();
+    _rerender();
     _initDnD();
   }
 
@@ -3289,7 +3331,7 @@ const Kanban = (() => {
       _saveLocal();
     }
 
-    _renderAll(_demands);
+    _rerender();
     fecharModal();
     App.toast('Demanda criada!', 'success');
   }
@@ -3387,7 +3429,7 @@ const Kanban = (() => {
     if (d) d.coluna = coluna;
     fecharModal();
     App.toast('Status atualizado!', 'success');
-    _renderAll(_demands);
+    _rerender();
   }
 
   function _editar(id, dOriginal) {
@@ -3428,7 +3470,7 @@ const Kanban = (() => {
               App.toast('Demanda atualizada!', 'success');
               var d = _demands.find(function(x) { return String(x.id) === String(id); });
               if (d) { d.titulo = titulo; d.descricao = novaDescricao; d.prioridade = prio; d.prazo = prazo; }
-              _renderAll(_demands);
+              _rerender();
             } catch (e) { App.toast('Erro: ' + e.message, 'error'); }
           } }
         ]
@@ -3444,7 +3486,7 @@ const Kanban = (() => {
     fecharModal();
     App.toast('Demanda excluida!', 'success');
     _demands = _demands.filter(function(x) { return String(x.id) !== String(id); });
-    _renderAll(_demands);
+    _rerender();
   }
 
   async function _salvarNota(id) {
@@ -3475,7 +3517,7 @@ const Kanban = (() => {
     localStorage.setItem('_kanban_demands', JSON.stringify(_demands));
   }
 
-  return { load, abrirNovaDemanda, fecharModal, salvar, abrirDetalhes, _onCoordChange, _onDragStart, _onDragEnd, _onTouchStart, _onTouchMove, _onTouchEnd };
+  return { load, abrirNovaDemanda, fecharModal, salvar, abrirDetalhes, _onCoordChange, _onDragStart, _onDragEnd, _onTouchStart, _onTouchMove, _onTouchEnd, aplicarFiltros, limparFiltros };
 })();
 
 

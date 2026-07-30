@@ -1013,6 +1013,22 @@
             <span class="coord-tag tag-projetos">PRJ · Projetos</span>
             <span class="coord-tag tag-financas">FIN · Finanças</span>
           </div>
+          <div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-bottom:14px;">
+            <span style="font-size:11px;color:var(--fg-3);font-weight:600;">Filtrar:</span>
+            <select id="kanbanFiltroCoord" class="form-input" style="width:auto;font-size:12px;padding:6px 10px;" onchange="Kanban.aplicarFiltros()">
+              <option value="">Todas coordenadorias</option>
+              <option value="GER">Geral</option>
+              <option value="OPS">Operações</option>
+              <option value="FIN">Finanças</option>
+              <option value="PRJ">Projetos</option>
+              <option value="GP">G. Pessoas</option>
+              <option value="MKT">Marketing</option>
+            </select>
+            <select id="kanbanFiltroResp" class="form-input" style="width:auto;font-size:12px;padding:6px 10px;" onchange="Kanban.aplicarFiltros()">
+              <option value="">Todos responsáveis</option>
+            </select>
+            <button class="btn btn-ghost" style="font-size:12px;padding:6px 10px;" onclick="Kanban.limparFiltros()">Limpar</button>
+          </div>
           <div style="display:flex;gap:16px;min-width:900px;padding-bottom:8px;" id="kanbanBoard">
             <!-- Colunas geradas por JS -->
             <div class="kanban-col">
@@ -1653,13 +1669,33 @@
   <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/lucide@0.452.0/dist/umd/lucide.min.js"></script>
-  <script src="js/permissoes.js?v=64"></script>
-  <script src="js/app.js?v=64"></script>
-  <script src="js/auth.js?v=64"></script>
-  <script src="js/abj.js?v=64"></script>
-  <script src="js/relatorio.js?v=64"></script>
-  <script src="js/emails.js?v=64"></script>
-  <script src="js/pages.js?v=64"></script>
+  <script src="js/permissoes.js?v=65"></script>
+  <script src="js/app.js?v=65"></script>
+  <script src="js/auth.js?v=65"></script>
+  <script src="js/abj.js?v=65"></script>
+  <script src="js/relatorio.js?v=65"></script>
+  <script src="js/emails.js?v=65"></script>
+  <script src="js/pages.js?v=65"></script>
+  <script>
+    // ── SERVICE WORKER: registro + auto-update ─────────
+    // dashboard.html é onde o usuário passa o dia todo; sem isso, quem
+    // deixa a aba aberta nunca via um SW novo assumir o controle.
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('sw.js').then(reg => {
+        let _swAtualizando = false;
+        navigator.serviceWorker.addEventListener('controllerchange', () => {
+          if (_swAtualizando) return;
+          _swAtualizando = true;
+          if (typeof mostrarToast === 'function') mostrarToast('Atualizando para a versão mais recente...', 'info', 1500);
+          setTimeout(() => window.location.reload(), 600);
+        });
+        document.addEventListener('visibilitychange', () => {
+          if (document.visibilityState === 'visible') reg.update().catch(() => {});
+        });
+        setInterval(() => reg.update().catch(() => {}), 30 * 60 * 1000);
+      }).catch(() => {});
+    }
+  </script>
   <script>
     // ── PROFILE DROPDOWN ───────────────────────────────
     function toggleProfileDropdown() {
