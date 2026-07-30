@@ -3097,6 +3097,62 @@ const Kanban = (() => {
     e.currentTarget.style.opacity = '';
   }
 
+  /* ---- Drag-and-drop por toque (mobile) ----
+     draggable="true" do HTML5 nao responde a gestos de toque (Safari iOS /
+     Chrome Android), entao a movimentacao no celular e refeita na mao com
+     touchstart/touchmove/touchend, imitando o mesmo fluxo do mouse acima. */
+  let _touchState = null;
+  let _suppressClick = false;
+  const TOUCH_DRAG_THRESHOLD = 10; // px de movimento antes de virar "arrastar" (evita brigar com o toque/scroll)
+
+  function _onTouchStart(e, id) {
+    if (e.touches.length !== 1) return;
+    const t = e.touches[0];
+    _touchState = { id, cardEl: e.currentTarget, startX: t.clientX, startY: t.clientY, active: false, zone: null };
+  }
+
+  function _onTouchMove(e) {
+    const st = _touchState;
+    if (!st) return;
+    const t = e.touches[0];
+    const dx = t.clientX - st.startX;
+    const dy = t.clientY - st.startY;
+    if (!st.active) {
+      if (Math.abs(dx) < TOUCH_DRAG_THRESHOLD && Math.abs(dy) < TOUCH_DRAG_THRESHOLD) return;
+      st.active = true;
+      st.cardEl.style.opacity = '0.6';
+      st.cardEl.style.zIndex = '50';
+      st.cardEl.style.pointerEvents = 'none';
+    }
+    e.preventDefault(); // so trava o scroll da pagina depois que o gesto virou "arrastar"
+    st.cardEl.style.transform = `translate(${dx}px, ${dy}px)`;
+    const under = document.elementFromPoint(t.clientX, t.clientY);
+    const zone = under && under.closest('.kanban-col-body');
+    if (zone !== st.zone) {
+      if (st.zone) { st.zone.style.background = ''; st.zone.style.outline = ''; }
+      if (zone) { zone.style.background = 'var(--surface-3)'; zone.style.outline = '1px dashed var(--brand-orange)'; }
+      st.zone = zone;
+    }
+  }
+
+  function _onTouchEnd() {
+    const st = _touchState;
+    if (!st) return;
+    _touchState = null;
+    st.cardEl.style.transform = '';
+    st.cardEl.style.opacity = '';
+    st.cardEl.style.zIndex = '';
+    st.cardEl.style.pointerEvents = '';
+    if (st.zone) { st.zone.style.background = ''; st.zone.style.outline = ''; }
+    if (!st.active) return; // foi so um toque — deixa o onclick abrir os detalhes normalmente
+    _suppressClick = true; // evita abrir o modal de detalhes logo apos soltar o card
+    if (st.zone) {
+      const col = COLS.find(c => st.zone.id === 'kanban-' + c.id);
+      const d = _demands.find(x => String(x.id) === String(st.id));
+      if (col && d && d.coluna !== col.coluna) _mudarStatus(st.id, col.coluna);
+    }
+  }
+
   function _renderAll(list) {
     COLS.forEach(col => {
       const el = document.getElementById('kanban-' + col.id);
@@ -3127,7 +3183,11 @@ const Kanban = (() => {
       : '';
     const podeMover = _podeMover(d);
     return '<div class="kanban-card" data-id="' + d.id + '" onclick="Kanban.abrirDetalhes(\'' + d.id + '\')"'
-      + (podeMover ? ' draggable="true" ondragstart="Kanban._onDragStart(event,\'' + d.id + '\')" ondragend="Kanban._onDragEnd(event)" style="cursor:grab"' : '')
+      + (podeMover
+          ? ' draggable="true" ondragstart="Kanban._onDragStart(event,\'' + d.id + '\')" ondragend="Kanban._onDragEnd(event)"'
+            + ' ontouchstart="Kanban._onTouchStart(event,\'' + d.id + '\')" ontouchmove="Kanban._onTouchMove(event)" ontouchend="Kanban._onTouchEnd(event)"'
+            + ' style="cursor:grab"'
+          : '')
       + '>'
       + '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px">'
       + '<span style="font-size:9px;font-weight:700;padding:2px 6px;border-radius:4px;background:' + prioCor + '22;color:' + prioCor + '">' + prio + '</span>'
@@ -3237,6 +3297,7 @@ const Kanban = (() => {
   var _SEP = '\n---NOTAS---\n';
 
   function abrirDetalhes(id) {
+    if (_suppressClick) { _suppressClick = false; return; } // clique disparado logo apos soltar um arrasto por toque
     var d = _demands.find(function(x) { return String(x.id) === String(id); });
     if (!d) return;
 
@@ -3414,7 +3475,7 @@ const Kanban = (() => {
     localStorage.setItem('_kanban_demands', JSON.stringify(_demands));
   }
 
-  return { load, abrirNovaDemanda, fecharModal, salvar, abrirDetalhes, _onCoordChange, _onDragStart, _onDragEnd };
+  return { load, abrirNovaDemanda, fecharModal, salvar, abrirDetalhes, _onCoordChange, _onDragStart, _onDragEnd, _onTouchStart, _onTouchMove, _onTouchEnd };
 })();
 
 
