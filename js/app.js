@@ -402,25 +402,46 @@ const App = {
         ${p.badge ? `<span class="nav-badge">${p.badge}</span>` : ''}
       </div>`;
 
+    /* Pasta colapsável e colorida por coordenadoria (ou "Institucional" pros
+       itens compartilhados) — cada coordenadoria só vê a própria pasta;
+       admin/coord. geral vê todas, mas colapsadas (só a sua abre sozinha). */
+    const _folderHtml = (nome, pages, isOpen, tagClassOverride) => {
+      const filtered = pages.filter(p => p.id !== 'dashboard');
+      if (!filtered.length) return '';
+      const tagClass = tagClassOverride || COORD_TAG_CLASS[nome] || 'tag-geral';
+      return `<details class="nav-folder" ${isOpen ? 'open' : ''} style="--folder-color:var(--${tagClass})">
+        <summary class="nav-folder-header">
+          <span class="nav-folder-icon">${getIcon('folder')}</span>
+          <span class="nav-folder-name">${nome}</span>
+          <span class="nav-folder-chevron">${getIcon('chevron-down')}</span>
+        </summary>
+        <div class="nav-folder-body">${filtered.map(_navItem).join('')}</div>
+      </details>`;
+    };
+
     const roleKey = Object.keys(ROLE_PAGES).find(k =>
       k.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '') ===
       cName.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
     ) || 'Geral';
 
+    const PINNED_PAGES = [
+      { id: 'dashboard',  icon: 'grid',          label: 'Painel Central' },
+      { id: 'demandas',   icon: 'check-square',  label: 'Demandas da Coord' },
+      { id: 'calendario', icon: 'calendar',      label: 'Calendário' },
+    ];
     const GLOBAL_PAGES = [
-      { id: 'demandas',             icon: 'check-square', label: 'Demandas da Coord' },
-      { id: 'calendario',           icon: 'calendar',     label: 'Calendário' },
-      { id: 'global_visitas',       icon: 'zap',          label: 'Visitas Técnicas' },
-      { id: 'global_apresentacoes', icon: 'star',         label: 'Apresentações Inst.' },
-      { id: 'global_producao',      icon: 'file',         label: 'Produção Científica' },
-      { id: 'global_assembleia',    icon: 'users',        label: 'Assembleia e Votos' },
+      { id: 'global_visitas',       icon: 'zap',   label: 'Visitas Técnicas' },
+      { id: 'global_apresentacoes', icon: 'star',  label: 'Apresentações Inst.' },
+      { id: 'global_producao',      icon: 'file',  label: 'Produção Científica' },
+      { id: 'global_assembleia',    icon: 'users', label: 'Assembleia e Votos' },
     ];
 
     let html = '<div class="sidebar-section">Meu painel</div>';
+    html += PINNED_PAGES.map(_navItem).join('');
 
     /* ── Conselheiro: nav restrita, somente leitura ── */
     if (role === 'conselheiro') {
-      html += (ROLE_PAGES['Conselheiro'] || []).map(_navItem).join('');
+      html += (ROLE_PAGES['Conselheiro'] || []).filter(p => p.id !== 'dashboard').map(_navItem).join('');
       html += '<div class="sidebar-section">Colaborativo</div>';
       html += `<div class="nav-item nav-shared" id="nav-compartilhado" onclick="goTo('compartilhado')">
         <span class="nav-icon">${getIcon('users')}</span>
@@ -431,13 +452,20 @@ const App = {
       return;
     }
 
-    /* ── Admin e Coord Geral: acesso total ── */
+    /* ── Admin e Coord Geral: vê todas as pastas (a própria já vem aberta) ── */
     const isCoordGeral = role === 'coordenador' && sigla === 'GER';
-    const myPages = (role === 'admin' || isCoordGeral)
-      ? Object.values(ROLE_PAGES).flat().concat(GLOBAL_PAGES).filter((v,i,a) => a.findIndex(t => t.id === v.id) === i)
-      : (ROLE_PAGES[roleKey] || []).concat(GLOBAL_PAGES);
-
-    html += myPages.map(_navItem).join('');
+    if (role === 'admin' || isCoordGeral) {
+      html += '<div class="sidebar-section">Coordenadorias</div>';
+      Object.keys(ROLE_PAGES).filter(k => k !== 'Conselheiro').forEach(nome => {
+        html += _folderHtml(nome, ROLE_PAGES[nome], nome === cName);
+      });
+      html += _folderHtml('Institucional', GLOBAL_PAGES, false, 'brand-orange');
+    } else {
+      /* ── Coordenador/assessor/membro de UMA coordenadoria: só a pasta dela ── */
+      html += '<div class="sidebar-section">Minha coordenadoria</div>';
+      html += _folderHtml(roleKey, ROLE_PAGES[roleKey] || [], true);
+      html += _folderHtml('Institucional', GLOBAL_PAGES, false, 'brand-orange');
+    }
 
     /* ── Operacional (ABJ) ── */
     html += '<div class="sidebar-section">Operacional</div>';

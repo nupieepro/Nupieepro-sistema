@@ -654,6 +654,26 @@ code, kbd, .mono { font: var(--t-mono); }
   background: rgba(245,197,24,.18); color: var(--brand-yellow);
   border: 1px solid rgba(245,197,24,.30);
 }
+
+/* ── Pastas colapsáveis do menu (uma por coordenadoria) ── */
+.nav-folder { margin: 2px 8px; }
+.nav-folder-header {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 10px; border-radius: var(--r-sm);
+  font: 600 12px/1.2 var(--font-body); color: var(--folder-color, var(--fg-2));
+  background: color-mix(in srgb, var(--folder-color, var(--fg-3)) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--folder-color, var(--fg-3)) 28%, transparent);
+  cursor: pointer; list-style: none; user-select: none;
+  transition: background var(--dur-1) var(--ease);
+}
+.nav-folder-header::-webkit-details-marker { display: none; }
+.nav-folder-header:hover { background: color-mix(in srgb, var(--folder-color, var(--fg-3)) 20%, transparent); }
+.nav-folder-icon { width: 16px; height: 16px; flex-shrink: 0; display: flex; }
+.nav-folder-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.nav-folder-chevron { width: 14px; height: 14px; flex-shrink: 0; display: flex; transition: transform var(--dur-2) var(--ease); }
+.nav-folder[open] > .nav-folder-header .nav-folder-chevron { transform: rotate(180deg); }
+.nav-folder-body { padding: 4px 0 2px 8px; border-left: 1px dashed var(--border-1); margin: 2px 0 4px 18px; }
+
 .sidebar-footer {
   margin-top: auto; padding: 10px 14px;
   border-top: 1px solid var(--border-1); flex-shrink: 0;
