@@ -423,8 +423,8 @@
   </main>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-  <script src="js/app.js?v=14"></script>
-  <script src="js/auth.js?v=14"></script>
+  <script src="js/app.js?v=15"></script>
+  <script src="js/auth.js?v=15"></script>
   <script>
     (async () => {
       // Init e-mail
@@ -444,7 +444,20 @@
 
       initLoginPage();
       Theme.init();
-      if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('sw.js').then(reg => {
+          let _swAtualizando = false;
+          navigator.serviceWorker.addEventListener('controllerchange', () => {
+            if (_swAtualizando) return;
+            _swAtualizando = true;
+            setTimeout(() => window.location.reload(), 600);
+          });
+          document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'visible') reg.update().catch(() => {});
+          });
+          setInterval(() => reg.update().catch(() => {}), 30 * 60 * 1000);
+        }).catch(() => {});
+      }
     })();
 
     const cursor = document.createElement('div');
