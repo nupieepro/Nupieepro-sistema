@@ -3214,22 +3214,39 @@ const Kanban = (() => {
     return isCoordOuAdmin || !!(uid && d.responsavel_id === uid);
   }
 
+  /* Dias de atraso: prazo vencido e ainda nao concluida (auditada). 0 = sem atraso. */
+  function _diasAtraso(d) {
+    if (!d.prazo || d.coluna === 'auditada') return 0;
+    const hoje = new Date(); hoje.setHours(0, 0, 0, 0);
+    const prazo = new Date(d.prazo + 'T00:00:00');
+    const diff = Math.round((hoje - prazo) / 86400000);
+    return diff > 0 ? diff : 0;
+  }
+
   function _cardHtml(d) {
     const sigla    = d.coordenadorias?.sigla || 'GER';
     const tagClass = TAG_CLASS[sigla] || 'geral';
     const prioCor  = PRIO_COR[d.prioridade] || 'var(--fg-3)';
     const prio     = (d.prioridade || 'media').toUpperCase();
     const resp     = d.users?.nome?.split(' ')[0] || null;
+    const atraso   = _diasAtraso(d);
     const prazo    = d.prazo
-      ? '<span class="kanban-card-meta">&#128197; ' + new Date(d.prazo + 'T12:00:00').toLocaleDateString('pt-BR') + '</span>'
+      ? '<span class="kanban-card-meta"' + (atraso > 0 ? ' style="color:var(--red);font-weight:700;"' : '') + '>&#128197; '
+        + new Date(d.prazo + 'T12:00:00').toLocaleDateString('pt-BR')
+        + (atraso > 0 ? ' · ⚠️ ' + atraso + (atraso === 1 ? ' dia atrasado' : ' dias atrasado') : '')
+        + '</span>'
       : '';
     const podeMover = _podeMover(d);
+    const cardStyle = [
+      podeMover ? 'cursor:grab' : '',
+      atraso > 0 ? 'border-left:3px solid var(--red)' : '',
+    ].filter(Boolean).join(';');
     return '<div class="kanban-card" data-id="' + d.id + '" onclick="Kanban.abrirDetalhes(\'' + d.id + '\')"'
       + (podeMover
           ? ' draggable="true" ondragstart="Kanban._onDragStart(event,\'' + d.id + '\')" ondragend="Kanban._onDragEnd(event)"'
             + ' ontouchstart="Kanban._onTouchStart(event,\'' + d.id + '\')" ontouchmove="Kanban._onTouchMove(event)" ontouchend="Kanban._onTouchEnd(event)"'
-            + ' style="cursor:grab"'
           : '')
+      + (cardStyle ? ' style="' + cardStyle + '"' : '')
       + '>'
       + '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px">'
       + '<span style="font-size:9px;font-weight:700;padding:2px 6px;border-radius:4px;background:' + prioCor + '22;color:' + prioCor + '">' + prio + '</span>'
