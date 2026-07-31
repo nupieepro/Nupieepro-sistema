@@ -3493,7 +3493,7 @@ const PagePessoas = {
         .order('data_inicio', { ascending: false });
       el.innerHTML = data?.length
         ? data.map(e => {
-            const dt = e.data_inicio ? new Date(e.data_inicio+'T12:00:00').toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit',year:'2-digit'}) : '—';
+            const dt = e.data_inicio ? _parseDataEvt(e.data_inicio).toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit',year:'2-digit'}) : '—';
             return `<div style="background:var(--b-1);border:1px solid var(--b-2);border-radius:10px;padding:14px 16px">
               <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:6px">
                 <div style="font-weight:700;font-size:14px;color:var(--c-white)">${sanitize(e.titulo)}</div>

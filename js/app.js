@@ -2765,6 +2765,15 @@ const Dem = {
 };
 window.Dem = Dem;
 
+/* Converte data_inicio (timestamptz do Supabase, ISO com "T" e hora) ou
+   prazo/aniversario (coluna `date`, "YYYY-MM-DD" pura) num Date válido.
+   Concatenar "T12:00:00" numa string que já tem hora (ex: eventos com
+   datetime-local) produz "Invalid Date". */
+function _parseDataEvt(str) {
+  if (!str) return null;
+  return str.includes('T') ? new Date(str) : new Date(str + 'T12:00:00');
+}
+
 /* ═══════════════════════════════════════════════════════════════
    NovoCal — Calendário dinâmico da página Calendário (full-page)
    ═══════════════════════════════════════════════════════════════ */
@@ -2815,12 +2824,14 @@ const NovoCal = {
     const sb = window._supabase;
     if (!sb) return;
     const inicio = new Date(this.year, this.month, 1).toISOString().split('T')[0];
-    const fim    = new Date(this.year, this.month + 1, 0).toISOString().split('T')[0];
+    // Limite exclusivo (1º dia do mês seguinte): data_inicio é timestamptz, então um
+    // evento no último dia do mês com horário após 00:00 UTC ficaria de fora de um .lte(fim).
+    const limite = new Date(this.year, this.month + 1, 1).toISOString().split('T')[0];
     const CORES  = { reuniao:'#9b7be8', evento:'var(--brand-orange)', treinamento:'#5b9cf6', enegep:'#f5c518', podcast:'#e85aa8', assembleia:'#2dd4a0', publicacao:'#f75412', prazo:'#f87171' };
     try {
       const [evRes, demRes] = await Promise.all([
-        sb.from('eventos').select('data_inicio,tipo').gte('data_inicio', inicio).lte('data_inicio', fim),
-        sb.from('demandas').select('prazo,coluna').gte('prazo', inicio).lte('prazo', fim),
+        sb.from('eventos').select('data_inicio,tipo').gte('data_inicio', inicio).lt('data_inicio', limite),
+        sb.from('demandas').select('prazo,coluna').gte('prazo', inicio).lt('prazo', limite),
       ]);
       const porDia = {};
       (evRes.data || []).forEach(e => {
@@ -2847,13 +2858,13 @@ const NovoCal = {
     if (!sb) { el.innerHTML = '<p style="font-size:12px;color:var(--fg-3);">Conecte ao Supabase para ver eventos.</p>'; return; }
     try {
       const inicio = new Date(this.year, this.month, 1).toISOString().split('T')[0];
-      const fim    = new Date(this.year, this.month + 1, 0).toISOString().split('T')[0];
-      const { data } = await sb.from('eventos').select('id,titulo,data_inicio,tipo,coordenadorias(sigla)').gte('data_inicio', inicio).lte('data_inicio', fim).order('data_inicio');
+      const limite = new Date(this.year, this.month + 1, 1).toISOString().split('T')[0];
+      const { data } = await sb.from('eventos').select('id,titulo,data_inicio,tipo,coordenadorias(sigla)').gte('data_inicio', inicio).lt('data_inicio', limite).order('data_inicio');
       if (!data?.length) { el.innerHTML = '<p style="font-size:12px;color:var(--fg-3);text-align:center;padding:1rem;">Nenhum evento neste mês.</p>'; return; }
       const CORES = { reuniao:'#9b7be8', evento:'var(--brand-orange)', treinamento:'#5b9cf6', enegep:'#f5c518', podcast:'#e85aa8', assembleia:'#2dd4a0', publicacao:'#f75412' };
       el.innerHTML = data.map(e => {
         const cor = CORES[e.tipo] || 'var(--fg-3)';
-        const dia = e.data_inicio ? new Date(e.data_inicio + 'T12:00:00').toLocaleDateString('pt-BR', { day:'2-digit', month:'short' }) : '—';
+        const dia = e.data_inicio ? _parseDataEvt(e.data_inicio).toLocaleDateString('pt-BR', { day:'2-digit', month:'short' }) : '—';
         return `<div onclick="NovoCal.editarEvento('${e.id}')" style="cursor:pointer;display:flex;gap:10px;align-items:flex-start;padding:10px;background:${cor}18;border-radius:8px;border-left:3px solid ${cor};">
           <div style="min-width:44px;text-align:center;font-size:11px;font-weight:700;color:${cor};">${dia}</div>
           <div><div style="font-weight:600;font-size:13px;">${sanitize(e.titulo)||'—'}</div><div style="font-size:11px;color:var(--fg-3);">${e.coordenadorias?.sigla||''} · ${e.tipo||''}</div></div>
@@ -2869,11 +2880,11 @@ const NovoCal = {
     if (!sb) { el.innerHTML = '<p style="font-size:13px;color:var(--fg-3);text-align:center;padding:16px 0;">Sem conexão com banco de dados.</p>'; return; }
     el.innerHTML = '<p style="font-size:13px;color:var(--fg-3);text-align:center;padding:16px 0;">Carregando...</p>';
     try {
-      const hoje  = new Date(this.year, this.month, 1).toISOString().split('T')[0];
-      const fim   = new Date(this.year, this.month + 1, 0).toISOString().split('T')[0];
+      const hoje   = new Date(this.year, this.month, 1).toISOString().split('T')[0];
+      const limite = new Date(this.year, this.month + 1, 1).toISOString().split('T')[0];
       const [evRes, demRes] = await Promise.all([
-        sb.from('eventos').select('id,titulo,data_inicio,tipo,coordenadorias(sigla,icone)').gte('data_inicio', hoje).lte('data_inicio', fim).order('data_inicio').limit(20),
-        sb.from('demandas').select('id,titulo,prazo,coluna,coordenadorias(sigla,icone)').gte('prazo', hoje).lte('prazo', fim).order('prazo').limit(20)
+        sb.from('eventos').select('id,titulo,data_inicio,tipo,coordenadorias(sigla,icone)').gte('data_inicio', hoje).lt('data_inicio', limite).order('data_inicio').limit(20),
+        sb.from('demandas').select('id,titulo,prazo,coluna,coordenadorias(sigla,icone)').gte('prazo', hoje).lt('prazo', limite).order('prazo').limit(20)
       ]);
       const eventos = (evRes.data || []).map(e => ({ id: e.id, titulo: e.titulo, data: e.data_inicio, tipo: e.tipo, coordenadorias: e.coordenadorias, _kind: 'evento' }));
       /* Mantém demandas em produção/evidência/revisão/concluídas visíveis (e editáveis por aqui),
@@ -2886,7 +2897,7 @@ const NovoCal = {
       const COL_LABEL = { pendente:'A Fazer', exec:'Em Produção', evidencia:'Evidência', realizada:'Revisão', auditada:'Concluída' };
       el.innerHTML = data.map(e => {
         const cor   = CORES[e.tipo] || 'var(--fg-3)';
-        const d     = e.data ? new Date(e.data + 'T12:00:00') : null;
+        const d     = e.data ? _parseDataEvt(e.data) : null;
         const dValid = d && !isNaN(d.getTime());
         const dia   = dValid ? d.getDate().toString().padStart(2,'0') : '—';
         const mes   = dValid ? d.toLocaleDateString('pt-BR',{month:'short'}).replace('.','').toUpperCase() : '';
@@ -2915,11 +2926,15 @@ const NovoCal = {
   /* Lista os eventos de um dia especifico, com opcao de editar/excluir/adicionar */
   async abrirDia(y, m, d) {
     const dataStr = `${y}-${String(m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+    const prox = new Date(y, m, d + 1);
+    const proxStr = `${prox.getFullYear()}-${String(prox.getMonth() + 1).padStart(2, '0')}-${String(prox.getDate()).padStart(2, '0')}`;
     const sb = window._supabase;
     const podeCriar = typeof Permissoes === 'undefined' || Permissoes.pode('podeCriarEvento') || Permissoes.isAdmin();
     let eventos = [];
     if (sb) {
-      const { data } = await sb.from('eventos').select('id,titulo,tipo,coordenadorias(sigla)').eq('data_inicio', dataStr).order('titulo');
+      // data_inicio é timestamptz — usa range do dia (não igualdade exata) pra
+      // pegar também eventos com horário (ex: treinamentos criados via datetime-local).
+      const { data } = await sb.from('eventos').select('id,titulo,tipo,coordenadorias(sigla)').gte('data_inicio', dataStr).lt('data_inicio', proxStr).order('titulo');
       eventos = data || [];
     }
     const dataLabel = new Date(y, m, d, 12).toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' });
