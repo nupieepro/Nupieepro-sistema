@@ -78,8 +78,6 @@ const ROLE_PAGES = {
   'Marketing':  [
     { id: 'dashboard',          icon: 'grid',         label: 'Painel Central' },
     { id: 'mkt_tracker',        icon: 'megaphone',    label: 'Social Media Tracker' },
-    { id: 'mkt_kanban',         icon: 'list',         label: 'Kanban da Lojinha' },
-    { id: 'mkt_lojinha_admin',  icon: 'shopping-bag', label: 'Lojinha (App)' },
   ],
   'Projetos':   [
     { id: 'dashboard',       icon: 'grid',      label: 'Painel Central' },
@@ -90,10 +88,12 @@ const ROLE_PAGES = {
     { id: 'prj_parcerias',   icon: 'handshake', label: 'Parcerias e Patrocínios' },
   ],
   'Finanças':   [
-    { id: 'dashboard',    icon: 'grid',        label: 'Painel Central' },
-    { id: 'fin_fluxo',    icon: 'banknote',    label: 'Fluxo de Caixa' },
-    { id: 'fin_abepro',   icon: 'users',       label: 'Associações ABJ' },
-    { id: 'fin_comercial',icon: 'gem',         label: 'Calendário Comercial' },
+    { id: 'dashboard',          icon: 'grid',         label: 'Painel Central' },
+    { id: 'fin_fluxo',          icon: 'banknote',     label: 'Fluxo de Caixa' },
+    { id: 'fin_abepro',         icon: 'users',        label: 'Associações ABJ' },
+    { id: 'fin_comercial',      icon: 'gem',          label: 'Calendário Comercial' },
+    { id: 'mkt_kanban',         icon: 'list',         label: 'Kanban da Lojinha' },
+    { id: 'mkt_lojinha_admin',  icon: 'shopping-bag', label: 'Lojinha (App)' },
   ],
   'Conselheiro': [
     { id: 'dashboard',         icon: 'grid',  label: 'Painel Central' },
@@ -1917,7 +1917,7 @@ const DashboardExtra = {
     let bdays = [];
 
     if (sb) {
-      const { data } = await sb.from('users').select('nome, aniversario, iniciais').not('aniversario', 'is', null);
+      const { data } = await sb.from('users').select('nome, aniversario, iniciais, coordenadorias(cor)').not('aniversario', 'is', null);
       bdays = (data || []).filter(u => {
         const m = new Date(u.aniversario + 'T12:00:00').getMonth() + 1;
         return m === month;
@@ -1943,14 +1943,17 @@ const DashboardExtra = {
       `;
     }).join('');
 
-    // Sincronizar com Calendário Global
+    // Sincronizar com Calendário Global — cor em destaque conforme a
+    // coordenadoria da pessoa (fallback amarelo pra quem não tem coordenadoria).
     bdays.forEach(u => {
       const d = new Date(u.aniversario + 'T12:00:00').getDate();
       const key = `${new Date().getFullYear()}-${month}-${d}`;
       if (!CAL_EVENTS[key]) CAL_EVENTS[key] = [];
-      CAL_EVENTS[key].push({ label: `Aniversário: ${u.nome}`, tag: '🎂', color: 'var(--yellow)' });
+      CAL_EVENTS[key].push({ label: `Aniversário: ${u.nome}`, tag: '🎂', color: u.coordenadorias?.cor || 'var(--yellow)' });
     });
     if (typeof Cal !== 'undefined' && Cal.render) Cal.render();
+    if (typeof MiniCal !== 'undefined' && MiniCal.render) MiniCal.render();
+    if (typeof NovoCal !== 'undefined' && NovoCal._render) NovoCal._render();
   },
 
   async renderAssembleia() {
@@ -2375,6 +2378,9 @@ const MiniCal = {
   prev() { MiniCal.month--; if (MiniCal.month < 0) { MiniCal.month = 11; MiniCal.year--; } MiniCal.render(); },
   next() { MiniCal.month++; if (MiniCal.month > 11) { MiniCal.month = 0; MiniCal.year++; } MiniCal.render(); },
 
+  /* Mesmo calendário compartilhado do "Calendário"/"Calendário Universal" —
+     clicar num dia abre o mesmo modal de ver/criar/editar, e os dias com
+     evento/prazo real (não só feriado/aniversário) ficam marcados. */
   render() {
     const grid = document.getElementById('miniCalGrid');
     if (!grid) return;
@@ -2395,32 +2401,75 @@ const MiniCal = {
     }
     for (let d = 1; d <= daysInMonth; d++) {
       const cell = document.createElement('div');
+      cell.id = 'miniCalDay-' + d;
       cell.className = 'mini-cal-day';
       const isToday = d === today.getDate() && MiniCal.month === today.getMonth() && MiniCal.year === today.getFullYear();
       if (isToday) cell.classList.add('today');
       const key = `${MiniCal.year}-${MiniCal.month + 1}-${d}`;
       if (CAL_EVENTS[key]) cell.classList.add('has-event');
       cell.textContent = d;
-      cell.onclick = () => goTo('compartilhado');
+      cell.onclick = () => NovoCal.abrirDia(MiniCal.year, MiniCal.month, d);
       grid.appendChild(cell);
     }
 
-    // Eventos próximos compactos
+    MiniCal._loadDayMarks();
+    MiniCal.renderUpcoming();
+  },
+
+  /* Marca com .has-event os dias com evento/prazo real do mês visível. */
+  async _loadDayMarks() {
+    const sb = window._supabase;
+    if (!sb) return;
+    const inicio = new Date(MiniCal.year, MiniCal.month, 1).toISOString().split('T')[0];
+    const limite = new Date(MiniCal.year, MiniCal.month + 1, 1).toISOString().split('T')[0];
+    try {
+      const [evRes, demRes] = await Promise.all([
+        sb.from('eventos').select('data_inicio').gte('data_inicio', inicio).lt('data_inicio', limite),
+        sb.from('demandas').select('prazo').gte('prazo', inicio).lt('prazo', limite),
+      ]);
+      [...(evRes.data || []).map(e => e.data_inicio), ...(demRes.data || []).map(d => d.prazo)].forEach(str => {
+        const d = parseInt(str.split('-')[2], 10);
+        document.getElementById('miniCalDay-' + d)?.classList.add('has-event');
+      });
+    } catch (err) { console.warn('[MiniCal._loadDayMarks]', err); }
+  },
+
+  /* Eventos próximos compactos — mescla feriados/aniversários com eventos e
+     prazos reais do Supabase; os reais são clicáveis pra editar. */
+  async renderUpcoming() {
     const evtsEl = document.getElementById('miniCalEvents');
     if (!evtsEl) return;
     const now = new Date();
-    const upcoming = Object.entries(CAL_EVENTS)
-      .map(([key, evts]) => { const [y,m,d] = key.split('-').map(Number); return { date: new Date(y,m-1,d), evts }; })
-      .filter(e => e.date >= now)
-      .sort((a,b) => a.date - b.date)
-      .slice(0, 3);
+    const holidays = Object.entries(CAL_EVENTS)
+      .map(([key, evts]) => { const [y,m,d] = key.split('-').map(Number); return { date: new Date(y,m-1,d), label: evts[0].label, color: evts[0].color, tag: evts[0].tag }; })
+      .filter(e => e.date >= now);
 
-    evtsEl.innerHTML = upcoming.map(({ date, evts }) => {
-      const ev = evts[0];
-      const ds = date.toLocaleDateString('pt-BR', { day:'2-digit', month:'short' });
-      return `<div style="display:flex;align-items:center;gap:8px;font-size:12px;padding:6px 8px;background:var(--w5);border-radius:8px;border:1px solid var(--b-1);">
-        <span style="color:${ev.color};font-size:13px;">${ev.tag || '📅'}</span>
-        <span style="flex:1;font-weight:500;">${ev.label}</span>
+    let reais = [];
+    const sb = window._supabase;
+    if (sb) {
+      try {
+        const hoje = now.toISOString().split('T')[0];
+        const [evRes, demRes] = await Promise.all([
+          sb.from('eventos').select('id,titulo,data_inicio,tipo').gte('data_inicio', hoje).order('data_inicio').limit(5),
+          sb.from('demandas').select('id,titulo,prazo').gte('prazo', hoje).order('prazo').limit(5),
+        ]);
+        reais = [
+          ...(evRes.data || []).map(e => ({ date: _parseDataEvt(e.data_inicio), label: e.titulo, color: EVENTO_CORES[e.tipo] || 'var(--fg-3)', tag: '📅', id: e.id, _kind: 'evento' })),
+          ...(demRes.data || []).map(d => ({ date: _parseDataEvt(d.prazo), label: d.titulo, color: EVENTO_CORES.prazo, tag: '🎯', id: d.id, _kind: 'demanda' })),
+        ].filter(e => e.date && !isNaN(e.date.getTime()));
+      } catch (err) { console.warn('[MiniCal.renderUpcoming]', err); }
+    }
+
+    const upcoming = [...reais, ...holidays].sort((a, b) => a.date - b.date).slice(0, 3);
+
+    evtsEl.innerHTML = upcoming.map(e => {
+      const ds = e.date.toLocaleDateString('pt-BR', { day:'2-digit', month:'short' });
+      const onclick = e._kind === 'evento' ? `NovoCal.editarEvento('${e.id}')`
+        : e._kind === 'demanda' ? (typeof Dem !== 'undefined' ? `Dem.abrirDetalhes('${e.id}')` : '')
+        : '';
+      return `<div ${onclick ? `onclick="${onclick}" style="cursor:pointer;` : 'style="'}display:flex;align-items:center;gap:8px;font-size:12px;padding:6px 8px;background:var(--w5);border-radius:8px;border:1px solid var(--b-1);">
+        <span style="color:${e.color};font-size:13px;">${e.tag || '📅'}</span>
+        <span style="flex:1;font-weight:500;">${sanitize(e.label)}</span>
         <span style="color:var(--t-3);white-space:nowrap;">${ds}</span>
       </div>`;
     }).join('') || '<p class="text-muted text-sm">Sem eventos próximos.</p>';
@@ -2836,12 +2885,13 @@ function _parseDataEvt(str) {
    quanto pelo "Calendário Universal" (Cal), que agora mostram os mesmos dados. */
 const EVENTO_CORES = { reuniao:'#9b7be8', evento:'var(--brand-orange)', treinamento:'#5b9cf6', enegep:'#f5c518', podcast:'#e85aa8', assembleia:'#2dd4a0', publicacao:'#f75412', prazo:'#f87171' };
 
-/* "Calendário" e "Calendário Universal" mostram os mesmos eventos — depois de
-   criar/editar/excluir um, atualiza os dois grids (o que não estiver na tela
-   nesse momento só recarrega em silêncio). */
+/* "Calendário", "Calendário Universal" e a mini-agenda do Painel Central
+   mostram os mesmos eventos — depois de criar/editar/excluir um, atualiza
+   os três (o que não estiver na tela nesse momento só recarrega em silêncio). */
 function _refreshCalendarios() {
   if (typeof NovoCal !== 'undefined') NovoCal._render();
   if (typeof Cal !== 'undefined') Cal.render();
+  if (typeof MiniCal !== 'undefined') MiniCal.render();
 }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -2988,14 +3038,24 @@ const NovoCal = {
       eventos = data || [];
     }
     const dataLabel = new Date(y, m, d, 12).toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' });
-    const lista = eventos.length ? eventos.map(e => `
+    // Feriados/aniversários (CAL_EVENTS) não são linhas da tabela `eventos` — mostra
+    // sem botão de editar/excluir, mas precisa aparecer aqui: é o que gera o pontinho
+    // marcado no dia no grid (senão o usuário vê a marca mas "Nenhum evento neste dia").
+    const fixos = CAL_EVENTS[`${y}-${m + 1}-${d}`] || [];
+    const listaFixos = fixos.map(ev => `
+      <div style="display:flex;align-items:center;gap:8px;padding:10px;background:var(--surface-3);border-radius:8px;margin-bottom:8px;">
+        <span style="font-size:16px;">${ev.tag || '📅'}</span>
+        <div style="font-weight:600;font-size:13px;color:${ev.color};">${sanitize(ev.label)}</div>
+      </div>`).join('');
+    const listaEventos = eventos.map(e => `
       <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding:10px;background:var(--surface-3);border-radius:8px;margin-bottom:8px;">
         <div><div style="font-weight:600;font-size:13px;">${sanitize(e.titulo)}</div><div style="font-size:11px;color:var(--fg-3);">${e.coordenadorias?.sigla || 'Todas'} · ${e.tipo || ''}</div></div>
         ${podeCriar ? `<div style="display:flex;gap:6px;flex-shrink:0;">
           <button class="btn btn-ghost" style="font-size:11px;padding:4px 8px;" onclick="NovoCal.editarEvento('${e.id}')">✏️</button>
           <button class="btn btn-ghost" style="font-size:11px;padding:4px 8px;" onclick="NovoCal.excluirEvento('${e.id}')">🗑️</button>
         </div>` : ''}
-      </div>`).join('') : `<p style="font-size:12px;color:var(--fg-3);text-align:center;padding:12px 0;">Nenhum evento neste dia.</p>`;
+      </div>`).join('');
+    const lista = (listaFixos + listaEventos) || `<p style="font-size:12px;color:var(--fg-3);text-align:center;padding:12px 0;">Nenhum evento neste dia.</p>`;
 
     abrirModal({
       titulo: `📅 ${dataLabel}`, tipo: 'info', corpo: lista,
