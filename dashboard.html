@@ -1155,7 +1155,7 @@
             </div>
           </div>
           <div class="topbar-right">
-            <button class="btn btn-primary" onclick="typeof PageCompartilhado!=='undefined'?PageCompartilhado.publicarData():mostrarToast('Módulo não carregado.','warning')">📅 Publicar Data</button>
+            <button class="btn btn-primary" onclick="(typeof Permissoes==='undefined'||Permissoes.pode('podeCriarEvento')||Permissoes.isAdmin())?NovoCal.novoEvento():mostrarToast('Você não tem permissão para publicar datas.','warning')">📅 Publicar Data</button>
           </div>
         </div>
         <div class="content">
@@ -1669,13 +1669,13 @@
   <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/lucide@0.452.0/dist/umd/lucide.min.js"></script>
-  <script src="js/permissoes.js?v=69"></script>
-  <script src="js/app.js?v=69"></script>
-  <script src="js/auth.js?v=69"></script>
-  <script src="js/abj.js?v=69"></script>
-  <script src="js/relatorio.js?v=69"></script>
-  <script src="js/emails.js?v=69"></script>
-  <script src="js/pages.js?v=69"></script>
+  <script src="js/permissoes.js?v=70"></script>
+  <script src="js/app.js?v=70"></script>
+  <script src="js/auth.js?v=70"></script>
+  <script src="js/abj.js?v=70"></script>
+  <script src="js/relatorio.js?v=70"></script>
+  <script src="js/emails.js?v=70"></script>
+  <script src="js/pages.js?v=70"></script>
   <script>
     // ── SERVICE WORKER: registro + auto-update ─────────
     // dashboard.html é onde o usuário passa o dia todo; sem isso, quem

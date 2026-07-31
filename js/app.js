@@ -826,7 +826,7 @@ function goTo(id) {
   if (id === 'marketing')         Marketing.loadKanban();
   if (id === 'projetos')          Projetos.loadSponsors();
   if (id === 'notificacoes')      typeof PageNotificacoes !== 'undefined' && PageNotificacoes.init();
-  if (id === 'compartilhado')     typeof PageCompartilhado !== 'undefined' && PageCompartilhado.init();
+  if (id === 'compartilhado')     typeof Cal !== 'undefined' && Cal.render();
   if (id === 'global_gestao')     { typeof Geral !== 'undefined' && Geral.loadMeetings?.(); typeof Assembleia !== 'undefined' && Assembleia.init?.(); }
   if (id === 'gp_aniversarios')   typeof PagePessoas !== 'undefined' && PagePessoas._renderAniversarios();
   if (id === 'gp_treinamentos')   typeof PagePessoas !== 'undefined' && PagePessoas._renderTreinamentosInternos();
@@ -1425,6 +1425,10 @@ const Cal = {
     Cal.render();
   },
 
+  /* Mesma agenda real (eventos + demandas) do "Calendário" (NovoCal) — este
+     grid mostra feriados/aniversários (CAL_EVENTS) direto, e sobrepõe os
+     eventos/prazos reais do Supabase de forma assíncrona logo em seguida,
+     pra ser literalmente o mesmo calendário compartilhado por todos. */
   render() {
     const grid = document.getElementById('calGrid');
     if (!grid) return;
@@ -1450,10 +1454,12 @@ const Cal = {
       grid.appendChild(empty);
     }
 
-    // Day cells
+    // Day cells — clicáveis, igual ao grid do "Calendário" (mesmo modal de ver/adicionar/editar).
     for (let d = 1; d <= daysInMonth; d++) {
       const cell = document.createElement('div');
       cell.className = 'cal-day';
+      cell.style.cursor = 'pointer';
+      cell.onclick = () => NovoCal.abrirDia(Cal.year, Cal.month, d);
       const isToday = (d === today.getDate() && Cal.month === today.getMonth() && Cal.year === today.getFullYear());
       if (isToday) cell.classList.add('today');
 
@@ -1470,41 +1476,93 @@ const Cal = {
           cell.appendChild(tag);
         });
       }
+      const dots = document.createElement('span');
+      dots.id = 'calDots-' + d;
+      dots.style.cssText = 'display:flex;gap:2px;flex-wrap:wrap;margin-top:2px;';
+      cell.appendChild(dots);
       grid.appendChild(cell);
     }
 
-    // Upcoming events list
+    Cal._loadDayMarks();
     Cal.renderUpcoming();
   },
 
-  renderUpcoming() {
+  /* Marca no grid os eventos e prazos reais (Supabase) do mês visível. */
+  async _loadDayMarks() {
+    const sb = window._supabase;
+    if (!sb) return;
+    const inicio = new Date(Cal.year, Cal.month, 1).toISOString().split('T')[0];
+    const limite = new Date(Cal.year, Cal.month + 1, 1).toISOString().split('T')[0];
+    try {
+      const [evRes, demRes] = await Promise.all([
+        sb.from('eventos').select('data_inicio,tipo').gte('data_inicio', inicio).lt('data_inicio', limite),
+        sb.from('demandas').select('prazo,coluna').gte('prazo', inicio).lt('prazo', limite),
+      ]);
+      const porDia = {};
+      (evRes.data || []).forEach(e => {
+        const d = parseInt(e.data_inicio.split('-')[2], 10);
+        (porDia[d] = porDia[d] || []).push(EVENTO_CORES[e.tipo] || 'var(--fg-3)');
+      });
+      (demRes.data || []).forEach(dm => {
+        const d = parseInt(dm.prazo.split('-')[2], 10);
+        (porDia[d] = porDia[d] || []).push(EVENTO_CORES.prazo);
+      });
+      Object.keys(porDia).forEach(d => {
+        const el = document.getElementById('calDots-' + d);
+        if (!el) return;
+        const cores = [...new Set(porDia[d])].slice(0, 4);
+        el.innerHTML = cores.map(c => `<span style="width:5px;height:5px;border-radius:50%;background:${c};display:inline-block;"></span>`).join('');
+      });
+    } catch (err) { console.warn('[Cal._loadDayMarks]', err); }
+  },
+
+  /* "Próximos Eventos": mescla feriados/aniversários (CAL_EVENTS) com os
+     eventos e prazos reais do Supabase (independente do mês visível no grid
+     acima) — os reais são clicáveis pra editar. */
+  async renderUpcoming() {
     const list = document.getElementById('calEventsList');
     if (!list) return;
     const now = new Date();
-    const upcoming = Object.entries(CAL_EVENTS)
+    const holidays = Object.entries(CAL_EVENTS)
       .map(([key, evts]) => {
         const [y, m, d] = key.split('-').map(Number);
-        return { date: new Date(y, m - 1, d), evts, key };
+        return { date: new Date(y, m - 1, d), label: evts[0].label, color: evts[0].color, tag: evts[0].tag, _kind: 'fixo' };
       })
-      .filter(e => e.date >= now)
-      .sort((a, b) => a.date - b.date)
-      .slice(0, 5);
+      .filter(e => e.date >= now);
+
+    let reais = [];
+    const sb = window._supabase;
+    if (sb) {
+      try {
+        const hoje = now.toISOString().split('T')[0];
+        const [evRes, demRes] = await Promise.all([
+          sb.from('eventos').select('id,titulo,data_inicio,tipo,coordenadorias(sigla,icone)').gte('data_inicio', hoje).order('data_inicio').limit(15),
+          sb.from('demandas').select('id,titulo,prazo,coordenadorias(sigla,icone)').gte('prazo', hoje).order('prazo').limit(15),
+        ]);
+        reais = [
+          ...(evRes.data || []).map(e => ({ date: _parseDataEvt(e.data_inicio), label: e.titulo, color: EVENTO_CORES[e.tipo] || 'var(--fg-3)', tag: e.coordenadorias?.icone || '📅', _kind: 'evento', id: e.id })),
+          ...(demRes.data || []).map(d => ({ date: _parseDataEvt(d.prazo), label: d.titulo, color: EVENTO_CORES.prazo, tag: d.coordenadorias?.icone || '🎯', _kind: 'demanda', id: d.id })),
+        ].filter(e => e.date && !isNaN(e.date.getTime()));
+      } catch (err) { console.warn('[Cal.renderUpcoming]', err); }
+    }
+
+    const upcoming = [...reais, ...holidays].sort((a, b) => a.date - b.date).slice(0, 8);
 
     if (upcoming.length === 0) {
       list.innerHTML = '<p class="text-muted text-sm">Nenhum evento próximo.</p>';
       return;
     }
 
-    list.innerHTML = upcoming.map(({ date, evts }) => {
-      const label = evts[0].label;
-      const color = evts[0].color;
-      const tag   = evts[0].tag;
-      const dateStr = date.toLocaleDateString('pt-BR', { day:'2-digit', month:'short', year:'numeric' });
+    list.innerHTML = upcoming.map(e => {
+      const dateStr = e.date.toLocaleDateString('pt-BR', { day:'2-digit', month:'short', year:'numeric' });
+      const onclick = e._kind === 'evento' ? `NovoCal.editarEvento('${e.id}')`
+        : e._kind === 'demanda' ? (typeof Dem !== 'undefined' ? `Dem.abrirDetalhes('${e.id}')` : '')
+        : '';
       return `
-        <div style="display:flex;align-items:center;gap:12px;padding:10px;background:var(--w5);border-radius:10px;border:1px solid var(--border);">
-          <div style="width:40px;height:40px;border-radius:8px;background:${color}22;color:${color};display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;">${tag || '📅'}</div>
+        <div ${onclick ? `onclick="${onclick}" style="cursor:pointer;` : 'style="'}display:flex;align-items:center;gap:12px;padding:10px;background:var(--w5);border-radius:10px;border:1px solid var(--border);">
+          <div style="width:40px;height:40px;border-radius:8px;background:${e.color}22;color:${e.color};display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;">${e.tag || '📅'}</div>
           <div style="flex:1;">
-            <div style="font-size:13px;font-weight:600;">${label}</div>
+            <div style="font-size:13px;font-weight:600;">${sanitize(e.label)}</div>
             <div style="font-size:11px;color:var(--w40);margin-top:2px;">${dateStr}</div>
           </div>
         </div>`;
@@ -2774,6 +2832,18 @@ function _parseDataEvt(str) {
   return str.includes('T') ? new Date(str) : new Date(str + 'T12:00:00');
 }
 
+/* Cores por tipo de evento — usado tanto pelo grid "Calendário" (NovoCal)
+   quanto pelo "Calendário Universal" (Cal), que agora mostram os mesmos dados. */
+const EVENTO_CORES = { reuniao:'#9b7be8', evento:'var(--brand-orange)', treinamento:'#5b9cf6', enegep:'#f5c518', podcast:'#e85aa8', assembleia:'#2dd4a0', publicacao:'#f75412', prazo:'#f87171' };
+
+/* "Calendário" e "Calendário Universal" mostram os mesmos eventos — depois de
+   criar/editar/excluir um, atualiza os dois grids (o que não estiver na tela
+   nesse momento só recarrega em silêncio). */
+function _refreshCalendarios() {
+  if (typeof NovoCal !== 'undefined') NovoCal._render();
+  if (typeof Cal !== 'undefined') Cal.render();
+}
+
 /* ═══════════════════════════════════════════════════════════════
    NovoCal — Calendário dinâmico da página Calendário (full-page)
    ═══════════════════════════════════════════════════════════════ */
@@ -2813,7 +2883,6 @@ const NovoCal = {
       if (btn) btn.style.display = podeCriar ? '' : 'none';
     });
 
-    this._loadEventos();
     this._loadProximos();
     this._loadDayMarks();
   },
@@ -2827,7 +2896,6 @@ const NovoCal = {
     // Limite exclusivo (1º dia do mês seguinte): data_inicio é timestamptz, então um
     // evento no último dia do mês com horário após 00:00 UTC ficaria de fora de um .lte(fim).
     const limite = new Date(this.year, this.month + 1, 1).toISOString().split('T')[0];
-    const CORES  = { reuniao:'#9b7be8', evento:'var(--brand-orange)', treinamento:'#5b9cf6', enegep:'#f5c518', podcast:'#e85aa8', assembleia:'#2dd4a0', publicacao:'#f75412', prazo:'#f87171' };
     try {
       const [evRes, demRes] = await Promise.all([
         sb.from('eventos').select('data_inicio,tipo').gte('data_inicio', inicio).lt('data_inicio', limite),
@@ -2836,12 +2904,17 @@ const NovoCal = {
       const porDia = {};
       (evRes.data || []).forEach(e => {
         const d = parseInt(e.data_inicio.split('-')[2], 10);
-        (porDia[d] = porDia[d] || []).push(CORES[e.tipo] || 'var(--fg-3)');
+        (porDia[d] = porDia[d] || []).push(EVENTO_CORES[e.tipo] || 'var(--fg-3)');
       });
       (demRes.data || []).forEach(dm => {
         const d = parseInt(dm.prazo.split('-')[2], 10);
-        (porDia[d] = porDia[d] || []).push(CORES.prazo);
+        (porDia[d] = porDia[d] || []).push(EVENTO_CORES.prazo);
       });
+      // Feriados/aniversários (CAL_EVENTS) — mesmos marcadores usados no Calendário Universal.
+      for (let d = 1; d <= new Date(this.year, this.month + 1, 0).getDate(); d++) {
+        const feriados = CAL_EVENTS[`${this.year}-${this.month + 1}-${d}`];
+        if (feriados) feriados.forEach(ev => (porDia[d] = porDia[d] || []).push(ev.color));
+      }
       Object.keys(porDia).forEach(d => {
         const el = document.getElementById('calMark-' + d);
         if (!el) return;
@@ -2849,28 +2922,6 @@ const NovoCal = {
         el.innerHTML = cores.map(c => `<span style="width:5px;height:5px;border-radius:50%;background:${c};display:inline-block;"></span>`).join('');
       });
     } catch (err) { console.warn('[NovoCal._loadDayMarks]', err); }
-  },
-
-  async _loadEventos() {
-    const el = document.getElementById('calEventsList');
-    if (!el) return;
-    const sb = window._supabase;
-    if (!sb) { el.innerHTML = '<p style="font-size:12px;color:var(--fg-3);">Conecte ao Supabase para ver eventos.</p>'; return; }
-    try {
-      const inicio = new Date(this.year, this.month, 1).toISOString().split('T')[0];
-      const limite = new Date(this.year, this.month + 1, 1).toISOString().split('T')[0];
-      const { data } = await sb.from('eventos').select('id,titulo,data_inicio,tipo,coordenadorias(sigla)').gte('data_inicio', inicio).lt('data_inicio', limite).order('data_inicio');
-      if (!data?.length) { el.innerHTML = '<p style="font-size:12px;color:var(--fg-3);text-align:center;padding:1rem;">Nenhum evento neste mês.</p>'; return; }
-      const CORES = { reuniao:'#9b7be8', evento:'var(--brand-orange)', treinamento:'#5b9cf6', enegep:'#f5c518', podcast:'#e85aa8', assembleia:'#2dd4a0', publicacao:'#f75412' };
-      el.innerHTML = data.map(e => {
-        const cor = CORES[e.tipo] || 'var(--fg-3)';
-        const dia = e.data_inicio ? _parseDataEvt(e.data_inicio).toLocaleDateString('pt-BR', { day:'2-digit', month:'short' }) : '—';
-        return `<div onclick="NovoCal.editarEvento('${e.id}')" style="cursor:pointer;display:flex;gap:10px;align-items:flex-start;padding:10px;background:${cor}18;border-radius:8px;border-left:3px solid ${cor};">
-          <div style="min-width:44px;text-align:center;font-size:11px;font-weight:700;color:${cor};">${dia}</div>
-          <div><div style="font-weight:600;font-size:13px;">${sanitize(e.titulo)||'—'}</div><div style="font-size:11px;color:var(--fg-3);">${e.coordenadorias?.sigla||''} · ${e.tipo||''}</div></div>
-        </div>`;
-      }).join('');
-    } catch(err) { el.innerHTML = '<p style="font-size:12px;color:var(--fg-3);">Erro ao carregar eventos.</p>'; }
   },
 
   async _loadProximos() {
@@ -2893,10 +2944,9 @@ const NovoCal = {
         .map(d => ({ id: d.id, titulo: d.titulo, data: d.prazo, tipo: 'prazo', coordenadorias: d.coordenadorias, _kind: 'demanda', _coluna: d.coluna }));
       const data = eventos.concat(demandas).sort((a,b) => (a.data||'').localeCompare(b.data||'')).slice(0, 10);
       if (!data.length) { el.innerHTML = '<p style="font-size:13px;color:var(--fg-3);text-align:center;padding:16px 0;">Nenhum evento ou prazo neste mês.<br><span style="font-size:11px;">Use o botão abaixo para registrar.</span></p>'; return; }
-      const CORES = { reuniao:'#9b7be8', evento:'var(--brand-orange)', treinamento:'#5b9cf6', enegep:'#f5c518', podcast:'#e85aa8', assembleia:'#2dd4a0', publicacao:'#f75412', prazo:'#f87171' };
       const COL_LABEL = { pendente:'A Fazer', exec:'Em Produção', evidencia:'Evidência', realizada:'Revisão', auditada:'Concluída' };
       el.innerHTML = data.map(e => {
-        const cor   = CORES[e.tipo] || 'var(--fg-3)';
+        const cor   = EVENTO_CORES[e.tipo] || 'var(--fg-3)';
         const d     = e.data ? _parseDataEvt(e.data) : null;
         const dValid = d && !isNaN(d.getTime());
         const dia   = dValid ? d.getDate().toString().padStart(2,'0') : '—';
@@ -2996,7 +3046,7 @@ const NovoCal = {
             }
             await sb.from('eventos').insert([{ titulo, tipo, data_inicio: data, ativo: true, coordenadoria_id: coordId, criado_por: window._appProfile?.id }]);
             mostrarToast('Evento registrado!', 'success');
-            NovoCal._render();
+            _refreshCalendarios();
           } catch(e) { mostrarToast('Erro ao salvar evento.', 'error'); console.warn(e); }
         }}
       ]
@@ -3031,7 +3081,7 @@ const NovoCal = {
               if (error) throw error;
               fecharModal();
               mostrarToast('Evento atualizado!', 'success');
-              NovoCal._render();
+              _refreshCalendarios();
             } catch(err) { mostrarToast('Erro ao salvar: ' + err.message, 'error'); }
           }}
         ]
@@ -3047,7 +3097,7 @@ const NovoCal = {
     fecharModal();
     if (error) { mostrarToast('Erro ao excluir: ' + error.message, 'error'); return; }
     mostrarToast('Evento excluído!', 'success');
-    this._render();
+    _refreshCalendarios();
   }
 };
 window.NovoCal = NovoCal;
@@ -3679,6 +3729,7 @@ function abrirModal({ titulo = '', tipo = 'info', corpo = '', botoes = [] } = {}
 
   overlay.style.display = 'flex';
   overlay.style.opacity = '1';
+  overlay.style.transform = 'translateY(0)';
 
   botoes.forEach((b, i) => {
     const btn = overlay.querySelector(`[data-mid="${i}"]`);
