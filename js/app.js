@@ -1917,7 +1917,7 @@ const DashboardExtra = {
     let bdays = [];
 
     if (sb) {
-      const { data } = await sb.from('users').select('nome, aniversario, iniciais').not('aniversario', 'is', null);
+      const { data } = await sb.from('users').select('nome, aniversario, iniciais, coordenadorias(cor)').not('aniversario', 'is', null);
       bdays = (data || []).filter(u => {
         const m = new Date(u.aniversario + 'T12:00:00').getMonth() + 1;
         return m === month;
@@ -1943,14 +1943,17 @@ const DashboardExtra = {
       `;
     }).join('');
 
-    // Sincronizar com Calendário Global
+    // Sincronizar com Calendário Global — cor em destaque conforme a
+    // coordenadoria da pessoa (fallback amarelo pra quem não tem coordenadoria).
     bdays.forEach(u => {
       const d = new Date(u.aniversario + 'T12:00:00').getDate();
       const key = `${new Date().getFullYear()}-${month}-${d}`;
       if (!CAL_EVENTS[key]) CAL_EVENTS[key] = [];
-      CAL_EVENTS[key].push({ label: `Aniversário: ${u.nome}`, tag: '🎂', color: 'var(--yellow)' });
+      CAL_EVENTS[key].push({ label: `Aniversário: ${u.nome}`, tag: '🎂', color: u.coordenadorias?.cor || 'var(--yellow)' });
     });
     if (typeof Cal !== 'undefined' && Cal.render) Cal.render();
+    if (typeof MiniCal !== 'undefined' && MiniCal.render) MiniCal.render();
+    if (typeof NovoCal !== 'undefined' && NovoCal._render) NovoCal._render();
   },
 
   async renderAssembleia() {
@@ -3035,14 +3038,24 @@ const NovoCal = {
       eventos = data || [];
     }
     const dataLabel = new Date(y, m, d, 12).toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' });
-    const lista = eventos.length ? eventos.map(e => `
+    // Feriados/aniversários (CAL_EVENTS) não são linhas da tabela `eventos` — mostra
+    // sem botão de editar/excluir, mas precisa aparecer aqui: é o que gera o pontinho
+    // marcado no dia no grid (senão o usuário vê a marca mas "Nenhum evento neste dia").
+    const fixos = CAL_EVENTS[`${y}-${m + 1}-${d}`] || [];
+    const listaFixos = fixos.map(ev => `
+      <div style="display:flex;align-items:center;gap:8px;padding:10px;background:var(--surface-3);border-radius:8px;margin-bottom:8px;">
+        <span style="font-size:16px;">${ev.tag || '📅'}</span>
+        <div style="font-weight:600;font-size:13px;color:${ev.color};">${sanitize(ev.label)}</div>
+      </div>`).join('');
+    const listaEventos = eventos.map(e => `
       <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding:10px;background:var(--surface-3);border-radius:8px;margin-bottom:8px;">
         <div><div style="font-weight:600;font-size:13px;">${sanitize(e.titulo)}</div><div style="font-size:11px;color:var(--fg-3);">${e.coordenadorias?.sigla || 'Todas'} · ${e.tipo || ''}</div></div>
         ${podeCriar ? `<div style="display:flex;gap:6px;flex-shrink:0;">
           <button class="btn btn-ghost" style="font-size:11px;padding:4px 8px;" onclick="NovoCal.editarEvento('${e.id}')">✏️</button>
           <button class="btn btn-ghost" style="font-size:11px;padding:4px 8px;" onclick="NovoCal.excluirEvento('${e.id}')">🗑️</button>
         </div>` : ''}
-      </div>`).join('') : `<p style="font-size:12px;color:var(--fg-3);text-align:center;padding:12px 0;">Nenhum evento neste dia.</p>`;
+      </div>`).join('');
+    const lista = (listaFixos + listaEventos) || `<p style="font-size:12px;color:var(--fg-3);text-align:center;padding:12px 0;">Nenhum evento neste dia.</p>`;
 
     abrirModal({
       titulo: `📅 ${dataLabel}`, tipo: 'info', corpo: lista,
