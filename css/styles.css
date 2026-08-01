@@ -500,17 +500,27 @@ body, .themed { transition: background-color 350ms var(--ease), color 200ms var(
   .full-mobile { width: 100% !important; }
   .grid-mobile-1 { grid-template-columns: 1fr !important; }
   /* Kanban: colunas lado a lado exigiam arrastar pro lado e cortavam o nome
-     da coluna — empilha uma em cima da outra, como lista, só no celular. */
-  .kanban-board { flex-direction: column; min-width: 0; }
-  .kanban-col { min-width: 0; }
+     da coluna — empilha uma em cima da outra, como lista, só no celular.
+     !important necessário: ".kanban-board"/".kanban-col" (base, sem media
+     query, mais abaixo no arquivo) fixam min-width em 900px/200px com a
+     mesma especificidade — sem !important essa regra daqui perdia a
+     cascata e o board continuava largo, exigindo scroll horizontal. */
+  .kanban-board { flex-direction: column; min-width: 0 !important; }
+  .kanban-col { min-width: 0 !important; }
   /* Topbar: title (topbar-left) tem overflow:hidden, então seu min-width
      automático é 0 — quando topbar-right é largo (ex: seletor Kanban/Lista/
      Heatmap + "+ Nova"), o flexbox encolhia o título até sobrar só "D…" em
      vez de quebrar linha. Dá um piso de largura ao título: só aí o
      flex-wrap tem motivo pra jogar topbar-right pra uma segunda linha —
-     topbars simples (um botão só) continuam numa linha só, sem mudar nada. */
-  .topbar { flex-wrap: wrap; height: auto; min-height: var(--topbar-h); row-gap: 8px; padding-top: 10px; padding-bottom: 10px; }
-  .topbar-left { flex: 1 1 auto; min-width: 160px; }
+     topbars simples (um botão só) continuam numa linha só, sem mudar nada.
+     !important necessário: ".topbar { height:var(--topbar-h) }" (base, sem
+     media query) e ".topbar-left { min-width:0 }" (idem, mais abaixo no
+     arquivo) têm a mesma especificidade e vêm depois no CSS, então sem
+     !important elas ganhavam a cascata e a topbar ficava com altura fixa —
+     a 2ª linha (Kanban/Lista/Heatmap/+Nova) vazava por cima do conteúdo
+     em vez de empurrá-lo pra baixo. */
+  .topbar { flex-wrap: wrap; height: auto !important; min-height: var(--topbar-h); row-gap: 8px; padding-top: 10px !important; padding-bottom: 10px !important; }
+  .topbar-left { flex: 1 1 auto; min-width: 160px !important; }
   .topbar-right { flex: 0 1 auto; justify-content: flex-end; }
 }
 
