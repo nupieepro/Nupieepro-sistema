@@ -779,7 +779,7 @@ const PageGeral = {
    Bloqueia se user nao tem permissao (cargo/role).
    ────────────────────────────────────────────────────────────── */
 function _renderAppEmbed(opts) {
-  const { pageId, titulo, icon, url, descricao, rolesPermitidas, cargosPermitidos } = opts;
+  const { pageId, titulo, icon, url, descricao, rolesPermitidas, cargosPermitidos, embutivel = true } = opts;
   const pg = document.getElementById(pageId);
   if (!pg) return;
   const ct = pg.querySelector('.content') || pg;
@@ -794,6 +794,21 @@ function _renderAppEmbed(opts) {
       <div style="font-size:15px;font-weight:700;color:var(--c-white)">Acesso Restrito</div>
       <div style="font-size:13px;color:var(--c-slate);margin-top:8px">${sanitize(descricao || 'Você não tem permissão para acessar este módulo.')}</div>
     </div>`;
+    return;
+  }
+  if (!embutivel) {
+    /* Alguns apps (ex: Trello) bloqueiam ser exibidos dentro de iframe de
+       outro site por política de segurança deles — nesse caso, em vez de
+       mostrar um embed quebrado/em branco, oferece um card de lançamento. */
+    ct.innerHTML = `
+      <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;text-align:center;padding:60px 20px;background:var(--b-1);border:1px solid var(--b-2);border-radius:12px;min-height:400px">
+        <div style="font-size:48px">${icon}</div>
+        <div>
+          <div style="font-size:16px;font-weight:700;color:var(--c-white)">${sanitize(titulo)}</div>
+          ${descricao ? `<div style="font-size:13px;color:var(--c-slate);margin-top:6px;max-width:360px">${sanitize(descricao)}</div>` : ''}
+        </div>
+        <a href="${url}" target="_blank" class="btn btn-primary" style="text-decoration:none">Abrir ↗</a>
+      </div>`;
     return;
   }
   ct.innerHTML = `
@@ -814,6 +829,35 @@ const PageMarketing = {
       url: 'https://nupieepro.github.io/Lojinha-Nupieepro/admin.html',
       descricao: 'Apenas Coord. Marketing, Coord. Financeiro, Coord. Geral e Admin podem gerenciar a Lojinha.',
       cargosPermitidos: ['coordenador de marketing', 'assessor de marketing', 'coordenador financeiro', 'assessor financeiro', 'coordenador geral', 'desenvolvedor'],
+    });
+  },
+  /* Trello não permite ser embutido num iframe de outro site (bloqueio de
+     segurança do próprio Trello — nada a fazer daqui), então _renderAppEmbed
+     mostra um card de lançamento em vez de tentar carregar o quadro dentro
+     da página; o link usa o shortLink (WrXCn9JF) puro em vez do link de
+     convite, que faria a pessoa "aceitar convite" toda vez que abrisse. */
+  _renderTrello() {
+    _renderAppEmbed({
+      pageId: 'page-mkt_trello',
+      titulo: 'Trello — Marketing NUPIEEPRO',
+      icon: '📋',
+      url: 'https://trello.com/b/WrXCn9JF',
+      descricao: 'Quadro de planejamento de Marketing no Trello.',
+      embutivel: false,
+      cargosPermitidos: ['coordenador de marketing', 'assessor de marketing', 'coordenador geral', 'desenvolvedor'],
+    });
+  },
+  /* Notion embute normalmente quando a página está compartilhada "Share to
+     web" (pública) — se não estiver, o iframe fica em branco; o link
+     "Abrir em nova aba" do _renderAppEmbed sempre funciona como alternativa. */
+  _renderNotion() {
+    _renderAppEmbed({
+      pageId: 'page-mkt_notion',
+      titulo: 'Notion — Marketing NUPIEEPRO',
+      icon: '📝',
+      url: 'https://app.notion.com/p/Marketing-NUPIEEPRO-39e785133f0c81908572e91189c326c2?source=copy_link',
+      descricao: 'Base de planejamento de Marketing no Notion.',
+      cargosPermitidos: ['coordenador de marketing', 'assessor de marketing', 'coordenador geral', 'desenvolvedor'],
     });
   },
   _renderKanban() {
@@ -5048,6 +5092,8 @@ document.addEventListener('nupi:booted', () => {
       'mkt_tracker':       () => PageMarketing._renderTracker(),
       'mkt_kanban':        () => PageMarketing._renderKanban(),
       'mkt_lojinha_admin': () => PageMarketing._renderLojinhaAdmin(),
+      'mkt_trello':        () => PageMarketing._renderTrello(),
+      'mkt_notion':        () => PageMarketing._renderNotion(),
       /* Financeiro */
       'fin_fluxo':         () => PageFinancas._renderFluxo(),
       'fin_abepro':        () => PageFinancas._renderABJFin(),
