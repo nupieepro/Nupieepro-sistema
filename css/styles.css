@@ -503,6 +503,15 @@ body, .themed { transition: background-color 350ms var(--ease), color 200ms var(
      da coluna — empilha uma em cima da outra, como lista, só no celular. */
   .kanban-board { flex-direction: column; min-width: 0; }
   .kanban-col { min-width: 0; }
+  /* Topbar: title (topbar-left) tem overflow:hidden, então seu min-width
+     automático é 0 — quando topbar-right é largo (ex: seletor Kanban/Lista/
+     Heatmap + "+ Nova"), o flexbox encolhia o título até sobrar só "D…" em
+     vez de quebrar linha. Dá um piso de largura ao título: só aí o
+     flex-wrap tem motivo pra jogar topbar-right pra uma segunda linha —
+     topbars simples (um botão só) continuam numa linha só, sem mudar nada. */
+  .topbar { flex-wrap: wrap; height: auto; min-height: var(--topbar-h); row-gap: 8px; padding-top: 10px; padding-bottom: 10px; }
+  .topbar-left { flex: 1 1 auto; min-width: 160px; }
+  .topbar-right { flex: 0 1 auto; justify-content: flex-end; }
 }
 
 /* ════ ZOOM GERAL — telas ficavam pequenas demais, principalmente
