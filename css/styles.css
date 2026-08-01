@@ -499,6 +499,10 @@ body, .themed { transition: background-color 350ms var(--ease), color 200ms var(
   .stack-mobile { flex-direction: column !important; }
   .full-mobile { width: 100% !important; }
   .grid-mobile-1 { grid-template-columns: 1fr !important; }
+  /* Kanban: colunas lado a lado exigiam arrastar pro lado e cortavam o nome
+     da coluna — empilha uma em cima da outra, como lista, só no celular. */
+  .kanban-board { flex-direction: column; min-width: 0; }
+  .kanban-col { min-width: 0; }
 }
 
 /* ════ ZOOM GERAL — telas ficavam pequenas demais, principalmente
@@ -1123,6 +1127,7 @@ code, kbd, .mono { font: var(--t-mono); }
 .color-dot { width: 18px; height: 18px; border-radius: 50%; flex-shrink: 0; border: 2px solid rgba(255,255,255,0.15); }
 
 /* ════ KANBAN ════ */
+.kanban-board { display: flex; gap: 16px; min-width: 900px; padding-bottom: 8px; }
 .kanban-col { flex: 1 1 220px; min-width: 200px; display: flex; flex-direction: column; background: var(--border-1); border: 1px solid var(--border-2); border-radius: var(--r-md); overflow: hidden; }
 .kanban-col-header { padding: 12px 16px; font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--fg-2); border-bottom: 2px solid var(--border-2); display: flex; align-items: center; gap: 8px; }
 .kanban-col-body { flex: 1; padding: 10px; display: flex; flex-direction: column; gap: 8px; min-height: 120px; }
