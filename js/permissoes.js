@@ -132,7 +132,7 @@ const Permissoes = (() => {
   /* ── Páginas por coordenadoria ── */
   const PAGES_POR_COORD = {
     'Geral':       ['geral_reunioes','geral_planejamento','geral_melhorias','geral_parcerias','global_visitas','global_apresentacoes','global_producao','global_assembleia','global_gestao'],
-    'Marketing':   ['mkt_tracker','global_visitas','global_apresentacoes'],
+    'Marketing':   ['mkt_tracker','mkt_trello','mkt_notion','global_visitas','global_apresentacoes'],
     'Finanças':    ['fin_fluxo','fin_abepro','fin_comercial','mkt_kanban','mkt_lojinha_admin','global_visitas','global_apresentacoes'],
     'Projetos':    ['prj_eventos','prj_enegep','prj_treinamentos','prj_nupicast','prj_parcerias','global_visitas','global_apresentacoes','global_producao'],
     'Operações':   ['ops_relatorios','ops_pops','ops_arquivo','global_visitas','global_apresentacoes'],

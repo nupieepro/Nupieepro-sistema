@@ -78,6 +78,8 @@ const ROLE_PAGES = {
   'Marketing':  [
     { id: 'dashboard',          icon: 'grid',         label: 'Painel Central' },
     { id: 'mkt_tracker',        icon: 'megaphone',    label: 'Social Media Tracker' },
+    { id: 'mkt_trello',         icon: 'trello',       label: 'Trello Marketing' },
+    { id: 'mkt_notion',         icon: 'notebook',     label: 'Notion Marketing' },
   ],
   'Projetos':   [
     { id: 'dashboard',       icon: 'grid',      label: 'Painel Central' },
@@ -761,7 +763,7 @@ const ALL_PAGES = [
   'manu','notificacoes','config','configuracoes',
   'demandas','calendario','geral','gp',
   'geral_reunioes','geral_planejamento','geral_melhorias','geral_parcerias',
-  'mkt_tracker','mkt_kanban',
+  'mkt_tracker','mkt_kanban','mkt_lojinha_admin','mkt_trello','mkt_notion',
   'fin_fluxo','fin_abepro','fin_comercial',
   'prj_eventos','prj_enegep','prj_treinamentos','prj_nupicast','prj_parcerias',
   'ops_relatorios','ops_pops','ops_arquivo','ops_inscricoes',
