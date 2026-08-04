@@ -521,7 +521,13 @@ body, .themed { transition: background-color 350ms var(--ease), color 200ms var(
      em vez de empurrá-lo pra baixo. */
   .topbar { flex-wrap: wrap; height: auto !important; min-height: var(--topbar-h); row-gap: 8px; padding-top: 10px !important; padding-bottom: 10px !important; }
   .topbar-left { flex: 1 1 auto; min-width: 160px !important; }
-  .topbar-right { flex: 0 1 auto; justify-content: flex-end; }
+  /* margin-left:auto (não só justify-content:flex-end) porque, ao quebrar
+     linha, topbar-right fica sozinho na 2ª linha — e um único item numa
+     linha flex fica colado no início (flex-start) mesmo com
+     justify-content:space-between no pai, já que não há "outro lado" pra
+     abrir espaço. margin-left:auto empurra o próprio item pro fim da
+     linha, sozinho ou não. */
+  .topbar-right { flex: 0 1 auto; justify-content: flex-end; margin-left: auto; }
 }
 
 /* ════ ZOOM GERAL — telas ficavam pequenas demais, principalmente
