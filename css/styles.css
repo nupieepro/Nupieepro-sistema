@@ -1245,7 +1245,11 @@ body { font-family: var(--font-body); }
   .sum-value { font-size: 20px; }
   .section-title { font-size: 15px; }
   .topbar-search { display: none; }
-  .profile-chip-name { display: none; }
+  /* A regra mirava ".profile-chip-name", classe que não existe no
+     markup — o span do nome usa id="topbarName". Sem isso, o nome
+     ficava visível no celular e não sobrava largura pra caber junto
+     do título "Dashboard EP" na mesma linha (estourava pra 2ª linha). */
+  .profile-chip-name, #topbarName { display: none; }
 }
 @media (max-width: 480px) {
   .summary-grid, .dash-grid { grid-template-columns: 1fr 1fr; gap: var(--s2); }
