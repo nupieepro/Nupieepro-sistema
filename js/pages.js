@@ -227,12 +227,7 @@ const PageGeral = {
       </div>
       <div id="lista-reunioes">
         <div style="padding:20px;text-align:center;color:var(--c-slate);font-size:13px">Carregando...</div>
-      </div>`) +
-    _sc('Check-in Digital','✅',`
-      <p style="font-size:13px;color:var(--c-slate);margin-bottom:14px">
-        Registre presença em eventos e reuniões. Tabela: frequencia.
-      </p>
-      ${_btn('Abrir check-in',"PageGeral.abrirCheckin()")}`);
+      </div>`);
     this._carregarReunioes();
   },
   async _carregarReunioes() {
@@ -4519,6 +4514,16 @@ const PageGlobal = {
   },
 
   /* ── Renders das páginas globais ── */
+  _renderCheckin() {
+    const pg = document.getElementById('page-global_checkin');
+    if (!pg) return;
+    const ct = pg.querySelector('.content') || pg;
+    ct.innerHTML = _sc('Check-in Digital','✅',`
+      <p style="font-size:13px;color:var(--c-slate);margin-bottom:14px">
+        Registre presença em eventos e reuniões. Disponível pra todos os membros, de qualquer coordenadoria.
+      </p>
+      ${_btn('Abrir check-in',"PageGeral.abrirCheckin()")}`);
+  },
   _renderVisitas() {
     const pg = document.getElementById('page-global_visitas');
     if (!pg) return;
@@ -5125,6 +5130,7 @@ document.addEventListener('nupi:booted', () => {
       'global_producao':      () => PageGlobal._renderProducao(),
       'global_assembleia':    () => PageGlobal._renderAssembleia(),
       'global_gestao':        () => PageGlobal._renderGestao(),
+      'global_checkin':       () => PageGlobal._renderCheckin(),
     };
     if (mapa[id]) try { mapa[id](); } catch(e) { console.warn('[pages goTo]', id, e); }
   };
