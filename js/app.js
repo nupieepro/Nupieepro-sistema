@@ -65,15 +65,14 @@ const ROLE_PAGES = {
     { id: 'ops_arquivo',       icon: 'folder',    label: 'Arquivo Digital' },
     { id: 'ops_inscricoes',    icon: 'ticket',    label: 'Gestão de Inscrições' },
     { id: 'ops_eventos_admin', icon: 'calendar',  label: 'Nupi-Eventos (App)' },
+    { id: 'gp_tap',            icon: 'layout',    label: 'Módulo TAP (Inovação)' },
   ],
   'G. Pessoas': [
     { id: 'dashboard',       icon: 'grid',         label: 'Painel Central' },
     { id: 'gp_talentos',     icon: 'users',         label: 'Banco de Talentos' },
     { id: 'gp_clima',        icon: 'thermometer',   label: 'Pesquisa de Clima' },
-    { id: 'gp_tap',          icon: 'layout',        label: 'Módulo TAP (Inovação)' },
     { id: 'gp_aniversarios', icon: 'gift',          label: 'Aniversários do Núcleo' },
     { id: 'gp_treinamentos', icon: 'book-open',     label: 'Treinamentos Internos' },
-    { id: 'pessoas',         icon: 'user-check',    label: 'Gestão de Membros' },
   ],
   'Marketing':  [
     { id: 'dashboard',          icon: 'grid',         label: 'Painel Central' },
