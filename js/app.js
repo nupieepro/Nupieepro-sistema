@@ -54,7 +54,6 @@ const ROLE_PAGES = {
     { id: 'geral_reunioes', icon: 'users', label: 'Reuniões e Check-in' },
     { id: 'geral_planejamento', icon: 'layout', label: 'Planejamento Sem.' },
     { id: 'geral_melhorias', icon: 'star', label: 'Caixa de Melhorias' },
-    { id: 'geral_parcerias', icon: 'gem', label: 'Parcerias Estratégicas' },
     { id: 'pessoas', icon: 'users', label: 'Gestão de Membros' },
     { id: 'tarefas', icon: 'list', label: 'Kanban Geral' },
   ],
@@ -87,6 +86,7 @@ const ROLE_PAGES = {
     { id: 'prj_treinamentos',icon: 'users',     label: 'Treinamentos Externos' },
     { id: 'prj_nupicast',    icon: 'megaphone', label: 'NUPICAST Tracker' },
     { id: 'prj_parcerias',   icon: 'handshake', label: 'Parcerias e Patrocínios' },
+    { id: 'geral_parcerias', icon: 'gem',       label: 'Parcerias Estratégicas' },
   ],
   'Finanças':   [
     { id: 'dashboard',          icon: 'grid',         label: 'Painel Central' },
