@@ -435,6 +435,7 @@ const App = {
       { id: 'global_apresentacoes', icon: 'star',  label: 'Apresentações Inst.' },
       { id: 'global_producao',      icon: 'file',  label: 'Produção Científica' },
       { id: 'global_assembleia',    icon: 'users', label: 'Assembleia e Votos' },
+      { id: 'global_checkin',       icon: 'check-square', label: 'Check-in Digital' },
     ];
 
     let html = '<div class="sidebar-section">Meu painel</div>';
@@ -767,7 +768,7 @@ const ALL_PAGES = [
   'prj_eventos','prj_enegep','prj_treinamentos','prj_nupicast','prj_parcerias',
   'ops_relatorios','ops_pops','ops_arquivo','ops_inscricoes',
   'gp_talentos','gp_clima','gp_tap','gp_aniversarios','gp_treinamentos',
-  'global_visitas','global_apresentacoes','global_producao','global_assembleia','global_gestao'
+  'global_visitas','global_apresentacoes','global_producao','global_assembleia','global_gestao','global_checkin'
 ];
 
 function goTo(id) {

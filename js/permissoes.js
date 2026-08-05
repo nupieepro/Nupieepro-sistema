@@ -280,7 +280,7 @@ const Permissoes = (() => {
     const m = getMatriz(p.role);
     if (m.pagesVisible === '*') return true;
     /* Páginas universais: todos os papéis ativos têm acesso */
-    const SEMPRE = ['dashboard','notificacoes','tarefas','compartilhado','demandas','abj','calendario'];
+    const SEMPRE = ['dashboard','notificacoes','tarefas','compartilhado','demandas','abj','calendario','global_checkin'];
     if (SEMPRE.includes(pageId)) return true;
     if (Array.isArray(m.pagesVisible)) return m.pagesVisible.includes(pageId);
     if (m.pagesVisible === 'coordenadoria') {
