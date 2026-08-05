@@ -173,17 +173,76 @@ const RelatorioModule = (() => {
         </div>
       </div>
       <div class="form-group">
-        <label class="form-label">Atividades realizadas *</label>
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:4px">
+          <label class="form-label" style="margin-bottom:0">Atividades realizadas *</label>
+          <button type="button" class="btn btn-ghost" style="font-size:11px;padding:4px 10px"
+            onclick="RelatorioModule._gerarRascunho()">✨ Gerar rascunho do mês</button>
+        </div>
         <textarea id="r-obs" class="evidence-textarea" style="min-height:130px"
           placeholder="Descreva as atividades realizadas: reuniões, eventos, publicações, treinamentos..."></textarea>
+        <span id="r-obs-status" style="font-size:11px;color:var(--c-slate);display:none;margin-top:4px"></span>
       </div>
       <div style="background:var(--a-1);border:1px solid var(--b-a);border-radius:8px;padding:10px;font-size:12px;color:var(--c-slate)">
-        💡 Após salvar, o PDF é gerado e baixado automaticamente.
+        💡 O rascunho puxa reuniões/eventos e demandas concluídas do mês — revise e complete antes de salvar. Após salvar, o PDF é gerado e baixado automaticamente.
       </div>`,
     botoes:[
       { texto:'Cancelar', classe:'btn-ghost', acao: fecharModal },
       { texto:'Salvar e gerar PDF ✓', classe:'btn-primary', acao: ()=>_salvar() }
     ]});
+  }
+  async function _gerarRascunho() {
+    const mes    = parseInt(document.getElementById('r-mes')?.value);
+    const ano    = parseInt(document.getElementById('r-ano')?.value);
+    const status = document.getElementById('r-obs-status');
+    const textarea = document.getElementById('r-obs');
+    if (!mes || !ano || !textarea) return;
+    if (textarea.value.trim() && !confirm('Isso vai substituir o texto atual pelo rascunho automático. Continuar?')) return;
+    if (status) { status.style.display = 'block'; status.textContent = 'Buscando atividades do mês...'; }
+    if (!window._supabase) { if (status) status.textContent = 'Sem conexão com o banco.'; return; }
+    try {
+      const mesStr  = `${ano}-${String(mes).padStart(2,'0')}`;
+      const proxMes = mes === 12 ? `${ano+1}-01` : `${ano}-${String(mes+1).padStart(2,'0')}`;
+      const dataIni = `${mesStr}-01`;
+      const dataFim = `${proxMes}-01`;
+      const coords  = await getCoords();
+      const ops     = coords.find(c => c.sigla === 'OPS');
+      const [re, rd] = await Promise.all([
+        window._supabase.from('eventos').select('titulo,tipo,data_inicio')
+          .eq('coordenadoria_id', ops?.id || '')
+          .gte('data_inicio', dataIni + 'T00:00:00').lt('data_inicio', dataFim + 'T00:00:00')
+          .order('data_inicio'),
+        window._supabase.from('demandas').select('titulo,updated_at')
+          .eq('coordenadoria_id', ops?.id || '')
+          .eq('coluna', 'auditada')
+          .gte('updated_at', dataIni + 'T00:00:00').lt('updated_at', dataFim + 'T00:00:00')
+          .order('updated_at'),
+      ]);
+      const eventos  = re.data || [];
+      const demandas = rd.data || [];
+      const TIPO_LABEL = { reuniao: 'Reunião', evento: 'Evento', visita: 'Visita', treinamento: 'Treinamento', podcast: 'Podcast' };
+      const linhas = [];
+      if (eventos.length) {
+        linhas.push('Reuniões e eventos:');
+        eventos.forEach(e => {
+          const d = new Date(e.data_inicio).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+          linhas.push(`- ${e.titulo} (${TIPO_LABEL[e.tipo] || e.tipo}, ${d})`);
+        });
+      }
+      if (demandas.length) {
+        if (linhas.length) linhas.push('');
+        linhas.push('Demandas concluídas:');
+        demandas.forEach(d => linhas.push(`- ${d.titulo}`));
+      }
+      if (!linhas.length) {
+        if (status) status.textContent = 'Nenhuma reunião, evento ou demanda concluída encontrada pra esse mês — escreva manualmente.';
+        return;
+      }
+      textarea.value = linhas.join('\n');
+      if (status) status.textContent = `Rascunho gerado com ${eventos.length} evento(s)/reunião(ões) e ${demandas.length} demanda(s) concluída(s). Edite como quiser antes de salvar.`;
+    } catch (e) {
+      console.warn('[Relatorio] Rascunho:', e);
+      if (status) status.textContent = 'Erro ao buscar atividades do mês.';
+    }
   }
   async function _salvar() {
     const mes  = parseInt(document.getElementById('r-mes')?.value);
@@ -252,6 +311,6 @@ const RelatorioModule = (() => {
       if (doc) doc.save(`NUPIEEPRO_Relatorio_${MESES_PT[data.mes-1]}_${data.ano}.pdf`);
     } catch(e) { mostrarToast('Erro ao gerar PDF.', 'error'); }
   }
-  return { renderPagina, abrirFormulario, baixarPDF };
+  return { renderPagina, abrirFormulario, baixarPDF, _gerarRascunho };
 })();
 window.RelatorioModule = RelatorioModule;
