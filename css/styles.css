@@ -137,7 +137,7 @@
   --s8: 32px;  --s10: 40px;  --s12: 48px;  --s16: 64px;
 
   /* ── Layout ── */
-  --sidebar-w:    248px;
+  --sidebar-w:    268px;
   --topbar-h:     60px;
   --mobile-nav-h: 58px;
 
@@ -530,13 +530,14 @@ body, .themed { transition: background-color 350ms var(--ease), color 200ms var(
   .topbar-right { flex: 0 1 auto; justify-content: flex-end; margin-left: auto; }
 }
 
-/* ════ ZOOM GERAL — telas ficavam pequenas demais, principalmente
-   na faixa 641–1024px (sidebar de ícone / "site de desktop" no celular) ════ */
+/* ════ ZOOM GERAL — telas ficavam pequenas demais/distantes, tanto no
+   celular quanto no PC (texto e ícones pequenos sobrando muito espaço
+   vazio nas telas maiores) ════ */
 @media (max-width: 640px) {
-  html { zoom: 1.05; }
+  html { zoom: 1.15; }
 }
 @media (min-width: 641px) {
-  html { zoom: 1.12; }
+  html { zoom: 1.2; }
 }
 @media (min-width: 641px) { .show-mobile { display: none !important; } }
 
