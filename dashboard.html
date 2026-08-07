@@ -18,7 +18,7 @@
   <link rel="icon" href="assets/icon-192.png" type="image/png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Plus+Jakarta+Sans:wght@600;700;800;900&family=JetBrains+Mono:wght@400;500;700&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Plus+Jakarta+Sans:wght@600;700;800;900&family=JetBrains+Mono:wght@400;500;700&family=Syne:wght@600;700;800&family=League+Spartan:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   
   <!-- EmailJS SDK -->
   <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
@@ -29,7 +29,7 @@
     // Injeção Crítica: Impede a tela branca de "Blink"
     (function(){
       var _t = localStorage.getItem('np-theme') || localStorage.getItem('nupie_theme') || 'nucleo';
-      var _f = localStorage.getItem('nupie_font') || 'default';
+      var _f = localStorage.getItem('nupie_font') || 'league-spartan';
       // Map legacy theme names to new ones
       var legacyMap = {'dark-orange':'nucleo','dark-purple':'violet','fusion':'nucleo','luminous':'papel','orange':'noite','obsidian':'noite','bad-boy':'noite','default':'nucleo'};
       if (legacyMap[_t]) _t = legacyMap[_t];
