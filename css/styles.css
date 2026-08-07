@@ -941,6 +941,11 @@ code, kbd, .mono { font: var(--t-mono); }
 .profile-card:hover { transform: translateY(-4px); box-shadow: var(--sh-lg); }
 
 /* ════ BUTTONS ════ */
+/* Canvas de gráfico (Chart.js) tem largura intrínseca de 300px — em telas
+   estreitas isso estoura o container antes do Chart.js medir e redimensionar
+   (ou se o script falhar/atrasar em carregar). max-width:100% garante que
+   nunca passe do container, independente do timing do JS. */
+canvas { max-width: 100%; }
 .btn {
   display: inline-flex; align-items: center; justify-content: center; gap: 6px;
   padding: 7px 14px; border-radius: var(--r-sm);
