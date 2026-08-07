@@ -320,7 +320,7 @@ const PageGeral = {
         Dois planos por ano: 1º semestre (prazo 31/03) e 2º semestre (prazo 31/07).
         Cada plano aprovado vale 1 estrela ABJ (Atividades 1 e 7).
       </p>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-bottom:16px">
         <div style="background:var(--a-1);border:1px solid var(--b-a);border-radius:12px;padding:18px">
           <div style="font-size:11px;font-weight:700;color:var(--c-accent);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">⭐ 1º Semestre ${ano}</div>
           <div style="font-size:13px;font-weight:700;color:var(--c-white);margin-bottom:4px">Jan → Jun</div>
