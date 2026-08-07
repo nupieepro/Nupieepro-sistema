@@ -1198,13 +1198,11 @@ code, kbd, .mono { font: var(--t-mono); }
 .sidebar-overlay.visible { display: block; }
 
 /* ════ FONT SYSTEM ════ */
-@font-face {
-  font-family: 'League Spartan';
-  src: url('../assets/fonts/LeagueSpartan-Bold.woff2') format('woff2');
-  font-weight: 700;
-  font-style: normal;
-  font-display: swap;
-}
+/* League Spartan vem do Google Fonts (link no <head>), com os pesos
+   400–800 — carregar só o Bold self-hosted (como antes) fazia todo
+   texto renderizar com os traços do Bold mesmo em peso 400/500/600,
+   ficando mais largo que o esperado e cortando em rótulos/badges com
+   largura fixa. */
 @font-face {
   font-family: 'Adumu';
   src: url('../assets/fonts/Adumu-Regular.woff2') format('woff2');

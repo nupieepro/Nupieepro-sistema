@@ -1336,7 +1336,7 @@ const Theme = {
     let theme = localStorage.getItem('nupie_theme') || localStorage.getItem('np-theme') || 'nucleo';
     const legMap = {'dark-orange':'nucleo','dark-purple':'violet','fusion':'nucleo','luminous':'papel','orange':'noite','obsidian':'noite','bad-boy':'noite','default':'nucleo'};
     if (legMap[theme]) theme = legMap[theme];
-    const font = localStorage.getItem('nupie_font') || 'default';
+    const font = localStorage.getItem('nupie_font') || 'league-spartan';
     Theme.apply(theme, true);
     Theme.applyFont(font, true);
   },
