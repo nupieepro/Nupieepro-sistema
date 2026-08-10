@@ -527,7 +527,22 @@ body, .themed { transition: background-color 350ms var(--ease), color 200ms var(
      justify-content:space-between no pai, já que não há "outro lado" pra
      abrir espaço. margin-left:auto empurra o próprio item pro fim da
      linha, sozinho ou não. */
-  .topbar-right { flex: 0 1 auto; justify-content: flex-end; margin-left: auto; }
+  .topbar-right { flex: 0 1 auto; justify-content: flex-end; margin-left: auto; gap: 4px !important; }
+  /* Zoom geral (1.25 no celular) deixou o conteúdo do topbar "maior" e sem
+     espaço pra caber tudo numa linha só de novo — aperta o que dá sem
+     esconder informação: seta do dropdown do perfil (decorativa, o chip
+     inteiro já é clicável), padding dos botões redondos e os gaps entre
+     os blocos. !important necessário: as regras base (".profile-chip",
+     ".topbar-btn", ".topbar-hamburger", ".topbar") não têm media query e
+     vêm depois no arquivo — mesma especificidade + posterior no cascade
+     ganham sem !important, e essas mudanças aqui não tinham efeito nenhum. */
+  .profile-chip > svg { display: none !important; }
+  .profile-chip { gap: 4px !important; padding: 4px 6px 4px 4px !important; }
+  .profile-chip .u-avatar { width: 24px !important; height: 24px !important; font-size: 10px !important; }
+  .topbar-btn { padding: 4px !important; }
+  .topbar-hamburger { padding: 5px !important; }
+  .topbar { gap: 4px !important; padding: 0 6px !important; }
+  .topbar-left { gap: 6px !important; }
 }
 
 /* ════ ZOOM GERAL — telas ficavam pequenas demais/distantes, tanto no
