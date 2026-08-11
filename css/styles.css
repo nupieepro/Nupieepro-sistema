@@ -543,6 +543,13 @@ body, .themed { transition: background-color 350ms var(--ease), color 200ms var(
   .topbar-hamburger { padding: 5px !important; }
   .topbar { gap: 4px !important; padding: 0 6px !important; }
   .topbar-left { gap: 6px !important; }
+  /* Mesmo com os ajustes acima, no aparelho real do usuário ainda quebrava
+     linha — a estimativa de folga em teste automatizado não bateu 100% com
+     o navegador real. Em vez de seguir cortando pixel a pixel (frágil),
+     tira o botão de engrenagem do topbar: Configurações já está no menu
+     lateral e no dropdown do perfil, esse aqui é redundante e é o que mais
+     ocupa espaço (ícone + padding + gap). */
+  .topbar-right .topbar-btn[onclick*="configuracoes"] { display: none !important; }
 }
 
 /* ════ ZOOM GERAL — telas ficavam pequenas demais/distantes, tanto no
