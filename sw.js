@@ -5,7 +5,7 @@
    browsers continuam servindo assets antigos do cache do SW.
    ============================================================ */
 
-const CACHE_NAME = 'nupieepro-v78';
+const CACHE_NAME = 'nupieepro-v79';
 const ASSETS = [
   './',
   './index.html',
@@ -13,7 +13,7 @@ const ASSETS = [
   './convite.html',
   './reset.html',
   './operacoes-site-inscricoes.html',
-  './css/styles.css?v=78',
+  './css/styles.css?v=79',
   './js/config.defaults.js',
   './js/app.js',
   './js/auth.js',
