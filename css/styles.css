@@ -1262,7 +1262,18 @@ body { font-family: var(--font-body); }
   .summary-grid, .dash-grid { grid-template-columns: repeat(2, 1fr); }
   .dash-chart-trio { grid-template-columns: 1fr 1fr; }
   .ep-hero { padding: 14px 16px; }
-  .ep-hero-right { display: none; }
+  /* O anel (IDN%) tem tamanho fixo (110px) e ".ep-hero-left" tem
+     min-width:160px — em telas estreitas isso não cabe lado a lado e o
+     anel quebra pra uma linha própria embaixo, criando um bloco vazio
+     enorme antes do resto do conteúdo. Diminui o anel e libera o
+     min-width do texto pra caber os dois lado a lado, como deve ser.
+     !important necessário: ".ep-hero"/".ep-hero-left"/".ep-hero-right"
+     têm uma segunda definição sem media query mais adiante no arquivo,
+     que ganha o cascade sem isso (mesma especificidade + vem depois). */
+  .ep-hero { flex-wrap: nowrap !important; gap: 12px !important; }
+  .ep-hero-left { min-width: 0 !important; }
+  .ep-hero-right { flex-shrink: 0 !important; }
+  .ep-hero-right svg { width: 72px !important; height: 72px !important; }
 }
 @media (max-width: 768px) {
   body { overflow: auto; }
