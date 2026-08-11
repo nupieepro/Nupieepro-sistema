@@ -1107,7 +1107,12 @@ canvas { max-width: 100%; }
 .alert-box.success{ display: flex; background: var(--green-dim); border: 1px solid var(--green-border); color: var(--green); }
 
 /* ════ TOAST ════ */
-.toast-container { position: fixed; top: var(--s4); right: var(--s4); z-index: 9999; display: flex; flex-direction: column; gap: var(--s2); pointer-events: none; max-width: 360px; width: calc(100vw - 2rem); }
+/* width:calc(100vw - 2rem) num position:fixed, combinado com o zoom geral
+   (html{zoom:1.25} no celular), fazia o toast ficar bem mais largo que a
+   tela de verdade — vazando cortado pelos dois lados. Tirando o "width"
+   fixo (só "right" definido), o container encolhe pro tamanho do próprio
+   conteúdo (shrink-to-fit), com max-width como teto — sem depender de vw. */
+.toast-container { position: fixed; top: var(--s4); right: var(--s4); z-index: 9999; display: flex; flex-direction: column; gap: var(--s2); pointer-events: none; max-width: min(360px, calc(100% - 2 * var(--s4))); }
 .toast {
   padding: 11px 16px; border-radius: var(--r-md); font-size: 13px; font-weight: 500;
   animation: fadeIn 0.35s var(--spring); pointer-events: auto; border: 1px solid;

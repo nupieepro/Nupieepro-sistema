@@ -792,9 +792,13 @@ function _renderAppEmbed(opts) {
     return;
   }
   if (!embutivel) {
-    /* Alguns apps (ex: Trello) bloqueiam ser exibidos dentro de iframe de
-       outro site por política de segurança deles — nesse caso, em vez de
-       mostrar um embed quebrado/em branco, oferece um card de lançamento. */
+    /* Alguns apps (ex: Trello, Notion) bloqueiam ser exibidos dentro de
+       iframe de outro site por política de segurança deles — nesse caso,
+       em vez de mostrar um embed quebrado/em branco, abre a aba
+       automaticamente ao entrar na página (mesmo clique que trouxe até
+       aqui, sem precisar clicar de novo em "Abrir") e mantém o card como
+       fallback pra quando o navegador bloquear o popup automático. */
+    window.open(url, '_blank', 'noopener');
     ct.innerHTML = `
       <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;text-align:center;padding:60px 20px;background:var(--b-1);border:1px solid var(--b-2);border-radius:12px;min-height:400px">
         <div style="font-size:48px">${icon}</div>
@@ -842,9 +846,9 @@ const PageMarketing = {
       cargosPermitidos: ['coordenador de marketing', 'assessor de marketing', 'coordenador geral', 'desenvolvedor'],
     });
   },
-  /* Notion embute normalmente quando a página está compartilhada "Share to
-     web" (pública) — se não estiver, o iframe fica em branco; o link
-     "Abrir em nova aba" do _renderAppEmbed sempre funciona como alternativa. */
+  /* O link é do app.notion.com (privado, exige login), não um "Share to
+     web" público — nunca embuti num iframe (Notion bloqueia por política
+     própria), então trata igual ao Trello: abre em nova aba direto. */
   _renderNotion() {
     _renderAppEmbed({
       pageId: 'page-mkt_notion',
@@ -852,6 +856,7 @@ const PageMarketing = {
       icon: '📝',
       url: 'https://app.notion.com/p/Marketing-NUPIEEPRO-39e785133f0c81908572e91189c326c2?source=copy_link',
       descricao: 'Base de planejamento de Marketing no Notion.',
+      embutivel: false,
       cargosPermitidos: ['coordenador de marketing', 'assessor de marketing', 'coordenador geral', 'desenvolvedor'],
     });
   },
