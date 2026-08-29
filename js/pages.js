@@ -1861,7 +1861,8 @@ const PageProjetos = {
   },
   async _excluirEvento(id) {
     if (!confirm('Excluir este evento?')) return;
-    await _sbq().from('eventos').delete().eq('id', id);
+    const ok = await dbEfetivou(_sbq().from('eventos').delete().eq('id', id));
+    if (!ok) { mostrarToast('Sem permissão para excluir este evento.','error'); return; }
     mostrarToast('Excluído!','success');
     PageProjetos._carregar?.();
   },
@@ -2180,25 +2181,29 @@ const PageProjetos = {
   },
   async _excluirCapacitacao(id) {
     if (!confirm('Excluir esta capacitação?')) return;
-    await _sbq().from('eventos').delete().eq('id', id);
+    const ok = await dbEfetivou(_sbq().from('eventos').delete().eq('id', id));
+    if (!ok) { mostrarToast('Sem permissão para excluir esta capacitação.','error'); return; }
     mostrarToast('Excluída!','success');
     PageProjetos._carregarTreinamentos();
   },
   async _excluirEpisodio(id) {
     if (!confirm('Excluir este episódio?')) return;
-    await _sbq().from('eventos').delete().eq('id', id);
+    const ok = await dbEfetivou(_sbq().from('eventos').delete().eq('id', id));
+    if (!ok) { mostrarToast('Sem permissão para excluir este episódio.','error'); return; }
     mostrarToast('Excluído!','success');
     PageProjetos._carregarNupicast();
   },
   async _excluirENEGEP(id) {
     if (!confirm('Excluir este registro do ENEGEP?')) return;
-    await _sbq().from('eventos').delete().eq('id', id);
+    const ok = await dbEfetivou(_sbq().from('eventos').delete().eq('id', id));
+    if (!ok) { mostrarToast('Sem permissão para excluir este registro.','error'); return; }
     mostrarToast('Excluído!','success');
     PageProjetos._carregarENEGEP();
   },
   async _excluirParceria(id) {
     if (!confirm('Excluir esta parceria?')) return;
-    await _sbq().from('parcerias').delete().eq('id', id);
+    const ok = await dbEfetivou(_sbq().from('parcerias').delete().eq('id', id));
+    if (!ok) { mostrarToast('Sem permissão para excluir esta parceria.','error'); return; }
     mostrarToast('Excluída!','success');
     PageProjetos._carregarParcerias?.();
   },
@@ -2377,7 +2382,8 @@ const PageOperacoes = {
   },
   async _excluirArquivo(id) {
     if (!confirm('Excluir este documento?')) return;
-    await _sbq().from('pops').delete().eq('id', id);
+    const ok = await dbEfetivou(_sbq().from('pops').delete().eq('id', id));
+    if (!ok) { mostrarToast('Sem permissão para excluir este documento.','error'); return; }
     mostrarToast('Documento excluído!','success');
     PageOperacoes._carregarArquivo();
   },
@@ -2471,7 +2477,8 @@ const PageOperacoes = {
   async _excluirEventoInscricao(id) {
     if (!confirm('Excluir este evento de inscrição? Todas as inscrições serão perdidas!')) return;
     await _sbq().from('inscricoes_eventos').delete().eq('evento_id', id);
-    await _sbq().from('eventos_inscricao').delete().eq('id', id);
+    const ok = await dbEfetivou(_sbq().from('eventos_inscricao').delete().eq('id', id));
+    if (!ok) { mostrarToast('Sem permissão para excluir este evento.','error'); return; }
     mostrarToast('Evento excluído!','success');
     PageOperacoes._carregarEventosInscricao();
   },
@@ -2514,7 +2521,8 @@ const PageOperacoes = {
   },
   async _toggleInscricoes(id, abrir) {
     try {
-      await _sbq().from('eventos_inscricao').update({inscricoes_abertas:abrir}).eq('id',id);
+      const ok = await dbEfetivou(_sbq().from('eventos_inscricao').update({inscricoes_abertas:abrir}).eq('id',id));
+      if (!ok) { mostrarToast('Sem permissão para alterar este evento.','error'); return; }
       mostrarToast(abrir?'Inscrições abertas!':'Inscrições fechadas!','success');
       this._carregarEventosInscricao();
     }catch(e){mostrarToast('Erro ao alterar status.','error');}
@@ -2551,7 +2559,8 @@ const PageOperacoes = {
     if(!nome){mostrarToast('Nome obrigatório!','warning');return;}
     fecharModal();
     try {
-      await _sbq().from('eventos_inscricao').update({nome,local:local||null,data_inicio:ini||null,data_fim:fim||null,vagas}).eq('id',id);
+      const ok = await dbEfetivou(_sbq().from('eventos_inscricao').update({nome,local:local||null,data_inicio:ini||null,data_fim:fim||null,vagas}).eq('id',id));
+      if (!ok) { mostrarToast('Sem permissão para editar este evento.','error'); return; }
       mostrarToast('Evento atualizado!','success');
       this._carregarEventosInscricao();
     }catch(e){mostrarToast('Erro ao atualizar.','error');}
@@ -2589,7 +2598,8 @@ const PageOperacoes = {
   },
   async _atualizarPresenca(id, status) {
     try {
-      await _sbq().from('inscricoes_eventos').update({status}).eq('id',id);
+      const ok = await dbEfetivou(_sbq().from('inscricoes_eventos').update({status}).eq('id',id));
+      if (!ok) { mostrarToast('Sem permissão para atualizar este inscrito.','error'); return; }
       mostrarToast('Status atualizado!','success');
     }catch(e){mostrarToast('Erro ao atualizar.','error');}
   },
@@ -2694,7 +2704,8 @@ const PageOperacoes = {
         fecharModal();
         if(!_sbq()){mostrarToast('Banco não conectado.','error');return;}
         try{
-          await _sbq().from('pops').update({nome:novoTitulo}).eq('id',id);
+          const ok = await dbEfetivou(_sbq().from('pops').update({nome:novoTitulo}).eq('id',id));
+          if (!ok) { mostrarToast('Sem permissão para editar este POP.','error'); return; }
           mostrarToast('POP atualizado!','success');
           PageOperacoes._renderPops();
         }catch(e){mostrarToast('Erro ao atualizar POP.','error');}
@@ -2704,7 +2715,8 @@ const PageOperacoes = {
   async _excluirPop(id) {
     if (!confirm('Excluir este POP? Esta ação não pode ser desfeita.')) return;
     if (!_sbq()) return;
-    await _sbq().from('pops').delete().eq('id', id);
+    const ok = await dbEfetivou(_sbq().from('pops').delete().eq('id', id));
+    if (!ok) { mostrarToast('Sem permissão para excluir este POP.','error'); return; }
     mostrarToast('POP excluído!','success');
     PageOperacoes._renderPops();
   },
@@ -3135,14 +3147,16 @@ const PagePessoas = {
   },
   async _excluirTAP(id) {
     if (!confirm('Excluir este TAP? Esta ação não pode ser desfeita.')) return;
-    await _sbq().from('taps').delete().eq('id', id);
+    const ok = await dbEfetivou(_sbq().from('taps').delete().eq('id', id));
+    if (!ok) { mostrarToast('Sem permissão para excluir este TAP.','error'); return; }
     mostrarToast('TAP excluído!','success');
     fecharModal();
     PagePessoas.relatorioTAP?.();
   },
   async _excluirPesquisaClima(id) {
     if (!confirm('Excluir esta pesquisa?')) return;
-    await _sbq().from('eventos').delete().eq('id', id);
+    const ok = await dbEfetivou(_sbq().from('eventos').delete().eq('id', id));
+    if (!ok) { mostrarToast('Sem permissão para excluir esta pesquisa.','error'); return; }
     mostrarToast('Pesquisa excluída!','success');
     PagePessoas._carregarClima();
   },
@@ -3360,13 +3374,15 @@ const PagePessoas = {
     } catch(e) { console.warn(e); mostrarToast('Erro ao registrar talento.','error'); }
   },
   async _atualizarStatusTalento(id, status) {
-    await _sbq().from('talentos').update({ status }).eq('id', id);
+    const ok = await dbEfetivou(_sbq().from('talentos').update({ status }).eq('id', id));
+    if (!ok) { mostrarToast('Sem permissão para alterar este talento.','error'); return; }
     mostrarToast('Status atualizado!','success');
     PagePessoas._carregarTalentos();
   },
   async _excluirTalento(id) {
     if (!confirm('Excluir este talento?')) return;
-    await _sbq().from('talentos').delete().eq('id', id);
+    const ok = await dbEfetivou(_sbq().from('talentos').delete().eq('id', id));
+    if (!ok) { mostrarToast('Sem permissão para excluir este talento.','error'); return; }
     mostrarToast('Excluído!','success');
     PagePessoas._carregarTalentos();
   },
@@ -3566,7 +3582,8 @@ const PagePessoas = {
   },
   async _excluirTreinamentoInterno(id) {
     if (!confirm('Excluir este treinamento?')) return;
-    await _sbq().from('eventos').delete().eq('id', id);
+    const ok = await dbEfetivou(_sbq().from('eventos').delete().eq('id', id));
+    if (!ok) { mostrarToast('Sem permissão para excluir este treinamento.','error'); return; }
     mostrarToast('Excluído!','success');
     PagePessoas._carregarTreinamentosInternos();
   },
@@ -4742,12 +4759,18 @@ const PageGlobal = {
     const pg = document.getElementById('page-global_assembleia');
     if (!pg) return;
     const ct = pg.querySelector('.content') || pg;
+    /* Votação institucional é restrita a admin de verdade no banco
+       (votacoes_admin_all) — diferente de Assembleia, que usa a tabela
+       eventos e aceita qualquer coordenador (podeCriarEvento). Reusar o
+       mesmo flag pros dois fazia todo coordenador ver o botão de gerenciar
+       votação e levar "sucesso" falso ao tentar usar. */
+    const podeGerenciarVotacao = Permissoes.isAdmin();
     const podeGerenciar = Permissoes.pode('podeCriarEvento');
     ct.innerHTML = _sc('Votações','🗳️',`
       <p style="font-size:13px;color:var(--c-slate);margin-bottom:14px">
         Votações ativas e histório de deliberações. Cada membro pode votar uma vez.
       </p>
-      ${podeGerenciar ? _btn('+ Nova Votação','PageGlobal.novaVotacao()') : ''}
+      ${podeGerenciarVotacao ? _btn('+ Nova Votação','PageGlobal.novaVotacao()') : ''}
       <div id="votacoes-lista" style="margin-top:14px;display:flex;flex-direction:column;gap:12px">
         <div style="padding:20px;text-align:center;color:var(--c-slate);font-size:13px">Carregando...</div>
       </div>`) +
@@ -4778,7 +4801,7 @@ const PageGlobal = {
       }
       const meuVotoMap = {};
       (mVotos||[]).forEach(v => { meuVotoMap[v.votacao_id] = v.opcao; });
-      const podeGerenciar = Permissoes.pode('podeCriarEvento');
+      const podeGerenciar = Permissoes.isAdmin();
       el.innerHTML = vots.map(v => {
         const opcoes  = Array.isArray(v.opcoes) ? v.opcoes : (v.opcoes ? JSON.parse(v.opcoes) : []);
         const jáVotei = meuVotoMap[v.id];
@@ -4894,13 +4917,15 @@ const PageGlobal = {
   async _excluirVotacao(id) {
     if (!confirm('Excluir esta votação? Todos os votos serão perdidos.')) return;
     await _sbq().from('votos').delete().eq('votacao_id', id);
-    await _sbq().from('votacoes').delete().eq('id', id);
+    const ok = await dbEfetivou(_sbq().from('votacoes').delete().eq('id', id));
+    if (!ok) { mostrarToast('Sem permissão para excluir esta votação.','error'); return; }
     mostrarToast('Votação excluída!','success');
     PageGlobal._carregarVotacoes();
   },
   async _encerrarVotacao(id) {
     if (!confirm('Encerrar esta votação? Ela não poderá receber mais votos.')) return;
-    await _sbq().from('votacoes').update({ ativa: false }).eq('id', id);
+    const ok = await dbEfetivou(_sbq().from('votacoes').update({ ativa: false }).eq('id', id));
+    if (!ok) { mostrarToast('Sem permissão para encerrar esta votação.','error'); return; }
     mostrarToast('Votação encerrada!','success');
     PageGlobal._carregarVotacoes();
   },

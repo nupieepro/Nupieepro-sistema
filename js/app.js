@@ -1601,6 +1601,18 @@ const Pessoas = {
   _tab: 'membros',
 
   switchTab(tab, el) {
+    /* "Gerenciar Acessos" promove gente a admin, reseta senha de qualquer
+       um e apaga contas — o botão da aba é HTML estático (dashboard.html),
+       visível a qualquer papel que chegue na página "pessoas" (inclusive
+       membro comum, desde o fix de menu por coordenadoria). O banco já
+       bloqueia excluir/promover pra quem não é admin de verdade, mas
+       resetar senha (Supabase Auth) não passa por RLS nenhuma — sem essa
+       checagem, qualquer pessoa nessa aba conseguia disparar e-mail de
+       redefinição de senha pra qualquer conta do núcleo. */
+    if (tab === 'gerenciar' && !(typeof Permissoes !== 'undefined' && Permissoes.isAdmin())) {
+      App.toast('Acesso restrito a administradores.', 'error');
+      return;
+    }
     this._tab = tab;
     document.querySelectorAll('#pessoasTabBar .tab').forEach(t => t.classList.remove('active'));
     if (el) el.classList.add('active');
@@ -1615,6 +1627,8 @@ const Pessoas = {
     const grid = document.getElementById('memberGrid');
     const mgrid = document.getElementById('manageGrid');
     const count = document.getElementById('memberCount');
+    const tabGerenciar = document.getElementById('tabGerenciar');
+    if (tabGerenciar) tabGerenciar.style.display = (typeof Permissoes !== 'undefined' && Permissoes.isAdmin()) ? '' : 'none';
 
     let members = [];
 
@@ -1852,7 +1866,19 @@ const Pessoas = {
   /* ============================================================
      Admin / Dev Decision Console (V6.0)
      ============================================================ */
+  /* Console de Gerenciar Acessos (excluir/promover/resetar senha de
+     QUALQUER pessoa) — reset de senha não passa por nenhuma policy do
+     banco (é a API de auth, não a tabela users), então sem essa checagem
+     aqui dentro qualquer um que chegasse na função via console do
+     navegador conseguia disparar reset de senha pra qualquer conta. */
+  _exigeAdmin() {
+    if (typeof Permissoes !== 'undefined' && Permissoes.isAdmin()) return true;
+    App.toast('Acesso restrito a administradores.', 'error');
+    return false;
+  },
+
   deleteMember(id, email) {
+    if (!this._exigeAdmin()) return;
     abrirModal({
       titulo: 'Confirmar Exclusão',
       corpo: `TEM CERTEZA? O membro ${email} será APAGADO permanentemente do banco.`,
@@ -1863,8 +1889,8 @@ const Pessoas = {
           App.loading(true);
           try {
             if (_sb) {
-              const { error } = await _sb.from('users').delete().eq('id', id);
-              if (error) throw error;
+              const ok = await dbEfetivou(_sb.from('users').delete().eq('id', id));
+              if (!ok) throw new Error('sem permissão');
               // E-mail de Despedida Profissional V6.8
               await window.EmailService?.notifyGoodbye?.({ nome: email, email });
             }
@@ -1879,6 +1905,7 @@ const Pessoas = {
   },
 
   resetPassword(email) {
+    if (!this._exigeAdmin()) return;
     abrirModal({
       titulo: 'Redefinir Senha',
       corpo: `Enviar redefinição de senha para ${email}?`,
@@ -1897,6 +1924,7 @@ const Pessoas = {
   },
 
   async sendMagicLink(email) {
+    if (!this._exigeAdmin()) return;
     window.App?.toast?.('Gerando acesso instantâneo...', 'info');
     const link = await window.MagicLink?.generate?.(email);
     await window.EmailService?.notifyInvite?.({ nome: email, email }, link);
@@ -1906,13 +1934,17 @@ const Pessoas = {
 
 const PessoasExt = {
   async updateRole(identifier, newRole) {
+    if (typeof Permissoes !== 'undefined' && !Permissoes.isAdmin()) {
+      window.App?.toast?.('Acesso restrito a administradores.', 'error');
+      return;
+    }
     const sb = window._sb || window._supabase;
     if (!sb) { window.App?.toast?.('Supabase necessário para alterar funções.', 'error'); return; }
     const q = identifier.includes('@')
       ? sb.from('users').update({ role: newRole }).eq('email', identifier)
       : sb.from('users').update({ role: newRole }).eq('id', identifier);
-    const { error } = await q;
-    if (error) { window.App?.toast?.('Erro ao atualizar: ' + error.message, 'error'); return; }
+    const ok = await dbEfetivou(q);
+    if (!ok) { window.App?.toast?.('Sem permissão para alterar esta função.', 'error'); return; }
     window.App?.toast?.('Função atualizada com sucesso!', 'success');
     /* Alerta dev/admin: role mudou */
     if (typeof _notificarDevs === 'function') {
@@ -2859,9 +2891,10 @@ const Dem = {
             const prazo  = document.getElementById('ed-dem-prazo')?.value || null;
             if (!titulo) { App.toast('Título é obrigatório.', 'error'); return; }
             try {
-              await window._supabase.from('demandas').update({
+              const ok = await dbEfetivou(window._supabase.from('demandas').update({
                 titulo, descricao: desc, prioridade: prio, prazo, updated_at: new Date().toISOString()
-              }).eq('id', id);
+              }).eq('id', id));
+              if (!ok) { App.toast('Sem permissão para editar esta demanda.', 'error'); return; }
               fecharModal();
               App.toast('Demanda atualizada!', 'success');
               Dem._loaded = false;
@@ -2875,8 +2908,8 @@ const Dem = {
 
   async _setStatus(id, coluna) {
     if (!_sb) return;
-    const { error } = await _sb.from('demandas').update({ coluna }).eq('id', id);
-    if (error) { App.toast('Erro ao atualizar: ' + error.message, 'error'); return; }
+    const ok = await dbEfetivou(_sb.from('demandas').update({ coluna }).eq('id', id));
+    if (!ok) { App.toast('Sem permissão para alterar esta demanda.', 'error'); return; }
     fecharModal();
     App.toast('Status atualizado!', 'success');
     Dem._loaded = false;
@@ -2886,8 +2919,8 @@ const Dem = {
   async _excluir(id) {
     if (!confirm('Tem certeza que deseja EXCLUIR esta demanda? Esta acao nao pode ser desfeita.')) return;
     if (!_sb) return;
-    const { error } = await _sb.from('demandas').delete().eq('id', id);
-    if (error) { App.toast('Erro ao excluir: ' + error.message, 'error'); return; }
+    const ok = await dbEfetivou(_sb.from('demandas').delete().eq('id', id));
+    if (!ok) { App.toast('Sem permissão para excluir esta demanda.', 'error'); return; }
     fecharModal();
     App.toast('Demanda excluída!', 'success');
     Dem._loaded = false;
@@ -3161,8 +3194,8 @@ const NovoCal = {
                 const { data: coords } = await sb.from('coordenadorias').select('id').eq('sigla', sigla).limit(1);
                 coordId = coords?.[0]?.id || null;
               }
-              const { error } = await sb.from('eventos').update({ titulo, tipo, data_inicio: data, coordenadoria_id: coordId }).eq('id', id);
-              if (error) throw error;
+              const ok = await dbEfetivou(sb.from('eventos').update({ titulo, tipo, data_inicio: data, coordenadoria_id: coordId }).eq('id', id));
+              if (!ok) { mostrarToast('Sem permissão para editar este evento.', 'error'); return; }
               fecharModal();
               mostrarToast('Evento atualizado!', 'success');
               _refreshCalendarios();
@@ -3177,9 +3210,9 @@ const NovoCal = {
     if (!confirm('Excluir este evento? Essa ação não pode ser desfeita.')) return;
     const sb = window._supabase;
     if (!sb) { mostrarToast('Sistema offline.', 'error'); return; }
-    const { error } = await sb.from('eventos').delete().eq('id', id);
+    const ok = await dbEfetivou(sb.from('eventos').delete().eq('id', id));
     fecharModal();
-    if (error) { mostrarToast('Erro ao excluir: ' + error.message, 'error'); return; }
+    if (!ok) { mostrarToast('Sem permissão para excluir este evento.', 'error'); return; }
     mostrarToast('Evento excluído!', 'success');
     _refreshCalendarios();
   }
