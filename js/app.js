@@ -1630,9 +1630,9 @@ const Pessoas = {
       <div style="background:var(--c-s2);padding:14px;border-radius:12px;border:1px solid ${m.cor==='orange'?'var(--orange-border)':'var(--border)'};display:flex;align-items:center;gap:14px;">
         <div style="width:44px;height:44px;border-radius:50%;background:${m.cor==='orange'?'var(--orange-dim)':'var(--blue-dim)'};border:2px solid ${m.cor==='orange'?'var(--orange)':'var(--blue)'};color:${m.cor==='orange'?'var(--orange)':'var(--blue)'};display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px;flex-shrink:0;">${m.iniciais}</div>
         <div style="flex:1;min-width:0;">
-          <div style="font-weight:700;font-size:14px;">${m.nome}</div>
-          <div style="font-size:11px;color:var(--t-3);margin-top:2px;">${m.cargo} · ${m.coord}</div>
-          <div style="font-size:10px;color:var(--t-4);margin-top:1px;">${m.email}</div>
+          <div style="font-weight:700;font-size:14px;">${sanitize(m.nome)}</div>
+          <div style="font-size:11px;color:var(--t-3);margin-top:2px;">${sanitize(m.cargo)} · ${sanitize(m.coord)}</div>
+          <div style="font-size:10px;color:var(--t-4);margin-top:1px;">${sanitize(m.email)}</div>
         </div>
       </div>
     `).join('');
@@ -1641,7 +1641,7 @@ const Pessoas = {
       <div style="background:var(--c-s2);padding:12px 14px;border-radius:10px;border:1px solid var(--border);display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
         <div style="width:34px;height:34px;border-radius:50%;background:var(--w10);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:12px;flex-shrink:0;">${m.iniciais}</div>
         <div style="flex:1;min-width:120px;">
-          <div style="font-weight:600;font-size:13px;">${m.nome}</div>
+          <div style="font-weight:600;font-size:13px;">${sanitize(m.nome)}</div>
           <div style="font-size:11px;color:var(--t-3);">${m.coord}</div>
         </div>
         <select style="background:var(--w5);border:1px solid var(--b-1);border-radius:8px;padding:5px 10px;color:var(--t-2);font-size:12px;outline:none;" onchange="Pessoas.updateRole('${m.id||m.email}',this.value)">
@@ -1943,7 +1943,7 @@ const DashboardExtra = {
         <div style="flex:0 0 140px; background:var(--s1); border:1px solid var(--b-1); border-radius:12px; padding:12px; display:flex; flex-direction:column; align-items:center; gap:8px;">
           <div class="side-avatar" style="width:40px;height:40px;font-size:14px;margin:0;"><i data-lucide="cake" style="stroke-width:1.5px;"></i></div>
           <div style="text-align:center;">
-            <div style="font-weight:700;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;width:110px;">${u.nome}</div>
+            <div style="font-weight:700;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;width:110px;">${sanitize(u.nome)}</div>
             <div style="font-size:10px;color:var(--orange);font-weight:800;margin-top:2px;">DIA ${d}</div>
           </div>
         </div>
@@ -3765,6 +3765,8 @@ function abrirModal({ titulo = '', tipo = 'info', corpo = '', botoes = [] } = {}
       'padding:0;backdrop-filter:blur(6px)',
       'transition:opacity .2s'
     ].join(';');
+    overlay.setAttribute('role', 'dialog');
+    overlay.setAttribute('aria-modal', 'true');
     overlay.addEventListener('click', e => { if (e.target === overlay) fecharModal(); });
     document.body.appendChild(overlay);
 
@@ -3786,7 +3788,7 @@ function abrirModal({ titulo = '', tipo = 'info', corpo = '', botoes = [] } = {}
     ">
       <div style="display:flex;justify-content:space-between;align-items:center">
         <div style="font-family:var(--f-head,'sans-serif');font-weight:700;font-size:16px;color:var(--c-white,#fff)">${titulo}</div>
-        <button onclick="fecharModal()" style="background:none;border:none;color:var(--t-3,#888);font-size:22px;cursor:pointer;padding:4px;line-height:1">✕</button>
+        <button onclick="fecharModal()" aria-label="Fechar" style="background:none;border:none;color:var(--t-3,#888);font-size:22px;cursor:pointer;padding:4px;line-height:1">✕</button>
       </div>
       <div style="color:var(--c-slate,#aaa);font-size:13px;line-height:1.6">${corpo}</div>
       ${botoes.length ? `<div style="display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap;padding-top:4px">
@@ -3820,5 +3822,15 @@ window._sb          = window._sb || _sb;
 
 /* Inicializa EmailService — sem isso o SDK do EmailJS nao tem publicKey. */
 try { EmailService.init(); } catch(e) { console.warn('EmailService.init failed:', e); }
+
+/* Esc fecha o modal visível (genérico __appModal ou o do Kanban) — nenhum
+   dos dois tinha esse atalho, só clique fora ou no botão "✕". */
+document.addEventListener('keydown', (e) => {
+  if (e.key !== 'Escape') return;
+  const appModal = document.getElementById('__appModal');
+  if (appModal && appModal.style.display !== 'none') { fecharModal(); return; }
+  const kanbanModal = document.getElementById('kanbanModal');
+  if (kanbanModal && kanbanModal.style.display !== 'none') { window.Kanban?.fecharModal?.(); }
+});
 
 console.log('NUPIEEPRO V6.2: Todos os módulos globais registrados.');

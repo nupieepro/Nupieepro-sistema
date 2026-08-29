@@ -4,7 +4,10 @@
    Fontes:  DM Sans · Plus Jakarta Sans · JetBrains Mono
    ════════════════════════════════════════════════════════════════ */
 
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Plus+Jakarta+Sans:wght@600;700;800;900&family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;700&family=Roboto+Mono:wght@400;700&family=Outfit:wght@400;700&family=Montserrat:wght@400;700&family=Fira+Code:wght@400;500&display=swap');
+/* DM Sans / Plus Jakarta Sans / JetBrains Mono já vêm de <link> no <head>
+   de dashboard.html e convite.html — não repetir aqui. Só as fontes
+   extras do seletor de fonte (data-font) que não estão em nenhum <link>. */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Roboto+Mono:wght@400;700&family=Outfit:wght@400;700&family=Montserrat:wght@400;700&family=Fira+Code:wght@400;500&display=swap');
 
 /* ═══ DESIGN TOKENS — tema padrão (nucleo) ═══ */
 :root {
@@ -33,7 +36,7 @@
   /* ── Foreground ── */
   --fg-1: #ffffff;
   --fg-2: #b8ccd8;
-  --fg-3: rgba(184,204,216,0.55);
+  --fg-3: rgba(184,204,216,0.65);
   --fg-4: rgba(184,204,216,0.35);
 
   /* ── Borders ── */
@@ -248,7 +251,7 @@
   --surface-5: #2a1810;
   --fg-1: #fff;
   --fg-2: #d6c3b1;
-  --fg-3: rgba(214,195,177,0.55);
+  --fg-3: rgba(214,195,177,0.65);
   --fg-4: rgba(214,195,177,0.30);
   --border-1: rgba(246,82,20,0.10);
   --border-2: rgba(246,82,20,0.22);
@@ -371,7 +374,7 @@
   --surface-5: #d6ccef;
   --fg-1: #213248;
   --fg-2: #4a5a73;
-  --fg-3: #7d89a0;
+  --fg-3: #5c6b85;
   --fg-4: rgba(33,50,72,0.35);
   --border-1: rgba(33,50,72,.10);
   --border-2: rgba(155,123,232,.30);
