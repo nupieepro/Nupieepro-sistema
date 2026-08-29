@@ -106,15 +106,15 @@
               <div class="form-section-header">🎨 Preferências de Tema</div>
               <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 0.8rem;">Escolha o tema que você prefere. Pode alterar depois nas configurações.</p>
               <div class="theme-selector">
-                <div class="theme-option active" id="themeOpt-orange" onclick="selectTheme('dark-orange', this)">
+                <div class="theme-option active" id="themeOpt-orange" onclick="selectTheme('nucleo', this)">
                   <div class="theme-dot" style="background: #f75412;"></div>
                   <div>Fusion</div>
                 </div>
-                <div class="theme-option" id="themeOpt-light" onclick="selectTheme('luminous', this)">
+                <div class="theme-option" id="themeOpt-light" onclick="selectTheme('papel', this)">
                   <div class="theme-dot" style="background: #fff;"></div>
                   <div>Claro</div>
                 </div>
-                <div class="theme-option" id="themeOpt-dark" onclick="selectTheme('dark-orange', this)">
+                <div class="theme-option" id="themeOpt-dark" onclick="selectTheme('noite', this)">
                   <div class="theme-dot" style="background: #0a0e1a;"></div>
                   <div>Escuro</div>
                 </div>
@@ -167,7 +167,7 @@
   </script>
   <script src="js/auth.js?v=63"></script>
   <script>
-    let selectedTheme = 'dark-orange';
+    let selectedTheme = 'nucleo';
     
     function selectTheme(theme, el) {
       selectedTheme = theme;

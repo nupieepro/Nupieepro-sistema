@@ -251,6 +251,15 @@
 
     let _eventoAtual = null;
 
+    /* XSS: nome/local/descricao vêm de eventos_inscricao, escritos por
+       admins ao criar o evento (PageOperacoes.novoEventoInscricao). Essa
+       é uma página PÚBLICA vista por qualquer visitante anônimo — um
+       typo ou copy-paste malicioso num desses campos executaria script
+       no navegador de todo mundo que abrisse a página. */
+    function esc(s) {
+      return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#x27;');
+    }
+
     // Formata data BR
     function fmtData(d) {
       if (!d) return '—';
@@ -291,16 +300,16 @@
         const icon = ev.icone || '🎯';
         return `
           <div class="event-card">
-            <div class="event-card-banner">${icon}</div>
+            <div class="event-card-banner">${esc(icon)}</div>
             <div class="event-card-body">
               <span class="event-status ${statusClass}">${statusLabel}</span>
-              <div class="event-title">${ev.nome}</div>
+              <div class="event-title">${esc(ev.nome)}</div>
               <div class="event-meta">
                 <span>📅 ${fmtData(ev.data_inicio)}${ev.data_fim ? ' → ' + fmtData(ev.data_fim) : ''}</span>
-                <span>📍 ${ev.local || 'A definir'}</span>
-                ${ev.vagas ? `<span>🪑 ${ev.vagas_ocupadas || 0}/${ev.vagas} vagas</span>` : ''}
+                <span>📍 ${esc(ev.local || 'A definir')}</span>
+                ${ev.vagas ? `<span>🪑 ${Number(ev.vagas_ocupadas)||0}/${Number(ev.vagas)||0} vagas</span>` : ''}
               </div>
-              <p style="font-size:13px;color:var(--slate);margin-bottom:16px;">${ev.descricao || ''}</p>
+              <p style="font-size:13px;color:var(--slate);margin-bottom:16px;">${esc(ev.descricao || '')}</p>
               <button class="btn-inscricao" ${!aberto ? 'disabled' : ''} onclick="abrirModal(${JSON.stringify(ev).replace(/"/g,'&quot;')})">
                 ${aberto ? 'Inscrever-se' : 'Inscrições Encerradas'}
               </button>

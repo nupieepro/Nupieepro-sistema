@@ -7,9 +7,6 @@
 const _SB_URL = 'https://quwpyrdxyibcbyzwfilb.supabase.co';
 const _SB_KEY = 'sb_publishable_VmEMT07DiE1f5DtxzgZomA_-F0gZIpM';
 
-const _EMAILJS_PUB_KEY = 'WIiLVFRJPDeqTP7Ox';
-const _EMAILJS_SERVICE = 'service_4d8167g';
-
 // Inicialização SEGURA do Supabase (try-catch para nunca travar o sistema)
 let _sb = null;
 try {
@@ -176,83 +173,14 @@ const RateLimiter = {
   reset(key) { delete this._attempts[key]; }
 };
 
-// === NOME DO REMETENTE ===
-const _EMAIL_SENDER = 'NUPIEEPRO Sistema';
-
-const EmailService = {
-  _inited: false,
-  init() {
-    if (this._inited) return;
-    if (typeof emailjs !== 'undefined') {
-      /* SDK v4 do EmailJS exige formato {publicKey: ...} */
-      try {
-        emailjs.init({ publicKey: _EMAILJS_PUB_KEY });
-        this._inited = true;
-        console.log('EmailService: V6.7 Active | Sender:', _EMAIL_SENDER);
-      } catch(e) {
-        console.error('EmailService init falhou:', e);
-      }
-    }
-  },
-
-  async send(templateId, params) {
-    if (typeof emailjs === 'undefined') return;
-    if (!this._inited) this.init();
-    try {
-      params.from_name = _EMAIL_SENDER;
-      await emailjs.send(_EMAILJS_SERVICE, templateId, params);
-      console.log('Email sent:', templateId);
-    } catch (e) {
-      console.error('Email error:', e);
-    }
-  },
-
-  // 🎂 Feliz Aniversário
-  async notifyBirthday(user) {
-    const nome = sanitize(user.nome);
-    await this.send('template_birthday', {
-      user_name: nome,
-      target_email: user.email,
-      subject: `Hoje o dia é de celebração, ${nome}! 🎉`,
-      message: `Olá, ${nome}!\n\nHoje é um dia mais do que especial! 💙🧡\n\nEm nome de todo o Nupi, queremos te desejar um feliz aniversário e um ano repleto de realizações, saúde e muito sucesso. Que a sua jornada continue sendo de constante evolução e que você continue agregando tanto valor aos nossos projetos e à nossa equipe.\n\nAproveite muito o seu dia, celebre suas conquistas e conte com a gente para os próximos desafios!\n\nUm grande abraço,\nEquipe Nupi`
-    });
-  },
-
-  // 👋 Despedida
-  async notifyGoodbye(user, personalMsg) {
-    const nome = sanitize(user.nome);
-    const extra = personalMsg ? `\n\nMensagem personalizada: ${sanitize(personalMsg)}` : '';
-    await this.send('template_goodbye', {
-      user_name: nome,
-      target_email: user.email,
-      subject: `Até logo e muito sucesso na sua jornada! 🚀`,
-      message: `Olá, ${nome}.\n\nGrandes ciclos se encerram para que novas e incríveis histórias possam ser escritas. 💙🧡\n\nHoje nos despedimos, mas o sentimento que fica é de uma imensa gratidão por toda a sua dedicação, produtividade e pelas marcas positivas que você deixa no Nupi. Trabalhar ao seu lado foi um grande aprendizado para todos nós.\n\nDesejamos que a sua trajetória seja brilhante e cheia de novas conquistas. Lembre-se de que as portas estarão sempre abertas e que você sempre fará parte da nossa história. Voa alto!${extra}\n\nCom carinho e admiração,\nEquipe Nupi`
-    });
-  },
-
-  // 📩 Convite (Onboarding)
-  async notifyInvite(user, magicLink) {
-    const nome = sanitize(user.nome);
-    await this.send('template_invite', {
-      user_name: nome,
-      target_email: user.email,
-      subject: `Você acaba de dar o primeiro passo para algo incrível! ✨`,
-      link: magicLink,
-      message: `Olá, ${nome}!\n\nÉ com muita alegria que te convidamos para integrar oficialmente o nosso sistema e fazer parte do Nupi! 💙🧡\n\nA partir de agora, você faz parte de um ambiente focado em desenvolvimento, gestão e resultados. Aqui, nós construímos projetos, aprimoramos nossas habilidades e, o mais importante, crescemos juntos.\n\nPara começar a sua jornada com a gente, basta acessar a plataforma através do link abaixo, configurar o seu perfil e explorar o sistema.\n\n🔗 Acesse aqui: ${magicLink}\n\nEstamos muito felizes em ter você no time. Prepare-se para fazer a diferença!\n\nSeja muito bem-vindo(a),\nEquipe Nupi`
-    });
-  },
-
-  // 📋 Nova Demanda
-  async notifyDemand(demand, targetEmail) {
-    await this.send('template_demand', {
-      demand_title: sanitize(demand.titulo),
-      target_email: targetEmail,
-      sender: sanitize(window._appProfile?.nome || 'Coordenação'),
-      subject: `Nova Demanda: ${sanitize(demand.titulo)}`,
-      message: `Uma nova demanda foi registrada no sistema.\n\nTítulo: ${sanitize(demand.titulo)}\nRemetente: ${sanitize(window._appProfile?.nome || 'Coordenação')}\n\nAcesse o sistema para verificar os detalhes.\n\nEquipe Nupi`
-    });
-  }
-};
+/* EmailService (V6.7) foi removido: enviava pra 4 templates que nunca
+   existiram no EmailJS (plano gratuito só tem 2 — template_convite e
+   template_demanda, ver js/emails.js). Todo envio falhava 100% das vezes
+   em silêncio (só console.error), sem o usuário nem o destinatário saber.
+   notifyDemand e notifyInvite já tinham sido substituídos pelos helpers
+   reais de js/emails.js; notifyBirthday nunca teve chamador. Ver
+   EmailsModule.enviarMagicLink (js/emails.js) para o caso que restava
+   (sendMagicLink, abaixo). */
 
 const MagicLink = {
   async generate(email) {
@@ -1871,8 +1799,10 @@ const Pessoas = {
             if (_sb) {
               const ok = await dbEfetivou(_sb.from('users').delete().eq('id', id));
               if (!ok) throw new Error('sem permissão');
-              // E-mail de Despedida Profissional V6.8
-              await window.EmailService?.notifyGoodbye?.({ nome: email, email });
+              /* E-mail de despedida removido: não há template disponível
+                 pra isso no EmailJS (plano gratuito só tem convite e
+                 demanda — ver js/emails.js). Chamava um template
+                 inexistente e falhava sempre, em silêncio. */
             }
             App.toast('Membro removido do núcleo.', 'success');
             this.loadMembers();
@@ -1907,8 +1837,9 @@ const Pessoas = {
     if (!this._exigeAdmin()) return;
     window.App?.toast?.('Gerando acesso instantâneo...', 'info');
     const link = await window.MagicLink?.generate?.(email);
-    await window.EmailService?.notifyInvite?.({ nome: email, email }, link);
-    window.App?.toast?.('Magic Link (2 min) enviado com sucesso!', 'success');
+    const ok = await window.EmailsModule?.enviarMagicLink?.({ email, link, criadoPor: window._appProfile?.nome });
+    if (ok) window.App?.toast?.('Magic Link (2 min) enviado com sucesso!', 'success');
+    else window.App?.toast?.('Link gerado, mas o e-mail falhou. Copie e envie manualmente: ' + link, 'error');
   }
 };
 
@@ -3851,7 +3782,6 @@ function abrirModal({ titulo = '', tipo = 'info', corpo = '', botoes = [] } = {}
 // V6.2 — Registro Global de Módulos Industriais (Elite Visibility)
 window.App          = App;
 window.Theme        = Theme;
-window.EmailService = EmailService;
 window.MagicLink    = MagicLink;
 window.Pessoas      = Pessoas;
 window.Kanban       = Kanban;
@@ -3859,11 +3789,7 @@ window.Dashboard    = Dashboard;
 window.Auth         = typeof Auth !== 'undefined' ? Auth : null;
 window.Financeiro   = Financeiro;
 window.CyberSecurity = CyberSecurity;
-window.EmailService = EmailService;
 window._sb          = window._sb || _sb;
-
-/* Inicializa EmailService — sem isso o SDK do EmailJS nao tem publicKey. */
-try { EmailService.init(); } catch(e) { console.warn('EmailService.init failed:', e); }
 
 /* Esc fecha o modal visível (genérico __appModal ou o do Kanban) — nenhum
    dos dois tinha esse atalho, só clique fora ou no botão "✕". */

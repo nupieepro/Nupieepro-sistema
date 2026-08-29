@@ -425,9 +425,6 @@
   <script src="js/auth.js?v=18"></script>
   <script>
     (async () => {
-      // Init e-mail
-      if (typeof EmailService !== 'undefined') EmailService.init();
-
       // MAGIC LINK V6.0: Clicou, Entrou.
       const magic = new URLSearchParams(window.location.search).get('magic');
       if (magic && typeof MagicLink !== 'undefined') {

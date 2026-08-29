@@ -14,6 +14,17 @@ const ABJModule = (() => {
   let _atividades = [];
   let _progresso  = [];
 
+  /* XSS: descrição e link de evidência vêm de texto que o PRÓPRIO MEMBRO
+     digita ao enviar uma evidência (_enviar, abaixo) e são exibidos sem
+     escape pra qualquer um que abrir o detalhe da atividade (inclusive a
+     GER/admin no painel de validação). Um membro podia injetar
+     <img onerror=...> na descrição ou javascript: no link. */
+  const _esc = typeof sanitize === 'function' ? sanitize : (s => String(s ?? ''));
+  function _safeHref(url) {
+    const u = String(url || '').trim();
+    return /^https?:\/\//i.test(u) ? _esc(u) : '#';
+  }
+
   /* ── Carrega dados do Supabase ── */
   async function carregar() {
     if (!window._supabase) return;
@@ -134,7 +145,7 @@ const ABJModule = (() => {
             <span style="font-size:20px;flex-shrink:0">${_ICONS[a.numero - 1] || '📌'}</span>
             <div style="flex:1;min-width:0">
               <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:3px">
-                <span style="font-weight:700;font-size:13px;color:var(--c-white)">${a.numero}. ${a.nome}</span>
+                <span style="font-weight:700;font-size:13px;color:var(--c-white)">${a.numero}. ${_esc(a.nome)}</span>
                 <span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:99px;
                              background:${cBadge}22;color:${cBadge};border:1px solid ${cBadge}44;text-transform:uppercase">
                   ${st.replace('_',' ')}
@@ -186,9 +197,9 @@ const ABJModule = (() => {
             <div style="background:var(--b-1);border-radius:8px;padding:8px 12px;display:flex;align-items:center;gap:10px">
               <span style="font-size:16px">${ev.tipo === 'link' ? '🔗' : ev.tipo === 'foto' ? '🖼️' : ev.tipo === 'video' ? '🎥' : ev.tipo === 'print' ? '📸' : '📄'}</span>
               <div style="flex:1;min-width:0">
-                <div style="font-size:12px;color:var(--c-white);font-weight:600">${ev.descricao || 'Sem descrição'}</div>
-                ${ev.url ? `<a href="${ev.url}" target="_blank" style="font-size:11px;color:var(--c-accent)">${ev.tipo === 'link' ? ev.url : 'Ver arquivo'} ↗</a>` : ''}
-                ${ev.mes ? `<div style="font-size:10px;color:var(--c-slate);margin-top:2px">${ev.mes}</div>` : ''}
+                <div style="font-size:12px;color:var(--c-white);font-weight:600">${_esc(ev.descricao) || 'Sem descrição'}</div>
+                ${ev.url ? `<a href="${_safeHref(ev.url)}" target="_blank" rel="noopener noreferrer" style="font-size:11px;color:var(--c-accent)">${ev.tipo === 'link' ? _esc(ev.url) : 'Ver arquivo'} ↗</a>` : ''}
+                ${ev.mes ? `<div style="font-size:10px;color:var(--c-slate);margin-top:2px">${_esc(ev.mes)}</div>` : ''}
               </div>
               <span style="font-size:10px;padding:2px 8px;border-radius:99px;background:${ev.aprovado ? 'var(--green)22' : 'var(--b-1)'};color:${ev.aprovado ? 'var(--green)' : 'var(--c-slate)'}">
                 ${ev.aprovado ? '✓ Aprovado' : 'Aguardando'}
@@ -227,7 +238,7 @@ const ABJModule = (() => {
       </div>`;
 
     abrirModal({
-      titulo: `${_ICONS[a.numero - 1] || '📌'} ${a.nome}`,
+      titulo: `${_ICONS[a.numero - 1] || '📌'} ${_esc(a.nome)}`,
       tipo: 'info',
       corpo: `
         <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px">
@@ -245,7 +256,7 @@ const ABJModule = (() => {
             <div style="font-weight:800;font-size:16px;color:var(--green)">${pts}</div>
           </div>
         </div>
-        <p style="font-size:13px;color:var(--c-slate);line-height:1.6;margin-bottom:14px">${a.descricao || ''}</p>
+        <p style="font-size:13px;color:var(--c-slate);line-height:1.6;margin-bottom:14px">${_esc(a.descricao)}</p>
         ${listaEvidencias}
         ${formEvidencia}`,
       botoes: [
@@ -437,8 +448,8 @@ const ABJModule = (() => {
       membros = data || [];
     } catch(e) { mostrarToast('Erro ao carregar membros.', 'error'); return; }
 
-    const optsMemb = membros.map(m => `<option value="${m.id}">${m.nome} (${m.role || 'membro'})</option>`).join('');
-    const optsAtv  = _atividades.map(a => `<option value="${a.id}" data-pts="${a.pontos_por_entrada||0}">${a.numero}. ${a.nome} — ${a.pontos_por_entrada||0} pts</option>`).join('');
+    const optsMemb = membros.map(m => `<option value="${m.id}">${_esc(m.nome)} (${_esc(m.role || 'membro')})</option>`).join('');
+    const optsAtv  = _atividades.map(a => `<option value="${a.id}" data-pts="${a.pontos_por_entrada||0}">${a.numero}. ${_esc(a.nome)} — ${a.pontos_por_entrada||0} pts</option>`).join('');
 
     abrirModal({ titulo: '✅ Validar atividade para membro', tipo: 'info', corpo: `
       <div class="form-group"><label class="form-label">Membro *</label>
