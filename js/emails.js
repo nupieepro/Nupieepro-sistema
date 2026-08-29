@@ -151,6 +151,7 @@ const EmailsModule = (() => {
     const hoje = new Date();
     const dia  = hoje.getDate();
     const mes  = hoje.getMonth() + 1;
+    let falhas = [];
     try {
       const { data } = await window._supabase
         .from('users')
@@ -162,9 +163,22 @@ const EmailsModule = (() => {
         const [, mP, dP] = p.aniversario.split('-').map(Number);
         if (dP === dia && mP === mes) {
           /* Notificação local (push.js já dispara — aqui só o e-mail) */
-          await enviarAniversario(p);
-          console.log('[Emails] Aniversário enviado para', p.nome);
+          const ok = await enviarAniversario(p);
+          if (ok) console.log('[Emails] Aniversário enviado para', p.nome);
+          else falhas.push(p.nome);
         }
+      }
+      /* template_aniversario não existe no EmailJS (plano gratuito só tem
+         template_convite/template_demanda — ver comentário no topo do
+         arquivo) — todo envio daqui falha sempre. _send() já engolia o
+         erro (só console.error), então isso vinha falhando 100% das vezes
+         em silêncio total, sem ninguém perceber. Até alguém decidir qual
+         template reaproveitar (ou criar um terceiro), pelo menos avisa os
+         devs/admin dentro do próprio sistema quando isso acontecer. */
+      if (falhas.length && typeof _notificarDevs === 'function') {
+        _notificarDevs('📧 E-mail de aniversário falhou',
+          `Não foi possível enviar e-mail de aniversário pra: ${falhas.join(', ')}. template_aniversario não existe no EmailJS (plano gratuito só permite 2 templates).`,
+          'sistema');
       }
     } catch(e) { console.warn('[Emails] checarAniversariosEmail:', e); }
   }
