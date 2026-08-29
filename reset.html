@@ -271,15 +271,20 @@
       el.className = 'alert ' + type;
     }
 
-    _sb.auth.onAuthStateChange(async (event, session) => {
-      if (event === 'PASSWORD_RECOVERY') {
-        showAlert('Link válido. Digite sua nova senha abaixo.', 'success');
-      } else if (event === 'SIGNED_IN' && session) {
-        setTimeout(() => App.redirect('dashboard.html'), 1500);
-      }
-    });
+    if (_sb) {
+      _sb.auth.onAuthStateChange(async (event, session) => {
+        if (event === 'PASSWORD_RECOVERY') {
+          showAlert('Link válido. Digite sua nova senha abaixo.', 'success');
+        } else if (event === 'SIGNED_IN' && session) {
+          setTimeout(() => App.redirect('dashboard.html'), 1500);
+        }
+      });
+    } else {
+      showAlert('Sistema offline. Verifique sua conexão e recarregue a página.', 'error');
+    }
 
     async function salvarNovaSenha() {
+      if (!_sb) { showAlert('Sistema offline. Recarregue a página.', 'error'); return; }
       const pw = document.getElementById('newPassword').value;
       const cf = document.getElementById('confirmPassword').value;
       if (pw.length < 6) { showAlert('Senha deve ter pelo menos 6 caracteres.', 'error'); return; }

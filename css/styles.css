@@ -1375,8 +1375,6 @@ body.tv-mode .topbar { background: #000 !important; border-bottom: none !importa
 .logo-text { font: 800 26px/1 var(--font-display); }
 .logo-text span { color: var(--brand-orange); }
 .subtitle { font-size: 16px; color: rgba(255,255,255,.5); max-width: 520px; line-height: 1.6; font-weight: 400; }
-.custom-cursor { position: fixed; top: 0; left: 0; width: 12px; height: 12px; background: var(--brand-orange); border-radius: 50%; pointer-events: none; z-index: 9999; transform: translate(-50%, -50%); transition: width 0.2s, height 0.2s, background 0.2s; }
-.custom-cursor.hovering { width: 44px; height: 44px; background: #fff; mix-blend-mode: difference; }
 
 /* Theme pills legacy */
 .theme-pills { display: flex; gap: 4px; align-items: center; }

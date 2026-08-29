@@ -292,8 +292,9 @@ function initConvitePage() {
 
       const infoEl = document.getElementById('conviteInfoBox');
       if (infoEl) {
+        const esc = typeof sanitize === 'function' ? sanitize : (s => String(s ?? ''));
         const coord = convite.coord_sigla ? `${convite.coord_sigla} — ${convite.coord_nome}` : 'Geral';
-        infoEl.innerHTML = `<span>📧 ${convite.email}</span><span>·</span><span>${coord}</span><span>·</span><span>${convite.cargo || convite.role}</span>`;
+        infoEl.innerHTML = `<span>📧 ${esc(convite.email)}</span><span>·</span><span>${esc(coord)}</span><span>·</span><span>${esc(convite.cargo || convite.role)}</span>`;
       }
     } catch (e) {
       if (loadingEl) loadingEl.style.display = 'none';
