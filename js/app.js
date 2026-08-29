@@ -143,6 +143,16 @@ document.addEventListener("mousemove", e => {
 
 function haptic(ms=15) { if(navigator.vibrate) navigator.vibrate(ms); }
 
+/* Confirma que um UPDATE/DELETE do Supabase realmente afetou alguma linha.
+   Quando o RLS bloqueia por falta de permissão, o Supabase JS não lança
+   erro — só devolve 0 linhas — então sem essa checagem o código segue
+   achando que deu certo e mostra sucesso pro usuário mesmo sem nada ter
+   sido salvo. Uso: const ok = await dbEfetivou(_sbq().from('x').update(...).eq('id', id)); */
+async function dbEfetivou(query) {
+  const { data, error } = await query.select('id');
+  return !error && !!data?.length;
+}
+
 /* ============================================================
    Omni-Connect Email & Security Engine (V6.7)
    ============================================================ */
@@ -3690,7 +3700,8 @@ const Kanban = (() => {
     var novoDesc = descBase + _SEP + (notas ? notas + '\n' : '') + linha;
 
     if (window._supabase) {
-      await window._supabase.from('demandas').update({ descricao: novoDesc }).eq('id', id).catch(console.warn);
+      const ok = await dbEfetivou(window._supabase.from('demandas').update({ descricao: novoDesc }).eq('id', id));
+      if (!ok) { App.toast('Não foi possível salvar a anotação (sem permissão nesta demanda).', 'error'); return; }
     }
     d.descricao = novoDesc;
     fecharModal();

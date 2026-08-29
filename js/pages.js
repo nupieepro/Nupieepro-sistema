@@ -514,13 +514,15 @@ const PageGeral = {
   },
   async _marcarMelhoria(id, coluna) {
     if (!_sbq()) return;
-    await _sbq().from('demandas').update({ coluna }).eq('id', id);
+    const ok = await dbEfetivou(_sbq().from('demandas').update({ coluna }).eq('id', id));
+    if (!ok) { mostrarToast('Sem permissão para alterar esta sugestão.','error'); return; }
     mostrarToast('Status atualizado!','success');
     PageGeral._carregarMelhorias();
   },
   async _excluirMelhoria(id) {
     if (!confirm('Excluir esta sugestão?')) return;
-    await _sbq().from('demandas').delete().eq('id', id);
+    const ok = await dbEfetivou(_sbq().from('demandas').delete().eq('id', id));
+    if (!ok) { mostrarToast('Sem permissão para excluir esta sugestão.','error'); return; }
     mostrarToast('Excluída!','success');
     PageGeral._carregarMelhorias();
   },
@@ -572,13 +574,15 @@ const PageGeral = {
   },
   async _marcarParceria(id) {
     if (!_sbq()) return;
-    await _sbq().from('demandas').update({ coluna: 'auditada' }).eq('id', id);
+    const ok = await dbEfetivou(_sbq().from('demandas').update({ coluna: 'auditada' }).eq('id', id));
+    if (!ok) { mostrarToast('Sem permissão para alterar esta parceria.','error'); return; }
     mostrarToast('Marcada como concluída','success');
     PageGeral._carregarParcerias();
   },
   async _excluirParceria(id) {
     if (!confirm('Excluir esta parceria?')) return;
-    await _sbq().from('demandas').delete().eq('id', id);
+    const ok = await dbEfetivou(_sbq().from('demandas').delete().eq('id', id));
+    if (!ok) { mostrarToast('Sem permissão para excluir esta parceria.','error'); return; }
     mostrarToast('Excluída!','success');
     PageGeral._carregarParcerias();
   },
@@ -1276,7 +1280,7 @@ const PageMarketing = {
     if (!titulo) { mostrarToast('Título é obrigatório.','warning'); return; }
     fecharModal();
     try {
-      await _sbq().from('demandas').update({
+      const ok = await dbEfetivou(_sbq().from('demandas').update({
         titulo,
         tipo:          document.getElementById('ed-tipo')?.value,
         coluna:        document.getElementById('ed-coluna')?.value,
@@ -1284,7 +1288,8 @@ const PageMarketing = {
         prazo:         document.getElementById('ed-prazo')?.value || null,
         descricao:     document.getElementById('ed-desc')?.value?.trim() || null,
         updated_at:    new Date().toISOString(),
-      }).eq('id', id);
+      }).eq('id', id));
+      if (!ok) { mostrarToast('Sem permissão para editar esta demanda.','error'); return; }
       mostrarToast('Demanda atualizada!','success');
       this._carregarKanban();
     } catch(e) { mostrarToast('Erro ao salvar.','error'); }
@@ -1292,7 +1297,8 @@ const PageMarketing = {
   async _excluirDemanda(id) {
     fecharModal();
     try {
-      await _sbq().from('demandas').delete().eq('id', id);
+      const ok = await dbEfetivou(_sbq().from('demandas').delete().eq('id', id));
+      if (!ok) { mostrarToast('Sem permissão para excluir esta demanda.','error'); return; }
       mostrarToast('Demanda excluída.','info');
       this._carregarKanban();
     } catch(e) { mostrarToast('Erro ao excluir.','error'); }
@@ -1381,7 +1387,8 @@ const PageFinancas = {
   },
   async _excluirEventoComercial(id) {
     if (!confirm('Excluir este evento comercial?')) return;
-    await _sbq().from('eventos').delete().eq('id', id);
+    const ok = await dbEfetivou(_sbq().from('eventos').delete().eq('id', id));
+    if (!ok) { mostrarToast('Sem permissão para excluir este evento.','error'); return; }
     mostrarToast('Evento excluído!','success');
     PageFinancas._carregarCalendario();
   },
@@ -1542,7 +1549,8 @@ const PageFinancas = {
   },
   async _excluirAssociacao(id) {
     if (!confirm('Excluir esta associação ABEPRO?')) return;
-    await _sbq().from('demandas').delete().eq('id', id);
+    const ok = await dbEfetivou(_sbq().from('demandas').delete().eq('id', id));
+    if (!ok) { mostrarToast('Sem permissão para excluir esta associação.','error'); return; }
     mostrarToast('Associação excluída!','success');
     PageFinancas._carregarABEPRO();
   },
@@ -1584,7 +1592,8 @@ const PageFinancas = {
   },
   async _confirmarComp(id) {
     try {
-      await _sbq().from('demandas').update({ coluna: 'auditada' }).eq('id', id);
+      const ok = await dbEfetivou(_sbq().from('demandas').update({ coluna: 'auditada' }).eq('id', id));
+      if (!ok) { mostrarToast('Sem permissão para confirmar este comprovante.','error'); return; }
       mostrarToast('Comprovante confirmado!','success');
       this._carregarABEPRO();
     } catch(e) { mostrarToast('Erro ao confirmar.','error'); }
@@ -1704,7 +1713,8 @@ const PageFinancas = {
         const data = document.getElementById('ed-data')?.value;
         const cat = document.getElementById('ed-cat')?.value?.trim();
         if (!desc || isNaN(valor)) { mostrarToast('Preencha descrição e valor','warning'); return; }
-        await _sbq().from(tabela).update({ descricao:desc, valor, [dataField]:data, categoria:cat }).eq('id', id);
+        const ok = await dbEfetivou(_sbq().from(tabela).update({ descricao:desc, valor, [dataField]:data, categoria:cat }).eq('id', id));
+        if (!ok) { mostrarToast('Sem permissão para editar este lançamento.','error'); return; }
         fecharModal();
         mostrarToast('Atualizado!','success');
         PageFinancas._carregarFluxo();
@@ -1714,7 +1724,8 @@ const PageFinancas = {
   async _excluirLancamento(tipo, id) {
     if (!confirm('Excluir este lançamento? Esta ação não pode ser desfeita.')) return;
     const tabela = tipo === 'venda' ? 'vendas' : 'despesas';
-    await _sbq().from(tabela).delete().eq('id', id);
+    const ok = await dbEfetivou(_sbq().from(tabela).delete().eq('id', id));
+    if (!ok) { mostrarToast('Sem permissão para excluir este lançamento.','error'); return; }
     mostrarToast('Excluído!','success');
     PageFinancas._carregarFluxo();
   },
