@@ -944,28 +944,10 @@ const PageMarketing = {
     abrirModal({ titulo:'📋 Nova Demanda de Conteúdo', tipo:'info', corpo:`
       <div class="form-group"><label class="form-label">Título *</label>
         <input id="nd-titulo" class="form-input" placeholder="Ex: Post Semana do MEJ"></div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-        <div class="form-group"><label class="form-label">Tipo</label>
-          <select id="nd-tipo" class="form-select">
-            <option value="conteudo">Conteúdo / Post</option>
-            <option value="lojinha">🛍️ Lojinha (10 dias úteis)</option>
-            <option value="divulgacao">Divulgação</option>
-          </select></div>
-        <div class="form-group"><label class="form-label">Prazo <span id="nd-prazo-hint" style="font-size:10px;color:var(--c-accent)"></span></label>
-          <input id="nd-prazo" type="date" class="form-input" value="${prazo10du}"></div>
-      </div>
+      <div class="form-group"><label class="form-label">Prazo <span style="font-size:10px;color:var(--c-accent)">(máx. 10 dias úteis)</span></label>
+        <input id="nd-prazo" type="date" class="form-input" value="${prazo10du}"></div>
       <div class="form-group"><label class="form-label">Descrição</label>
-        <textarea id="nd-desc" class="form-input" style="height:70px" placeholder="Detalhes do conteúdo a criar..."></textarea></div>
-      <script>
-        document.getElementById('nd-tipo').onchange=function(){
-          if(this.value==='lojinha'){
-            document.getElementById('nd-prazo').value='${prazo10du}';
-            document.getElementById('nd-prazo-hint').textContent='(máx. 10 dias úteis)';
-          } else {
-            document.getElementById('nd-prazo-hint').textContent='';
-          }
-        };
-      </script>`,
+        <textarea id="nd-desc" class="form-input" style="height:70px" placeholder="Detalhes do conteúdo a criar..."></textarea></div>`,
     botoes:[
       {texto:'Cancelar',classe:'btn-ghost',acao:fecharModal},
       {texto:'Criar ✓',classe:'btn-primary',acao:()=>this._salvarDemanda()}
@@ -976,14 +958,18 @@ const PageMarketing = {
     const coluna = 'pendente';
     const prazo  = document.getElementById('nd-prazo')?.value || null;
     const desc   = document.getElementById('nd-desc')?.value?.trim();
-    const tipo   = document.getElementById('nd-tipo')?.value || 'conteudo';
+    /* Essa tela é só o Kanban da Lojinha (_carregarKanban filtra
+       tipo='lojinha') — 'tipo' nunca ia pro insert antes (só era usado no
+       texto da notificação), então toda demanda criada aqui, com qualquer
+       tipo escolhido, sumia do quadro na hora, sempre. */
+    const tipo   = 'lojinha';
     if (!titulo) { mostrarToast('Coloca um título!','warning'); return; }
     fecharModal();
     try {
       const coords = await getCoords();
       const mkt = coords.find(c => c.sigla === 'MKT');
       await _sbq().from('demandas').insert([{
-        titulo, coluna, descricao: desc || null,
+        titulo, coluna, tipo, descricao: desc || null,
         prazo: prazo || null,
         coordenadoria_id: mkt?.id || null,
         responsavel_id:   window._appProfile?.id,
@@ -992,7 +978,7 @@ const PageMarketing = {
       mostrarToast('Demanda criada!','success');
       /* Notifica coordenadores de Marketing (in-app) */
       _notificarCoord('MKT', `Nova demanda: ${titulo}`,
-        `Uma nova demanda de ${tipo} foi aberta${prazo ? ` com prazo em ${_fmt(prazo)}.` : '.'}`, 'info', 'demanda');
+        `Uma nova demanda da Lojinha foi aberta${prazo ? ` com prazo em ${_fmt(prazo)}.` : '.'}`, 'info', 'demanda');
       /* Notifica responsavel (in-app + email se for outra pessoa) */
       _notificarResponsavelDemanda({
         responsavelId: window._appProfile?.id, titulo, tipo,

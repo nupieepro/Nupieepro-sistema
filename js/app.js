@@ -1824,43 +1824,24 @@ const Pessoas = {
   },
 
   async addMemberDirect() {
-    const email = document.getElementById('inviteEmail')?.value.trim();
-    const nome = document.getElementById('inviteNome')?.value.trim();
-    const cargo = this._getCargo();
-    const coordSigla = document.getElementById('inviteCoord')?.value;
-    const role = document.getElementById('inviteRole')?.value;
-    const bday = document.getElementById('inviteBday')?.value;
-    const mandate = document.getElementById('inviteMandate')?.value;
-    const pass = document.getElementById('invitePass')?.value;
+    /* Esse modo ("Adicionar Membro Agora") só inseria uma linha em
+       public.users — NUNCA criou de fato uma conta em auth.users (isso
+       exige a Admin API do Supabase, com uma service_role key, que não
+       dá pra usar com segurança no client). O campo de senha era lido do
+       formulário e simplesmente descartado. Resultado: um "membro
+       fantasma" que aparece em toda lista, mas não consegue logar — e a
+       tela dizia "Membro adicionado com sucesso" mesmo assim. O e-mail de
+       boas-vindas (EmailService.notifyInvite) também usava um template do
+       EmailJS que não existe. Desativado até existir um jeito real de
+       criar a conta (Edge Function com Admin API, por exemplo) — use
+       "Gerar Link de Convite" (this.gerarConvite), que já funciona de
+       ponta a ponta. */
     const alertEl = document.getElementById('inviteAlert');
-
-    if (!email || !nome || !cargo || !coordSigla || !pass) {
-      if (alertEl) { alertEl.textContent = 'Preencha todos os campos, incluindo a senha.'; alertEl.className = 'alert-box error'; }
-      return;
+    if (alertEl) {
+      alertEl.textContent = 'Este modo está desativado — ele criava um cadastro sem acesso real ao sistema. Use "Gerar Link de Convite" para adicionar membros.';
+      alertEl.className = 'alert-box error';
     }
-
-    if (_sb) {
-      // 1. Criar no Auth? (Geralmente requer Admin API key)
-      App.toast('Adicionando membro ao núcleo...', 'info');
-      const { error } = await _sb.from('users').insert({
-        email, nome, cargo, role, aniversario: bday,
-        coordenadoria_id: (await _sb.from('coordenadorias').select('id').eq('sigla', coordSigla).single()).data?.id,
-        ativo: true
-      });
-      if (error) {
-        if (alertEl) { alertEl.textContent = 'Erro: ' + error.message; alertEl.className = 'alert-box error'; }
-        return;
-      }
-      App.toast('Membro adicionado com sucesso. Convite enviado!', 'success');
-      // Trigger Welcome/Access Email
-      const magic = await MagicLink.generate(email);
-      await EmailService.notifyInvite({ nome, email }, magic);
-      /* Alerta dev/admin: membro novo cadastrado */
-      if (typeof _notificarDevs === 'function') {
-        _notificarDevs('🆕 Novo membro adicionado', `${nome} (${cargo} · ${coordSigla}) foi adicionado como ${role}.`, 'membros');
-      }
-    }
-    Pessoas.loadMembers();
+    App.toast('Use "Gerar Link de Convite" — esse modo não funciona.', 'error');
   },
 
   /* ============================================================
@@ -3547,7 +3528,18 @@ const Kanban = (() => {
           .single();
         if (error) throw error;
         _demands.unshift(data);
-        if (data) await EmailService.notifyDemand(data, '').catch(function(){});
+        /* EmailService.notifyDemand usava um template do EmailJS que não
+           existe (template_demand — só template_convite/template_demanda
+           estão ativos, ver js/emails.js) e mandava pra targetEmail=''
+           (ninguém) — nunca notificou o responsável de verdade, nem por
+           e-mail nem dentro do sistema. Troca pelo helper que já funciona
+           (usado em js/pages.js pra outras telas de criar demanda). */
+        if (data && responsavel && typeof _notificarResponsavelDemanda === 'function') {
+          _notificarResponsavelDemanda({
+            responsavelId: responsavel, titulo, prazo,
+            criadoPor: window._appProfile?.nome,
+          }).catch(function(){});
+        }
       } catch (e) {
         console.warn('Kanban: fallback local.', e.message);
         _demands.unshift(demand);

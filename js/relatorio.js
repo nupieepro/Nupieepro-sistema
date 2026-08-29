@@ -253,17 +253,24 @@ const RelatorioModule = (() => {
     mostrarToast('Salvando e gerando PDF...', 'info', 2500);
     let totalVendas = 0, totalDespesas = 0, totalEventos = 0, pontosAbj = 0;
     let atvsAbj = [];
+    let salvouNoBanco = true;
     if (window._supabase) {
       try {
         const mesStr  = `${ano}-${String(mes).padStart(2,'0')}`;
         const proxMes = mes === 12 ? `${ano+1}-01` : `${ano}-${String(mes+1).padStart(2,'0')}`;
         const dataIni = `${mesStr}-01`;
         const dataFim = `${proxMes}-01`;
+        /* mes_ref em progresso_abj é texto livre gerado por
+           toLocaleDateString('pt-BR',{month:'long',year:'numeric'}) (mesmo
+           formato usado em js/abj.js) — precisa reproduzir igual pra
+           filtrar certo, senão a query abaixo (antes sem filtro nenhum de
+           mês) traz TODO progresso ABJ já registrado, de qualquer mês. */
+        const mesRefFiltro = new Date(ano, mes - 1, 1).toLocaleDateString('pt-BR', {month:'long', year:'numeric'});
         const [rv, rd, re, rp] = await Promise.all([
           window._supabase.from('vendas').select('valor').gte('data_venda', dataIni).lt('data_venda', dataFim),
           window._supabase.from('despesas').select('valor').gte('data_despesa', dataIni).lt('data_despesa', dataFim),
           window._supabase.from('eventos').select('id', {count:'exact',head:true}).gte('data_inicio', dataIni+'T00:00:00').lt('data_inicio', dataFim+'T00:00:00'),
-          window._supabase.from('progresso_abj').select('pontos, status, atividades_abj(nome)')
+          window._supabase.from('progresso_abj').select('pontos, status, atividades_abj(nome)').eq('mes_ref', mesRefFiltro)
         ]);
         totalVendas   = (rv.data||[]).reduce((s,v)=>s+Number(v.valor||0),0);
         totalDespesas = (rd.data||[]).reduce((s,d)=>s+Number(d.valor||0),0);
@@ -274,7 +281,7 @@ const RelatorioModule = (() => {
       try {
         const coords = await getCoords();
         const ops = coords.find(c=>c.sigla==='OPS');
-        await window._supabase.from('relatorios_mensais').insert([{
+        const { error } = await window._supabase.from('relatorios_mensais').insert([{
           mes, ano, observacoes: obs,
           total_vendas: totalVendas,
           total_despesas: totalDespesas,
@@ -283,7 +290,10 @@ const RelatorioModule = (() => {
           coordenadoria_id: ops?.id || null,
           gerado_por: window._appProfile?.id
         }]);
-      } catch(e) { console.warn('[Relatorio] Insert:', e.message); }
+        if (error) salvouNoBanco = false;
+      } catch(e) { console.warn('[Relatorio] Insert:', e.message); salvouNoBanco = false; }
+    } else {
+      salvouNoBanco = false;
     }
     try {
       const doc = await gerarPDF({
@@ -294,7 +304,15 @@ const RelatorioModule = (() => {
       });
       if (doc) doc.save(`NUPIEEPRO_Relatorio_${MESES_PT[mes-1]}_${ano}.pdf`);
     } catch(e) { console.warn('[PDF]', e); }
-    mostrarToast(`Relatório de ${MESES_PT[mes-1]} salvo! PDF gerado. ✅`, 'success');
+    /* Antes disparava "salvo!" mesmo quando o insert em relatorios_mensais
+       falhava (RLS bloqueando quem não é coordenador/admin, ou erro de
+       rede) — o PDF baixava normal e ninguém percebia que o relatório
+       nunca entrou no sistema, arriscando o prazo/pontuação ABJ do mês. */
+    if (salvouNoBanco) {
+      mostrarToast(`Relatório de ${MESES_PT[mes-1]} salvo! PDF gerado. ✅`, 'success');
+    } else {
+      mostrarToast(`PDF gerado, mas NÃO foi salvo no sistema (sem permissão ou erro de conexão). Fale com um coordenador de Operações.`, 'error', 6000);
+    }
     _carregar();
   }
   async function baixarPDF(id) {
