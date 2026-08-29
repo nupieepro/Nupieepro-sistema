@@ -4920,7 +4920,10 @@ const PageGlobal = {
           <div style="font-size:22px;font-weight:900;color:${k.cor}">${k.valor}</div>
           <div style="font-size:11px;color:var(--c-slate)">${k.label}</div>
         </div>`).join('');
-      if (!coords?.length) return;
+      if (!coords?.length) {
+        document.getElementById('gestao-coords').innerHTML = '<div style="padding:16px;text-align:center;color:var(--c-slate);font-size:13px">Nenhuma coordenadoria cadastrada.</div>';
+        return;
+      }
       const { data: membPorCoord } = await _sbq()
         .from('users').select('coordenadoria_id').eq('ativo',true);
       const cntMap = {};

@@ -802,7 +802,10 @@ function goTo(id) {
 
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   const navEl = document.getElementById('nav-' + id);
-  if (navEl) navEl.classList.add('active');
+  if (navEl) {
+    navEl.classList.add('active');
+    navEl.scrollIntoView({ block: 'nearest' });
+  }
 
   const sidebar = document.getElementById('sidebar');
   const overlay = document.getElementById('sidebarOverlay');
@@ -1317,9 +1320,11 @@ const Theme = {
     const label = document.getElementById('systemThemeLabel');
     if (label) label.textContent = themeLabel[name] || name;
 
-    haptic();
-    // Toast apenas quando o usuário trocou manualmente (não em inicialização)
-    if (!silent) App.toast('Tema: ' + (themeLabel[name] || name), 'info', 1200);
+    // Haptic/toast apenas quando o usuário trocou manualmente (não em inicialização)
+    if (!silent) {
+      haptic();
+      App.toast('Tema: ' + (themeLabel[name] || name), 'info', 1200);
+    }
   },
 
   applyFont(name, silent = false) {
@@ -1328,8 +1333,8 @@ const Theme = {
     document.querySelectorAll('[id^="fontBtn-"]').forEach(b => b.classList.remove('active'));
     const btn = document.getElementById('fontBtn-' + name);
     if (btn) btn.classList.add('active');
-    haptic();
     // Sem toast para fonte — mudança visual é imediata e óbvia
+    if (!silent) haptic();
   },
 
   init() {
