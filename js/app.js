@@ -103,6 +103,20 @@ const ROLE_PAGES = {
   ],
 };
 
+/* Institucional — visível a todas as coordenadorias, além da própria pasta.
+   Único lugar onde essa lista é definida; permissoes.js lê window.GLOBAL_PAGES
+   em vez de manter uma cópia separada (era assim antes e as duas listas
+   desalinhavam, deixando itens clicáveis na sidebar que o goTo() bloqueava). */
+const GLOBAL_PAGES = [
+  { id: 'global_visitas',       icon: 'zap',   label: 'Visitas Técnicas' },
+  { id: 'global_apresentacoes', icon: 'star',  label: 'Apresentações Inst.' },
+  { id: 'global_producao',      icon: 'file',  label: 'Produção Científica' },
+  { id: 'global_assembleia',    icon: 'users', label: 'Assembleia e Votos' },
+  { id: 'global_checkin',       icon: 'check-square', label: 'Check-in Digital' },
+];
+window.ROLE_PAGES   = ROLE_PAGES;
+window.GLOBAL_PAGES = GLOBAL_PAGES;
+
 const COORD_TAG_CLASS = {
   'Geral': 'tag-geral',
   'Operações': 'tag-operacoes',
@@ -429,13 +443,6 @@ const App = {
       { id: 'dashboard',  icon: 'grid',          label: 'Painel Central' },
       { id: 'demandas',   icon: 'check-square',  label: 'Demandas da Coord' },
       { id: 'calendario', icon: 'calendar',      label: 'Calendário' },
-    ];
-    const GLOBAL_PAGES = [
-      { id: 'global_visitas',       icon: 'zap',   label: 'Visitas Técnicas' },
-      { id: 'global_apresentacoes', icon: 'star',  label: 'Apresentações Inst.' },
-      { id: 'global_producao',      icon: 'file',  label: 'Produção Científica' },
-      { id: 'global_assembleia',    icon: 'users', label: 'Assembleia e Votos' },
-      { id: 'global_checkin',       icon: 'check-square', label: 'Check-in Digital' },
     ];
 
     let html = '<div class="sidebar-section">Meu painel</div>';

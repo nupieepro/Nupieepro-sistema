@@ -40,15 +40,14 @@ const Permissoes = (() => {
     /**
      * coordenador-geral — Ana Lívia, Luís Henrique
      * Leitura global + poder estratégico (aprovar, KPIs, PCD).
+     * A sidebar (buildSidebar, js/app.js) mostra a esse papel TODAS as
+     * pastas de coordenadoria, igual ao admin — pagesVisible '*' só
+     * controla navegação/leitura; os poderes de escrita continuam presos
+     * nas flags abaixo (podeGerenciarUsuarios etc, todas false pra este
+     * papel), que é onde a diferença pro admin de fato mora.
      */
     coordenador_geral: {
-      pagesVisible: [
-        'dashboard','abj','notificacoes','tarefas','demandas','calendario',
-        'geral_reunioes','geral_planejamento','geral_melhorias','geral_parcerias',
-        'global_visitas','global_apresentacoes','global_producao','global_assembleia','global_gestao',
-        'pessoas','compartilhado','dev_usuarios',
-        'gp_aniversarios','gp_treinamentos','prj_parcerias',
-      ],
+      pagesVisible: '*',
       podeGerenciarUsuarios: false, /* só GP e admin */
       podeAlterarRoles: false,
       podeVerLogs: false,
@@ -121,23 +120,29 @@ const Permissoes = (() => {
     },
 
     /**
-     * membro — visitante sem coord definida
+     * membro — mesma pasta da sua coordenadoria (só sem os poderes de
+     * gestão do coordenador/assessor). Sem coordenadoria_id, não vê
+     * nada além do universal (getCoordPages devolve lista vazia).
      */
     membro: {
-      pagesVisible: ['dashboard','notificacoes'],
+      pagesVisible: 'coordenadoria',
       isAdmin: false,
     },
   };
 
-  /* ── Páginas por coordenadoria ── */
-  const PAGES_POR_COORD = {
-    'Geral':       ['geral_reunioes','geral_planejamento','geral_melhorias','global_visitas','global_apresentacoes','global_producao','global_assembleia','global_gestao'],
-    'Marketing':   ['mkt_tracker','mkt_trello','mkt_notion','global_visitas','global_apresentacoes'],
-    'Finanças':    ['fin_fluxo','fin_abepro','fin_comercial','mkt_kanban','mkt_lojinha_admin','global_visitas','global_apresentacoes'],
-    'Projetos':    ['prj_eventos','prj_enegep','prj_treinamentos','prj_nupicast','prj_parcerias','geral_parcerias','global_visitas','global_apresentacoes','global_producao'],
-    'Operações':   ['ops_relatorios','ops_pops','ops_arquivo','gp_tap','global_visitas','global_apresentacoes'],
-    'G. Pessoas':  ['gp_talentos','gp_clima','gp_aniversarios','gp_treinamentos','global_visitas','global_apresentacoes'],
-  };
+  /* ── Páginas por coordenadoria ──
+     Antes esta lista era digitada à mão aqui, em paralelo à sidebar real
+     (ROLE_PAGES em js/app.js) — as duas foram desalinhando com o tempo
+     (ex: "Gestão de Inscrições" e "Nupi-Eventos (App)" apareciam clicáveis
+     na pasta de Operações mas Permissoes.podeVer() barrava os dois com
+     "Acesso restrito"). Agora deriva direto de ROLE_PAGES + GLOBAL_PAGES
+     (window.*, definidas em js/app.js), que é a mesma fonte que desenha a
+     sidebar — só existe um lugar pra manter essa lista atualizada. */
+  function getCoordPages(coordNome) {
+    const propria = (window.ROLE_PAGES?.[coordNome] || []).map(p => p.id);
+    const institucional = (window.GLOBAL_PAGES || []).map(p => p.id);
+    return [...propria, ...institucional];
+  }
 
   /* ══════════════════════════════════════════
      REGRAS DE NEGÓCIO — Prazos e Bloqueios
@@ -285,18 +290,13 @@ const Permissoes = (() => {
     if (Array.isArray(m.pagesVisible)) return m.pagesVisible.includes(pageId);
     if (m.pagesVisible === 'coordenadoria') {
       const coordNome = p.coordenadorias?.nome || '';
-      const paginas   = PAGES_POR_COORD[coordNome] || [];
-      return paginas.includes(pageId);
+      return getCoordPages(coordNome).includes(pageId);
     }
     return false;
   }
 
   function isAdmin() {
     return getPerfil()?.role === 'admin';
-  }
-
-  function getCoordPages(coordNome) {
-    return PAGES_POR_COORD[coordNome] || [];
   }
 
   /* ══════════════════════════════════════════
@@ -327,7 +327,12 @@ const Permissoes = (() => {
     getNivelInfo,
     REGRAS,
     NIVEL_LABEL,
-    PAGES_POR_COORD,
+    /* Mantido pra tela "Páginas por Coordenadoria" do painel Dev — computado
+       na hora a partir de ROLE_PAGES em vez de lista fixa (ver getCoordPages). */
+    get PAGES_POR_COORD() {
+      const nomes = Object.keys(window.ROLE_PAGES || {}).filter(k => k !== 'Conselheiro');
+      return Object.fromEntries(nomes.map(nome => [nome, getCoordPages(nome)]));
+    },
     MATRIZ,
   };
 })();
