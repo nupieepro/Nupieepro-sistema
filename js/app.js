@@ -103,6 +103,20 @@ const ROLE_PAGES = {
   ],
 };
 
+/* Institucional — visível a todas as coordenadorias, além da própria pasta.
+   Único lugar onde essa lista é definida; permissoes.js lê window.GLOBAL_PAGES
+   em vez de manter uma cópia separada (era assim antes e as duas listas
+   desalinhavam, deixando itens clicáveis na sidebar que o goTo() bloqueava). */
+const GLOBAL_PAGES = [
+  { id: 'global_visitas',       icon: 'zap',   label: 'Visitas Técnicas' },
+  { id: 'global_apresentacoes', icon: 'star',  label: 'Apresentações Inst.' },
+  { id: 'global_producao',      icon: 'file',  label: 'Produção Científica' },
+  { id: 'global_assembleia',    icon: 'users', label: 'Assembleia e Votos' },
+  { id: 'global_checkin',       icon: 'check-square', label: 'Check-in Digital' },
+];
+window.ROLE_PAGES   = ROLE_PAGES;
+window.GLOBAL_PAGES = GLOBAL_PAGES;
+
 const COORD_TAG_CLASS = {
   'Geral': 'tag-geral',
   'Operações': 'tag-operacoes',
@@ -128,6 +142,16 @@ document.addEventListener("mousemove", e => {
 });
 
 function haptic(ms=15) { if(navigator.vibrate) navigator.vibrate(ms); }
+
+/* Confirma que um UPDATE/DELETE do Supabase realmente afetou alguma linha.
+   Quando o RLS bloqueia por falta de permissão, o Supabase JS não lança
+   erro — só devolve 0 linhas — então sem essa checagem o código segue
+   achando que deu certo e mostra sucesso pro usuário mesmo sem nada ter
+   sido salvo. Uso: const ok = await dbEfetivou(_sbq().from('x').update(...).eq('id', id)); */
+async function dbEfetivou(query) {
+  const { data, error } = await query.select('id');
+  return !error && !!data?.length;
+}
 
 /* ============================================================
    Omni-Connect Email & Security Engine (V6.7)
@@ -429,13 +453,6 @@ const App = {
       { id: 'dashboard',  icon: 'grid',          label: 'Painel Central' },
       { id: 'demandas',   icon: 'check-square',  label: 'Demandas da Coord' },
       { id: 'calendario', icon: 'calendar',      label: 'Calendário' },
-    ];
-    const GLOBAL_PAGES = [
-      { id: 'global_visitas',       icon: 'zap',   label: 'Visitas Técnicas' },
-      { id: 'global_apresentacoes', icon: 'star',  label: 'Apresentações Inst.' },
-      { id: 'global_producao',      icon: 'file',  label: 'Produção Científica' },
-      { id: 'global_assembleia',    icon: 'users', label: 'Assembleia e Votos' },
-      { id: 'global_checkin',       icon: 'check-square', label: 'Check-in Digital' },
     ];
 
     let html = '<div class="sidebar-section">Meu painel</div>';
@@ -802,7 +819,10 @@ function goTo(id) {
 
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   const navEl = document.getElementById('nav-' + id);
-  if (navEl) navEl.classList.add('active');
+  if (navEl) {
+    navEl.classList.add('active');
+    navEl.scrollIntoView({ block: 'nearest' });
+  }
 
   const sidebar = document.getElementById('sidebar');
   const overlay = document.getElementById('sidebarOverlay');
@@ -1317,9 +1337,11 @@ const Theme = {
     const label = document.getElementById('systemThemeLabel');
     if (label) label.textContent = themeLabel[name] || name;
 
-    haptic();
-    // Toast apenas quando o usuário trocou manualmente (não em inicialização)
-    if (!silent) App.toast('Tema: ' + (themeLabel[name] || name), 'info', 1200);
+    // Haptic/toast apenas quando o usuário trocou manualmente (não em inicialização)
+    if (!silent) {
+      haptic();
+      App.toast('Tema: ' + (themeLabel[name] || name), 'info', 1200);
+    }
   },
 
   applyFont(name, silent = false) {
@@ -1328,8 +1350,8 @@ const Theme = {
     document.querySelectorAll('[id^="fontBtn-"]').forEach(b => b.classList.remove('active'));
     const btn = document.getElementById('fontBtn-' + name);
     if (btn) btn.classList.add('active');
-    haptic();
     // Sem toast para fonte — mudança visual é imediata e óbvia
+    if (!silent) haptic();
   },
 
   init() {
@@ -1579,6 +1601,18 @@ const Pessoas = {
   _tab: 'membros',
 
   switchTab(tab, el) {
+    /* "Gerenciar Acessos" promove gente a admin, reseta senha de qualquer
+       um e apaga contas — o botão da aba é HTML estático (dashboard.html),
+       visível a qualquer papel que chegue na página "pessoas" (inclusive
+       membro comum, desde o fix de menu por coordenadoria). O banco já
+       bloqueia excluir/promover pra quem não é admin de verdade, mas
+       resetar senha (Supabase Auth) não passa por RLS nenhuma — sem essa
+       checagem, qualquer pessoa nessa aba conseguia disparar e-mail de
+       redefinição de senha pra qualquer conta do núcleo. */
+    if (tab === 'gerenciar' && !(typeof Permissoes !== 'undefined' && Permissoes.isAdmin())) {
+      App.toast('Acesso restrito a administradores.', 'error');
+      return;
+    }
     this._tab = tab;
     document.querySelectorAll('#pessoasTabBar .tab').forEach(t => t.classList.remove('active'));
     if (el) el.classList.add('active');
@@ -1593,6 +1627,8 @@ const Pessoas = {
     const grid = document.getElementById('memberGrid');
     const mgrid = document.getElementById('manageGrid');
     const count = document.getElementById('memberCount');
+    const tabGerenciar = document.getElementById('tabGerenciar');
+    if (tabGerenciar) tabGerenciar.style.display = (typeof Permissoes !== 'undefined' && Permissoes.isAdmin()) ? '' : 'none';
 
     let members = [];
 
@@ -1625,9 +1661,9 @@ const Pessoas = {
       <div style="background:var(--c-s2);padding:14px;border-radius:12px;border:1px solid ${m.cor==='orange'?'var(--orange-border)':'var(--border)'};display:flex;align-items:center;gap:14px;">
         <div style="width:44px;height:44px;border-radius:50%;background:${m.cor==='orange'?'var(--orange-dim)':'var(--blue-dim)'};border:2px solid ${m.cor==='orange'?'var(--orange)':'var(--blue)'};color:${m.cor==='orange'?'var(--orange)':'var(--blue)'};display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px;flex-shrink:0;">${m.iniciais}</div>
         <div style="flex:1;min-width:0;">
-          <div style="font-weight:700;font-size:14px;">${m.nome}</div>
-          <div style="font-size:11px;color:var(--t-3);margin-top:2px;">${m.cargo} · ${m.coord}</div>
-          <div style="font-size:10px;color:var(--t-4);margin-top:1px;">${m.email}</div>
+          <div style="font-weight:700;font-size:14px;">${sanitize(m.nome)}</div>
+          <div style="font-size:11px;color:var(--t-3);margin-top:2px;">${sanitize(m.cargo)} · ${sanitize(m.coord)}</div>
+          <div style="font-size:10px;color:var(--t-4);margin-top:1px;">${sanitize(m.email)}</div>
         </div>
       </div>
     `).join('');
@@ -1636,7 +1672,7 @@ const Pessoas = {
       <div style="background:var(--c-s2);padding:12px 14px;border-radius:10px;border:1px solid var(--border);display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
         <div style="width:34px;height:34px;border-radius:50%;background:var(--w10);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:12px;flex-shrink:0;">${m.iniciais}</div>
         <div style="flex:1;min-width:120px;">
-          <div style="font-weight:600;font-size:13px;">${m.nome}</div>
+          <div style="font-weight:600;font-size:13px;">${sanitize(m.nome)}</div>
           <div style="font-size:11px;color:var(--t-3);">${m.coord}</div>
         </div>
         <select style="background:var(--w5);border:1px solid var(--b-1);border-radius:8px;padding:5px 10px;color:var(--t-2);font-size:12px;outline:none;" onchange="Pessoas.updateRole('${m.id||m.email}',this.value)">
@@ -1830,7 +1866,19 @@ const Pessoas = {
   /* ============================================================
      Admin / Dev Decision Console (V6.0)
      ============================================================ */
+  /* Console de Gerenciar Acessos (excluir/promover/resetar senha de
+     QUALQUER pessoa) — reset de senha não passa por nenhuma policy do
+     banco (é a API de auth, não a tabela users), então sem essa checagem
+     aqui dentro qualquer um que chegasse na função via console do
+     navegador conseguia disparar reset de senha pra qualquer conta. */
+  _exigeAdmin() {
+    if (typeof Permissoes !== 'undefined' && Permissoes.isAdmin()) return true;
+    App.toast('Acesso restrito a administradores.', 'error');
+    return false;
+  },
+
   deleteMember(id, email) {
+    if (!this._exigeAdmin()) return;
     abrirModal({
       titulo: 'Confirmar Exclusão',
       corpo: `TEM CERTEZA? O membro ${email} será APAGADO permanentemente do banco.`,
@@ -1841,8 +1889,8 @@ const Pessoas = {
           App.loading(true);
           try {
             if (_sb) {
-              const { error } = await _sb.from('users').delete().eq('id', id);
-              if (error) throw error;
+              const ok = await dbEfetivou(_sb.from('users').delete().eq('id', id));
+              if (!ok) throw new Error('sem permissão');
               // E-mail de Despedida Profissional V6.8
               await window.EmailService?.notifyGoodbye?.({ nome: email, email });
             }
@@ -1857,6 +1905,7 @@ const Pessoas = {
   },
 
   resetPassword(email) {
+    if (!this._exigeAdmin()) return;
     abrirModal({
       titulo: 'Redefinir Senha',
       corpo: `Enviar redefinição de senha para ${email}?`,
@@ -1875,6 +1924,7 @@ const Pessoas = {
   },
 
   async sendMagicLink(email) {
+    if (!this._exigeAdmin()) return;
     window.App?.toast?.('Gerando acesso instantâneo...', 'info');
     const link = await window.MagicLink?.generate?.(email);
     await window.EmailService?.notifyInvite?.({ nome: email, email }, link);
@@ -1884,13 +1934,17 @@ const Pessoas = {
 
 const PessoasExt = {
   async updateRole(identifier, newRole) {
+    if (typeof Permissoes !== 'undefined' && !Permissoes.isAdmin()) {
+      window.App?.toast?.('Acesso restrito a administradores.', 'error');
+      return;
+    }
     const sb = window._sb || window._supabase;
     if (!sb) { window.App?.toast?.('Supabase necessário para alterar funções.', 'error'); return; }
     const q = identifier.includes('@')
       ? sb.from('users').update({ role: newRole }).eq('email', identifier)
       : sb.from('users').update({ role: newRole }).eq('id', identifier);
-    const { error } = await q;
-    if (error) { window.App?.toast?.('Erro ao atualizar: ' + error.message, 'error'); return; }
+    const ok = await dbEfetivou(q);
+    if (!ok) { window.App?.toast?.('Sem permissão para alterar esta função.', 'error'); return; }
     window.App?.toast?.('Função atualizada com sucesso!', 'success');
     /* Alerta dev/admin: role mudou */
     if (typeof _notificarDevs === 'function') {
@@ -1938,7 +1992,7 @@ const DashboardExtra = {
         <div style="flex:0 0 140px; background:var(--s1); border:1px solid var(--b-1); border-radius:12px; padding:12px; display:flex; flex-direction:column; align-items:center; gap:8px;">
           <div class="side-avatar" style="width:40px;height:40px;font-size:14px;margin:0;"><i data-lucide="cake" style="stroke-width:1.5px;"></i></div>
           <div style="text-align:center;">
-            <div style="font-weight:700;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;width:110px;">${u.nome}</div>
+            <div style="font-weight:700;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;width:110px;">${sanitize(u.nome)}</div>
             <div style="font-size:10px;color:var(--orange);font-weight:800;margin-top:2px;">DIA ${d}</div>
           </div>
         </div>
@@ -2837,9 +2891,10 @@ const Dem = {
             const prazo  = document.getElementById('ed-dem-prazo')?.value || null;
             if (!titulo) { App.toast('Título é obrigatório.', 'error'); return; }
             try {
-              await window._supabase.from('demandas').update({
+              const ok = await dbEfetivou(window._supabase.from('demandas').update({
                 titulo, descricao: desc, prioridade: prio, prazo, updated_at: new Date().toISOString()
-              }).eq('id', id);
+              }).eq('id', id));
+              if (!ok) { App.toast('Sem permissão para editar esta demanda.', 'error'); return; }
               fecharModal();
               App.toast('Demanda atualizada!', 'success');
               Dem._loaded = false;
@@ -2853,8 +2908,8 @@ const Dem = {
 
   async _setStatus(id, coluna) {
     if (!_sb) return;
-    const { error } = await _sb.from('demandas').update({ coluna }).eq('id', id);
-    if (error) { App.toast('Erro ao atualizar: ' + error.message, 'error'); return; }
+    const ok = await dbEfetivou(_sb.from('demandas').update({ coluna }).eq('id', id));
+    if (!ok) { App.toast('Sem permissão para alterar esta demanda.', 'error'); return; }
     fecharModal();
     App.toast('Status atualizado!', 'success');
     Dem._loaded = false;
@@ -2864,8 +2919,8 @@ const Dem = {
   async _excluir(id) {
     if (!confirm('Tem certeza que deseja EXCLUIR esta demanda? Esta acao nao pode ser desfeita.')) return;
     if (!_sb) return;
-    const { error } = await _sb.from('demandas').delete().eq('id', id);
-    if (error) { App.toast('Erro ao excluir: ' + error.message, 'error'); return; }
+    const ok = await dbEfetivou(_sb.from('demandas').delete().eq('id', id));
+    if (!ok) { App.toast('Sem permissão para excluir esta demanda.', 'error'); return; }
     fecharModal();
     App.toast('Demanda excluída!', 'success');
     Dem._loaded = false;
@@ -3139,8 +3194,8 @@ const NovoCal = {
                 const { data: coords } = await sb.from('coordenadorias').select('id').eq('sigla', sigla).limit(1);
                 coordId = coords?.[0]?.id || null;
               }
-              const { error } = await sb.from('eventos').update({ titulo, tipo, data_inicio: data, coordenadoria_id: coordId }).eq('id', id);
-              if (error) throw error;
+              const ok = await dbEfetivou(sb.from('eventos').update({ titulo, tipo, data_inicio: data, coordenadoria_id: coordId }).eq('id', id));
+              if (!ok) { mostrarToast('Sem permissão para editar este evento.', 'error'); return; }
               fecharModal();
               mostrarToast('Evento atualizado!', 'success');
               _refreshCalendarios();
@@ -3155,9 +3210,9 @@ const NovoCal = {
     if (!confirm('Excluir este evento? Essa ação não pode ser desfeita.')) return;
     const sb = window._supabase;
     if (!sb) { mostrarToast('Sistema offline.', 'error'); return; }
-    const { error } = await sb.from('eventos').delete().eq('id', id);
+    const ok = await dbEfetivou(sb.from('eventos').delete().eq('id', id));
     fecharModal();
-    if (error) { mostrarToast('Erro ao excluir: ' + error.message, 'error'); return; }
+    if (!ok) { mostrarToast('Sem permissão para excluir este evento.', 'error'); return; }
     mostrarToast('Evento excluído!', 'success');
     _refreshCalendarios();
   }
@@ -3678,7 +3733,8 @@ const Kanban = (() => {
     var novoDesc = descBase + _SEP + (notas ? notas + '\n' : '') + linha;
 
     if (window._supabase) {
-      await window._supabase.from('demandas').update({ descricao: novoDesc }).eq('id', id).catch(console.warn);
+      const ok = await dbEfetivou(window._supabase.from('demandas').update({ descricao: novoDesc }).eq('id', id));
+      if (!ok) { App.toast('Não foi possível salvar a anotação (sem permissão nesta demanda).', 'error'); return; }
     }
     d.descricao = novoDesc;
     fecharModal();
@@ -3760,6 +3816,8 @@ function abrirModal({ titulo = '', tipo = 'info', corpo = '', botoes = [] } = {}
       'padding:0;backdrop-filter:blur(6px)',
       'transition:opacity .2s'
     ].join(';');
+    overlay.setAttribute('role', 'dialog');
+    overlay.setAttribute('aria-modal', 'true');
     overlay.addEventListener('click', e => { if (e.target === overlay) fecharModal(); });
     document.body.appendChild(overlay);
 
@@ -3781,7 +3839,7 @@ function abrirModal({ titulo = '', tipo = 'info', corpo = '', botoes = [] } = {}
     ">
       <div style="display:flex;justify-content:space-between;align-items:center">
         <div style="font-family:var(--f-head,'sans-serif');font-weight:700;font-size:16px;color:var(--c-white,#fff)">${titulo}</div>
-        <button onclick="fecharModal()" style="background:none;border:none;color:var(--t-3,#888);font-size:22px;cursor:pointer;padding:4px;line-height:1">✕</button>
+        <button onclick="fecharModal()" aria-label="Fechar" style="background:none;border:none;color:var(--t-3,#888);font-size:22px;cursor:pointer;padding:4px;line-height:1">✕</button>
       </div>
       <div style="color:var(--c-slate,#aaa);font-size:13px;line-height:1.6">${corpo}</div>
       ${botoes.length ? `<div style="display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap;padding-top:4px">
@@ -3815,5 +3873,15 @@ window._sb          = window._sb || _sb;
 
 /* Inicializa EmailService — sem isso o SDK do EmailJS nao tem publicKey. */
 try { EmailService.init(); } catch(e) { console.warn('EmailService.init failed:', e); }
+
+/* Esc fecha o modal visível (genérico __appModal ou o do Kanban) — nenhum
+   dos dois tinha esse atalho, só clique fora ou no botão "✕". */
+document.addEventListener('keydown', (e) => {
+  if (e.key !== 'Escape') return;
+  const appModal = document.getElementById('__appModal');
+  if (appModal && appModal.style.display !== 'none') { fecharModal(); return; }
+  const kanbanModal = document.getElementById('kanbanModal');
+  if (kanbanModal && kanbanModal.style.display !== 'none') { window.Kanban?.fecharModal?.(); }
+});
 
 console.log('NUPIEEPRO V6.2: Todos os módulos globais registrados.');

@@ -1,4 +1,12 @@
 # Cloudflare Pages — headers customizados
+
+# Headers de segurança reais (as <meta http-equiv> equivalentes são
+# ignoradas pelo navegador para X-Frame-Options/X-Content-Type-Options).
+/*
+  X-Frame-Options: DENY
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+
 # Evita que o navegador/edge sirva uma cópia antiga desses arquivos por muito
 # tempo, senão o Service Worker demora a perceber que existe uma versão nova
 # (o app.js/etc. já usam ?v=NN pra cache-busting, mas o shell abaixo precisa

@@ -66,7 +66,6 @@
               <div class="wiz-dot" id="wd3">3</div>
               <div class="wiz-line" id="wl3"></div>
               <div class="wiz-dot" id="wd4">✦</div>
-            </div>
 
             <div id="conviteInfoBox" style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;background:rgba(145,154,187,0.08);border:1px solid rgba(145,154,187,0.15);border-radius:10px;padding:10px 14px;font-size:12px;color:var(--text-secondary);margin-bottom:4px;"></div>
 
@@ -125,6 +124,7 @@
               <button class="btn-login" id="btnConvite" onclick="doConviteRegister()" style="margin-top: 1.5rem;">Criar Minha Conta</button>
             </form>
           </div>
+          <!-- closes #wizard (opened above the dots); wraps the dots + info box + form so JS can show/hide the whole step together -->
 
           <div id="conviteSuccess" style="display:none;">
             <div class="success-wrap">
@@ -150,7 +150,7 @@
   <div id="pwaToast" class="pwn-toast" style="display: none;">
     <div>📲 Instale o app para acesso rápido!</div>
     <button class="pwn-btn" onclick="installPWA()">Instalar</button>
-    <button class="pwn-btn" onclick="dismissPWA()" style="background: rgba(255,255,255,0.1);">✕</button>
+    <button class="pwn-btn" onclick="dismissPWA()" aria-label="Fechar" style="background: rgba(255,255,255,0.1);">✕</button>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>

@@ -31,12 +31,8 @@ const Auth = {
     try { await sb.auth.signOut(); } catch(_) {}
 
     const { data: convite, error: tokenErr } = await sb
-      .from('convites')
-      .select('*, coordenadorias(nome, sigla)')
-      .eq('token', token)
-      .eq('usado', false)
-      .gt('expires_at', new Date().toISOString())
-      .single();
+      .rpc('get_convite_by_token', { p_token: token })
+      .maybeSingle();
 
     if (tokenErr || !convite) throw new Error('Convite inválido ou expirado.');
 
@@ -60,7 +56,7 @@ const Auth = {
     });
 
     if (error) throw error;
-    await sb.from('convites').update({ usado: true }).eq('id', convite.id);
+    await sb.rpc('consumir_convite', { p_token: token });
     return data;
   },
 
@@ -280,12 +276,8 @@ function initConvitePage() {
     }
     try {
       const { data: convite, error } = await sb
-        .from('convites')
-        .select('*, coordenadorias(nome, sigla)')
-        .eq('token', token)
-        .eq('usado', false)
-        .gt('expires_at', new Date().toISOString())
-        .single();
+        .rpc('get_convite_by_token', { p_token: token })
+        .maybeSingle();
 
       if (error || !convite) {
         if (loadingEl) loadingEl.style.display = 'none';
@@ -300,7 +292,7 @@ function initConvitePage() {
 
       const infoEl = document.getElementById('conviteInfoBox');
       if (infoEl) {
-        const coord = convite.coordenadorias ? `${convite.coordenadorias.sigla} — ${convite.coordenadorias.nome}` : 'Geral';
+        const coord = convite.coord_sigla ? `${convite.coord_sigla} — ${convite.coord_nome}` : 'Geral';
         infoEl.innerHTML = `<span>📧 ${convite.email}</span><span>·</span><span>${coord}</span><span>·</span><span>${convite.cargo || convite.role}</span>`;
       }
     } catch (e) {

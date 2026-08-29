@@ -300,10 +300,39 @@ create policy "users_read" on public.users for select using (
 create policy "users_update_self" on public.users for update using (id = auth.uid());
 create policy "users_admin" on public.users for all using (public.is_admin());
 
--- CONVITES: anon can read (for token validation), coord+ can insert
-create policy "convites_anon_read" on public.convites for select to anon using (true);
+-- CONVITES: token lookup/consumo via function (não leitura direta da tabela
+-- por anon — ver migration 006), coord+ lê/atualiza/insere.
 create policy "convites_auth_read" on public.convites for select using (public.is_coord_or_admin());
 create policy "convites_insert" on public.convites for insert with check (public.is_coord_or_admin());
+create policy "convites_update" on public.convites for update using (public.is_coord_or_admin());
+
+-- Lookup de UM convite por token, sem expor a tabela toda a anon (migration 006).
+create or replace function public.get_convite_by_token(p_token text)
+returns table (email text, role text, cargo text, coordenadoria_id uuid, coord_nome text, coord_sigla text)
+language sql security definer set search_path = public stable as $$
+  select c.email, c.role, c.cargo, c.coordenadoria_id, co.nome, co.sigla
+  from public.convites c
+  left join public.coordenadorias co on co.id = c.coordenadoria_id
+  where c.token = p_token and c.usado = false and c.expires_at > now()
+  limit 1;
+$$;
+revoke all on function public.get_convite_by_token(text) from public;
+grant execute on function public.get_convite_by_token(text) to anon, authenticated;
+
+-- Marca o convite como usado — só quem tem o e-mail exato do convite (migration 006).
+create or replace function public.consumir_convite(p_token text)
+returns boolean language plpgsql security definer set search_path = public as $$
+declare v_ok boolean := false;
+begin
+  update public.convites set usado = true
+  where token = p_token and usado = false and expires_at > now()
+    and email = (select email from auth.users where id = auth.uid())
+  returning true into v_ok;
+  return coalesce(v_ok, false);
+end;
+$$;
+revoke all on function public.consumir_convite(text) from public;
+grant execute on function public.consumir_convite(text) to authenticated;
 
 -- ATIVIDADES_ABJ: everyone reads, coord+ writes
 create policy "abj_read" on public.atividades_abj for select using (true);
