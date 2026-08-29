@@ -3969,7 +3969,8 @@ const PageDev = {
   },
 
   async _revogarConvite(id) {
-    await _sbq().from('convites').update({ expires_at: new Date().toISOString() }).eq('id', id);
+    const { error } = await _sbq().from('convites').update({ expires_at: new Date().toISOString() }).eq('id', id);
+    if (error) { mostrarToast('Não foi possível revogar o convite.','error'); return; }
     mostrarToast('Convite revogado.','info');
     this._carregarConvites();
   },
