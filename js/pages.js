@@ -2280,16 +2280,6 @@ const PageProjetos = {
 };
 const PageOperacoes = {
   async init() { this._renderPops(); this._renderRelatorios(); },
-  _renderEventosAdmin() {
-    _renderAppEmbed({
-      pageId: 'page-ops_eventos_admin',
-      titulo: 'Nupi-Eventos',
-      icon: '🎟️',
-      url: 'https://nupieepro.github.io/nupi-eventos/admin.html',
-      descricao: 'Apenas Coord. Operações, Coord. Geral e Admin podem gerenciar Eventos.',
-      cargosPermitidos: ['coordenador de operações', 'assessor de operações', 'coordenador geral', 'desenvolvedor'],
-    });
-  },
   _renderRelatorios() {
     if (typeof RelatorioModule !== 'undefined') { RelatorioModule.renderPagina(); return; }
     const pg=document.getElementById('page-ops_relatorios');
@@ -5139,7 +5129,6 @@ document.addEventListener('nupi:booted', () => {
       'ops_pops':          () => PageOperacoes._renderPops(),
       'ops_arquivo':       () => PageOperacoes._renderArquivo(),
       'ops_inscricoes':    () => PageOperacoes._renderInscricoes(),
-      'ops_eventos_admin': () => PageOperacoes._renderEventosAdmin(),
       /* Gestão de Pessoas */
       'gp_talentos':       () => PagePessoas._renderTalentos(),
       'gp_clima':          () => PagePessoas._renderClima(),
