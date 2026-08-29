@@ -63,7 +63,6 @@ const ROLE_PAGES = {
     { id: 'ops_pops',          icon: 'folder',    label: 'Cofre de POPs' },
     { id: 'ops_arquivo',       icon: 'folder',    label: 'Arquivo Digital' },
     { id: 'ops_inscricoes',    icon: 'ticket',    label: 'Gestão de Inscrições' },
-    { id: 'ops_eventos_admin', icon: 'calendar',  label: 'Nupi-Eventos (App)' },
     { id: 'gp_tap',            icon: 'layout',    label: 'Módulo TAP (Inovação)' },
   ],
   'G. Pessoas': [
