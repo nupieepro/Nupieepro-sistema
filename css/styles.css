@@ -506,6 +506,15 @@ body, .themed { transition: background-color 350ms var(--ease), color 200ms var(
   .user-chip { justify-content: center; }
   .u-avatar { width: 36px; height: 36px; }
   .sidebar-footer { padding: 10px 8px; }
+  /* Mesma proteção contra "topbar-title esmagado até virar 'D…'" que já
+     existe pro celular (ver comentário grande no bloco max-width:640px logo
+     abaixo) — faltava aqui. Nessa faixa (641–1024px) a sidebar já encolheu
+     pro rail de ícones (72px), sobrando pouco espaço pro topbar quando ele
+     tem botões extras (Kanban/Lista/Heatmap, "+ Nova" etc.), e sem isso o
+     mesmo corte acontecia de novo — só que em tablet, não só no celular. */
+  .topbar { flex-wrap: wrap; height: auto !important; min-height: var(--topbar-h); row-gap: 8px; padding-top: 10px !important; padding-bottom: 10px !important; }
+  .topbar-left { flex: 1 1 auto; min-width: 160px !important; }
+  .topbar-right { flex: 0 1 auto; justify-content: flex-end; margin-left: auto; gap: 4px !important; }
 }
 @media (max-width: 640px) {
   :root { --sidebar-w: 0px; --topbar-h: 56px; }
@@ -916,6 +925,15 @@ code, kbd, .mono { font: var(--t-mono); }
 }
 .section-title { font: var(--t-h3); margin-bottom: var(--s3); color: var(--fg-1); }
 
+/* Card clicável (ex: card de membro em Gestão de Membros → abre modal de ações) */
+.member-card { transition: transform var(--dur-2) var(--ease), border-color var(--dur-2) var(--ease); }
+.member-card:hover, .member-card:focus-visible {
+  transform: translateY(-2px);
+  border-color: var(--brand-orange) !important;
+  outline: none;
+}
+.member-card:active { transform: translateY(0); }
+
 /* Glass card variant */
 .glass-card {
   background: var(--glass); backdrop-filter: blur(12px);
@@ -1303,9 +1321,19 @@ canvas { max-width: 100%; }
 
 /* ════ MOBILE ════ */
 .mobile-nav { display: none; position: fixed; bottom: 0; left: 0; right: 0; background: var(--surface-1); border-top: 1px solid var(--border-1); padding: var(--s1) 0; padding-bottom: calc(var(--s1) + env(safe-area-inset-bottom)); z-index: 100; justify-content: space-around; backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); }
-.mnav-item { display: flex; flex-direction: column; align-items: center; gap: 3px; padding: var(--s1) var(--s3); font-size: 10px; color: var(--fg-3); cursor: pointer; transition: color var(--dur-1) var(--ease); min-width: 48px; }
+.mnav-item {
+  display: flex; flex-direction: column; align-items: center; gap: 3px;
+  padding: var(--s1) var(--s2); font-size: 10px; color: var(--fg-3); cursor: pointer;
+  transition: color var(--dur-1) var(--ease);
+  /* flex:1 + min-width:0 fazem os até-5 itens dividirem a barra em partes
+     iguais e permitem que o rótulo abaixo encolha o bastante pra truncar
+     em vez de quebrar em 2-3 linhas feias (label como "Reuniões e Check-in"
+     não cabe em ~70px de largura numa tela de 360px). */
+  flex: 1 1 0; min-width: 0;
+}
 .mnav-item .mnav-icon { display: flex; align-items: center; justify-content: center; width: 22px; height: 22px; flex-shrink: 0; }
 .mnav-item .mnav-icon svg { width: 100%; height: 100%; }
+.mnav-item > span:last-child { max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .mnav-item.active, .mnav-item:active { color: var(--brand-purple-l); }
 .sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.6); z-index: 90; backdrop-filter: blur(4px); }
 .sidebar-overlay.visible { display: block; }
