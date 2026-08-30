@@ -2039,22 +2039,67 @@ const Projetos = {
   async loadSponsors() {
     if (typeof PageProjetos !== 'undefined') { PageProjetos.init(); }
     const grid = document.getElementById('sponsorGrid');
-    if (!grid || !window._supabase) return;
-    grid.innerHTML = '<p style="color:var(--c-slate);font-size:13px;padding:12px;">Carregando…</p>';
-    try {
-      const { data } = await window._supabase.from('parcerias').select('*').eq('ativa', true).order('nome');
-      if (!data?.length) {
-        grid.innerHTML = '<p style="color:var(--c-slate);font-size:13px;padding:12px;">Nenhuma parceria cadastrada ainda. Use o menu Projetos → Parcerias.</p>';
-        return;
-      }
-      grid.innerHTML = data.map(p => `
-        <div style="background:var(--b-1);border:1px solid var(--b-2);border-radius:12px;padding:14px;text-align:center;cursor:pointer" onclick="goTo('prj_parcerias')">
-          ${p.logo_url ? `<img src="${sanitize(p.logo_url)}" style="height:40px;object-fit:contain;margin-bottom:8px;display:block;margin:0 auto 8px">` : '<div style="font-size:28px;margin-bottom:8px">🤝</div>'}
-          <div style="font-weight:700;font-size:12px;color:var(--c-white)">${sanitize(p.nome)}</div>
-          <div style="font-size:10px;color:var(--c-slate);text-transform:capitalize">${p.tipo||'parceiro'}</div>
-        </div>`).join('');
-    } catch(e) { grid.innerHTML = '<p style="color:var(--c-slate);font-size:13px;padding:12px;">Erro ao carregar.</p>'; }
+    if (grid && window._supabase) {
+      grid.innerHTML = '<p style="color:var(--c-slate);font-size:13px;padding:12px;">Carregando…</p>';
+      try {
+        const { data } = await window._supabase.from('parcerias').select('*').eq('ativa', true).order('nome');
+        if (!data?.length) {
+          grid.innerHTML = '<p style="color:var(--c-slate);font-size:13px;padding:12px;">Nenhuma parceria cadastrada ainda. Use o menu Projetos → Parcerias.</p>';
+        } else {
+          grid.innerHTML = data.map(p => `
+            <div style="background:var(--b-1);border:1px solid var(--b-2);border-radius:12px;padding:14px;text-align:center;cursor:pointer" onclick="goTo('prj_parcerias')">
+              ${p.logo_url ? `<img src="${sanitize(p.logo_url)}" style="height:40px;object-fit:contain;margin-bottom:8px;display:block;margin:0 auto 8px">` : '<div style="font-size:28px;margin-bottom:8px">🤝</div>'}
+              <div style="font-weight:700;font-size:12px;color:var(--c-white)">${sanitize(p.nome)}</div>
+              <div style="font-size:10px;color:var(--c-slate);text-transform:capitalize">${p.tipo||'parceiro'}</div>
+            </div>`).join('');
+        }
+      } catch(e) { grid.innerHTML = '<p style="color:var(--c-slate);font-size:13px;padding:12px;">Erro ao carregar.</p>'; }
+    }
+    this.loadNupicastPreview();
+    this.loadEventsPreview();
   },
+
+  /* #nupicastList e #projEvents (hub "Portfólio & Ações") nunca tinham dono:
+     PageProjetos.init() só preenche as páginas dedicadas (#page-prj_nupicast,
+     #page-prj_eventos), então esses dois cards do hub ficavam permanentemente
+     vazios — sem dado, sem "carregando", sem "nenhum registro". */
+  async loadNupicastPreview() {
+    const el = document.getElementById('nupicastList');
+    if (!el || !window._supabase) return;
+    const { data } = await window._supabase.from('eventos')
+      .select('id,titulo,data_inicio').eq('tipo', 'podcast')
+      .order('data_inicio', { ascending: false }).limit(3);
+    if (!data?.length) {
+      el.innerHTML = '<p style="color:var(--c-slate);font-size:13px;padding:8px 0;">Nenhum episódio registrado ainda.</p>';
+      return;
+    }
+    el.innerHTML = data.map(e => `
+      <div style="padding:8px 0;border-bottom:1px solid var(--b-1);">
+        <div style="font-weight:600;font-size:13px;">${sanitize(e.titulo)}</div>
+        <div style="font-size:11px;color:var(--c-slate);">📅 ${_fmt(e.data_inicio)}</div>
+      </div>`).join('')
+      + '<button class="btn btn-ghost" style="margin-top:8px;width:100%;font-size:12px;" onclick="goTo(\'prj_nupicast\')">Ver episódios →</button>';
+  },
+
+  async loadEventsPreview() {
+    const el = document.getElementById('projEvents');
+    if (!el || !window._supabase) return;
+    const hoje = new Date().toISOString().slice(0, 10);
+    const { data } = await window._supabase.from('eventos')
+      .select('id,titulo,tipo,data_inicio').in('tipo', ['evento', 'visita', 'treinamento', 'podcast'])
+      .gte('data_inicio', hoje).order('data_inicio', { ascending: true }).limit(3);
+    if (!data?.length) {
+      el.innerHTML = '<p style="color:var(--c-slate);font-size:13px;padding:8px 0;">Nenhum evento estratégico agendado.</p>';
+      return;
+    }
+    el.innerHTML = data.map(e => `
+      <div style="padding:8px 0;border-bottom:1px solid var(--b-1);">
+        <div style="font-weight:600;font-size:13px;">${sanitize(e.titulo)}</div>
+        <div style="font-size:11px;color:var(--c-slate);">📅 ${_fmt(e.data_inicio)} · ${sanitize(e.tipo)}</div>
+      </div>`).join('')
+      + '<button class="btn btn-ghost" style="margin-top:8px;width:100%;font-size:12px;" onclick="goTo(\'prj_eventos\')">Ver todos →</button>';
+  },
+
   novoPatrocinador() { goTo('prj_parcerias'); }
 };
 
@@ -2384,9 +2429,32 @@ const Marketing = {
 };
 
 const GP = {
+  /* Prévia do Banco de Talentos no hub "G. Pessoas" (#talentGrid). Não é a
+     mesma coisa que PagePessoas._renderTalentos() — aquela função monta a
+     página cheia (#page-gp_talentos), com CRUD completo; ela ficava presa
+     olhando pro elemento errado quando chamada por aqui (a partir do hub
+     #page-gp), então #talentGrid nunca era preenchido — nem com dado real,
+     nem com "nenhum talento cadastrado", ficava permanentemente vazio. */
   async loadTalentBank() {
-    if (typeof PagePessoas !== 'undefined') { PagePessoas._renderTalentos(); return; }
-    Pessoas.loadMembers();
+    const el = document.getElementById('talentGrid');
+    if (!el) return;
+    if (!_sb) { el.innerHTML = '<p style="font-size:13px;color:var(--fg-3);text-align:center;margin:0;">Sem conexão.</p>'; return; }
+    const { data } = await _sb.from('talentos')
+      .select('nome,area_interesse,status').order('created_at', { ascending: false }).limit(5);
+    if (!data?.length) {
+      el.innerHTML = '<p style="font-size:13px;color:var(--fg-3);text-align:center;margin:0;">Nenhum talento cadastrado ainda.</p>';
+      return;
+    }
+    const STATUS_COR = { novo:'var(--c-accent)', contato:'var(--yellow)', entrevista:'var(--c-accent)', aprovado:'var(--green)', reprovado:'var(--red)', arquivado:'var(--c-slate)' };
+    el.innerHTML = data.map(t => `
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 10px;background:var(--w5);border-radius:8px;border:1px solid var(--border);">
+        <div style="min-width:0;">
+          <div style="font-weight:600;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${sanitize(t.nome)}</div>
+          ${t.area_interesse ? `<div style="font-size:11px;color:var(--fg-3);">🎯 ${sanitize(t.area_interesse)}</div>` : ''}
+        </div>
+        <span style="font-size:10px;font-weight:700;color:${STATUS_COR[t.status] || 'var(--fg-3)'};flex-shrink:0;">${sanitize(t.status || '—')}</span>
+      </div>`).join('')
+      + '<button class="btn btn-ghost" style="margin-top:4px;width:100%;font-size:12px;" onclick="goTo(\'gp_talentos\')">Ver banco completo →</button>';
   }
 };
 
@@ -2775,7 +2843,7 @@ const Dem = {
         <td style="padding:10px 12px;font-size:12px;color:var(--fg-2);">${resp}</td>
         <td style="padding:10px 12px;font-family:var(--font-mono);font-size:11px;">${prazo}</td>
         <td style="padding:10px 12px;font-size:11px;font-weight:700;color:${prioCor}">${(d.prioridade || '—').toUpperCase()}</td>
-        <td style="padding:10px 12px;font-size:12px;">${COL_LABEL[d.coluna] || d.coluna}</td>
+        <td style="padding:10px 12px;font-size:12px;">${COL_LABEL[d.coluna] || d.coluna || '—'}</td>
       </tr>`;
     }).join('') : `<tr><td colspan="6" style="padding:20px;text-align:center;color:var(--fg-3);">Nenhuma demanda cadastrada ainda. Clique em "+ Nova" para criar.</td></tr>`;
   },
@@ -3034,7 +3102,7 @@ const NovoCal = {
         const icone = e.coordenadorias?.icone || '';
         const concluida = e._kind === 'demanda' && e._coluna === 'auditada';
         const kindIcon = e._kind === 'demanda' ? (concluida ? '✅ ' : '🎯 ') : '';
-        const statusLbl = e._kind === 'demanda' ? ' · ' + (COL_LABEL[e._coluna] || e._coluna) : '';
+        const statusLbl = e._kind === 'demanda' ? ' · ' + (COL_LABEL[e._coluna] || e._coluna || '—') : '';
         const onclick = e._kind === 'demanda'
           ? (typeof Dem !== 'undefined' ? `Dem.abrirDetalhes('${e.id}')` : '')
           : `NovoCal.editarEvento('${e.id}')`;
