@@ -239,8 +239,8 @@
           <div class="field-wrap">
             <span class="field-icon">🔒</span>
             <input type="password" id="newPassword"
-                   placeholder="Mínimo 6 caracteres"
-                   minlength="6" required autocomplete="new-password">
+                   placeholder="Mínimo 8 caracteres, com letras e números"
+                   minlength="8" required autocomplete="new-password">
           </div>
         </div>
         <div class="field">
@@ -249,7 +249,7 @@
             <span class="field-icon">🔒</span>
             <input type="password" id="confirmPassword"
                    placeholder="Repita a senha"
-                   minlength="6" required autocomplete="new-password">
+                   minlength="8" required autocomplete="new-password">
           </div>
         </div>
         <button id="btnSave" class="btn" type="button" onclick="salvarNovaSenha()">
@@ -287,7 +287,8 @@
       if (!_sb) { showAlert('Sistema offline. Recarregue a página.', 'error'); return; }
       const pw = document.getElementById('newPassword').value;
       const cf = document.getElementById('confirmPassword').value;
-      if (pw.length < 6) { showAlert('Senha deve ter pelo menos 6 caracteres.', 'error'); return; }
+      if (pw.length < 8) { showAlert('Senha deve ter pelo menos 8 caracteres.', 'error'); return; }
+      if (!/[A-Za-z]/.test(pw) || !/[0-9]/.test(pw)) { showAlert('Senha deve ter letras e números.', 'error'); return; }
       if (pw !== cf)      { showAlert('As senhas não coincidem.', 'error'); return; }
 
       const btn = document.getElementById('btnSave');

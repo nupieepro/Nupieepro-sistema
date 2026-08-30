@@ -317,7 +317,8 @@ async function doConviteRegister() {
   if (!sobrenome)   { showAlert('Insira seu sobrenome.',                     'error', 'conviteAlert'); return; }
   if (!apelido)     { showAlert('Insira seu apelido.',                       'error', 'conviteAlert'); return; }
   if (!nascimento)  { showAlert('Insira sua data de aniversário.',           'error', 'conviteAlert'); return; }
-  if (password.length < 6) { showAlert('Senha deve ter pelo menos 6 caracteres.', 'error', 'conviteAlert'); return; }
+  if (password.length < 8) { showAlert('Senha deve ter pelo menos 8 caracteres.', 'error', 'conviteAlert'); return; }
+  if (!/[A-Za-z]/.test(password) || !/[0-9]/.test(password)) { showAlert('Senha deve ter letras e números.', 'error', 'conviteAlert'); return; }
   if (password !== confirm) { showAlert('As senhas não coincidem.',          'error', 'conviteAlert'); return; }
 
   const btn = document.getElementById('btnConvite');
