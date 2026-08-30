@@ -263,7 +263,8 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-  <script src="js/app.js"></script>
+  <script src="js/app.js?v=83"></script>
+  <script src="js/validacao.js?v=83"></script>
   <script>
     function showAlert(msg, type) {
       const el = document.getElementById('resetAlert');
@@ -287,8 +288,8 @@
       if (!_sb) { showAlert('Sistema offline. Recarregue a página.', 'error'); return; }
       const pw = document.getElementById('newPassword').value;
       const cf = document.getElementById('confirmPassword').value;
-      if (pw.length < 8) { showAlert('Senha deve ter pelo menos 8 caracteres.', 'error'); return; }
-      if (!/[A-Za-z]/.test(pw) || !/[0-9]/.test(pw)) { showAlert('Senha deve ter letras e números.', 'error'); return; }
+      const erroSenha = senhaForte(pw);
+      if (erroSenha) { showAlert(erroSenha, 'error'); return; }
       if (pw !== cf)      { showAlert('As senhas não coincidem.', 'error'); return; }
 
       const btn = document.getElementById('btnSave');
