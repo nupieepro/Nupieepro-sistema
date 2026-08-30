@@ -1132,6 +1132,23 @@ canvas { max-width: 100%; }
 .toast--warning { background: var(--yellow-dim); color: var(--yellow);  border-color: var(--yellow-border); }
 .toast--info    { background: var(--blue-dim);   color: var(--blue);    border-color: var(--blue-border); }
 
+/* No mobile, .main-area troca pra overflow:visible e quem rola é a página
+   inteira (ver @media max-width:768px mais abaixo) — a topbar (sticky)
+   não fica garantidamente onde .toast-container espera (logo abaixo dela),
+   então um toast fixo "top: topbar-h + gap" acaba flutuando por cima de
+   qualquer conteúdo que tenha subido até ali durante o scroll. Em vez de
+   depender da posição da topbar, ancora embaixo — acima da mobile-nav,
+   que é sempre uma faixa reservada (.main-area já tem padding-bottom pra
+   isso) e nunca tem conteúdo por baixo, scroll nenhum interfere. */
+@media (max-width: 768px) {
+  .toast-container {
+    top: auto;
+    bottom: calc(var(--mobile-nav-h) + env(safe-area-inset-bottom) + var(--s3));
+    left: var(--s3); right: var(--s3);
+    max-width: none;
+  }
+}
+
 /* ════ SPINNER ════ */
 .spinner { width: 20px; height: 20px; border: 2px solid var(--border-1); border-top-color: var(--brand-purple-l); border-radius: 50%; animation: spin 0.55s linear infinite; display: inline-block; }
 .loading-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.65); display: flex; align-items: center; justify-content: center; z-index: 9999; backdrop-filter: blur(4px); }
