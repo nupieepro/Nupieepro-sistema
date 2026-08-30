@@ -21,6 +21,7 @@ const ASSETS = [
   './js/permissoes.js?v=82',
   './js/emails.js?v=82',
   './js/relatorio.js?v=82',
+  './js/documentos.js?v=82',
   './js/push.js?v=82',
   './manifest.json',
   './assets/icon.png',
