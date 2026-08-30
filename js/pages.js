@@ -2400,200 +2400,6 @@ const PageOperacoes = {
       PageOperacoes._renderArquivo();
     } catch(e) { mostrarToast('Erro ao salvar documento.','error'); }
   },
-  /* ── Gestão de Inscrições ── */
-  async _renderInscricoes() {
-    const pg=document.getElementById('page-ops_inscricoes');
-    if(!pg)return;
-    const ct=pg.querySelector('.content')||pg;
-    ct.innerHTML=_sc('Gestão de Inscrições','🎟️',`
-      <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap">
-        ${_btn('+ Novo evento','PageOperacoes.novoEventoInscricao()')}
-      </div>
-      <div id="ins-eventos-lista" style="display:flex;flex-direction:column;gap:10px">
-        <div style="padding:20px;text-align:center;color:var(--c-slate);font-size:13px">Carregando...</div>
-      </div>`);
-    await this._carregarEventosInscricao();
-  },
-  async _carregarEventosInscricao() {
-    const el=document.getElementById('ins-eventos-lista');
-    if(!el||!_sbq())return;
-    try {
-      const {data}=await _sbq().from('eventos_inscricao').select('*').order('data_inicio',{ascending:false});
-      if(!data?.length){el.innerHTML='<div style="padding:20px;text-align:center;color:var(--c-slate);font-size:13px">Nenhum evento de inscrição cadastrado.</div>';return;}
-      el.innerHTML=data.map(e=>{
-        const abertas=e.inscricoes_abertas;
-        const vagas=e.vagas?`${e.vagas_ocupadas||0}/${e.vagas}`:`${e.vagas_ocupadas||0}`;
-        const dataI=e.data_inicio?new Date(e.data_inicio).toLocaleDateString('pt-BR'):'—';
-        return `
-          <div style="background:var(--b-1);border:1px solid var(--b-2);border-radius:12px;padding:14px 16px">
-            <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:8px">
-              <div>
-                <div style="font-weight:700;font-size:14px;color:var(--c-white)">${e.icone||'🎯'} ${sanitize(e.nome)}</div>
-                <div style="font-size:12px;color:var(--c-slate);margin-top:2px">📅 ${dataI} · 👥 ${vagas} inscrições</div>
-                ${e.local?`<div style="font-size:12px;color:var(--c-slate)">📍 ${sanitize(e.local)}</div>`:''}
-              </div>
-              <span style="font-size:11px;font-weight:700;padding:3px 10px;border-radius:99px;
-                           background:${abertas?'var(--green)22':'var(--b-2)'};
-                           color:${abertas?'var(--green)':'var(--c-slate)'};
-                           border:1px solid ${abertas?'var(--green)44':'var(--b-2)'}">
-                ${abertas?'✅ Abertas':'🔒 Fechadas'}
-              </span>
-            </div>
-            <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">
-              ${_btn(abertas?'🔒 Fechar inscrições':'✅ Abrir inscrições',
-                `PageOperacoes._toggleInscricoes('${e.id}',${!abertas})`,abertas?'btn-ghost':'btn-primary')}
-              ${_btn('👥 Ver inscritos',`PageOperacoes._verInscritos('${e.id}','${sanitize(e.nome).replace(/'/g,"\\'")}')`, 'btn-ghost')}
-              ${_btn('✏️ Editar',`PageOperacoes._editarEventoInscricao('${e.id}')`, 'btn-ghost')}
-              ${_btn('🗑️ Excluir',`PageOperacoes._excluirEventoInscricao('${e.id}')`, 'btn-ghost')}
-            </div>
-          </div>`;
-      }).join('');
-    }catch(e){el.innerHTML='<div style="padding:16px;color:var(--c-slate)">Erro ao carregar.</div>';}
-  },
-  async _excluirEventoInscricao(id) {
-    if (!confirm('Excluir este evento de inscrição? Todas as inscrições serão perdidas!')) return;
-    await _sbq().from('inscricoes_eventos').delete().eq('evento_id', id);
-    const ok = await dbEfetivou(_sbq().from('eventos_inscricao').delete().eq('id', id));
-    if (!ok) { mostrarToast('Sem permissão para excluir este evento.','error'); return; }
-    mostrarToast('Evento excluído!','success');
-    PageOperacoes._carregarEventosInscricao();
-  },
-  novoEventoInscricao() {
-    const hoje=new Date().toISOString().slice(0,16);
-    abrirModal({titulo:'🎟️ Novo Evento de Inscrição',tipo:'info',corpo:`
-      <div class="form-group"><label class="form-label">Nome do evento *</label>
-        <input id="ins-nome" class="form-input" placeholder="Ex: Assembleia Geral 2026"></div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-        <div class="form-group"><label class="form-label">Data/hora início</label>
-          <input id="ins-ini" type="datetime-local" class="form-input" value="${hoje}"></div>
-        <div class="form-group"><label class="form-label">Data/hora fim</label>
-          <input id="ins-fim" type="datetime-local" class="form-input"></div>
-      </div>
-      <div class="form-group"><label class="form-label">Local</label>
-        <input id="ins-local" class="form-input" placeholder="Ex: Auditório A, Bloco B"></div>
-      <div class="form-group"><label class="form-label">Vagas (vazio = ilimitado)</label>
-        <input id="ins-vagas" type="number" class="form-input" placeholder="Ex: 50"></div>
-      <div class="form-group"><label class="form-label">Ícone</label>
-        <input id="ins-icone" class="form-input" value="🎯" style="width:80px"></div>`,
-      botoes:[
-        {texto:'Cancelar',classe:'btn-ghost',acao:fecharModal},
-        {texto:'Criar evento ✓',classe:'btn-primary',acao:()=>this._salvarEventoInscricao()},
-      ]});
-  },
-  async _salvarEventoInscricao() {
-    const nome  =document.getElementById('ins-nome')?.value?.trim();
-    const ini   =document.getElementById('ins-ini')?.value;
-    const fim   =document.getElementById('ins-fim')?.value;
-    const local =document.getElementById('ins-local')?.value?.trim();
-    const vagas =parseInt(document.getElementById('ins-vagas')?.value)||null;
-    const icone =document.getElementById('ins-icone')?.value?.trim()||'🎯';
-    if(!nome){mostrarToast('Informe o nome do evento!','warning');return;}
-    fecharModal();
-    try {
-      await _sbq().from('eventos_inscricao').insert([{nome,local:local||null,data_inicio:ini||null,data_fim:fim||null,vagas,icone,inscricoes_abertas:false}]);
-      mostrarToast('Evento criado!','success');
-      this._carregarEventosInscricao();
-    }catch(e){mostrarToast('Erro ao criar evento.','error');}
-  },
-  async _toggleInscricoes(id, abrir) {
-    try {
-      const ok = await dbEfetivou(_sbq().from('eventos_inscricao').update({inscricoes_abertas:abrir}).eq('id',id));
-      if (!ok) { mostrarToast('Sem permissão para alterar este evento.','error'); return; }
-      mostrarToast(abrir?'Inscrições abertas!':'Inscrições fechadas!','success');
-      this._carregarEventosInscricao();
-    }catch(e){mostrarToast('Erro ao alterar status.','error');}
-  },
-  async _editarEventoInscricao(id) {
-    const {data:e}=await _sbq().from('eventos_inscricao').select('*').eq('id',id).single();
-    if(!e){mostrarToast('Evento não encontrado.','error');return;}
-    const ini=e.data_inicio?new Date(e.data_inicio).toISOString().slice(0,16):'';
-    const fim=e.data_fim?new Date(e.data_fim).toISOString().slice(0,16):'';
-    abrirModal({titulo:'✏️ Editar Evento',tipo:'info',corpo:`
-      <div class="form-group"><label class="form-label">Nome *</label>
-        <input id="ins-e-nome" class="form-input" value="${sanitize(e.nome)}"></div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-        <div class="form-group"><label class="form-label">Data/hora início</label>
-          <input id="ins-e-ini" type="datetime-local" class="form-input" value="${ini}"></div>
-        <div class="form-group"><label class="form-label">Data/hora fim</label>
-          <input id="ins-e-fim" type="datetime-local" class="form-input" value="${fim}"></div>
-      </div>
-      <div class="form-group"><label class="form-label">Local</label>
-        <input id="ins-e-local" class="form-input" value="${sanitize(e.local||'')}"></div>
-      <div class="form-group"><label class="form-label">Vagas</label>
-        <input id="ins-e-vagas" type="number" class="form-input" value="${e.vagas||''}"></div>`,
-      botoes:[
-        {texto:'Cancelar',classe:'btn-ghost',acao:fecharModal},
-        {texto:'Salvar ✓',classe:'btn-primary',acao:()=>this._salvarEdicaoEvento(id)},
-      ]});
-  },
-  async _salvarEdicaoEvento(id) {
-    const nome  =document.getElementById('ins-e-nome')?.value?.trim();
-    const ini   =document.getElementById('ins-e-ini')?.value;
-    const fim   =document.getElementById('ins-e-fim')?.value;
-    const local =document.getElementById('ins-e-local')?.value?.trim();
-    const vagas =parseInt(document.getElementById('ins-e-vagas')?.value)||null;
-    if(!nome){mostrarToast('Nome obrigatório!','warning');return;}
-    fecharModal();
-    try {
-      const ok = await dbEfetivou(_sbq().from('eventos_inscricao').update({nome,local:local||null,data_inicio:ini||null,data_fim:fim||null,vagas}).eq('id',id));
-      if (!ok) { mostrarToast('Sem permissão para editar este evento.','error'); return; }
-      mostrarToast('Evento atualizado!','success');
-      this._carregarEventosInscricao();
-    }catch(e){mostrarToast('Erro ao atualizar.','error');}
-  },
-  async _verInscritos(eventoId, nomeEvento) {
-    abrirModal({titulo:`👥 Inscritos — ${nomeEvento}`,tipo:'info',corpo:`
-      <div id="ins-lista-modal" style="max-height:50vh;overflow-y:auto;margin-bottom:8px">
-        <div style="padding:16px;text-align:center;color:var(--c-slate)">Carregando...</div>
-      </div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap">
-        ${_btn('📥 Exportar CSV',`PageOperacoes._exportarCSV('${eventoId}','${nomeEvento.replace(/'/g,"\\'")}')`, 'btn-ghost')}
-      </div>`,
-      botoes:[{texto:'Fechar',classe:'btn-ghost',acao:fecharModal}]});
-    try {
-      const {data}=await _sbq().from('inscricoes_eventos').select('*').eq('evento_id',eventoId).order('created_at');
-      const el=document.getElementById('ins-lista-modal');
-      if(!el)return;
-      if(!data?.length){el.innerHTML='<div style="padding:16px;text-align:center;color:var(--c-slate)">Nenhum inscrito ainda.</div>';return;}
-      el.innerHTML=data.map(i=>`
-        <div style="background:var(--b-1);border:1px solid var(--b-2);border-radius:8px;padding:10px 12px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px">
-          <div>
-            <div style="font-weight:600;font-size:13px;color:var(--c-white)">${sanitize(i.nome)}</div>
-            <div style="font-size:11px;color:var(--c-slate)">${sanitize(i.email)}${i.e_membro?' · ⭐ Membro':''}</div>
-            ${i.curso?`<div style="font-size:11px;color:var(--c-slate)">${sanitize(i.curso)}${i.instituicao?' — '+sanitize(i.instituicao):''}</div>`:''}
-          </div>
-          <select onchange="PageOperacoes._atualizarPresenca('${i.id}',this.value)"
-            style="background:var(--b-2);border:1px solid var(--b-3);border-radius:6px;padding:4px 8px;color:var(--c-white);font-size:11px">
-            <option value="inscrito" ${i.status==='inscrito'?'selected':''}>⏳ Inscrito</option>
-            <option value="presente" ${i.status==='presente'?'selected':''}>✅ Presente</option>
-            <option value="ausente" ${i.status==='ausente'?'selected':''}>❌ Ausente</option>
-            <option value="cancelado" ${i.status==='cancelado'?'selected':''}>🚫 Cancelado</option>
-          </select>
-        </div>`).join('');
-    }catch(e){const _el=document.getElementById('ins-lista-modal');if(_el)_el.innerHTML='<div style="padding:16px;color:var(--c-slate)">Erro ao carregar.</div>';}
-  },
-  async _atualizarPresenca(id, status) {
-    try {
-      const ok = await dbEfetivou(_sbq().from('inscricoes_eventos').update({status}).eq('id',id));
-      if (!ok) { mostrarToast('Sem permissão para atualizar este inscrito.','error'); return; }
-      mostrarToast('Status atualizado!','success');
-    }catch(e){mostrarToast('Erro ao atualizar.','error');}
-  },
-  async _exportarCSV(eventoId, nomeEvento) {
-    try {
-      const {data}=await _sbq().from('inscricoes_eventos').select('*').eq('evento_id',eventoId).order('created_at');
-      if(!data?.length){mostrarToast('Nenhum inscrito para exportar.','warning');return;}
-      const esc=v=>`"${(v||'').replace(/"/g,'""')}"`;
-      const header='Nome,Email,CPF,Curso,Instituição,Membro,Status,Inscrito em';
-      const rows=data.map(i=>[esc(i.nome),esc(i.email),esc(i.cpf),esc(i.curso),esc(i.instituicao),i.e_membro?'Sim':'Não',i.status||'inscrito',i.created_at?new Date(i.created_at).toLocaleString('pt-BR'):''].join(','));
-      const csv=[header,...rows].join('\n');
-      const a=document.createElement('a');
-      a.href='data:text/csv;charset=utf-8,'+encodeURIComponent('﻿'+csv);
-      a.download=`inscritos-${nomeEvento.replace(/\s+/g,'-')}.csv`;
-      a.click();
-      mostrarToast('CSV exportado!','success');
-    }catch(e){mostrarToast('Erro ao exportar.','error');}
-  },
   async _renderPops() {
     const pg=document.getElementById('page-ops_pops');
     if(!pg)return;
@@ -3814,7 +3620,7 @@ const PageDev = {
           <option value="false" ${!u.ativo?'selected':''}>○ Inativo (desligado)</option>
         </select></div>
       <p style="font-size:11px;color:var(--c-slate);margin-top:8px">
-        ⚠️ Ao inativar, o sistema envia automaticamente o e-mail de despedida.
+        ⚠️ Ao mudar o status de Ativo para Inativo, o sistema envia automaticamente um e-mail de despedida ao membro.
       </p>`,
     botoes:[
       { texto:'Cancelar', classe:'btn-ghost', acao: fecharModal },
@@ -3846,6 +3652,12 @@ const PageDev = {
       _notificarDevs(`✏️ Membro atualizado: ${nome}`,
         `Cargo: ${cargo || '—'} · Role: ${role} · Ativo: ${ativo ? 'sim' : 'não'}`,
         'membros');
+      /* E-mail de despedida — só na transição ativo → inativo */
+      if (uOriginal?.ativo && !ativo && uOriginal?.email && typeof EmailsModule !== 'undefined') {
+        const criadoPor = window._appProfile?.apelido || window._appProfile?.nome || 'Administração';
+        EmailsModule.enviarDespedida({ email: uOriginal.email, nome, criadoPor })
+          .then(ok => { if (!ok) _notificarDevs('📧 E-mail de despedida falhou', `Não foi possível notificar ${nome} (${uOriginal.email}).`, 'sistema'); });
+      }
     } catch(e) {
       mostrarToast('Erro ao salvar: ' + e.message, 'error');
     }
@@ -5128,7 +4940,6 @@ document.addEventListener('nupi:booted', () => {
       'ops_relatorios':    () => PageOperacoes._renderRelatorios(),
       'ops_pops':          () => PageOperacoes._renderPops(),
       'ops_arquivo':       () => PageOperacoes._renderArquivo(),
-      'ops_inscricoes':    () => PageOperacoes._renderInscricoes(),
       /* Gestão de Pessoas */
       'gp_talentos':       () => PagePessoas._renderTalentos(),
       'gp_clima':          () => PagePessoas._renderClima(),

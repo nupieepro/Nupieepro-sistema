@@ -59,7 +59,6 @@ const ROLE_PAGES = {
     { id: 'ops_relatorios',    icon: 'file',      label: 'Relatórios ABJ' },
     { id: 'ops_pops',          icon: 'folder',    label: 'Cofre de POPs' },
     { id: 'ops_arquivo',       icon: 'folder',    label: 'Arquivo Digital' },
-    { id: 'ops_inscricoes',    icon: 'ticket',    label: 'Gestão de Inscrições' },
     { id: 'gp_tap',            icon: 'layout',    label: 'Módulo TAP (Inovação)' },
   ],
   'G. Pessoas': [
@@ -704,7 +703,7 @@ const ALL_PAGES = [
   'mkt_tracker','mkt_kanban','mkt_lojinha_admin','mkt_trello','mkt_notion',
   'fin_fluxo','fin_abepro','fin_comercial',
   'prj_eventos','prj_enegep','prj_treinamentos','prj_nupicast','prj_parcerias',
-  'ops_relatorios','ops_pops','ops_arquivo','ops_inscricoes',
+  'ops_relatorios','ops_pops','ops_arquivo',
   'gp_talentos','gp_clima','gp_tap','gp_aniversarios','gp_treinamentos',
   'global_visitas','global_apresentacoes','global_producao','global_assembleia','global_gestao','global_checkin'
 ];
@@ -761,7 +760,6 @@ function goTo(id) {
   if (id === 'prj_eventos')       typeof PageProjetos  !== 'undefined' && PageProjetos.init();
   if (id === 'operacoes')         Operacoes.loadHub();
   if (id === 'ops_pops')          typeof PageOperacoes !== 'undefined' && PageOperacoes._renderPops();
-  if (id === 'ops_inscricoes')    typeof PageOperacoes !== 'undefined' && PageOperacoes._renderInscricoes();
   if (id === 'gp_talentos')       typeof PagePessoas   !== 'undefined' && PagePessoas._renderTalentos();
   if (id === 'demandas')          Dem.setView('kanban', document.getElementById('demViewKanban'));
   if (id === 'calendario')        NovoCal._render();

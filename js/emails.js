@@ -214,12 +214,50 @@ const EmailsModule = (() => {
     });
   }
 
+  /* ════════════════════════════════════════════
+     👋 5. DESPEDIDA (membro inativado por um admin)
+     Reaproveita template_convite (plano gratuito só tem 2 templates) —
+     mesma justificativa do enviarMagicLink acima.
+  ════════════════════════════════════════════ */
+  async function enviarDespedida({ email, nome, criadoPor }) {
+    const primeiroNome = nome?.split(' ')[0] || 'membro';
+    const link = `${typeof location !== 'undefined' ? location.origin : 'https://nupieepro.pages.dev'}/index.html`;
+    return _send('template_convite', {
+      para_email:     email,
+      email:          email,
+      nome_convidado: nome || primeiroNome,
+      coord:          'NUPIEEPRO',
+      cargo:          '—',
+      ano_gestao:     new Date().getFullYear().toString(),
+      link,
+      criado_por:     criadoPor || 'Administração',
+      assunto: `Obrigado pela sua passagem pelo Nupi, ${primeiroNome} 💙🧡`,
+      mensagem: [
+        `Olá, ${primeiroNome}!`,
+        '',
+        'Seu vínculo ativo com o NUPIEEPRO foi encerrado no sistema.',
+        '',
+        'Registramos aqui nosso agradecimento por tudo que você contribuiu durante sua passagem —',
+        'cada entrega, cada reunião e cada ideia fizeram parte da história do núcleo.',
+        '',
+        'As portas do Nupi continuam abertas. Se um dia quiser voltar a acompanhar ou participar,',
+        'basta acessar o sistema:',
+        '',
+        `🔗 ${link}`,
+        '',
+        'Com gratidão,',
+        'Equipe NUPIEEPRO',
+      ].join('\n'),
+    });
+  }
+
   /* ── Expõe API pública ── */
   return {
     enviarAniversario,
     enviarDemandaCadastrada,
     enviarConvite,
     enviarMagicLink,
+    enviarDespedida,
     checarAniversariosEmail,
   };
 })();
