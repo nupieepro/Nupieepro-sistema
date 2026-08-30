@@ -29,7 +29,7 @@
     // Injeção Crítica: Impede a tela branca de "Blink"
     (function(){
       var _t = localStorage.getItem('np-theme') || localStorage.getItem('nupie_theme') || 'nucleo';
-      var _f = localStorage.getItem('nupie_font') || 'league-spartan';
+      var _f = localStorage.getItem('nupie_font') || 'default';
       // Map legacy theme names to new ones
       var legacyMap = {'dark-orange':'nucleo','dark-purple':'violet','fusion':'nucleo','luminous':'papel','orange':'noite','obsidian':'noite','bad-boy':'noite','default':'nucleo'};
       if (legacyMap[_t]) _t = legacyMap[_t];
@@ -255,7 +255,7 @@
           <div class="topbar-center hide-mobile">
             <div class="topbar-search" onclick="document.getElementById('topbarSearchInput').focus()">
               <svg viewBox="0 0 20 20" fill="currentColor" width="14" height="14" style="color:var(--fg-3)"><path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd"/></svg>
-              <input id="topbarSearchInput" placeholder="Buscar página, membro ou demanda..." style="background:none;border:none;outline:none;color:var(--fg-1);font-size:13px;flex:1;font-family:var(--font-sans);">
+              <input id="topbarSearchInput" placeholder="Buscar página, membro ou demanda..." style="background:none;border:none;outline:none;color:var(--fg-1);font-size:13px;flex:1;font-family:var(--font-body);">
               <kbd style="font-family:var(--font-mono);font-size:10px;color:var(--fg-3);background:var(--surface-3);border:1px solid var(--border-1);border-radius:4px;padding:1px 5px;">⌘K</kbd>
             </div>
           </div>
@@ -1329,7 +1329,7 @@
                 <a href="https://nupieepro.github.io/Lojinha-Nupieepro/" target="_blank" class="btn" style="background:rgba(255,255,255,0.05); color:var(--white); border: 1px solid var(--b-2); width:100%; white-space:normal;">Testar Site Público de Vendas</a>
             </div>
 
-            <div class="section-card text-center" style="padding:3.5rem; border-radius:16px; border: 1px solid var(--b-1); background:var(--s1); box-shadow: inset 0 0 50px rgba(247, 84, 18, 0.05);">
+            <div class="section-card text-center" style="padding:3.5rem; border-radius:16px; border: 1px solid var(--b-1); background:var(--s1); box-shadow: inset 0 0 50px rgba(208, 84, 26, 0.05);">
                 <div style="font-size:40px;margin-bottom:1rem;">🔐</div>
                 <strong style="color:var(--white);">Admin de Pedidos — Finanças Master</strong><br>
                 <p style="font-size:12px;color:var(--t-2);margin:0.5rem 0 1.5rem;">Visualização interna segura com dashboard de caixas, envios e lucros das coordenações.</p>

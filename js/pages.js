@@ -4098,11 +4098,11 @@ const PageDev = {
       ${_sc('Status do Sistema','🔖',`
         <div style="display:flex;flex-direction:column;gap:8px;font-size:13px">
           ${[
-            ['App Core',    'v9.0',  '#f75412'],
-            ['ABJ Module',  'v3.0',  '#f75412'],
-            ['Pages.js',    'v2.0',  '#f75412'],
-            ['Emails.js',   'v1.0',  '#f75412'],
-            ['Permissoes.js','v1.0', '#f75412'],
+            ['App Core',    'v9.0',  'var(--brand-orange)'],
+            ['ABJ Module',  'v3.0',  'var(--brand-orange)'],
+            ['Pages.js',    'v2.0',  'var(--brand-orange)'],
+            ['Emails.js',   'v1.0',  'var(--brand-orange)'],
+            ['Permissoes.js','v1.0', 'var(--brand-orange)'],
             ['Supabase',    sb?'✅ Conectado':'❌ Offline', sb?'var(--green)':'var(--red)'],
             ['Rede',        online?'✅ Online':'🔴 Offline', online?'var(--green)':'var(--red)'],
             ['Service Worker', 'serviceWorker' in navigator ? '✅ Ativo':'❌ Não suportado', 'serviceWorker' in navigator?'var(--green)':'var(--red)'],

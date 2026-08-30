@@ -15,8 +15,8 @@ const RelatorioModule = (() => {
     if (!jsPDF) { mostrarToast('jsPDF não carregado.', 'error'); return null; }
     const doc = new jsPDF({ orientation:'portrait', unit:'mm', format:'a4' });
     const W = 210, M = 20;
-    const azul   = [41, 50, 79];
-    const laranja = [247, 84, 18];
+    const azul   = [15, 7, 50];
+    const laranja = [208, 84, 26];
     const cinza  = [100, 110, 130];
     doc.setFillColor(...azul);
     doc.rect(0, 0, W, 42, 'F');
