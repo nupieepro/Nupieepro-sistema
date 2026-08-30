@@ -1,0 +1,26 @@
+-- ============================================================
+-- Migração 008: Fecha exposição de PII de inscritos em eventos
+-- Já aplicada em produção (quwpyrdxyibcbyzwfilb) via Supabase MCP.
+-- Mantida aqui para histórico, igual ao padrão das migrations anteriores.
+-- ============================================================
+--
+-- CRÍTICO (achado em auditoria de RLS em 30/08/2026): "ie_auth_select"
+-- (public.inscricoes_eventos) só exigia auth.role() = 'authenticated' —
+-- qualquer membro logado, de qualquer coordenadoria, conseguia ler a lista
+-- completa de inscritos de QUALQUER evento via chamada direta à API,
+-- incluindo nome, e-mail, CPF, curso e instituição (a tabela guarda CPF —
+-- dado sensível pela LGPD).
+--
+-- A migration 007 já tinha identificado esse buraco e decidiu não apertar
+-- na hora porque a tela "Ver Inscritos"/exportar CSV (só de Operações,
+-- PageOperacoes._verInscritos/_exportarCSV) dependia de member/assessor de
+-- Operações conseguir ler os inscritos, e não havia gate de role nessa tela.
+--
+-- Essa tela foi removida do sistema nesta mesma auditoria — Operações passou
+-- a usar ferramenta própria de gestão de inscrições, então "Gestão de
+-- Inscrições" (aba, rota e funções em js/app.js/js/pages.js/dashboard.html)
+-- não existe mais. Sem UI nenhuma dependendo de member/assessor lerem essa
+-- tabela, aperta pra coordenador/admin — mesmo critério já usado em
+-- ei_coord_admin_update/ei_coord_admin_delete (migration 007).
+DROP POLICY IF EXISTS "ie_auth_select" ON public.inscricoes_eventos;
+CREATE POLICY "ie_coord_admin_select" ON public.inscricoes_eventos FOR SELECT USING (public.is_coord_or_admin());
