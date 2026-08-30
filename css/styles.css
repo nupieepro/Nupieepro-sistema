@@ -1352,8 +1352,6 @@ canvas { max-width: 100%; }
   font-display: swap;
 }
 [data-font="inter"]         { --font-body: 'Inter', sans-serif;          --font-display: 'Inter', sans-serif; }
-[data-font="mono"]          { --font-body: 'Roboto Mono', monospace;     --font-display: 'Roboto Mono', monospace; }
-[data-font="outfit"]        { --font-body: 'Outfit', sans-serif;         --font-display: 'Outfit', sans-serif; }
 [data-font="fira"]          { --font-body: 'Fira Code', monospace;       --font-display: 'Fira Code', monospace; }
 [data-font="montserrat"]    { --font-body: 'Montserrat', sans-serif;     --font-display: 'Montserrat', sans-serif; }
 [data-font="league-spartan"] { --font-body: 'League Spartan', sans-serif; --font-display: 'League Spartan', sans-serif; }
