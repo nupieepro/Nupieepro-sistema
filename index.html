@@ -20,7 +20,7 @@
   <!-- Tipografia de Alta Qualidade -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Plus+Jakarta+Sans:wght@700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=League+Spartan:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   
   <!-- Theme init: aplica o tema salvo antes de qualquer render -->
   <script>
@@ -37,26 +37,35 @@
 
   <style>
     :root {
-      /* Núcleo (azul petróleo) — padrão */
-      --c-bg:       #0d1c2a;
-      --c-s1:       #0a1520;
-      --c-s2:       rgba(17, 32, 51, 0.80);
-      --c-s3:       #1a2d40;
-      --c-accent:   #f65214;
-      --c-accent2:  #ff7a3d;
+      /* Núcleo (azul marinho + laranja escuro) — paleta oficial, padrão */
+      --c-bg:       #0f0732;
+      --c-s1:       #0b0526;
+      --c-s2:       rgba(23, 13, 66, 0.80);
+      --c-s3:       #221454;
+      --c-accent:   #d0541a;
+      --c-accent2:  #e07d43;
       --c-white:    #ffffff;
       --c-slate:    rgba(184,204,216,0.60);
       --border:     rgba(255,255,255,0.08);
-      --a-1: rgba(246,82,20,0.06);
-      --a-2: rgba(246,82,20,0.12);
-      --a-3: rgba(246,82,20,0.22);
-      --black:      #0d1c2a;
+      --a-1: rgba(208,84,26,0.06);
+      --a-2: rgba(208,84,26,0.12);
+      --a-3: rgba(208,84,26,0.22);
+      --black:      #0f0732;
       --white:      #ffffff;
-      --orange:     #f65214;
-      --orange-dim: rgba(246,82,20,0.12);
-      --font-body: 'DM Sans', sans-serif;
-      --font-head: 'Plus Jakarta Sans', sans-serif;
+      --orange:     #d0541a;
+      --orange-dim: rgba(208,84,26,0.12);
+      --font-body: 'League Spartan', sans-serif;
+      --font-head: 'Adumu', 'League Spartan', sans-serif;
       --font-mono: 'JetBrains Mono', monospace;
+    }
+
+    /* Adumu (título/logo) — self-hosted, mesmo arquivo do dashboard */
+    @font-face {
+      font-family: 'Adumu';
+      src: url('assets/fonts/Adumu-Regular.woff2') format('woff2');
+      font-weight: 400;
+      font-style: normal;
+      font-display: swap;
     }
 
     /* Noite (preto + laranja) */
@@ -125,7 +134,7 @@
       position: absolute;
       font-family: var(--font-mono);
       font-size: 10px;
-      color: var(--orange);
+      color: var(--c-accent2, var(--orange));
       text-transform: uppercase;
       padding: 4px 8px;
       letter-spacing: 1px;
@@ -147,8 +156,8 @@
       position: absolute;
       inset: 0;
       background-image:
-        linear-gradient(var(--a-1, rgba(247,84,18,0.04)) 1px, transparent 1px),
-        linear-gradient(90deg, var(--a-1, rgba(247,84,18,0.04)) 1px, transparent 1px);
+        linear-gradient(var(--a-1, rgba(208,84,26,0.04)) 1px, transparent 1px),
+        linear-gradient(90deg, var(--a-1, rgba(208,84,26,0.04)) 1px, transparent 1px);
       background-size: 50px 50px;
       z-index: 1;
     }
@@ -187,8 +196,51 @@
       display: flex;
       flex-direction: column;
       justify-content: center;
+      position: relative;
       animation: revealSlideRight 0.8s cubic-bezier(0.16, 1, 0.3, 1) both;
     }
+
+    /* ─── Cotas de Desenho Técnico (Engenharia de Produção) ─── */
+    .dim-callout {
+      position: absolute;
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.5px;
+      color: var(--orange);
+      opacity: 0.32;
+      pointer-events: none;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      white-space: nowrap;
+    }
+    .dim-callout .dim-line { width: 28px; height: 1px; background: var(--orange-dim); position: relative; }
+    .dim-callout .dim-line::before, .dim-callout .dim-line::after {
+      content: ''; position: absolute; top: -3px; width: 1px; height: 7px; background: var(--orange-dim);
+    }
+    .dim-callout .dim-line::before { left: 0; }
+    .dim-callout .dim-line::after { right: 0; }
+    .dim-logo   { top: -10px; left: 62px; }
+    .dim-tol    { bottom: -18px; right: 4%; }
+
+    /* ─── Linha de Produção (esteira animada) ─── */
+    .prod-line {
+      position: relative;
+      width: 100%;
+      max-width: 380px;
+      height: 1px;
+      margin-top: 1.4rem;
+      background: repeating-linear-gradient(90deg, var(--orange-dim) 0 6px, transparent 6px 14px);
+      overflow: visible;
+    }
+    .prod-line span {
+      position: absolute; top: -2.5px; width: 6px; height: 6px;
+      border-radius: 1px; background: var(--orange); opacity: 0.55;
+      animation: prodMove 4s linear infinite;
+    }
+    .prod-line span:nth-child(2) { animation-delay: 1.33s; }
+    .prod-line span:nth-child(3) { animation-delay: 2.66s; }
+    @keyframes prodMove { from { left: 0%; opacity: 0; } 10% { opacity: .55; } 90% { opacity: .55; } to { left: 100%; opacity: 0; } }
 
     .login-section {
       width: 460px;
@@ -209,7 +261,7 @@
     .logo-container { display: flex; align-items: center; gap: 12px; margin-bottom: 2rem; }
     .logo-icon { width: 44px; height: 44px; object-fit: contain; object-position: center; animation: breathe 3s ease-in-out infinite alternate; }
     .logo-text { font-family: var(--font-head); font-size: 26px; font-weight: 800; }
-    .logo-text span { color: var(--c-accent, var(--orange)); }
+    .logo-text span { color: var(--c-accent2, var(--orange)); }
 
     @keyframes breathe { 0% { transform: scale(1); filter: brightness(1); } 100% { transform: scale(1.08); filter: brightness(1.3) drop-shadow(0 0 10px var(--c-accent, var(--orange))); } }
 
@@ -225,9 +277,9 @@
       /* [V9.0] Shimmer Camaleão Multi-Tone */
       background: linear-gradient(91deg, 
         var(--c-white, #ffffff) 0%, 
-        var(--c-accent, #f75412) 20%, 
-        var(--c-accent2, #ff7d33) 40%, 
-        var(--c-accent, #f75412) 60%, 
+        var(--c-accent, #d0541a) 20%, 
+        var(--c-accent2, #e07d43) 40%, 
+        var(--c-accent, #d0541a) 60%, 
         var(--c-white, #ffffff) 80%,
         var(--c-white, #ffffff) 100%);
       background-size: 200% auto;
@@ -235,7 +287,7 @@
       -webkit-text-fill-color: transparent;
       animation: shimmerElite 5s linear infinite;
       /* Camada de segurança para legibilidade */
-      filter: drop-shadow(0 0 25px var(--a-3, rgba(247, 84, 18, 0.4)));
+      filter: drop-shadow(0 0 25px var(--a-3, rgba(208, 84, 26, 0.4)));
       text-shadow: 0 0 1px rgba(0,0,0,0.1); 
     }
     @keyframes shimmerElite {
@@ -263,8 +315,8 @@
     }
     .form-input:focus {
       border-color: var(--orange);
-      background: rgba(247, 84, 18, 0.05);
-      box-shadow: 0 0 20px rgba(247, 84, 18, 0.1);
+      background: rgba(208, 84, 26, 0.05);
+      box-shadow: 0 0 20px rgba(208, 84, 26, 0.1);
     }
 
     .btn-submit {
@@ -293,12 +345,12 @@
       background: var(--orange);
       color: #fff;
       transform: translateY(-2px);
-      box-shadow: 0 8px 24px rgba(247, 84, 18, 0.30);
+      box-shadow: 0 8px 24px rgba(208, 84, 26, 0.30);
     }
 
     .card-footer { display: flex; justify-content: space-between; margin-top: 2rem; }
     .btn-link { background: none; border: none; color: rgba(255,255,255,0.3); font-size: 12px; cursor: pointer; transition: color 0.2s; }
-    .btn-link:hover { color: var(--orange); }
+    .btn-link:hover { color: var(--c-accent2, var(--orange)); }
 
     .panel-wrap { display: none; margin-top: 2rem; padding-top: 2rem; border-top: 1px solid var(--border); }
     .panel-wrap.open { display: block; animation: revealUp 0.4s ease both; }
@@ -318,11 +370,11 @@
 
     @media (max-width: 900px) {
       .container { flex-direction: column; height: auto; }
-      .brand-section { padding: 60px 24px; text-align: center; align-items: center; min-height: 50vh; }
-      .shimmer-text { font-size: clamp(34px, 10vw, 48px); margin-bottom: 1.5rem; letter-spacing: -1px; }
-      .subtitle { font-size: 16px; margin-bottom: 1rem; opacity: 0.7; }
+      .brand-section { padding: 48px 24px 32px; text-align: center; align-items: center; min-height: auto; }
+      .shimmer-text { font-size: clamp(30px, 9vw, 40px); margin-bottom: 1rem; letter-spacing: -1px; }
+      .subtitle { font-size: 15px; margin-bottom: 0.5rem; opacity: 0.7; }
       .login-section { width: 100%; height: auto; padding: 40px 24px; border-left: none; border-top: 1px solid var(--border); background: rgba(5, 5, 5, 0.9); }
-      .hud-overlay, .gear { display: none !important; visibility: hidden; }
+      .hud-overlay, .hud-tag, .hud-line, .gear, .dim-callout, .prod-line { display: none !important; visibility: hidden !important; }
       body { overflow-y: auto; }
       .btn-submit { width: 100%; margin-left: 0; padding: 16px; font-size: 13px; }
     }
@@ -356,6 +408,13 @@
 
   <div class="bg-blueprint"></div>
 
+  <div class="hud-overlay" aria-hidden="true">
+    <div class="hud-line hud-v"></div>
+    <div class="hud-line hud-h"></div>
+    <div class="hud-tag hud-tl">NUPIEEPRO // PCP.SISTEMA</div>
+    <div class="hud-tag hud-br" id="hudStatus">REV. 2026.03</div>
+  </div>
+
   <div class="industrial-stage">
     <div class="gear gear-1">
       <svg viewBox="0 0 100 100" fill="currentColor"><path d="M95,44.1c-0.2-2.1-0.6-4.1-1.2-6.1l-6.8-1.5c-0.5-2.2-1.3-4.2-2.3-6.1l4.1-5.6c-1.4-1.6-3-3-4.6-4.3L78.6,24.6 c-1.9-1-3.9-1.8-6.1-2.3l-1.5-6.8c-2-0.6-4-1-6.1-1.2l-1.5,6.8c-2.2,0.5-4.2,1.3-6.1,2.3l-5.6-4.1c-1.6,1.4-3,3-4.3,4.6l4.1,5.6 c-1,1.9-1.8,3.9-2.3,6.1l-6.8,1.5c-0.6,2-1,4-1.2,6.1l6.8,1.5c0.5,2.2,1.3,4.2,2.3,6.1l-4.1,5.6c1.4,1.6,3,3,4.6,4.3l5.6-4.1 c1.9,1,3.9,1.8,6.1,2.3l1.5,6.8c2,0.6,4,1,6.1,1.2l1.5-6.8c2.2-0.5,4.2-1.3,6.1-2.3l5.6,4.1c1.6-1.4,3-3,4.3-4.6l-4.1-5.6 c1-1.9,1.8-3.9,2.3-6.1L95,44.1z M50,65c-8.3,0-15-6.7-15-15s6.7-15,15-15s15,6.7,15,15S58.3,65,50,65z"/></svg>
@@ -367,13 +426,16 @@
 
   <main class="container">
     <div class="brand-section">
+      <div class="dim-callout dim-logo" aria-hidden="true"><span class="dim-line"></span>Ø 44mm</div>
       <div class="logo-container">
         <img src="assets/icon-192.png" alt="Logo" class="logo-icon">
         <div class="logo-text">NUPIE<span>EPRO</span></div>
       </div>
       <h1 class="shimmer-text">Gestão do NUPIEEPRO<br>Tudo em um só lugar.</h1>
       <p class="subtitle">Plataforma interna do Núcleo Piauiense de Estudantes de Engenharia de Produção. Acesso restrito a membros.</p>
-      <div style="margin-top:2rem; font-size:11px; color:var(--c-slate); opacity:0.6; letter-spacing:1px; font-weight:700;">NUPIEEPRO · ABEPRO JOVEM · 2026</div>
+      <div class="prod-line" aria-hidden="true"><span></span><span></span><span></span></div>
+      <div style="margin-top:1.4rem; font-size:11px; color:var(--c-slate); opacity:0.6; letter-spacing:1px; font-weight:700;">NUPIEEPRO · ABEPRO JOVEM · 2026</div>
+      <div class="dim-callout dim-tol" aria-hidden="true">TOL ±0.02 · ISO 9001<span class="dim-line"></span></div>
     </div>
 
     <div class="login-section">
@@ -383,16 +445,16 @@
         <form id="loginForm" onsubmit="return false;" novalidate>
           <div class="form-group">
             <label class="form-label" for="loginEmail">E-mail</label>
-            <input type="email" id="loginEmail" class="form-input" placeholder="seu@email.com" required>
+            <input type="email" id="loginEmail" class="form-input" placeholder="seu@email.com" autocomplete="email" required>
           </div>
 
           <div class="form-group">
             <label class="form-label" for="loginPassword">Senha</label>
-            <input type="password" id="loginPassword" class="form-input" placeholder="••••••••" required>
+            <input type="password" id="loginPassword" class="form-input" placeholder="••••••••" autocomplete="current-password" required>
           </div>
 
           <div style="font-size: 10px; color: rgba(255,255,255,0.4); margin-bottom: 1rem; text-align: left; line-height: 1.4;">
-            Ao acessar o sistema, você concorda com os <a href="#" style="color: var(--orange); text-decoration: none;">Termos de Uso e Política de Privacidade (LGPD)</a>.
+            Ao acessar o sistema, você concorda com os <a href="#" style="color: var(--c-accent2, var(--orange)); text-decoration: none;">Termos de Uso e Política de Privacidade (LGPD)</a>.
           </div>
           <button id="btnLogin" class="btn-submit" onclick="doLogin()">
             Entrar
@@ -407,7 +469,7 @@
 
         <div id="resetPanel" class="panel-wrap">
           <div id="resetAlert" class="alert"></div>
-          <input type="email" id="resetEmail" class="form-input" placeholder="Seu e-mail cadastrado">
+          <input type="email" id="resetEmail" class="form-input" placeholder="Seu e-mail cadastrado" autocomplete="email">
           <button id="btnReset" class="btn-submit" onclick="doResetPassword()" style="background:var(--orange); color:#fff; margin-top:1rem;">Enviar link de recuperação</button>
         </div>
 
@@ -454,6 +516,17 @@
         }).catch(() => {});
       }
     })();
+
+    // HUD industrial: readout rotativo com termos reais de Engenharia de Produção
+    const _hudMsgs = ['REV. 2026.03', 'PCP · ATIVO', 'CICLO PRODUTIVO: OK', 'TAKT TIME OK', 'STATUS: ONLINE'];
+    let _hudI = 0;
+    const _hudEl = document.getElementById('hudStatus');
+    if (_hudEl) {
+      setInterval(() => {
+        _hudI = (_hudI + 1) % _hudMsgs.length;
+        _hudEl.textContent = _hudMsgs[_hudI];
+      }, 3200);
+    }
 
     const cursor = document.createElement('div');
     cursor.className = 'custom-cursor';
