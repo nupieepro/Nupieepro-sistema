@@ -148,6 +148,8 @@ const RelatorioModule = (() => {
                   </span>
                   <button class="btn btn-ghost" style="font-size:12px"
                     onclick="RelatorioModule.baixarPDF('${r.id}')">⬇ PDF</button>
+                  <button class="btn btn-ghost" style="font-size:12px"
+                    onclick="RelatorioModule.baixarWord('${r.id}')">⬇ Word</button>
                 </div>
               </div>`;
           }).join('')
@@ -329,6 +331,35 @@ const RelatorioModule = (() => {
       if (doc) doc.save(`NUPIEEPRO_Relatorio_${MESES_PT[data.mes-1]}_${data.ano}.pdf`);
     } catch(e) { mostrarToast('Erro ao gerar PDF.', 'error'); }
   }
-  return { renderPagina, abrirFormulario, baixarPDF, _gerarRascunho };
+  async function baixarWord(id) {
+    if (!window._supabase || !window.DocumentosModule) { mostrarToast('Gerador de documentos não carregado.', 'error'); return; }
+    mostrarToast('Gerando Word...', 'info', 1500);
+    try {
+      const { data: r } = await window._supabase
+        .from('relatorios_mensais').select('*, coordenadorias(nome)').eq('id', id).single();
+      if (!r) { mostrarToast('Não encontrado.', 'error'); return; }
+      const prazo = _statusPrazo(r.mes, r.ano);
+      const saldo = (r.total_vendas||0) - (r.total_despesas||0);
+      const campos = [
+        ['Mês de referência:', `${MESES_PT[r.mes-1]} ${r.ano}`],
+        ['Coordenadoria:', r.coordenadorias?.nome || '—'],
+        ['Status do prazo:', prazo.label.replace(/[✅⚠️❌]\s*/,'')],
+        ['Pontos ABJ:', `${r.pontos_abj||0} pts`],
+      ];
+      const secoes = [];
+      if (r.total_vendas || r.total_despesas) {
+        secoes.push({ titulo:'Resumo Financeiro do Mês', corpo:
+          `Vendas: R$ ${(r.total_vendas||0).toFixed(2)}\nDespesas: R$ ${(r.total_despesas||0).toFixed(2)}\nSaldo: R$ ${saldo.toFixed(2)}` });
+      }
+      if (r.observacoes) secoes.push({ titulo:'Atividades Realizadas', corpo: r.observacoes });
+      const blob = await window.DocumentosModule.gerarWordFormal({
+        titulo: `Relatório Mensal — ${MESES_PT[r.mes-1]} ${r.ano}`,
+        subtitulo: r.coordenadorias?.nome || null,
+        campos, secoes, geradoPor: window._appProfile?.nome,
+      });
+      if (blob) window.DocumentosModule.baixarBlob(blob, `NUPIEEPRO_Relatorio_${MESES_PT[r.mes-1]}_${r.ano}.docx`);
+    } catch(e) { console.warn('[Relatorio Word]', e); mostrarToast('Erro ao gerar Word.', 'error'); }
+  }
+  return { renderPagina, abrirFormulario, baixarPDF, baixarWord, _gerarRascunho };
 })();
 window.RelatorioModule = RelatorioModule;

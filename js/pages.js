@@ -244,7 +244,7 @@ const PageGeral = {
         ? data.map(r=>{
           let extra = {};
           let linkMeet = '';
-          /* descricao pode ser url direto OU JSON com {link, ...} */
+          /* descricao pode ser url direto OU JSON com {link, ata} */
           if (r.descricao) {
             if (r.descricao.startsWith('http')) linkMeet = r.descricao;
             else { try { extra = JSON.parse(r.descricao); linkMeet = extra.link || ''; } catch {} }
@@ -262,6 +262,9 @@ const PageGeral = {
                            background:var(--green)22;color:var(--green);border:1px solid var(--green)44">
                 ${r.ativo?'Ativa':'Encerrada'}
               </span>
+              ${extra.ata?`
+              <button class="btn btn-ghost" style="padding:3px 7px;font-size:11px" title="Baixar ata em PDF" onclick="PageGeral._exportarAta('${r.id}','pdf')">📄</button>
+              <button class="btn btn-ghost" style="padding:3px 7px;font-size:11px" title="Baixar ata em Word" onclick="PageGeral._exportarAta('${r.id}','word')">📝</button>`:''}
               <button class="btn btn-ghost" style="padding:3px 7px;font-size:11px" title="Editar" onclick="PageGeral._editarReuniao('${r.id}')">✏️</button>
               <button class="btn btn-ghost" style="padding:3px 7px;font-size:11px;color:var(--red)" title="Excluir" onclick="PageGeral._excluirReuniao('${r.id}')">🗑️</button>
             </div>
@@ -275,6 +278,9 @@ const PageGeral = {
     const { data: r } = await _sbq().from('eventos').select('*').eq('id', id).single();
     if (!r) { mostrarToast('Reunião não encontrada','error'); return; }
     const dataIso = r.data_inicio ? new Date(r.data_inicio).toISOString().slice(0,16) : '';
+    let extra = {};
+    if (r.descricao && !r.descricao.startsWith('http')) { try { extra = JSON.parse(r.descricao); } catch {} }
+    const linkAtual = r.descricao?.startsWith('http') ? r.descricao : (extra.link || '');
     abrirModal({ titulo: '✏️ Editar Reunião', corpo: `
       <div class="form-group"><label class="form-label">Título *</label>
         <input id="er-titulo" class="form-input" value="${sanitize(r.titulo||'')}"></div>
@@ -282,6 +288,10 @@ const PageGeral = {
         <input id="er-data" type="datetime-local" class="form-input" value="${dataIso}"></div>
       <div class="form-group"><label class="form-label">Vagas</label>
         <input id="er-vagas" type="number" class="form-input" value="${r.vagas||0}"></div>
+      <div class="form-group"><label class="form-label">Link (Google Meet, etc.)</label>
+        <input id="er-link" class="form-input" value="${sanitize(linkAtual)}" placeholder="https://meet.google.com/..."></div>
+      <div class="form-group"><label class="form-label">Ata / Resumo da Reunião</label>
+        <textarea id="er-ata" class="form-input" style="height:90px" placeholder="Pauta, deliberações, encaminhamentos...">${sanitize(extra.ata||'')}</textarea></div>
       <div class="form-group"><label class="form-label">Status</label>
         <select id="er-ativo" class="form-select">
           <option value="true" ${r.ativo?'selected':''}>Ativa</option>
@@ -294,8 +304,11 @@ const PageGeral = {
         const data = document.getElementById('er-data')?.value;
         const vagas = parseInt(document.getElementById('er-vagas')?.value) || null;
         const ativo = document.getElementById('er-ativo')?.value === 'true';
+        const link = document.getElementById('er-link')?.value?.trim();
+        const ata = document.getElementById('er-ata')?.value?.trim();
         if (!titulo || !data) { mostrarToast('Preencha título e data','warning'); return; }
-        await _sbq().from('eventos').update({ titulo, data_inicio: data, vagas, ativo }).eq('id', id);
+        const descricao = (link || ata) ? JSON.stringify({ link: link||undefined, ata: ata||undefined }) : null;
+        await _sbq().from('eventos').update({ titulo, data_inicio: data, vagas, ativo, descricao }).eq('id', id);
         fecharModal();
         mostrarToast('Reunião atualizada!','success');
         PageGeral._carregarReunioes();
@@ -307,6 +320,36 @@ const PageGeral = {
     await _sbq().from('eventos').delete().eq('id', id);
     mostrarToast('Reunião excluída!','success');
     PageGeral._carregarReunioes();
+  },
+  async _exportarAta(id, formato) {
+    if (!_sbq() || !window.DocumentosModule) { mostrarToast('Gerador de documentos não carregado.','error'); return; }
+    mostrarToast('Gerando documento...','info',1500);
+    try {
+      const { data: r } = await _sbq().from('eventos').select('*, users!criado_por(nome, apelido)').eq('id', id).single();
+      if (!r) { mostrarToast('Reunião não encontrada.','error'); return; }
+      let extra = {};
+      if (r.descricao && !r.descricao.startsWith('http')) { try { extra = JSON.parse(r.descricao); } catch {} }
+      if (!extra.ata) { mostrarToast('Esta reunião ainda não tem ata registrada.','warning'); return; }
+      const relator = r.users?.apelido || r.users?.nome || '—';
+      const args = {
+        titulo: 'Ata de Reunião', subtitulo: r.titulo,
+        campos: [
+          ['Data/hora:', _fmt(r.data_inicio)],
+          ['Registrado por:', relator],
+          ['Vagas/participantes:', r.vagas||'—'],
+        ],
+        secoes: [{ titulo:'Pauta, Deliberações e Encaminhamentos', corpo: extra.ata }],
+        geradoPor: window._appProfile?.nome,
+      };
+      const nomeArq = `NUPIEEPRO_Ata_${(r.titulo||'reuniao').replace(/[^\wÀ-ÿ]+/g,'_').slice(0,60)}`;
+      if (formato === 'pdf') {
+        const doc = window.DocumentosModule.gerarPDFFormal(args);
+        if (doc) doc.save(`${nomeArq}.pdf`);
+      } else {
+        const blob = await window.DocumentosModule.gerarWordFormal(args);
+        if (blob) window.DocumentosModule.baixarBlob(blob, `${nomeArq}.docx`);
+      }
+    } catch(e) { console.warn('[Ata export]', e); mostrarToast('Erro ao gerar documento.','error'); }
   },
   _renderPlanejamento() {
     const pg = document.getElementById('page-geral_planejamento');
@@ -598,7 +641,9 @@ const PageGeral = {
           <input id="nr-vagas" type="number" class="form-input" value="17"></div>
       </div>
       <div class="form-group"><label class="form-label">Link (Google Meet, etc.)</label>
-        <input id="nr-link" class="form-input" placeholder="https://meet.google.com/..."></div>`,
+        <input id="nr-link" class="form-input" placeholder="https://meet.google.com/..."></div>
+      <div class="form-group"><label class="form-label">Ata / Resumo da Reunião</label>
+        <textarea id="nr-ata" class="form-input" style="height:90px" placeholder="Pauta, deliberações, encaminhamentos... (pode preencher depois de realizada)"></textarea></div>`,
     botoes:[
       {texto:'Cancelar',classe:'btn-ghost',acao:fecharModal},
       {texto:'Criar ✓',classe:'btn-primary',acao:()=>this._salvarReuniao()}
@@ -681,14 +726,19 @@ const PageGeral = {
     const data   = document.getElementById('nr-data')?.value;
     const vagas  = parseInt(document.getElementById('nr-vagas')?.value)||17;
     const link   = document.getElementById('nr-link')?.value?.trim();
+    const ata    = document.getElementById('nr-ata')?.value?.trim();
     if(!titulo||!data){mostrarToast('Preencha título e data!','warning');return;}
     fecharModal();
     try {
       const coords = await getCoords();
       const ger = coords.find(c=>c.sigla==='GER');
+      /* descricao guarda {link, ata} em JSON — mesmo campo que já era usado
+         só pro link antes, mantendo compatibilidade com reuniões antigas
+         (_carregarReunioes trata tanto texto puro quanto JSON). */
+      const descricao = (link || ata) ? JSON.stringify({ link: link||undefined, ata: ata||undefined }) : null;
       await _sbq().from('eventos').insert([{
         titulo, data_inicio:data, tipo:'reuniao',
-        vagas, descricao:link||null, ativo:true,
+        vagas, descricao, ativo:true,
         coordenadoria_id:ger?.id||null,
         criado_por: window._appProfile?.id
       }]);
@@ -2916,6 +2966,8 @@ const PagePessoas = {
                              background:${corStatus[t.status]||'var(--c-slate)'}22;color:${corStatus[t.status]||'var(--c-slate)'};
                              border:1px solid ${corStatus[t.status]||'var(--c-slate)'}44;
                              text-transform:uppercase;letter-spacing:.05em;white-space:nowrap">${t.status||'rascunho'}</span>
+                <button class="btn btn-ghost" style="padding:3px 7px;font-size:11px" title="Baixar PDF" onclick="PagePessoas._exportarTAP('${t.id}','pdf')">📄</button>
+                <button class="btn btn-ghost" style="padding:3px 7px;font-size:11px" title="Baixar Word" onclick="PagePessoas._exportarTAP('${t.id}','word')">📝</button>
                 <button class="btn btn-ghost" style="padding:3px 7px;font-size:11px;color:var(--red)" title="Excluir" onclick="PagePessoas._excluirTAP('${t.id}')">🗑️</button>
               </div>
             </div>
@@ -2934,6 +2986,40 @@ const PagePessoas = {
     mostrarToast('TAP excluído!','success');
     fecharModal();
     PagePessoas.relatorioTAP?.();
+  },
+  async _exportarTAP(id, formato) {
+    if (!_sbq() || !window.DocumentosModule) { mostrarToast('Gerador de documentos não carregado.','error'); return; }
+    mostrarToast('Gerando documento...','info',1500);
+    try {
+      const { data: t } = await _sbq().from('taps').select('*, users!criado_por(nome, apelido)').eq('id', id).single();
+      if (!t) { mostrarToast('TAP não encontrado.','error'); return; }
+      const autor = t.users?.apelido || t.users?.nome || '—';
+      const secoes = [
+        { titulo:'Justificativa',              corpo:t.justificativa },
+        { titulo:'Objetivo Principal',         corpo:t.objetivo },
+        { titulo:'Escopo',                     corpo:t.escopo },
+        { titulo:'Limitadores e Restrições',   corpo:t.premissas },
+        { titulo:'Riscos Principais',          corpo:t.riscos },
+        { titulo:'Marcos e Cronograma',        corpo:t.entregas_principais },
+        { titulo:'Partes Interessadas',        corpo:t.partes_interessadas },
+        { titulo:'Métricas de Sucesso',        corpo:t.criterios_aceitacao },
+      ];
+      const campos = [
+        ['Projeto:', t.nome_projeto],
+        ['Status:', (t.status||'rascunho').replace(/^\w/,c=>c.toUpperCase())],
+        ['Submetido por:', autor],
+        ['Data de submissão:', _fmt(t.created_at)],
+      ];
+      const args = { titulo:'Termo de Abertura de Projeto (TAP)', subtitulo:t.nome_projeto, campos, secoes, geradoPor: window._appProfile?.nome };
+      const nomeArq = `NUPIEEPRO_TAP_${(t.nome_projeto||'projeto').replace(/[^\wÀ-ÿ]+/g,'_').slice(0,60)}`;
+      if (formato === 'pdf') {
+        const doc = window.DocumentosModule.gerarPDFFormal(args);
+        if (doc) doc.save(`${nomeArq}.pdf`);
+      } else {
+        const blob = await window.DocumentosModule.gerarWordFormal(args);
+        if (blob) window.DocumentosModule.baixarBlob(blob, `${nomeArq}.docx`);
+      }
+    } catch(e) { console.warn('[TAP export]', e); mostrarToast('Erro ao gerar documento.','error'); }
   },
   async _excluirPesquisaClima(id) {
     if (!confirm('Excluir esta pesquisa?')) return;
