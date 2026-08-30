@@ -1263,7 +1263,27 @@ const Theme = {
     }
   },
 
+  _FONT_FAMILIES: {
+    inter:       'Inter:wght@400;500;600;700;800',
+    mono:        'Roboto+Mono:wght@400;500;700',
+    outfit:      'Outfit:wght@400;500;600;700;800',
+    fira:        'Fira+Code:wght@400;500;600;700',
+    montserrat:  'Montserrat:wght@400;600;700;800',
+  },
+  _loadedFonts: new Set(),
+
+  _ensureFontLoaded(name) {
+    const family = Theme._FONT_FAMILIES[name];
+    if (!family || Theme._loadedFonts.has(name)) return;
+    const link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = 'https://fonts.googleapis.com/css2?family=' + family + '&display=swap';
+    document.head.appendChild(link);
+    Theme._loadedFonts.add(name);
+  },
+
   applyFont(name, silent = false) {
+    Theme._ensureFontLoaded(name);
     document.documentElement.setAttribute('data-font', name === 'default' ? '' : name);
     localStorage.setItem('nupie_font', name);
     document.querySelectorAll('[id^="fontBtn-"]').forEach(b => b.classList.remove('active'));

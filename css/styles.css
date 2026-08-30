@@ -157,9 +157,14 @@
   --dur-2: 200ms;
   --dur-3: 350ms;
 
-  /* ── Type families ── */
+  /* ── Type families ──
+     Adumu (fonte autoral, condensada) ficou reservada só pra marca/wordmark
+     (--font-logo) — em textos maiores/corridos (títulos, botões) ela grudava
+     e ficava difícil de ler. --font-display (títulos, botões, cabeçalhos) usa
+     Plus Jakarta Sans: profissional, muito legível, ainda com peso e caráter. */
   --font-body:    'League Spartan', ui-sans-serif, system-ui, -apple-system, sans-serif;
-  --font-display: 'Adumu', 'League Spartan', sans-serif;
+  --font-display: 'Plus Jakarta Sans', 'League Spartan', sans-serif;
+  --font-logo:    'Adumu', 'League Spartan', sans-serif;
   --font-mono:    'JetBrains Mono', ui-monospace, monospace;
 
   /* ── Type scale ── */
@@ -691,7 +696,7 @@ code, kbd, .mono { font: var(--t-mono); }
   padding: 14px 16px; display: flex; align-items: center; gap: 12px;
   border-bottom: 1px solid var(--border-1); flex-shrink: 0; min-height: var(--topbar-h);
 }
-.sidebar-logo-text { font: 800 14px/1.15 var(--font-display); letter-spacing: .02em; color: var(--fg-1); }
+.sidebar-logo-text { font: 800 14px/1.15 var(--font-logo); letter-spacing: .02em; color: var(--fg-1); }
 .sidebar-logo-text span { color: var(--brand-orange-2) !important; }
 .sidebar-logo-sub { font: 600 9px/1.4 var(--font-body); letter-spacing: .12em; text-transform: uppercase; color: var(--brand-purple-l); margin-top: 4px; opacity: 0.85; }
 .sidebar-section {
@@ -1054,7 +1059,7 @@ canvas { max-width: 100%; }
   box-shadow: 0 32px 72px -16px rgba(0,0,0,0.7);
   display: flex; flex-direction: column; gap: var(--s2);
 }
-.logo-wordmark { font: 800 20px var(--font-display); color: var(--fg-1); }
+.logo-wordmark { font: 800 20px var(--font-logo); color: var(--fg-1); }
 .logo-wordmark .pi { color: var(--brand-orange); }
 .form-title { font: 800 22px var(--font-display); color: var(--fg-1); }
 .form-subtitle { font-size: 13px; color: var(--fg-3); line-height: 1.5; }
@@ -1326,10 +1331,12 @@ canvas { max-width: 100%; }
 [data-font="league-spartan"] { --font-body: 'League Spartan', sans-serif; --font-display: 'League Spartan', sans-serif; }
 [data-font="adumu"]         { --font-body: 'Adumu', sans-serif;          --font-display: 'Adumu', sans-serif; }
 /* Combinação padrão do Núcleo: League Spartan (corpo/UI, 400-800, versátil)
-   + Adumu (títulos/destaque, peso único, autoral) — mesma coisa que o :root
-   já aplica sem nenhum data-font, redeclarado aqui pra reselecionar "Padrão"
-   explicitamente funcionar depois de trocar de fonte. */
-[data-font="default"]       { --font-body: 'League Spartan', sans-serif; --font-display: 'Adumu', 'League Spartan', sans-serif; }
+   + Plus Jakarta Sans (títulos/destaque) — mesma coisa que o :root já aplica
+   sem nenhum data-font, redeclarado aqui pra reselecionar "Padrão"
+   explicitamente funcionar depois de trocar de fonte. Adumu (a fonte autoral
+   da marca) fica reservada só pro wordmark "NUPIEEPRO" via --font-logo,
+   fixo, fora desse seletor — não muda com o tema de fonte escolhido. */
+[data-font="default"]       { --font-body: 'League Spartan', sans-serif; --font-display: 'Plus Jakarta Sans', 'League Spartan', sans-serif; }
 [data-font="jakarta"]       { --font-body: 'DM Sans', sans-serif;        --font-display: 'Plus Jakarta Sans', sans-serif; }
 body { font-family: var(--font-body); }
 [data-font] body { font-family: var(--font-body); }
@@ -1449,7 +1456,7 @@ body.tv-mode .topbar { background: #000 !important; border-bottom: none !importa
 .panel-wrap.open { display: block; animation: fadeIn 0.4s ease both; }
 .logo-container { display: flex; align-items: center; gap: 12px; margin-bottom: 2rem; }
 .logo-icon { width: 44px; height: 44px; object-fit: contain; animation: breathe 3s ease-in-out infinite alternate; }
-.logo-text { font: 800 26px/1 var(--font-display); }
+.logo-text { font: 800 26px/1 var(--font-logo); }
 .logo-text span { color: var(--brand-orange-2); }
 .subtitle { font-size: 16px; color: rgba(255,255,255,.5); max-width: 520px; line-height: 1.6; font-weight: 400; }
 
@@ -1550,9 +1557,8 @@ body.tv-mode .topbar { background: #000 !important; border-bottom: none !importa
 .ep-oee-value {
   font-size: 40px; font-weight: 900; font-family: var(--font-display);
   line-height: 1;
-  /* Era -1.5px — a Adumu já é uma fonte "display" naturalmente mais
-     condensada; empilhar um tracking negativo tão forte em cima grudava
-     os caracteres. Ver mesmo ajuste em .shimmer-text (index.html). */
+  /* Era -1.5px fixo — tracking negativo forte demais grudava os caracteres
+     num número grande. Em em, o aperto acompanha o tamanho da fonte. */
   letter-spacing: -0.01em;
 }
 
