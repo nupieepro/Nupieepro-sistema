@@ -294,7 +294,12 @@ function initConvitePage() {
       if (infoEl) {
         const esc = typeof sanitize === 'function' ? sanitize : (s => String(s ?? ''));
         const coord = convite.coord_sigla ? `${convite.coord_sigla} — ${convite.coord_nome}` : 'Geral';
-        infoEl.innerHTML = `<span>📧 ${esc(convite.email)}</span><span>·</span><span>${esc(coord)}</span><span>·</span><span>${esc(convite.cargo || convite.role)}</span>`;
+        /* Separador "·" como pseudo-elemento (não um <span> à parte): com
+           flex-wrap, um span só com o ponto podia quebrar sozinho pra uma
+           linha nova quando o email era comprido, ficando um "·" solto.
+           Grudado no ::before do próprio item seguinte, ele nunca se separa
+           do texto que introduz. */
+        infoEl.innerHTML = `<span>📧 ${esc(convite.email)}</span><span class="info-sep">${esc(coord)}</span><span class="info-sep">${esc(convite.cargo || convite.role)}</span>`;
       }
     } catch (e) {
       if (loadingEl) loadingEl.style.display = 'none';

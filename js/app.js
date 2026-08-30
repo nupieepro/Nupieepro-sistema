@@ -909,7 +909,7 @@ const Dashboard = {
       // Gráficos — dados reais
       Dashboard.renderChartPareto(allDemands);
       Dashboard.renderChartCoord(allDemands);
-      Dashboard.render5S();
+      Dashboard.render5S().catch(e => console.warn('[Dash 5S]', e.message));
       Dashboard.renderChartFreq().catch(e => console.warn('[Dash FreqEvt]', e.message));
       Dashboard.renderChartRadar().catch(e => console.warn('[Dash Radar]', e.message));
 
@@ -1079,31 +1079,66 @@ const Dashboard = {
     el.innerHTML=`<svg viewBox="0 0 180 180" style="width:100%;max-height:155px;">${rings}${axes}<path d="${dataP}" fill="var(--brand-orange)" fill-opacity="0.18" stroke="var(--brand-orange)" stroke-width="2"/>${lbls}</svg>`;
   },
 
-  render5S() {
+  _5S_SENSOS: ['Seiri','Seiton','Seiso','Seiketsu','Shitsuke'],
+  _5S_DESCR: ['Senso de Utilização','Senso de Organização','Senso de Limpeza','Senso de Padronização','Senso de Disciplina'],
+
+  /* Auditoria 5S: cada avaliação vira uma linha própria em
+     auditoria_5s (Supabase), não uma sobrescrita em localStorage — assim
+     todo o núcleo vê a mesma nota, e dá pra acompanhar a evolução no
+     tempo, que é a própria ideia do 5S. */
+  async render5S() {
     const el = document.getElementById('dashChart5S');
     if (!el) return;
-    const S=['Seiri','Seiton','Seiso','Seiketsu','Shitsuke'];
-    const scores=JSON.parse(localStorage.getItem('np_5s')||'null')||[7,7,7,7,7];
-    el.innerHTML=`<div style="display:flex;align-items:flex-end;gap:5px;height:90px;">`+
+    const S = Dashboard._5S_SENSOS;
+
+    const btnNova = document.getElementById('btn5SNova');
+    if (btnNova) btnNova.style.display = ['admin','coordenador'].includes(window._appProfile?.role) ? '' : 'none';
+
+    if (!_sb) {
+      el.innerHTML = '<p style="color:var(--fg-3);font-size:12px;text-align:center;padding:20px 0;">Sem conexão.</p>';
+      return;
+    }
+
+    const { data, error } = await _sb.from('auditoria_5s')
+      .select('*').order('created_at', { ascending: false }).limit(1).maybeSingle();
+
+    if (error || !data) {
+      el.innerHTML = '<p style="color:var(--fg-3);font-size:12px;text-align:center;padding:12px 0;">Ainda sem avaliação registrada.</p>';
+      return;
+    }
+
+    const scores = [data.seiri, data.seiton, data.seiso, data.seiketsu, data.shitsuke];
+    const dataStr = new Date(data.created_at).toLocaleDateString('pt-BR');
+    el.innerHTML = `<div style="display:flex;align-items:flex-end;gap:5px;height:90px;">`+
       S.map((s,i)=>{
         const h=Math.max(Math.round(scores[i]/10*72),4);
         const cor=scores[i]>=8?'var(--green)':scores[i]>=5?'var(--brand-orange)':'#ef4444';
-        return`<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;" onclick="Dashboard.edit5S(${i})" title="${s}: ${scores[i]}/10">
+        return`<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;" title="${s}: ${scores[i]}/10">
           <div style="width:100%;height:${h}px;background:${cor};border-radius:3px 3px 0 0;opacity:0.85;"></div>
           <div style="font-size:9px;color:var(--fg-4);">${s.slice(0,2)}</div>
         </div>`;
       }).join('')+
-      `</div><div style="font-size:10px;color:var(--fg-4);text-align:center;margin-top:6px;">Média: ${(scores.reduce((a,b)=>a+b,0)/5).toFixed(1)}/10</div>`;
+      `</div><div style="font-size:10px;color:var(--fg-4);text-align:center;margin-top:6px;">Média: ${(scores.reduce((a,b)=>a+b,0)/5).toFixed(1)}/10 · avaliado em ${dataStr}</div>`;
   },
 
-  edit5S(idx) {
-    const S=['Seiri','Seiton','Seiso','Seiketsu','Shitsuke'];
-    const DESCR=['Senso de Utilização','Senso de Organização','Senso de Limpeza','Senso de Padronização','Senso de Disciplina'];
-    const scores=JSON.parse(localStorage.getItem('np_5s')||'null')||[7,7,7,7,7];
-    abrirModal({ titulo:`${S[idx]} — ${DESCR[idx]}`, tipo:'info', corpo:`
+  novaAuditoria5S() {
+    if (!['admin','coordenador'].includes(window._appProfile?.role)) {
+      App.toast('Só coordenadores e admin registram uma nova auditoria 5S.', 'error');
+      return;
+    }
+    const S = Dashboard._5S_SENSOS;
+    const DESCR = Dashboard._5S_DESCR;
+    abrirModal({ titulo: 'Nova Auditoria 5S', tipo: 'info', corpo: `
+      <p style="font-size:12px;color:var(--fg-3,var(--c-slate));margin-bottom:10px;">Dê uma nota de 0 a 10 pra cada senso, avaliando o núcleo agora.</p>
+      ${S.map((s,i) => `
+        <div class="form-group">
+          <label class="form-label">${s} — ${DESCR[i]}</label>
+          <input id="5s-nota-${i}" class="form-input" type="number" min="0" max="10" value="5">
+        </div>
+      `).join('')}
       <div class="form-group">
-        <label class="form-label">Nota de 0 a 10</label>
-        <input id="5s-nota" class="form-input" type="number" min="0" max="10" value="${scores[idx]}">
+        <label class="form-label">Observações (opcional)</label>
+        <textarea id="5s-obs" class="form-input" rows="2" placeholder="O que motivou essas notas, o que precisa melhorar..."></textarea>
       </div>
       <div style="font-size:12px;color:var(--fg-3,var(--c-slate));margin-top:6px;padding:8px 12px;background:var(--surface-2,var(--b-1));border-radius:8px;">
         <strong style="color:#ef4444">0–4</strong> Insuficiente &nbsp;·&nbsp;
@@ -1112,11 +1147,17 @@ const Dashboard = {
       </div>`,
     botoes:[
       {texto:'Cancelar',classe:'btn-ghost',acao:fecharModal},
-      {texto:'Salvar',classe:'btn-primary',acao:()=>{
-        const v=Math.max(0,Math.min(10,parseInt(document.getElementById('5s-nota')?.value)||0));
-        scores[idx]=v;
-        localStorage.setItem('np_5s',JSON.stringify(scores));
+      {texto:'Salvar Auditoria',classe:'btn-primary',acao: async () => {
+        const nota = i => Math.max(0, Math.min(10, parseInt(document.getElementById('5s-nota-'+i)?.value) || 0));
+        const row = {
+          seiri: nota(0), seiton: nota(1), seiso: nota(2), seiketsu: nota(3), shitsuke: nota(4),
+          observacoes: document.getElementById('5s-obs')?.value.trim() || null,
+          avaliado_por: window._appProfile?.id || null,
+        };
+        const { error } = await _sb.from('auditoria_5s').insert(row);
+        if (error) { App.toast('Erro ao salvar auditoria: ' + error.message, 'error'); return; }
         fecharModal();
+        App.toast('Auditoria 5S registrada!', 'success');
         Dashboard.render5S();
       }}
     ]});
@@ -1171,7 +1212,7 @@ const Dashboard = {
       if(e) e.innerHTML='<p style="color:var(--fg-3);font-size:12px;text-align:center;padding:20px 0;">Sem conexão.</p>';
     });
     Dashboard.renderChartFreq(); // mostra barras zeradas sem query
-    Dashboard.render5S();        // localStorage funciona offline
+    Dashboard.render5S();        // sem _sb, cai direto no "Sem conexão."
     const radarEl=document.getElementById('dashChartRadar');
     if(radarEl) radarEl.innerHTML='<p style="color:var(--fg-3);font-size:12px;text-align:center;">Sem conexão.</p>';
   },
@@ -1265,8 +1306,6 @@ const Theme = {
 
   _FONT_FAMILIES: {
     inter:       'Inter:wght@400;500;600;700;800',
-    mono:        'Roboto+Mono:wght@400;500;700',
-    outfit:      'Outfit:wght@400;500;600;700;800',
     fira:        'Fira+Code:wght@400;500;600;700',
     montserrat:  'Montserrat:wght@400;600;700;800',
   },
