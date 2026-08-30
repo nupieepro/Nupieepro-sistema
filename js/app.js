@@ -59,7 +59,6 @@ const ROLE_PAGES = {
     { id: 'ops_relatorios',    icon: 'file',      label: 'Relatórios ABJ' },
     { id: 'ops_pops',          icon: 'folder',    label: 'Cofre de POPs' },
     { id: 'ops_arquivo',       icon: 'folder',    label: 'Arquivo Digital' },
-    { id: 'ops_inscricoes',    icon: 'ticket',    label: 'Gestão de Inscrições' },
     { id: 'gp_tap',            icon: 'layout',    label: 'Módulo TAP (Inovação)' },
   ],
   'G. Pessoas': [
@@ -704,7 +703,7 @@ const ALL_PAGES = [
   'mkt_tracker','mkt_kanban','mkt_lojinha_admin','mkt_trello','mkt_notion',
   'fin_fluxo','fin_abepro','fin_comercial',
   'prj_eventos','prj_enegep','prj_treinamentos','prj_nupicast','prj_parcerias',
-  'ops_relatorios','ops_pops','ops_arquivo','ops_inscricoes',
+  'ops_relatorios','ops_pops','ops_arquivo',
   'gp_talentos','gp_clima','gp_tap','gp_aniversarios','gp_treinamentos',
   'global_visitas','global_apresentacoes','global_producao','global_assembleia','global_gestao','global_checkin'
 ];
@@ -761,7 +760,6 @@ function goTo(id) {
   if (id === 'prj_eventos')       typeof PageProjetos  !== 'undefined' && PageProjetos.init();
   if (id === 'operacoes')         Operacoes.loadHub();
   if (id === 'ops_pops')          typeof PageOperacoes !== 'undefined' && PageOperacoes._renderPops();
-  if (id === 'ops_inscricoes')    typeof PageOperacoes !== 'undefined' && PageOperacoes._renderInscricoes();
   if (id === 'gp_talentos')       typeof PagePessoas   !== 'undefined' && PagePessoas._renderTalentos();
   if (id === 'demandas')          Dem.setView('kanban', document.getElementById('demViewKanban'));
   if (id === 'calendario')        NovoCal._render();
@@ -2138,7 +2136,7 @@ const Geral = {
         return;
       }
       list.innerHTML = alertas.map(a => `
-        <div style="background:rgba(247,84,18,0.05);border:1px solid rgba(247,84,18,0.2);padding:10px;border-radius:8px;display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+        <div style="background:rgba(208,84,26,0.05);border:1px solid rgba(208,84,26,0.2);padding:10px;border-radius:8px;display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
           <div>
             <div style="font-weight:700;font-size:12px;color:var(--fg-1);">${a.nome}</div>
             <div style="font-size:10px;color:var(--brand-orange);">⚠️ ${a.faltas} FALTAS NÃO JUSTIFICADAS (${a.coord})</div>
@@ -2627,7 +2625,7 @@ const Dem = {
           const n = heatData[c][col];
           const pct = n / maxVal;
           const alpha = n > 0 ? Math.max(0.15, pct * 0.8) : 0;
-          const bg = n > 0 ? 'rgba(246,82,20,' + alpha + ')' : 'var(--surface-2)';
+          const bg = n > 0 ? 'rgba(208,84,26,' + alpha + ')' : 'var(--surface-2)';
           const color = n > 0 ? 'inherit' : 'var(--fg-4)';
           html += '<td style="padding:8px;text-align:center;"><div style="width:36px;height:36px;border-radius:6px;background:' + bg + ';display:flex;align-items:center;justify-content:center;font-weight:' + (n > 0 ? '700' : '400') + ';color:' + color + ';margin:auto;">' + n + '</div></td>';
         });
@@ -2845,7 +2843,7 @@ function _parseDataEvt(str) {
 
 /* Cores por tipo de evento — usado tanto pelo grid "Calendário" (NovoCal)
    quanto pelo "Calendário Universal" (Cal), que agora mostram os mesmos dados. */
-const EVENTO_CORES = { reuniao:'#9b7be8', evento:'var(--brand-orange)', treinamento:'#5b9cf6', enegep:'#f5c518', podcast:'#e85aa8', assembleia:'#2dd4a0', publicacao:'#f75412', prazo:'#f87171' };
+const EVENTO_CORES = { reuniao:'#9b7be8', evento:'var(--brand-orange)', treinamento:'#5b9cf6', enegep:'#f5c518', podcast:'#e85aa8', assembleia:'#2dd4a0', publicacao:'var(--brand-orange-2)', prazo:'#f87171' };
 
 /* "Calendário", "Calendário Universal" e a mini-agenda do Painel Central
    mostram os mesmos eventos — depois de criar/editar/excluir um, atualiza
@@ -2880,7 +2878,7 @@ const NovoCal = {
     for (let i = 0; i < firstDay; i++) html += '<div></div>';
     for (let d = 1; d <= days; d++) {
       const isToday = d === today.getDate() && this.month === today.getMonth() && this.year === today.getFullYear();
-      html += `<div onclick="NovoCal.abrirDia(${this.year}, ${this.month}, ${d})" style="cursor:pointer;aspect-ratio:1;border-radius:6px;border:1px solid var(--border-1);padding:4px;font-size:11px;font-family:var(--font-mono);display:flex;flex-direction:column;justify-content:space-between;${isToday ? 'background:rgba(246,82,20,0.15);border-color:var(--brand-orange);font-weight:700;color:var(--brand-orange);' : ''}"><span>${d}</span><span id="calMark-${d}" style="display:flex;gap:2px;flex-wrap:wrap;"></span></div>`;
+      html += `<div onclick="NovoCal.abrirDia(${this.year}, ${this.month}, ${d})" style="cursor:pointer;aspect-ratio:1;border-radius:6px;border:1px solid var(--border-1);padding:4px;font-size:11px;font-family:var(--font-mono);display:flex;flex-direction:column;justify-content:space-between;${isToday ? 'background:rgba(208,84,26,0.15);border-color:var(--brand-orange);font-weight:700;color:var(--brand-orange);' : ''}"><span>${d}</span><span id="calMark-${d}" style="display:flex;gap:2px;flex-wrap:wrap;"></span></div>`;
     }
     grid.innerHTML = html;
 

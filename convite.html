@@ -23,9 +23,9 @@
     .theme-selector { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 0.8rem; }
     .theme-option { padding: 10px; border: 2px solid transparent; border-radius: 8px; background: rgba(255,255,255,0.05); cursor: pointer; transition: all 200ms; text-align: center; font-size: 12px; }
     .theme-option:hover { background: rgba(255,255,255,0.08); }
-    .theme-option.active { border-color: var(--orange); background: rgba(247,84,18,0.15); }
+    .theme-option.active { border-color: var(--orange); background: rgba(208,84,26,0.15); }
     .theme-dot { width: 24px; height: 24px; border-radius: 6px; margin: 0 auto 6px; }
-    .pwn-toast { position: fixed; bottom: 24px; right: 24px; background: linear-gradient(135deg, #f75412, #ff7043); color: #fff; padding: 16px 20px; border-radius: 12px; box-shadow: 0 8px 32px rgba(247,84,18,0.3); font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 12px; animation: slideInUp 400ms ease-out; z-index: 10000; }
+    .pwn-toast { position: fixed; bottom: 24px; right: 24px; background: linear-gradient(135deg, #d0541a, #e07d43); color: #fff; padding: 16px 20px; border-radius: 12px; box-shadow: 0 8px 32px rgba(208,84,26,0.3); font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 12px; animation: slideInUp 400ms ease-out; z-index: 10000; }
     @keyframes slideInUp { from { transform: translateY(120%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
     .pwn-btn { background: rgba(255,255,255,0.2); border: none; color: #fff; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 12px; }
     .pwn-btn:hover { background: rgba(255,255,255,0.3); }
@@ -107,7 +107,7 @@
               <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 0.8rem;">Escolha o tema que você prefere. Pode alterar depois nas configurações.</p>
               <div class="theme-selector">
                 <div class="theme-option active" id="themeOpt-orange" onclick="selectTheme('nucleo', this)">
-                  <div class="theme-dot" style="background: #f75412;"></div>
+                  <div class="theme-dot" style="background: #d0541a;"></div>
                   <div>Fusion</div>
                 </div>
                 <div class="theme-option" id="themeOpt-light" onclick="selectTheme('papel', this)">

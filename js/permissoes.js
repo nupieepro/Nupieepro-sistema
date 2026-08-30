@@ -303,7 +303,7 @@ const Permissoes = (() => {
      NÍVEIS DE PERMISSÃO (para exibição na aba Dev)
   ══════════════════════════════════════════ */
   const NIVEL_LABEL = {
-    admin:      { label: 'Dev / Admin',        cor: '#f75412', badge: '👨‍💻 DEV' },
+    admin:      { label: 'Dev / Admin',        cor: '#d0541a', badge: '👨‍💻 DEV' },
     coordenador_geral: { label: 'Coord. Geral', cor: '#6366f1', badge: '🏛️ GERAL' },
     coordenador: { label: 'Coordenador',        cor: '#a855f7', badge: '📋 COORD' },
     assessor:    { label: 'Assessor',           cor: '#22c55e', badge: '✅ ASS' },

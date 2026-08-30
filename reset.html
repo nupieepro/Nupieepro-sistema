@@ -16,8 +16,8 @@
 
     :root {
       --black:   #000000;
-      --purple:  #2f1d70;
-      --orange:  #f75412;
+      --purple:  #1e3a6e;
+      --orange:  #d0541a;
       --white:   #ffffff;
       --surface: #29324f;
     }
@@ -51,7 +51,7 @@
       position: absolute;
       top: -15%; right: -15%;
       width: 50vw; height: 60vh;
-      background: radial-gradient(ellipse, rgba(247,84,18,0.07) 0%, transparent 60%);
+      background: radial-gradient(ellipse, rgba(208,84,26,0.07) 0%, transparent 60%);
       filter: blur(70px);
     }
 
@@ -72,13 +72,13 @@
     .logo-row img {
       height: 80px; width: auto; object-fit: contain;
       margin-bottom: 0.75rem;
-      filter: drop-shadow(0 4px 20px rgba(247,84,18,0.22));
+      filter: drop-shadow(0 4px 20px rgba(208,84,26,0.22));
     }
     .logo-name {
       font-family: 'Plus Jakarta Sans', sans-serif;
       font-size: 24px; font-weight: 900; letter-spacing: -0.04em;
     }
-    .logo-name .lo { color: #f75412; }
+    .logo-name .lo { color: #d0541a; }
 
     /* Card */
     .card {
@@ -100,7 +100,7 @@
       position: absolute; inset: 0;
       border-radius: 24px;
       padding: 1px;
-      background: linear-gradient(135deg, rgba(247,84,18,0.55) 0%, rgba(47,29,112,0.55) 100%);
+      background: linear-gradient(135deg, rgba(208,84,26,0.55) 0%, rgba(47,29,112,0.55) 100%);
       -webkit-mask:
         linear-gradient(#fff 0 0) content-box,
         linear-gradient(#fff 0 0);
@@ -114,9 +114,9 @@
       display: flex; align-items: center; gap: 8px;
       font-size: 9.5px; font-weight: 800;
       letter-spacing: 0.24em; text-transform: uppercase;
-      color: #f75412; margin-bottom: 10px;
+      color: #d0541a; margin-bottom: 10px;
     }
-    .eyebrow-line { width: 18px; height: 2px; background: #f75412; border-radius: 1px; flex-shrink: 0; }
+    .eyebrow-line { width: 18px; height: 2px; background: #d0541a; border-radius: 1px; flex-shrink: 0; }
 
     h1 {
       font-family: 'Plus Jakarta Sans', sans-serif;
@@ -150,13 +150,13 @@
       font-family: 'DM Sans', sans-serif;
       font-size: 14px; outline: none;
       transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
-      caret-color: #f75412;
+      caret-color: #d0541a;
     }
     .field input::placeholder { color: rgba(255,255,255,0.18); }
     .field input:focus {
-      border-color: #f75412;
-      background: rgba(247,84,18,0.04);
-      box-shadow: 0 0 0 3px rgba(247,84,18,0.12);
+      border-color: #d0541a;
+      background: rgba(208,84,26,0.04);
+      box-shadow: 0 0 0 3px rgba(208,84,26,0.12);
     }
     .field-wrap:focus-within .field-icon { opacity: 0.70; }
 
@@ -174,10 +174,10 @@
       font-family: 'Plus Jakarta Sans', sans-serif;
       font-size: 15px; font-weight: 700;
       letter-spacing: 0.07em; text-transform: uppercase;
-      background: linear-gradient(135deg, #f75412 0%, #2f1d70 100%);
+      background: linear-gradient(135deg, #d0541a 0%, #1e3a6e 100%);
       color: #fff;
       transition: transform 0.2s ease, box-shadow 0.2s ease;
-      box-shadow: 0 8px 28px -6px rgba(247,84,18,0.40);
+      box-shadow: 0 8px 28px -6px rgba(208,84,26,0.40);
       position: relative; overflow: hidden;
     }
     .btn::before {
@@ -186,7 +186,7 @@
       background: linear-gradient(135deg, rgba(255,255,255,0.10) 0%, transparent 55%);
       border-radius: inherit; pointer-events: none;
     }
-    .btn:hover { transform: translateY(-2px); box-shadow: 0 14px 36px -8px rgba(247,84,18,0.52); }
+    .btn:hover { transform: translateY(-2px); box-shadow: 0 14px 36px -8px rgba(208,84,26,0.52); }
     .btn:active { transform: translateY(0); }
     .btn:disabled { opacity: 0.6; pointer-events: none; }
 
@@ -198,7 +198,7 @@
       color: rgba(255,255,255,0.65); font-weight: 600;
       text-decoration: none; transition: color 0.2s;
     }
-    .back-link a:hover { color: #f75412; }
+    .back-link a:hover { color: #d0541a; }
 
     @keyframes fadeUp {
       from { opacity: 0; transform: translateY(16px); }
