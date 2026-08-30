@@ -20,7 +20,7 @@
   <!-- Tipografia de Alta Qualidade -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=League+Spartan:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=League+Spartan:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   
   <!-- Theme init: aplica o tema salvo antes de qualquer render -->
   <script>
@@ -55,7 +55,11 @@
       --orange:     #d0541a;
       --orange-dim: rgba(208,84,26,0.12);
       --font-body: 'League Spartan', sans-serif;
-      --font-head: 'Adumu', 'League Spartan', sans-serif;
+      /* Adumu (autoral, condensada) fica só na logo pequena (--font-logo) —
+         em texto maior/corrido ela gruda e fica difícil de ler. O título
+         grande e o botão usam Plus Jakarta Sans: profissional e bem legível. */
+      --font-head: 'Plus Jakarta Sans', 'League Spartan', sans-serif;
+      --font-logo: 'Adumu', 'League Spartan', sans-serif;
       --font-mono: 'JetBrains Mono', monospace;
     }
 
@@ -260,7 +264,7 @@
 
     .logo-container { display: flex; align-items: center; gap: 12px; margin-bottom: 2rem; }
     .logo-icon { width: 44px; height: 44px; object-fit: contain; object-position: center; animation: breathe 3s ease-in-out infinite alternate; }
-    .logo-text { font-family: var(--font-head); font-size: 26px; font-weight: 800; }
+    .logo-text { font-family: var(--font-logo); font-size: 26px; font-weight: 800; }
     .logo-text span { color: var(--c-accent2, var(--orange)); }
 
     @keyframes breathe { 0% { transform: scale(1); filter: brightness(1); } 100% { transform: scale(1.08); filter: brightness(1.3) drop-shadow(0 0 10px var(--c-accent, var(--orange))); } }
@@ -272,7 +276,13 @@
       line-height: 1.05;
       padding-bottom: 0.08em;
       font-weight: 900;
-      letter-spacing: -2px;
+      /* Era -2px fixo — numa fonte com tamanho fluido (clamp 32–68px),
+         um valor fixo em px vira uma proporção ENORME no celular (onde o
+         texto renderiza nos 32px), grudando as letras da Adumu (que já é
+         uma fonte "display" mais condensada por natureza) a ponto de ficar
+         quase ilegível. Em em, o aperto acompanha o tamanho da fonte —
+         sutil no desktop, sem esmagar no mobile. */
+      letter-spacing: -0.01em;
       margin-bottom: 2rem;
       /* [V9.0] Shimmer Camaleão Multi-Tone */
       background: linear-gradient(91deg, 
@@ -371,7 +381,7 @@
     @media (max-width: 900px) {
       .container { flex-direction: column; height: auto; }
       .brand-section { padding: 48px 24px 32px; text-align: center; align-items: center; min-height: auto; }
-      .shimmer-text { font-size: clamp(30px, 9vw, 40px); margin-bottom: 1rem; letter-spacing: -1px; }
+      .shimmer-text { font-size: clamp(30px, 9vw, 40px); margin-bottom: 1rem; letter-spacing: -0.01em; }
       .subtitle { font-size: 15px; margin-bottom: 0.5rem; opacity: 0.7; }
       .login-section { width: 100%; height: auto; padding: 40px 24px; border-left: none; border-top: 1px solid var(--border); background: rgba(5, 5, 5, 0.9); }
       .hud-overlay, .hud-tag, .hud-line, .gear, .dim-callout, .prod-line { display: none !important; visibility: hidden !important; }
@@ -483,8 +493,8 @@
   </main>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-  <script src="js/app.js?v=83"></script>
-  <script src="js/auth.js?v=83"></script>
+  <script src="js/app.js?v=87"></script>
+  <script src="js/auth.js?v=87"></script>
   <script>
     (async () => {
       // MAGIC LINK V6.0: Clicou, Entrou.

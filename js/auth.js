@@ -184,17 +184,17 @@ function initLoginPage() {
     if (!session) return;
     const isMock = !sb && !!localStorage.getItem('mockSession');
     if (!isMock && sb) {
-      const formCard = document.querySelector('.form-card');
-      if (formCard) {
-        formCard.innerHTML = `
-          <div class="form-header">
-            <div class="form-eyebrow">Sessão Ativa</div>
-            <div class="form-title">Você já está conectado</div>
-            <div class="form-sub">Continuar ou entrar com outra conta.</div>
+      const loginBox = document.querySelector('.login-box');
+      if (loginBox) {
+        loginBox.innerHTML = `
+          <div class="form-group">
+            <div class="form-label">Sessão Ativa</div>
+            <h2 style="font-family:var(--font-head);font-size:22px;font-weight:800;margin-bottom:6px;">Você já está conectado</h2>
+            <p style="font-size:13px;color:var(--c-slate);line-height:1.5;">Continuar ou entrar com outra conta.</p>
           </div>
-          <div style="display:flex;flex-direction:column;gap:12px;margin-top:24px;">
-            <button class="btn-login" onclick="window.location.href='dashboard.html'">Entrar no Sistema</button>
-            <button class="btn-login" style="background:transparent;border:1px solid rgba(145,154,187,0.2);color:var(--slate);" onclick="forceLogout()">Trocar de Conta</button>
+          <div style="display:flex;flex-direction:column;gap:12px;margin-top:1.5rem;">
+            <button class="btn-submit" style="width:100%;justify-content:center;" onclick="window.location.href='dashboard.html'">Entrar no Sistema</button>
+            <button class="btn-submit" style="width:100%;justify-content:center;background:transparent;border:1px solid var(--border);color:var(--c-slate);" onclick="forceLogout()">Trocar de Conta</button>
           </div>
         `;
       }
