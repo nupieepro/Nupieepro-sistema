@@ -889,6 +889,14 @@ code, kbd, .mono { font: var(--t-mono); }
   padding: var(--s4) var(--s6);
   display: flex; flex-direction: column; gap: var(--s4);
   flex: 1;
+  /* .main-area (ancestor) tem overflow-x:hidden pra impedir a página inteira
+     de rolar de lado. Isso também escondia sem aviso qualquer coisa larga
+     demais aqui dentro — o pior caso é o Kanban (.kanban-board tem
+     min-width:900px): a última coluna simplesmente sumia cortada na borda
+     da tela, sem barra de rolagem, sem nenhum jeito de alcançar os cards
+     dela. overflow-x:auto aqui cria uma região de rolagem própria pro
+     conteúdo largo, sem deixar a página toda rolar de lado. */
+  overflow-x: auto;
 }
 
 /* ════ KPI / SUM CARDS ════ */
@@ -915,6 +923,23 @@ code, kbd, .mono { font: var(--t-mono); }
 .sum-label { font-size: 10px; color: var(--fg-3); text-transform: uppercase; letter-spacing: 0.1em; font-weight: 600; }
 .sum-value { font: 800 24px/1 var(--font-display); color: var(--fg-1); }
 .sum-sub, .sum-trend { font-size: 11px; color: var(--fg-3); }
+
+/* Countdown do Selo ABJ (dias:horas:min até a próxima estrela) — sem essa
+   regra, número e rótulo ("02" e "dias") ficavam colados sem espaço nenhum
+   ("02dias"), porque a marcação não tinha espaço entre os dois e nada
+   definia o layout de coluna que separa visualmente número e rótulo. */
+.abj-countdown { display: flex; align-items: center; justify-content: center; gap: 12px; }
+.abj-countdown-unit { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.abj-countdown-num { font: 800 22px/1 var(--font-display); color: var(--fg-1); }
+.abj-countdown-label { font-size: 10px; color: var(--fg-3); text-transform: uppercase; letter-spacing: 0.06em; }
+
+/* Mini-estatística (label + valor) usada em hubs como "Agência MKT" —
+   sem essa regra o <span> do rótulo e o <strong> do valor ficavam colados
+   sem espaço nenhum (ex: "Demandas MKT0 ativas"), porque a marcação não
+   tem espaço em branco entre as duas tags e nada definia o layout. */
+.stat-mini { display: flex; flex-direction: column; gap: 4px; }
+.stat-mini span { font-size: 11px; color: var(--fg-3); }
+.stat-mini strong { font: 800 18px/1.2 var(--font-display); color: var(--fg-1); }
 
 /* ════ SECTION CARDS ════ */
 .section-card {

@@ -77,11 +77,11 @@ const ABJModule = (() => {
           ${prox.label} — prazo ${new Date(prox.prazo).toLocaleDateString('pt-BR', {day:'2-digit', month:'long'})}
         </div>
         <div class="abj-countdown">
-          <div class="abj-countdown-unit"><span class="abj-countdown-num">${String(dias).padStart(2,'0')}</span>dias</div>
+          <div class="abj-countdown-unit"><span class="abj-countdown-num">${String(dias).padStart(2,'0')}</span><span class="abj-countdown-label">dias</span></div>
           <span style="color:var(--c-accent);font-weight:900;font-size:18px">:</span>
-          <div class="abj-countdown-unit"><span class="abj-countdown-num">${String(hrs).padStart(2,'0')}</span>horas</div>
+          <div class="abj-countdown-unit"><span class="abj-countdown-num">${String(hrs).padStart(2,'0')}</span><span class="abj-countdown-label">horas</span></div>
           <span style="color:var(--c-accent);font-weight:900;font-size:18px">:</span>
-          <div class="abj-countdown-unit"><span class="abj-countdown-num">${String(min).padStart(2,'0')}</span>min</div>
+          <div class="abj-countdown-unit"><span class="abj-countdown-num">${String(min).padStart(2,'0')}</span><span class="abj-countdown-label">min</span></div>
         </div>
         <div style="margin-top:8px;font-size:11px;color:var(--c-slate)">
           Atividades: ${prox.atividades.map(n => {
