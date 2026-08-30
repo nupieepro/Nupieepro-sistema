@@ -23,7 +23,7 @@
   <!-- EmailJS SDK -->
   <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 
-  <link rel="stylesheet" href="css/styles.css?v=87">
+  <link rel="stylesheet" href="css/styles.css?v=88">
   
   <script>
     // Injeção Crítica: Impede a tela branca de "Blink"
@@ -1407,11 +1407,10 @@
           </div>
         </div>
 
-        <!-- Abas: Membros / Convidar / Gerenciar -->
+        <!-- Abas: Membros / Convidar -->
         <div class="tab-bar" id="pessoasTabBar">
           <div class="tab active" onclick="Pessoas.switchTab('membros',this)">Membros</div>
           <div class="tab" id="tabConvidar" onclick="Pessoas.switchTab('convidar',this)">+ Convidar</div>
-          <div class="tab" id="tabGerenciar" onclick="Pessoas.switchTab('gerenciar',this)">Gerenciar Acessos</div>
         </div>
 
         <div class="content">
@@ -1506,19 +1505,6 @@
               <p style="font-size:11px;color:var(--w40);margin-top:10px;">
                 ℹ A pessoa acessa o link, cria a senha e entra no sistema automaticamente.
               </p>
-            </div>
-          </div>
-
-          <!-- ABA: Gerenciar Acessos -->
-          <div id="pessoasTabGerenciar" style="display:none;">
-            <div class="section-card">
-              <div class="section-title">Gerenciar Acessos dos Membros</div>
-              <p style="font-size:13px;color:var(--w40);margin-bottom:1.5rem;">
-                Altere coordenadoria ou função de qualquer membro a qualquer momento.
-              </p>
-              <div id="manageGrid" style="display:flex;flex-direction:column;gap:10px;">
-                <p class="text-muted text-sm">Carregando...</p>
-              </div>
             </div>
           </div>
 
@@ -1661,15 +1647,15 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/lucide@0.452.0/dist/umd/lucide.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/docx@9.7.1/dist/index.iife.js"></script>
-  <script src="js/permissoes.js?v=87"></script>
-  <script src="js/app.js?v=87"></script>
-  <script src="js/auth.js?v=87"></script>
-  <script src="js/abj.js?v=87"></script>
-  <script src="js/relatorio.js?v=87"></script>
-  <script src="js/documentos.js?v=87"></script>
-  <script src="js/emails.js?v=87"></script>
-  <script src="js/pages.js?v=87"></script>
-  <script src="js/push.js?v=87"></script>
+  <script src="js/permissoes.js?v=88"></script>
+  <script src="js/app.js?v=88"></script>
+  <script src="js/auth.js?v=88"></script>
+  <script src="js/abj.js?v=88"></script>
+  <script src="js/relatorio.js?v=88"></script>
+  <script src="js/documentos.js?v=88"></script>
+  <script src="js/emails.js?v=88"></script>
+  <script src="js/pages.js?v=88"></script>
+  <script src="js/push.js?v=88"></script>
   <script>
     // ── SERVICE WORKER: registro + auto-update ─────────
     // dashboard.html é onde o usuário passa o dia todo; sem isso, quem

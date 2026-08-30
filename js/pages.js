@@ -3819,6 +3819,9 @@ const PageDev = {
       fecharModal();
       mostrarToast('Usuário atualizado!', 'success');
       this._carregarUsuarios();
+      /* Mantém o card em "Gestão de Membros" (fora do Terminal) sincronizado
+         quando a edição vem do modal de detalhe do membro, não desta página. */
+      if (typeof Pessoas !== 'undefined' && Pessoas.loadMembers) Pessoas.loadMembers();
       /* Alerta dev/admin: usuario editado */
       _notificarDevs(`✏️ Membro atualizado: ${nome}`,
         `Cargo: ${cargo || '—'} · Role: ${role} · Ativo: ${ativo ? 'sim' : 'não'}`,

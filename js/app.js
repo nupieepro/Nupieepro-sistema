@@ -1540,34 +1540,19 @@ const Pessoas = {
   _tab: 'membros',
 
   switchTab(tab, el) {
-    /* "Gerenciar Acessos" promove gente a admin, reseta senha de qualquer
-       um e apaga contas — o botão da aba é HTML estático (dashboard.html),
-       visível a qualquer papel que chegue na página "pessoas" (inclusive
-       membro comum, desde o fix de menu por coordenadoria). O banco já
-       bloqueia excluir/promover pra quem não é admin de verdade, mas
-       resetar senha (Supabase Auth) não passa por RLS nenhuma — sem essa
-       checagem, qualquer pessoa nessa aba conseguia disparar e-mail de
-       redefinição de senha pra qualquer conta do núcleo. */
-    if (tab === 'gerenciar' && !(typeof Permissoes !== 'undefined' && Permissoes.isAdmin())) {
-      App.toast('Acesso restrito a administradores.', 'error');
-      return;
-    }
     this._tab = tab;
     document.querySelectorAll('#pessoasTabBar .tab').forEach(t => t.classList.remove('active'));
     if (el) el.classList.add('active');
-    ['membros','convidar','gerenciar'].forEach(t => {
+    ['membros','convidar'].forEach(t => {
       const el2 = document.getElementById('pessoasTab' + t.charAt(0).toUpperCase() + t.slice(1));
       if (el2) el2.style.display = t === tab ? '' : 'none';
     });
-    if (tab === 'membros' || tab === 'gerenciar') Pessoas.loadMembers();
+    if (tab === 'membros') Pessoas.loadMembers();
   },
 
   async loadMembers() {
     const grid = document.getElementById('memberGrid');
-    const mgrid = document.getElementById('manageGrid');
     const count = document.getElementById('memberCount');
-    const tabGerenciar = document.getElementById('tabGerenciar');
-    if (tabGerenciar) tabGerenciar.style.display = (typeof Permissoes !== 'undefined' && Permissoes.isAdmin()) ? '' : 'none';
 
     let members = [];
 
@@ -1597,38 +1582,90 @@ const Pessoas = {
     }
 
     if (grid && members.length > 0) grid.innerHTML = members.map(m => `
-      <div style="background:var(--c-s2);padding:14px;border-radius:12px;border:1px solid ${m.cor==='orange'?'var(--orange-border)':'var(--border)'};display:flex;align-items:center;gap:14px;">
+      <div class="member-card" role="button" tabindex="0" aria-label="Ver opções de ${sanitize(m.nome)}"
+           onclick="Pessoas.abrirDetalhe('${m.id}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();Pessoas.abrirDetalhe('${m.id}');}"
+           style="background:var(--c-s2);padding:14px;border-radius:12px;border:1px solid ${m.cor==='orange'?'var(--orange-border)':'var(--border)'};display:flex;align-items:center;gap:14px;">
         <div style="width:44px;height:44px;border-radius:50%;background:${m.cor==='orange'?'var(--orange-dim)':'var(--blue-dim)'};border:2px solid ${m.cor==='orange'?'var(--orange)':'var(--blue)'};color:${m.cor==='orange'?'var(--orange)':'var(--blue)'};display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px;flex-shrink:0;">${m.iniciais}</div>
         <div style="flex:1;min-width:0;">
           <div style="font-weight:700;font-size:14px;">${sanitize(m.nome)}</div>
           <div style="font-size:11px;color:var(--t-3);margin-top:2px;">${sanitize(m.cargo)} · ${sanitize(m.coord)}</div>
           <div style="font-size:10px;color:var(--t-4);margin-top:1px;">${sanitize(m.email)}</div>
         </div>
+        <div style="color:var(--t-4);font-size:16px;flex-shrink:0;" aria-hidden="true">›</div>
       </div>
     `).join('');
+  },
 
-    if (mgrid) mgrid.innerHTML = members.map(m => `
-      <div style="background:var(--c-s2);padding:12px 14px;border-radius:10px;border:1px solid var(--border);display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
-        <div style="width:34px;height:34px;border-radius:50%;background:var(--w10);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:12px;flex-shrink:0;">${m.iniciais}</div>
-        <div style="flex:1;min-width:120px;">
-          <div style="font-weight:600;font-size:13px;">${sanitize(m.nome)}</div>
-          <div style="font-size:11px;color:var(--t-3);">${m.coord}</div>
-        </div>
-        <select style="background:var(--w5);border:1px solid var(--b-1);border-radius:8px;padding:5px 10px;color:var(--t-2);font-size:12px;outline:none;" onchange="Pessoas.updateRole('${m.id||m.email}',this.value)">
-          <option value="membro" ${m.role==='membro'?'selected':''}>Membro</option>
-          <option value="coordenador" ${m.role==='coordenador'?'selected':''}>Coordenador</option>
-          <option value="admin" ${m.role==='admin'?'selected':''}>Admin/Dev</option>
-        </select>
+  /* Modal de detalhe/ações do membro — abre ao clicar no card em "Membros".
+     Substitui a antiga aba "Gerenciar Acessos": as mesmas ações (editar,
+     redefinir senha, magic link, excluir) ficam aqui, por membro, em vez
+     de uma lista separada só pra quem é admin mexer em qualquer um. */
+  async abrirDetalhe(id) {
+    if (!_sb) { App.toast('Supabase necessário para ver detalhes.', 'error'); return; }
+    App.loading(true);
+    const { data: u, error } = await _sb.from('users')
+      .select('*, coordenadorias(id,nome,sigla)')
+      .eq('id', id).single();
+    App.loading(false);
+    if (error || !u) { App.toast('Erro ao carregar membro.', 'error'); return; }
 
-        <!-- V6.0 Decision Console (Admin Only) -->
-        <div style="display:flex; gap:6px; margin-left:auto;">
-          <button class="btn btn-ghost" title="Editar perfil" onclick="(function(){ goTo('dev_usuarios'); setTimeout(function(){ if (typeof PageDev !== 'undefined' && PageDev.editarUsuario) PageDev.editarUsuario('${m.id}'); }, 300); })()" style="padding:4px 8px; font-size:14px; border:1px solid var(--b-1);">✏️</button>
-          <button class="btn btn-ghost" title="Gerar Magic Link (2 min)" onclick="Pessoas.sendMagicLink('${m.email}')" style="padding:4px 8px; font-size:14px; border:1px solid var(--b-1);">🪄</button>
-          <button class="btn btn-ghost" title="Redefinir Senha" onclick="Pessoas.resetPassword('${m.email}')" style="padding:4px 8px; font-size:14px; border:1px solid var(--b-1);">🔑</button>
-          <button class="btn btn-ghost" title="APAGAR DEFINITIVAMENTE" onclick="Pessoas.deleteMember('${m.id}','${m.email}')" style="padding:4px 8px; font-size:14px; border:1px solid var(--b-1); color:var(--red);">🔥</button>
+    const isAdmin = typeof Permissoes !== 'undefined' && Permissoes.isAdmin();
+    const iniciais = u.iniciais || u.nome?.[0] || '?';
+    const cor = u.role === 'admin' ? 'orange' : 'blue';
+
+    /* Os botões abaixo (exceto "Fechar") chamam funções que já abrem seu
+       próprio abrirModal() de confirmação — não fecha o modal atual antes:
+       fecharModal() agenda um display:none daqui a 220ms, que apagaria o
+       modal de confirmação recém-aberto por baixo do usuário. abrirModal()
+       já substitui o conteúdo do mesmo overlay na hora, sem precisar fechar
+       primeiro. */
+    const botoes = [{ texto: 'Fechar', classe: 'btn-ghost', acao: fecharModal }];
+    if (isAdmin) {
+      botoes.push(
+        { texto: '✏️ Editar Perfil', classe: 'btn-ghost', acao: () => Pessoas.editarPerfil(u.id) },
+        { texto: '🔑 Redefinir Senha', classe: 'btn-ghost', acao: () => Pessoas.resetPassword(u.email) },
+        { texto: '🪄 Magic Link', classe: 'btn-ghost', acao: () => Pessoas.sendMagicLink(u.email) },
+        { texto: '🔥 Excluir', classe: 'btn-primary', acao: () => Pessoas.deleteMember(u.id, u.email) }
+      );
+    }
+
+    abrirModal({
+      titulo: sanitize(u.nome || u.email || 'Membro'),
+      corpo: `
+        <div style="display:flex;align-items:center;gap:14px;margin-bottom:1rem;">
+          <div style="width:52px;height:52px;border-radius:50%;background:${cor==='orange'?'var(--orange-dim)':'var(--blue-dim)'};border:2px solid ${cor==='orange'?'var(--orange)':'var(--blue)'};color:${cor==='orange'?'var(--orange)':'var(--blue)'};display:flex;align-items:center;justify-content:center;font-weight:800;font-size:17px;flex-shrink:0;">${sanitize(iniciais)}</div>
+          <div style="min-width:0;">
+            <div style="font-weight:700;font-size:15px;color:var(--c-white);">${sanitize(u.nome || u.email)}</div>
+            <div style="font-size:12px;color:var(--t-3);margin-top:2px;">${sanitize(u.cargo || '—')} · ${sanitize(u.coordenadorias?.nome || 'Geral')}</div>
+          </div>
         </div>
-      </div>
-    `).join('');
+        <div style="display:flex;flex-direction:column;gap:6px;font-size:12px;color:var(--t-3);background:var(--w5);border:1px solid var(--b-1);border-radius:10px;padding:10px 14px;">
+          <div>📧 Usuário (login): <span style="color:var(--c-white);">${sanitize(u.email)}</span></div>
+          ${u.aniversario ? `<div>🎂 Aniversário: <span style="color:var(--c-white);">${_fmt(u.aniversario)}</span></div>` : ''}
+          <div>Status: <span style="color:${u.ativo ? 'var(--green)' : 'var(--red)'};">${u.ativo ? '● Ativo' : '○ Inativo'}</span></div>
+        </div>
+        ${isAdmin ? `<p style="font-size:11px;color:var(--t-4);margin-top:10px;">🔒 Por segurança, senhas nunca ficam visíveis — nem para administradores, nem o sistema guarda a senha em texto puro (isso vale pra qualquer sistema sério, não é limitação do NUPIEEPRO). Use "Redefinir Senha" pra mandar um link por e-mail e ela mesma escolher uma nova, ou "Magic Link" pra dar acesso instantâneo sem precisar de senha nenhuma.</p>` : ''}
+      `,
+      botoes
+    });
+  },
+
+  /* Garante os dados que o modal de edição completa (PageDev.editarUsuario)
+     precisa — coordenadorias e o próprio usuário — mesmo sem ter passado
+     pela página "Terminal" antes, e reabre pelo mesmo formulário rico de
+     lá (nome, apelido, cargo, role, coordenadoria, status etc.) em vez de
+     duplicar o formulário aqui. */
+  async editarPerfil(id) {
+    if (typeof PageDev === 'undefined') { App.toast('Módulo de edição indisponível.', 'error'); return; }
+    if (!PageDev._coords.length && _sb) {
+      const { data } = await _sb.from('coordenadorias').select('id,nome,sigla').order('nome');
+      PageDev._coords = data || [];
+    }
+    if (!(window._devUsuarios || []).some(x => x.id === id)) {
+      const { data: u } = await _sb.from('users').select('*,coordenadorias(nome,sigla,cor)').eq('id', id).single();
+      if (u) window._devUsuarios = [...(window._devUsuarios || []), u];
+    }
+    PageDev.editarUsuario(id);
   },
 
   toggleCargoOutro(value) {
@@ -1853,33 +1890,6 @@ const Pessoas = {
     if (ok) window.App?.toast?.('Magic Link (2 min) enviado com sucesso!', 'success');
     else window.App?.toast?.('Link gerado, mas o e-mail falhou. Copie e envie manualmente: ' + link, 'error');
   }
-};
-
-const PessoasExt = {
-  async updateRole(identifier, newRole) {
-    if (typeof Permissoes !== 'undefined' && !Permissoes.isAdmin()) {
-      window.App?.toast?.('Acesso restrito a administradores.', 'error');
-      return;
-    }
-    const sb = window._sb || window._supabase;
-    if (!sb) { window.App?.toast?.('Supabase necessário para alterar funções.', 'error'); return; }
-    const q = identifier.includes('@')
-      ? sb.from('users').update({ role: newRole }).eq('email', identifier)
-      : sb.from('users').update({ role: newRole }).eq('id', identifier);
-    const ok = await dbEfetivou(q);
-    if (!ok) { window.App?.toast?.('Sem permissão para alterar esta função.', 'error'); return; }
-    window.App?.toast?.('Função atualizada com sucesso!', 'success');
-    /* Alerta dev/admin: role mudou */
-    if (typeof _notificarDevs === 'function') {
-      _notificarDevs('🔑 Função alterada',
-        `${identifier} agora é ${newRole}. Alterado por ${window._appProfile?.nome || 'desconhecido'}.`,
-        'permissoes');
-    }
-  }
-};
-
-Pessoas.updateRole = function (identifier, newRole) {
-  return PessoasExt.updateRole(identifier, newRole);
 };
 
 /* ============================================================
@@ -3729,16 +3739,22 @@ function mostrarToast(mensagem, tipo, duracao) {
   App.toast(mensagem, tipo || 'info', duracao || 3500);
 }
 
+let _modalHideTimer = null;
+
 function fecharModal() {
   const el = document.getElementById('__appModal');
   if (el) {
     el.style.opacity = '0';
     el.style.transform = 'translateY(100%)';
-    setTimeout(() => { if (el) el.style.display = 'none'; }, 220);
+    /* Se abrirModal() reabrir (outro modal, ex: confirmação em cadeia) antes
+       dos 220ms, esse timeout teria que ser cancelado — senão ele some com
+       o modal novo por baixo do usuário. Ver clearTimeout em abrirModal(). */
+    _modalHideTimer = setTimeout(() => { if (el) el.style.display = 'none'; _modalHideTimer = null; }, 220);
   }
 }
 
 function abrirModal({ titulo = '', tipo = 'info', corpo = '', botoes = [] } = {}) {
+  if (_modalHideTimer) { clearTimeout(_modalHideTimer); _modalHideTimer = null; }
   let overlay = document.getElementById('__appModal');
   if (!overlay) {
     overlay = document.createElement('div');
