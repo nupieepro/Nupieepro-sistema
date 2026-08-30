@@ -483,9 +483,13 @@ const PageGeral = {
   },
   async _marcarPlanoConcluido(id, semestre) {
     if (!_sbq()) return;
-    const role = window._appProfile?.role;
-    const cargo = (window._appProfile?.cargo || '').toLowerCase();
-    if (role !== 'admin' && !cargo.includes('coordenador geral') && !cargo.includes('desenvolvedor')) {
+    /* Antes checava um texto livre no campo cargo ("coordenador geral"/
+       "desenvolvedor") — dependia de como a pessoa digitou o próprio
+       cargo, e não tinha nada a ver com a lógica real de Coordenação
+       Geral (role='coordenador' + coordenadoria 'Geral', ver
+       permissoes.js). Usa o mesmo flag do MATRIZ que já cobre exatamente
+       essa dupla (admin + coordenador_geral). */
+    if (!Permissoes.pode('podeAprovarRelatorio')) {
       mostrarToast('Apenas Coordenação Geral ou Admin pode marcar planos como concluídos.','warning');
       return;
     }
@@ -2973,6 +2977,8 @@ const PagePessoas = {
         entregas_principais: d.cronograma || null,
         criterios_aceitacao: d.metricas || null,
         premissas: d.limitadores || null,
+        recursos_necessarios: d.recursos || null,
+        validacao_aprovacao: d.aprovacao || null,
         coordenadoria_id: gp?.id || null,
         criado_por: window._appProfile?.id,
         status: 'rascunho',
@@ -3078,8 +3084,10 @@ const PagePessoas = {
         { titulo:'Limitadores e Restrições',   corpo:t.premissas },
         { titulo:'Riscos Principais',          corpo:t.riscos },
         { titulo:'Marcos e Cronograma',        corpo:t.entregas_principais },
+        { titulo:'Recursos Necessários',       corpo:t.recursos_necessarios },
         { titulo:'Partes Interessadas',        corpo:t.partes_interessadas },
         { titulo:'Métricas de Sucesso',        corpo:t.criterios_aceitacao },
+        { titulo:'Validação e Aprovação',      corpo:t.validacao_aprovacao },
       ];
       const campos = [
         ['Projeto:', t.nome_projeto],
