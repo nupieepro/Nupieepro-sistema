@@ -1,0 +1,8 @@
+{
+  "name": "nupieepro-sistema",
+  "private": true,
+  "description": "Sistema de gestão do NUPIEEPRO. Site estático (sem build) — este package.json existe só pra rodar os testes.",
+  "scripts": {
+    "test": "node --test"
+  }
+}
