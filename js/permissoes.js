@@ -338,3 +338,9 @@ const Permissoes = (() => {
 })();
 
 window.Permissoes = Permissoes;
+
+/* Exporta como CommonJS quando rodando em Node (testes) — não afeta o
+   navegador, onde `module` não existe e este bloco nunca executa. */
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = Permissoes;
+}
