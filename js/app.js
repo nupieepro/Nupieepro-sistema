@@ -587,12 +587,6 @@ const App = {
     if (hora >= 12 && hora < 18) return "Boa tarde";
     return "Boa noite";
   },
-  setFont(family) {
-    document.documentElement.setAttribute('data-font', family);
-    localStorage.setItem('nupie_font', family);
-    // Sem toast — mudança visual é imediata
-  },
-  
   syncSettingsInputs(p) {
     if (!p) return;
     const elNome = document.getElementById('myProfileNome');
@@ -1285,7 +1279,7 @@ const Theme = {
     let theme = localStorage.getItem('nupie_theme') || localStorage.getItem('np-theme') || 'nucleo';
     const legMap = {'dark-orange':'nucleo','dark-purple':'violet','fusion':'nucleo','luminous':'papel','orange':'noite','obsidian':'noite','bad-boy':'noite','default':'nucleo'};
     if (legMap[theme]) theme = legMap[theme];
-    const font = localStorage.getItem('nupie_font') || 'league-spartan';
+    const font = localStorage.getItem('nupie_font') || 'default';
     Theme.apply(theme, true);
     Theme.applyFont(font, true);
   },
