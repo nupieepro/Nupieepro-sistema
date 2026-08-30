@@ -467,6 +467,8 @@ const PageGeral = {
               ${concluido
                 ? `<span style="font-size:10px;font-weight:700;padding:3px 9px;border-radius:99px;background:var(--green)22;color:var(--green);border:1px solid var(--green)44">✓ Concluído</span>`
                 : `<button class="btn btn-ghost" style="padding:3px 8px;font-size:11px;color:var(--green)" onclick="PageGeral._marcarPlanoConcluido('${e.id}', ${semestre})">✓ Marcar concluído</button>`}
+              <button class="btn btn-ghost" style="padding:3px 7px;font-size:11px" title="Baixar PDF" onclick="PageGeral._exportarPlano('${e.id}','pdf')">📄</button>
+              <button class="btn btn-ghost" style="padding:3px 7px;font-size:11px" title="Baixar Word" onclick="PageGeral._exportarPlano('${e.id}','word')">📝</button>
               <button class="btn btn-ghost" style="padding:3px 7px;font-size:11px;color:var(--red)" title="Excluir" onclick="PageGeral._excluirPlano('${e.id}', ${semestre})">🗑️</button>
             </div>
           </div>
@@ -503,6 +505,35 @@ const PageGeral = {
     mostrarToast('Plano excluído!','success');
     fecharModal();
     PageGeral.verAtividades(semestre);
+  },
+  async _exportarPlano(id, formato) {
+    if (!_sbq() || !window.DocumentosModule) { mostrarToast('Gerador de documentos não carregado.','error'); return; }
+    mostrarToast('Gerando documento...','info',1500);
+    try {
+      const { data: e } = await _sbq().from('eventos').select('*, users!criado_por(nome, apelido)').eq('id', id).single();
+      if (!e) { mostrarToast('Plano não encontrado.','error'); return; }
+      let d = {}; try { d = JSON.parse(e.descricao || '{}'); } catch {}
+      const autor = e.users?.apelido || e.users?.nome || '—';
+      const secoes = [
+        { titulo:'Objetivos Principais', corpo:d.objetivos },
+        { titulo:'Ações Conjuntas com a ABJ', corpo:d.acoes_abj },
+      ];
+      const campos = [
+        ['Semestre:', `${d.semestre}º Semestre ${d.ano||''}`],
+        ['Data de aprovação:', _fmt(e.data_inicio)],
+        ['Aprovado por:', autor],
+        ['Status:', d.concluido ? `Concluído em ${_fmt(d.concluido_em)}` : 'Em andamento'],
+      ];
+      const args = { titulo:'Plano de Ação Semestral', subtitulo:e.titulo, campos, secoes, geradoPor: window._appProfile?.nome };
+      const nomeArq = `NUPIEEPRO_Plano_${(e.titulo||'semestral').replace(/[^\wÀ-ÿ]+/g,'_').slice(0,60)}`;
+      if (formato === 'pdf') {
+        const doc = window.DocumentosModule.gerarPDFFormal(args);
+        if (doc) doc.save(`${nomeArq}.pdf`);
+      } else {
+        const blob = await window.DocumentosModule.gerarWordFormal(args);
+        if (blob) window.DocumentosModule.baixarBlob(blob, `${nomeArq}.docx`);
+      }
+    } catch(e) { console.warn('[Plano export]', e); mostrarToast('Erro ao gerar documento.','error'); }
   },
   _renderMelhorias() {
     const pg = document.getElementById('page-geral_melhorias');
@@ -4688,6 +4719,8 @@ const PageGlobal = {
               <div style="font-weight:700;font-size:14px;color:var(--c-white);flex:1;min-width:0">${sanitize(v.titulo)}</div>
               <div style="display:flex;align-items:center;gap:6px">
                 <span style="font-size:10px;white-space:nowrap">${status}</span>
+                <button class="btn btn-ghost" style="padding:3px 7px;font-size:11px" title="Baixar resultado em PDF" onclick="PageGlobal._exportarVotacao('${v.id}','pdf')">📄</button>
+                <button class="btn btn-ghost" style="padding:3px 7px;font-size:11px" title="Baixar resultado em Word" onclick="PageGlobal._exportarVotacao('${v.id}','word')">📝</button>
                 ${podeGerenciar && v.ativa && !expirou ? `<button class="btn btn-ghost" style="padding:3px 7px;font-size:11px" title="Encerrar" onclick="PageGlobal._encerrarVotacao('${v.id}')">🔒</button>` : ''}
                 ${podeGerenciar ? `<button class="btn btn-ghost" style="padding:3px 7px;font-size:11px;color:var(--red)" title="Excluir" onclick="PageGlobal._excluirVotacao('${v.id}')">🗑️</button>` : ''}
               </div>
@@ -4771,7 +4804,12 @@ const PageGlobal = {
             <div style="background:var(--b-1);border:1px solid var(--b-2);border-radius:10px;padding:14px 16px">
               <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:4px">
                 <div style="font-weight:700;font-size:13px;color:var(--c-white);flex:1;min-width:0">${sanitize(e.titulo)}</div>
-                <button class="btn btn-ghost" style="padding:3px 7px;font-size:11px;color:var(--red)" title="Excluir" onclick="PageGlobal._excluirAssembleia('${e.id}')">🗑️</button>
+                <div style="display:flex;align-items:center;gap:6px">
+                  ${e.descricao?`
+                  <button class="btn btn-ghost" style="padding:3px 7px;font-size:11px" title="Baixar PDF" onclick="PageGlobal._exportarAssembleia('${e.id}','pdf')">📄</button>
+                  <button class="btn btn-ghost" style="padding:3px 7px;font-size:11px" title="Baixar Word" onclick="PageGlobal._exportarAssembleia('${e.id}','word')">📝</button>`:''}
+                  <button class="btn btn-ghost" style="padding:3px 7px;font-size:11px;color:var(--red)" title="Excluir" onclick="PageGlobal._excluirAssembleia('${e.id}')">🗑️</button>
+                </div>
               </div>
               <div style="font-size:12px;color:var(--c-slate)">
                 📅 ${_fmt(e.data_inicio)}
@@ -4788,6 +4826,33 @@ const PageGlobal = {
     mostrarToast('Assembleia excluída!','success');
     PageGlobal._carregarAssembleia();
   },
+  async _exportarAssembleia(id, formato) {
+    if (!_sbq() || !window.DocumentosModule) { mostrarToast('Gerador de documentos não carregado.','error'); return; }
+    mostrarToast('Gerando documento...','info',1500);
+    try {
+      const { data: e } = await _sbq().from('eventos').select('*, users!criado_por(nome, apelido)').eq('id', id).single();
+      if (!e) { mostrarToast('Assembleia não encontrada.','error'); return; }
+      const autor = e.users?.apelido || e.users?.nome || '—';
+      const args = {
+        titulo: 'Ata de Assembleia', subtitulo: e.titulo,
+        campos: [
+          ['Data:', _fmt(e.data_inicio)],
+          ['Local:', e.local || '—'],
+          ['Registrado por:', autor],
+        ],
+        secoes: [{ titulo:'Pauta e Deliberações', corpo: e.descricao }],
+        geradoPor: window._appProfile?.nome,
+      };
+      const nomeArq = `NUPIEEPRO_Assembleia_${(e.titulo||'assembleia').replace(/[^\wÀ-ÿ]+/g,'_').slice(0,60)}`;
+      if (formato === 'pdf') {
+        const doc = window.DocumentosModule.gerarPDFFormal(args);
+        if (doc) doc.save(`${nomeArq}.pdf`);
+      } else {
+        const blob = await window.DocumentosModule.gerarWordFormal(args);
+        if (blob) window.DocumentosModule.baixarBlob(blob, `${nomeArq}.docx`);
+      }
+    } catch(e) { console.warn('[Assembleia export]', e); mostrarToast('Erro ao gerar documento.','error'); }
+  },
   async _excluirVotacao(id) {
     if (!confirm('Excluir esta votação? Todos os votos serão perdidos.')) return;
     await _sbq().from('votos').delete().eq('votacao_id', id);
@@ -4802,6 +4867,49 @@ const PageGlobal = {
     if (!ok) { mostrarToast('Sem permissão para encerrar esta votação.','error'); return; }
     mostrarToast('Votação encerrada!','success');
     PageGlobal._carregarVotacoes();
+  },
+  async _exportarVotacao(id, formato) {
+    if (!_sbq() || !window.DocumentosModule) { mostrarToast('Gerador de documentos não carregado.','error'); return; }
+    mostrarToast('Gerando documento...','info',1500);
+    try {
+      const [{ data: v }, { data: votos }] = await Promise.all([
+        _sbq().from('votacoes').select('*').eq('id', id).single(),
+        _sbq().from('votos').select('opcao').eq('votacao_id', id),
+      ]);
+      if (!v) { mostrarToast('Votação não encontrada.','error'); return; }
+      const opcoes = Array.isArray(v.opcoes) ? v.opcoes : (v.opcoes ? JSON.parse(v.opcoes) : []);
+      const total = votos?.length || 0;
+      const contagem = {};
+      opcoes.forEach(op => contagem[op] = 0);
+      (votos||[]).forEach(vt => { contagem[vt.opcao] = (contagem[vt.opcao]||0) + 1; });
+      const resultado = opcoes.map(op => {
+        const n = contagem[op] || 0;
+        const pct = total ? ((n/total)*100).toFixed(1) : '0.0';
+        return `${op}: ${n} voto(s) — ${pct}%`;
+      }).join('\n');
+      const expirou = v.expires_at && new Date(v.expires_at) < new Date();
+      const args = {
+        titulo: 'Resultado de Votação', subtitulo: v.titulo,
+        campos: [
+          ['Status:', (!v.ativa || expirou) ? 'Encerrada' : 'Em andamento'],
+          ['Total de votos:', String(total)],
+          ['Encerramento:', v.expires_at ? _fmt(v.expires_at) : '—'],
+        ],
+        secoes: [
+          { titulo:'Contexto', corpo: v.descricao },
+          { titulo:'Apuração', corpo: resultado || 'Nenhum voto registrado ainda.' },
+        ],
+        geradoPor: window._appProfile?.nome,
+      };
+      const nomeArq = `NUPIEEPRO_Votacao_${(v.titulo||'votacao').replace(/[^\wÀ-ÿ]+/g,'_').slice(0,60)}`;
+      if (formato === 'pdf') {
+        const doc = window.DocumentosModule.gerarPDFFormal(args);
+        if (doc) doc.save(`${nomeArq}.pdf`);
+      } else {
+        const blob = await window.DocumentosModule.gerarWordFormal(args);
+        if (blob) window.DocumentosModule.baixarBlob(blob, `${nomeArq}.docx`);
+      }
+    } catch(e) { console.warn('[Votacao export]', e); mostrarToast('Erro ao gerar documento.','error'); }
   },
 
   async _renderGestao() {
