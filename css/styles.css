@@ -1500,7 +1500,11 @@ body.tv-mode .topbar { background: #000 !important; border-bottom: none !importa
 .ep-hero-right { display: flex; align-items: center; justify-content: center; }
 .ep-oee-value {
   font-size: 40px; font-weight: 900; font-family: var(--font-display);
-  line-height: 1; letter-spacing: -1.5px;
+  line-height: 1;
+  /* Era -1.5px — a Adumu já é uma fonte "display" naturalmente mais
+     condensada; empilhar um tracking negativo tão forte em cima grudava
+     os caracteres. Ver mesmo ajuste em .shimmer-text (index.html). */
+  letter-spacing: -0.01em;
 }
 
 /* ════ GLASS CARD ════ */

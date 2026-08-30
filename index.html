@@ -272,7 +272,13 @@
       line-height: 1.05;
       padding-bottom: 0.08em;
       font-weight: 900;
-      letter-spacing: -2px;
+      /* Era -2px fixo — numa fonte com tamanho fluido (clamp 32–68px),
+         um valor fixo em px vira uma proporção ENORME no celular (onde o
+         texto renderiza nos 32px), grudando as letras da Adumu (que já é
+         uma fonte "display" mais condensada por natureza) a ponto de ficar
+         quase ilegível. Em em, o aperto acompanha o tamanho da fonte —
+         sutil no desktop, sem esmagar no mobile. */
+      letter-spacing: -0.01em;
       margin-bottom: 2rem;
       /* [V9.0] Shimmer Camaleão Multi-Tone */
       background: linear-gradient(91deg, 
@@ -371,7 +377,7 @@
     @media (max-width: 900px) {
       .container { flex-direction: column; height: auto; }
       .brand-section { padding: 48px 24px 32px; text-align: center; align-items: center; min-height: auto; }
-      .shimmer-text { font-size: clamp(30px, 9vw, 40px); margin-bottom: 1rem; letter-spacing: -1px; }
+      .shimmer-text { font-size: clamp(30px, 9vw, 40px); margin-bottom: 1rem; letter-spacing: -0.01em; }
       .subtitle { font-size: 15px; margin-bottom: 0.5rem; opacity: 0.7; }
       .login-section { width: 100%; height: auto; padding: 40px 24px; border-left: none; border-top: 1px solid var(--border); background: rgba(5, 5, 5, 0.9); }
       .hud-overlay, .hud-tag, .hud-line, .gear, .dim-callout, .prod-line { display: none !important; visibility: hidden !important; }
@@ -483,8 +489,8 @@
   </main>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-  <script src="js/app.js?v=84"></script>
-  <script src="js/auth.js?v=84"></script>
+  <script src="js/app.js?v=85"></script>
+  <script src="js/auth.js?v=85"></script>
   <script>
     (async () => {
       // MAGIC LINK V6.0: Clicou, Entrou.
