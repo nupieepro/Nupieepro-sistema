@@ -19,10 +19,38 @@ const DocumentosModule = (() => {
     return new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' });
   }
 
+  /* Desenha uma tabela simples (cabeçalho navy + linhas zebradas) e devolve
+     o novo y. Usado por extratos/listagens (ex: Fluxo de Caixa). */
+  function _desenharTabelaPDF(doc, { colunas, linhas, larguras }, y, W, M) {
+    const cols = larguras || colunas.map(() => (W - M * 2) / colunas.length);
+    const xs = []; let acc = M;
+    cols.forEach(w => { xs.push(acc); acc += w; });
+    const rowH = 7;
+    function header(yy) {
+      doc.setFillColor(...NAVY); doc.rect(M, yy - 5, W - M * 2, rowH, 'F');
+      doc.setTextColor(255, 255, 255); doc.setFont('helvetica', 'bold'); doc.setFontSize(9);
+      colunas.forEach((c, i) => doc.text(String(c), xs[i] + 2, yy));
+      return yy + rowH;
+    }
+    y = header(y);
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(9);
+    linhas.forEach((linha, idx) => {
+      if (y > 275) { doc.addPage(); y = 20; y = header(y); }
+      if (idx % 2 === 1) { doc.setFillColor(245, 246, 248); doc.rect(M, y - 5, W - M * 2, rowH, 'F'); }
+      doc.setTextColor(40, 40, 55);
+      linha.forEach((cell, i) => {
+        const txt = doc.splitTextToSize(String(cell ?? ''), cols[i] - 4)[0] || '';
+        doc.text(txt, xs[i] + 2, y);
+      });
+      y += rowH;
+    });
+    return y + 8;
+  }
+
   /* ══════════════════════════════════════════
      PDF — página branca, cabeçalho azul-marinho + faixa laranja
   ══════════════════════════════════════════ */
-  function gerarPDFFormal({ titulo, subtitulo, campos = [], secoes = [], geradoPor }) {
+  function gerarPDFFormal({ titulo, subtitulo, campos = [], secoes = [], tabela = null, geradoPor }) {
     const jsPDF = window.jspdf?.jsPDF || window.jsPDF;
     if (!jsPDF) { mostrarToast('jsPDF não carregado.', 'error'); return null; }
     const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
@@ -56,6 +84,11 @@ const DocumentosModule = (() => {
     doc.setDrawColor(...ORANGE); doc.setLineWidth(0.5);
     doc.line(M, y, W - M, y); y += 10;
 
+    if (tabela?.linhas?.length) {
+      if (y > 250) { doc.addPage(); y = 20; }
+      y = _desenharTabelaPDF(doc, tabela, y, W, M);
+    }
+
     secoes.forEach(s => {
       if (!s.corpo) return;
       if (y > 260) { doc.addPage(); y = 20; }
@@ -84,9 +117,10 @@ const DocumentosModule = (() => {
   /* ══════════════════════════════════════════
      WORD (.docx) — mesma identidade visual
   ══════════════════════════════════════════ */
-  async function gerarWordFormal({ titulo, subtitulo, campos = [], secoes = [], geradoPor }) {
+  async function gerarWordFormal({ titulo, subtitulo, campos = [], secoes = [], tabela = null, geradoPor }) {
     if (!window.docx) { mostrarToast('Gerador de Word não carregado.', 'error'); return null; }
-    const { Document, Paragraph, TextRun, AlignmentType, BorderStyle, Header, Footer, PageNumber, Packer } = window.docx;
+    const { Document, Paragraph, TextRun, AlignmentType, BorderStyle, Header, Footer, PageNumber, Packer,
+            Table, TableRow, TableCell, WidthType } = window.docx;
 
     const children = [];
     children.push(new Paragraph({
@@ -118,6 +152,23 @@ const DocumentosModule = (() => {
         spacing: { after: 100 },
       }));
     });
+    if (tabela?.linhas?.length) {
+      const headerRow = new TableRow({
+        children: tabela.colunas.map(c => new TableCell({
+          shading: { fill: NAVY_HEX },
+          children: [new Paragraph({ children: [new TextRun({ text: String(c), bold: true, color: 'FFFFFF', size: 18 })] })],
+        })),
+      });
+      const bodyRows = tabela.linhas.map((linha, idx) => new TableRow({
+        children: linha.map(cell => new TableCell({
+          shading: idx % 2 === 1 ? { fill: 'F5F6F8' } : undefined,
+          children: [new Paragraph({ children: [new TextRun({ text: String(cell ?? ''), size: 18, color: '3C3C50' })] })],
+        })),
+      }));
+      children.push(new Table({ width: { size: 100, type: WidthType.PERCENTAGE }, rows: [headerRow, ...bodyRows] }));
+      children.push(new Paragraph({ text: '', spacing: { after: 200 } }));
+    }
+
     secoes.forEach(s => {
       if (!s.corpo) return;
       children.push(new Paragraph({

@@ -1699,6 +1699,8 @@ const PageFinancas = {
       <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px">
         ${_btn('+ Registrar venda',"PageFinancas.lancar('venda')")}
         ${_btn('+ Registrar despesa',"PageFinancas.lancar('despesa')",'btn-ghost')}
+        ${_btn('📄 Extrato PDF',"PageFinancas._exportarExtrato('pdf')",'btn-ghost')}
+        ${_btn('📝 Extrato Word',"PageFinancas._exportarExtrato('word')",'btn-ghost')}
       </div>
       <div id="fin-lista" style="display:flex;flex-direction:column;gap:8px">
         <div style="padding:20px;text-align:center;color:var(--c-slate);font-size:13px">Carregando...</div>
@@ -1795,6 +1797,50 @@ const PageFinancas = {
     if (!ok) { mostrarToast('Sem permissão para excluir este lançamento.','error'); return; }
     mostrarToast('Excluído!','success');
     PageFinancas._carregarFluxo();
+  },
+  async _exportarExtrato(formato) {
+    if (!_sbq() || !window.DocumentosModule) { mostrarToast('Gerador de documentos não carregado.','error'); return; }
+    mostrarToast('Gerando extrato...','info',1500);
+    try {
+      const hoje = new Date();
+      const mesIniDate = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
+      const mesStr = mesIniDate.toISOString().split('T')[0];
+      const proxMesStr = new Date(hoje.getFullYear(), hoje.getMonth()+1, 1).toISOString().split('T')[0];
+      const [rv, rd] = await Promise.all([
+        _sbq().from('vendas').select('*').gte('data_venda', mesStr).lt('data_venda', proxMesStr).order('data_venda'),
+        _sbq().from('despesas').select('*').gte('data_despesa', mesStr).lt('data_despesa', proxMesStr).order('data_despesa'),
+      ]);
+      const vendas = rv.data||[], despesas = rd.data||[];
+      const totVenda = vendas.reduce((s,v)=>s+Number(v.valor||0),0);
+      const totDesp  = despesas.reduce((s,d)=>s+Number(d.valor||0),0);
+      const tudo = [
+        ...vendas.map(v=>({...v,_tipo:'Venda',_sinal:'+',_data:v.data_venda,_cat:v.categoria||v.produto||'—'})),
+        ...despesas.map(d=>({...d,_tipo:'Despesa',_sinal:'-',_data:d.data_despesa,_cat:d.categoria||'—'})),
+      ].sort((a,b)=>a._data.localeCompare(b._data));
+      const nomeMes = hoje.toLocaleDateString('pt-BR',{month:'long',year:'numeric'});
+      const args = {
+        titulo: 'Extrato de Fluxo de Caixa', subtitulo: nomeMes.replace(/^\w/,c=>c.toUpperCase()),
+        campos: [
+          ['Saldo do mês:', `R$ ${(totVenda-totDesp).toFixed(2)}`],
+          ['Total de vendas:', `R$ ${totVenda.toFixed(2)}`],
+          ['Total de despesas:', `R$ ${totDesp.toFixed(2)}`],
+        ],
+        tabela: tudo.length ? {
+          colunas: ['Data','Descrição','Categoria','Tipo','Valor (R$)'],
+          linhas: tudo.map(r => [_fmt(r._data), r.descricao||'—', r._cat, r._tipo, `${r._sinal} ${Number(r.valor||0).toFixed(2)}`]),
+        } : null,
+        secoes: tudo.length ? [] : [{ titulo:'Observação', corpo:'Nenhum lançamento registrado neste mês.' }],
+        geradoPor: window._appProfile?.nome,
+      };
+      const nomeArq = `NUPIEEPRO_Extrato_${nomeMes.replace(/[^\wÀ-ÿ]+/g,'_')}`;
+      if (formato === 'pdf') {
+        const doc = window.DocumentosModule.gerarPDFFormal(args);
+        if (doc) doc.save(`${nomeArq}.pdf`);
+      } else {
+        const blob = await window.DocumentosModule.gerarWordFormal(args);
+        if (blob) window.DocumentosModule.baixarBlob(blob, `${nomeArq}.docx`);
+      }
+    } catch(e) { console.warn('[Extrato export]', e); mostrarToast('Erro ao gerar extrato.','error'); }
   },
   lancar(tipo) {
     const hoje=new Date().toISOString().split('T')[0];
