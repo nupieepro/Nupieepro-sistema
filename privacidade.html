@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#000000">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:;">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
+  <meta name="robots" content="noindex">
+  <title>NUPIEEPRO — Termos de Uso e Política de Privacidade</title>
+  <link rel="icon" href="assets/icon-192.png" type="image/png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=League+Spartan:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@700;800&display=swap" rel="stylesheet">
+  <script>
+    (function(){
+      var _t = localStorage.getItem('np-theme') || localStorage.getItem('nupie_theme') || 'nucleo';
+      var m = {'dark-orange':'nucleo','dark-purple':'violet','fusion':'nucleo','luminous':'papel','orange':'noite','obsidian':'noite','bad-boy':'noite','default':'nucleo'};
+      if (m[_t]) _t = m[_t];
+      document.documentElement.setAttribute('data-theme', _t);
+    })();
+  </script>
+  <style>
+    :root {
+      --c-bg: #0f0732; --c-s1: #0b0526; --c-s2: rgba(23,13,66,0.80); --c-s3: #221454;
+      --c-accent: #d0541a; --c-accent2: #e07d43; --c-white: #ffffff; --c-slate: rgba(184,204,216,0.72);
+      --border: rgba(255,255,255,0.10);
+      --font-body: 'League Spartan', sans-serif;
+      --font-head: 'Plus Jakarta Sans', 'League Spartan', sans-serif;
+    }
+    [data-theme="noite"] { --c-bg:#000; --c-s1:#060300; --c-s2:rgba(14,8,5,0.80); --c-s3:#15100a; --c-slate:rgba(214,195,177,0.72); --border:rgba(246,82,20,0.12); }
+    [data-theme="violet"] { --c-bg:#000; --c-s1:#050308; --c-s2:rgba(10,6,15,0.80); --c-s3:#110a1a; --c-accent:#b9a0ff; --c-accent2:#d4c2ff; --c-slate:rgba(200,185,255,0.72); --border:rgba(155,123,232,0.14); }
+    [data-theme="papel"] { --c-bg:#f7f5fb; --c-s1:#eeebf5; --c-s2:rgba(240,237,250,0.92); --c-s3:#e6dff5; --c-accent:#9b7be8; --c-accent2:#b9a0ff; --c-white:#213248; --c-slate:rgba(33,50,72,0.68); --border:rgba(33,50,72,0.12); }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { background: var(--c-bg); color: var(--c-white); font-family: var(--font-body); -webkit-font-smoothing: antialiased; }
+    body { min-height: 100svh; padding: 32px 20px 80px; }
+
+    .doc { max-width: 720px; margin: 0 auto; }
+
+    .doc-top { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 32px; flex-wrap: wrap; }
+    .doc-brand { font-family: var(--font-head); font-weight: 800; font-size: 15px; letter-spacing: 0.02em; color: var(--c-white); }
+    .doc-back { font-size: 13px; color: var(--c-accent2); text-decoration: none; font-weight: 600; }
+    .doc-back:hover { text-decoration: underline; }
+
+    h1 { font-family: var(--font-head); font-weight: 800; font-size: clamp(24px, 4vw, 32px); line-height: 1.25; margin-bottom: 8px; }
+    .doc-meta { font-size: 12px; color: var(--c-slate); margin-bottom: 36px; }
+
+    h2 { font-family: var(--font-head); font-weight: 700; font-size: 17px; margin: 36px 0 12px; color: var(--c-accent2); }
+    p, li { font-size: 14.5px; line-height: 1.7; color: var(--c-white); opacity: 0.92; }
+    p + p { margin-top: 12px; }
+    ul { margin: 10px 0 10px 20px; }
+    li { margin-bottom: 6px; }
+    strong { font-weight: 700; }
+
+    table { width: 100%; border-collapse: collapse; margin: 14px 0; font-size: 13.5px; }
+    th, td { text-align: left; padding: 10px 12px; border: 1px solid var(--border); vertical-align: top; }
+    th { background: var(--c-s3); font-family: var(--font-head); font-weight: 700; font-size: 12px; text-transform: uppercase; letter-spacing: 0.04em; }
+    td { background: var(--c-s2); }
+
+    .box {
+      background: var(--c-s2); border: 1px solid var(--border); border-radius: 12px;
+      padding: 16px 18px; margin: 18px 0;
+    }
+    .box p { opacity: 1; }
+
+    a { color: var(--c-accent2); }
+
+    footer { margin-top: 48px; padding-top: 20px; border-top: 1px solid var(--border); font-size: 12px; color: var(--c-slate); }
+  </style>
+</head>
+<body>
+  <div class="doc">
+    <div class="doc-top">
+      <div class="doc-brand">NUPIEEPRO</div>
+      <a class="doc-back" href="index.html">← Voltar ao acesso</a>
+    </div>
+
+    <h1>Termos de Uso e Política de Privacidade</h1>
+    <div class="doc-meta">Última atualização: agosto de 2026 · Aplicável ao sistema de gestão do NUPIEEPRO</div>
+
+    <h2>1. Sobre este documento</h2>
+    <p>
+      O NUPIEEPRO é um núcleo estudantil de Engenharia de Produção, vinculado à ABEPRO Jovem, que usa este
+      sistema para organizar sua gestão interna: cadastro de membros, eventos, demandas, projetos, controle
+      financeiro e banco de talentos. Este documento explica quais dados o sistema coleta, para que servem,
+      quem tem acesso a eles e quais direitos você tem sobre os seus dados, conforme a Lei Geral de Proteção
+      de Dados (Lei nº 13.709/2018 — LGPD).
+    </p>
+    <p>
+      Ao usar o sistema, seja como membro, convidado ou participante de um evento aberto ao público, você
+      concorda com os termos descritos aqui.
+    </p>
+
+    <h2>2. Quais dados coletamos</h2>
+    <p>Os dados variam de acordo com a forma como você interage com o sistema:</p>
+    <table>
+      <tr><th>Situação</th><th>Dados coletados</th></tr>
+      <tr>
+        <td>Cadastro de membro (via convite)</td>
+        <td>Nome, apelido, e-mail, senha (armazenada de forma criptografada), cargo, coordenadoria, curso, instituição de ensino, data de aniversário e foto de perfil, quando enviada.</td>
+      </tr>
+      <tr>
+        <td>Inscrição em evento aberto ao público</td>
+        <td>Nome, e-mail, CPF, curso e instituição de ensino, usados apenas para controle de vagas e emissão de certificado.</td>
+      </tr>
+      <tr>
+        <td>Cadastro no Banco de Talentos</td>
+        <td>Nome, e-mail, telefone, curso, semestre, área de interesse, habilidades e links de Lattes ou LinkedIn, quando informados.</td>
+      </tr>
+      <tr>
+        <td>Uso do sistema como membro logado</td>
+        <td>Registro de presença em eventos, participação em demandas, avaliações de auditoria 5S e histórico de ações dentro do sistema, para fins de organização interna.</td>
+      </tr>
+      <tr>
+        <td>Notificações no navegador</td>
+        <td>Um identificador técnico do navegador, usado somente para entregar notificações que você mesmo autorizou.</td>
+      </tr>
+      <tr>
+        <td>Pesquisa de clima organizacional</td>
+        <td>Respostas vinculadas a um código gerado automaticamente, não ao seu nome ou e-mail. O núcleo não consegue identificar quem respondeu o quê.</td>
+      </tr>
+    </table>
+
+    <h2>3. Para que usamos esses dados</h2>
+    <ul>
+      <li>Gerenciar o acesso e os papéis de cada pessoa dentro do sistema.</li>
+      <li>Organizar eventos, controlar vagas e emitir certificados de participação.</li>
+      <li>Manter o banco de talentos para conectar interessados às coordenadorias do núcleo.</li>
+      <li>Acompanhar demandas, projetos e indicadores internos de gestão.</li>
+      <li>Enviar comunicados e notificações relevantes sobre o núcleo.</li>
+      <li>Cumprir obrigações da instituição de ensino e da ABEPRO Jovem quando exigido.</li>
+    </ul>
+    <p>Nenhum dado é usado para fins de publicidade ou vendido a terceiros, em nenhuma hipótese.</p>
+
+    <h2>4. Com quem seus dados são compartilhados</h2>
+    <p>
+      Seus dados não são vendidos nem repassados a terceiros para fins comerciais. Eles ficam visíveis
+      apenas para membros do núcleo com o papel adequado para aquela informação — por exemplo, dados
+      financeiros só são visíveis à coordenadoria responsável e à administração, e o CPF de inscritos em
+      eventos só é acessível a quem organiza aquele evento. Essa separação é aplicada diretamente no banco
+      de dados, não depende só da interface do sistema.
+    </p>
+    <p>
+      O sistema roda sobre a infraestrutura da <strong>Supabase</strong>, que atua como operadora técnica
+      dos dados (hospedagem do banco de dados e autenticação), seguindo os padrões de segurança do próprio
+      serviço. A Supabase não tem finalidade própria sobre esses dados, apenas os armazena em nome do
+      núcleo.
+    </p>
+
+    <h2>5. Base legal</h2>
+    <p>
+      O tratamento dos seus dados se baseia no <strong>consentimento</strong> dado no momento do cadastro
+      ou da inscrição, e no <strong>legítimo interesse</strong> do núcleo em se organizar internamente
+      enquanto entidade estudantil, nos termos do art. 7º da LGPD. Você pode retirar seu consentimento a
+      qualquer momento, conforme descrito na seção 8.
+    </p>
+
+    <h2>6. Como protegemos seus dados</h2>
+    <ul>
+      <li>Senhas nunca são armazenadas em texto puro; a autenticação é feita pela Supabase com criptografia.</li>
+      <li>Todo o tráfego entre o seu navegador e o sistema passa por HTTPS.</li>
+      <li>O acesso a cada tabela de dados segue regras de permissão por papel (RLS), aplicadas no próprio banco de dados, não só na tela.</li>
+      <li>Cabeçalhos de segurança do navegador (proteção contra clickjacking e outros ataques comuns) estão ativos em todas as páginas.</li>
+    </ul>
+
+    <h2>7. Por quanto tempo guardamos seus dados</h2>
+    <p>
+      Dados de membros são mantidos enquanto a pessoa estiver ativa no núcleo e por um período posterior
+      razoável, para fins de histórico institucional. Dados de inscrição em eventos são mantidos pelo tempo
+      necessário para a organização do evento e emissão de certificados. Você pode pedir a exclusão
+      antecipada a qualquer momento, como descrito a seguir.
+    </p>
+
+    <h2>8. Seus direitos</h2>
+    <p>Conforme a LGPD, você pode a qualquer momento:</p>
+    <ul>
+      <li>Confirmar quais dados seus o sistema guarda.</li>
+      <li>Corrigir dados incompletos, desatualizados ou incorretos.</li>
+      <li>Pedir a exclusão dos seus dados, quando não houver obrigação legal de mantê-los.</li>
+      <li>Pedir uma cópia dos seus dados em formato legível.</li>
+      <li>Revogar seu consentimento, o que pode significar a perda de acesso ao sistema.</li>
+    </ul>
+    <div class="box">
+      <p>
+        Para exercer qualquer um desses direitos, entre em contato com a administração do núcleo pelo
+        e-mail <strong>contato@nupieepro.com.br</strong> (ajustar para o canal oficial do núcleo). O pedido
+        será respondido em até 15 dias.
+      </p>
+    </div>
+
+    <h2>9. Cookies e armazenamento local</h2>
+    <p>
+      O sistema guarda no seu navegador apenas o essencial para funcionar: a sua sessão de acesso, o tema
+      visual escolhido e preferências de exibição. Nada disso é usado para rastreamento ou publicidade, e
+      pode ser apagado a qualquer momento limpando os dados do site no navegador.
+    </p>
+
+    <h2>10. Termos de uso</h2>
+    <ul>
+      <li>Você é responsável por manter sua senha em sigilo e por tudo que for feito com a sua conta.</li>
+      <li>O sistema é de uso interno do núcleo; não deve ser usado para fins alheios às atividades do NUPIEEPRO.</li>
+      <li>Informações inseridas no sistema (eventos, demandas, dados financeiros) devem ser verdadeiras e atualizadas.</li>
+      <li>O uso indevido do sistema, incluindo tentativa de acessar dados fora do seu papel, pode levar à suspensão do acesso.</li>
+    </ul>
+
+    <h2>11. Alterações nesta política</h2>
+    <p>
+      Este documento pode ser atualizado conforme o sistema evolui. A data no topo da página sempre indica
+      a versão mais recente. Mudanças relevantes serão comunicadas aos membros pelo próprio sistema.
+    </p>
+
+    <h2>12. Contato</h2>
+    <p>
+      Dúvidas sobre este documento ou sobre o tratamento dos seus dados podem ser enviadas para
+      <strong>contato@nupieepro.com.br</strong> (ajustar para o canal oficial do núcleo).
+    </p>
+
+    <footer>NUPIEEPRO · Sistema de Gestão · ABEPRO Jovem</footer>
+  </div>
+</body>
+</html>
