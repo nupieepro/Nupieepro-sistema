@@ -1,29 +1,30 @@
 /* ============================================================
-   NUPIEEPRO — Service Worker v57
+   NUPIEEPRO — Service Worker v58
    Network-first com fallback para cache offline.
    ATENCAO: Versionar CACHE_NAME a cada deploy importante senao
    browsers continuam servindo assets antigos do cache do SW.
    ============================================================ */
 
-const CACHE_NAME = 'nupieepro-v90';
+const CACHE_NAME = 'nupieepro-v91';
 const ASSETS = [
   './',
   './index.html',
   './dashboard.html',
   './convite.html',
   './reset.html',
-  './css/styles.css?v=90',
+  './privacidade.html',
+  './css/styles.css?v=91',
   './js/config.defaults.js',
-  './js/app.js?v=90',
-  './js/auth.js?v=90',
-  './js/abj.js?v=90',
-  './js/pages.js?v=90',
-  './js/permissoes.js?v=90',
-  './js/emails.js?v=90',
-  './js/relatorio.js?v=90',
-  './js/documentos.js?v=90',
-  './js/validacao.js?v=90',
-  './js/push.js?v=90',
+  './js/app.js?v=91',
+  './js/auth.js?v=91',
+  './js/abj.js?v=91',
+  './js/pages.js?v=91',
+  './js/permissoes.js?v=91',
+  './js/emails.js?v=91',
+  './js/relatorio.js?v=91',
+  './js/documentos.js?v=91',
+  './js/validacao.js?v=91',
+  './js/push.js?v=91',
   './manifest.json',
   './assets/icon.png',
 ];
