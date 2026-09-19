@@ -5,7 +5,7 @@
    browsers continuam servindo assets antigos do cache do SW.
    ============================================================ */
 
-const CACHE_NAME = 'nupieepro-v91';
+const CACHE_NAME = 'nupieepro-v92';
 const ASSETS = [
   './',
   './index.html',
@@ -13,18 +13,18 @@ const ASSETS = [
   './convite.html',
   './reset.html',
   './privacidade.html',
-  './css/styles.css?v=91',
+  './css/styles.css?v=92',
   './js/config.defaults.js',
-  './js/app.js?v=91',
-  './js/auth.js?v=91',
-  './js/abj.js?v=91',
-  './js/pages.js?v=91',
-  './js/permissoes.js?v=91',
-  './js/emails.js?v=91',
-  './js/relatorio.js?v=91',
-  './js/documentos.js?v=91',
-  './js/validacao.js?v=91',
-  './js/push.js?v=91',
+  './js/app.js?v=92',
+  './js/auth.js?v=92',
+  './js/abj.js?v=92',
+  './js/pages.js?v=92',
+  './js/permissoes.js?v=92',
+  './js/emails.js?v=92',
+  './js/relatorio.js?v=92',
+  './js/documentos.js?v=92',
+  './js/validacao.js?v=92',
+  './js/push.js?v=92',
   './manifest.json',
   './assets/icon.png',
 ];
@@ -70,6 +70,19 @@ self.addEventListener('fetch', (event) => {
         }
         return response;
       })
-      .catch(() => caches.match(event.request))
+      .catch(async () => {
+        // Rede falhou: tenta cache. Se não achar nada (ex: SW antigo pedindo
+        // um asset versionado que já saiu do cache), NUNCA devolve undefined
+        // pro respondWith — isso quebra com "Failed to convert value to
+        // 'Response'" e trava o app inteiro. Cai pro shell (index.html) em
+        // navegação, ou devolve uma resposta vazia como último recurso.
+        const cached = await caches.match(event.request);
+        if (cached) return cached;
+        if (event.request.mode === 'navigate') {
+          const shell = await caches.match('./index.html');
+          if (shell) return shell;
+        }
+        return new Response('', { status: 503, statusText: 'Offline' });
+      })
   );
 });

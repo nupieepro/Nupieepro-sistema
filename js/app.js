@@ -870,11 +870,11 @@ const Dashboard = {
       if (elDelT) elDelT.textContent = deliveryPct !== null ? `${doneTasks} de ${allDemands.length} demandas` : 'Sem demandas cadastradas';
 
       // Auditoria ABJ
-      const auditPct = Math.round((totalPts / 50) * 100);
+      const auditPct = Math.min(Math.round((totalPts / 50) * 100), 100);
       const auditBar = document.getElementById('audit-bar');
       const auditTxt = document.getElementById('audit-percent');
       const auditStatus = document.getElementById('audit-status');
-      if (auditBar) auditBar.style.width = Math.min(auditPct, 100) + '%';
+      if (auditBar) auditBar.style.width = auditPct + '%';
       if (auditTxt) auditTxt.textContent = auditPct + '%';
       if (auditStatus) {
         if (auditPct >= 100) auditStatus.textContent = 'Auditoria completa — Selo garantido';
