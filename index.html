@@ -493,8 +493,8 @@
   </main>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-  <script src="js/app.js?v=93"></script>
-  <script src="js/auth.js?v=93"></script>
+  <script src="js/app.js?v=94"></script>
+  <script src="js/auth.js?v=94"></script>
   <script>
     (async () => {
       // MAGIC LINK V6.0: Clicou, Entrou.
@@ -512,10 +512,18 @@
       initLoginPage();
       Theme.init();
       if ('serviceWorker' in navigator) {
+        /* Só recarrega quando um SW troca de um antigo pro novo (atualização
+           real). Na primeira visita (ainda sem controller nenhum), o SW
+           assume a aba assim que ativa e dispara controllerchange do mesmo
+           jeito — sem essa guarda, todo primeiro acesso levava um reload
+           desnecessário. Uma vez que a aba já tem controller, qualquer
+           controllerchange seguinte é atualização de verdade e recarrega. */
+        let _jaTinhaController = !!navigator.serviceWorker.controller;
         navigator.serviceWorker.register('sw.js').then(reg => {
           let _swAtualizando = false;
           navigator.serviceWorker.addEventListener('controllerchange', () => {
             if (_swAtualizando) return;
+            if (!_jaTinhaController) { _jaTinhaController = true; return; }
             _swAtualizando = true;
             setTimeout(() => window.location.reload(), 600);
           });

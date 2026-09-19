@@ -23,7 +23,7 @@
   <!-- EmailJS SDK -->
   <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 
-  <link rel="stylesheet" href="css/styles.css?v=93">
+  <link rel="stylesheet" href="css/styles.css?v=94">
   
   <script>
     // Injeção Crítica: Impede a tela branca de "Blink"
@@ -1647,24 +1647,29 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/lucide@0.452.0/dist/umd/lucide.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/docx@9.7.1/dist/index.iife.js"></script>
-  <script src="js/permissoes.js?v=93"></script>
-  <script src="js/app.js?v=93"></script>
-  <script src="js/auth.js?v=93"></script>
-  <script src="js/abj.js?v=93"></script>
-  <script src="js/relatorio.js?v=93"></script>
-  <script src="js/documentos.js?v=93"></script>
-  <script src="js/emails.js?v=93"></script>
-  <script src="js/pages.js?v=93"></script>
-  <script src="js/push.js?v=93"></script>
+  <script src="js/permissoes.js?v=94"></script>
+  <script src="js/app.js?v=94"></script>
+  <script src="js/auth.js?v=94"></script>
+  <script src="js/abj.js?v=94"></script>
+  <script src="js/relatorio.js?v=94"></script>
+  <script src="js/documentos.js?v=94"></script>
+  <script src="js/emails.js?v=94"></script>
+  <script src="js/pages.js?v=94"></script>
+  <script src="js/push.js?v=94"></script>
   <script>
     // ── SERVICE WORKER: registro + auto-update ─────────
     // dashboard.html é onde o usuário passa o dia todo; sem isso, quem
     // deixa a aba aberta nunca via um SW novo assumir o controle.
     if ('serviceWorker' in navigator) {
+      // Primeira visita (sem controller ainda) tambem dispara controllerchange
+      // quando o SW assume a aba — nao e atualizacao de verdade, entao nao
+      // recarrega nesse caso (ver mesma guarda em index.html).
+      let _jaTinhaController = !!navigator.serviceWorker.controller;
       navigator.serviceWorker.register('sw.js').then(reg => {
         let _swAtualizando = false;
         navigator.serviceWorker.addEventListener('controllerchange', () => {
           if (_swAtualizando) return;
+          if (!_jaTinhaController) { _jaTinhaController = true; return; }
           _swAtualizando = true;
           if (typeof mostrarToast === 'function') mostrarToast('Atualizando para a versão mais recente...', 'info', 1500);
           setTimeout(() => window.location.reload(), 600);
