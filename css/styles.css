@@ -1241,13 +1241,23 @@ canvas { max-width: 100%; }
    qualquer conteúdo que tenha subido até ali durante o scroll. Em vez de
    depender da posição da topbar, ancora embaixo — acima da mobile-nav,
    que é sempre uma faixa reservada (.main-area já tem padding-bottom pra
-   isso) e nunca tem conteúdo por baixo, scroll nenhum interfere. */
-@media (max-width: 768px) {
+   isso) e nunca tem conteúdo por baixo, scroll nenhum interfere.
+
+   Isso também vale no tablet (769-1024px): mesmo sem o problema de scroll
+   do mobile de verdade, o conteúdo ali é estreito o bastante pra o toast
+   (360px, ancorado a "right") cobrir o título do card logo abaixo da
+   topbar — sem mobile-nav pra ancorar acima, só desce pro rodapé. */
+@media (max-width: 1024px) {
   .toast-container {
     top: auto;
-    bottom: calc(var(--mobile-nav-h) + env(safe-area-inset-bottom) + var(--s3));
+    bottom: calc(env(safe-area-inset-bottom) + var(--s3));
     left: var(--s3); right: var(--s3);
     max-width: none;
+  }
+}
+@media (max-width: 768px) {
+  .toast-container {
+    bottom: calc(var(--mobile-nav-h) + env(safe-area-inset-bottom) + var(--s3));
   }
 }
 
