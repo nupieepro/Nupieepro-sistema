@@ -23,7 +23,7 @@
   <!-- EmailJS SDK -->
   <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 
-  <link rel="stylesheet" href="css/styles.css?v=97">
+  <link rel="stylesheet" href="css/styles.css?v=98">
   
   <script>
     // Injeção Crítica: Impede a tela branca de "Blink"
@@ -34,7 +34,7 @@
       var legacyMap = {'dark-orange':'nucleo','dark-purple':'violet','fusion':'nucleo','luminous':'papel','orange':'noite','obsidian':'noite','bad-boy':'noite','default':'nucleo'};
       if (legacyMap[_t]) _t = legacyMap[_t];
       document.documentElement.setAttribute('data-theme', _t);
-      if (_f !== 'default') document.documentElement.setAttribute('data-font', _f);
+      document.documentElement.setAttribute('data-font', _f);
     })();
   </script>
 </head>
@@ -1647,15 +1647,15 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/lucide@0.452.0/dist/umd/lucide.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/docx@9.7.1/dist/index.iife.js"></script>
-  <script src="js/permissoes.js?v=97"></script>
-  <script src="js/app.js?v=97"></script>
-  <script src="js/auth.js?v=97"></script>
-  <script src="js/abj.js?v=97"></script>
-  <script src="js/relatorio.js?v=97"></script>
-  <script src="js/documentos.js?v=97"></script>
-  <script src="js/emails.js?v=97"></script>
-  <script src="js/pages.js?v=97"></script>
-  <script src="js/push.js?v=97"></script>
+  <script src="js/permissoes.js?v=98"></script>
+  <script src="js/app.js?v=98"></script>
+  <script src="js/auth.js?v=98"></script>
+  <script src="js/abj.js?v=98"></script>
+  <script src="js/relatorio.js?v=98"></script>
+  <script src="js/documentos.js?v=98"></script>
+  <script src="js/emails.js?v=98"></script>
+  <script src="js/pages.js?v=98"></script>
+  <script src="js/push.js?v=98"></script>
   <script>
     // ── SERVICE WORKER: registro + auto-update ─────────
     // dashboard.html é onde o usuário passa o dia todo; sem isso, quem
@@ -1728,21 +1728,12 @@
       }
     };
 
-    // ── THEME APPLY (New themes) ────────────────────────
-    if (typeof window.Theme === 'undefined') window.Theme = {};
-    var _origThemeApply = window.Theme.apply;
-    window.Theme.apply = function(t) {
-      // Map legacy names to new
-      var legMap = {'dark-orange':'nucleo','dark-purple':'violet','fusion':'nucleo','luminous':'papel','orange':'noite','obsidian':'noite','bad-boy':'noite'};
-      if (legMap[t]) t = legMap[t];
-      document.documentElement.setAttribute('data-theme', t);
-      localStorage.setItem('np-theme', t);
-      localStorage.setItem('nupie_theme', t);
-      // Update setting buttons active state
-      document.querySelectorAll('[id^="themeBtn-"]').forEach(function(b) { b.classList.remove('active'); });
-      var btn = document.getElementById('themeBtn-' + t);
-      if (btn) btn.classList.add('active');
-    };
+    /* Theme.apply e Theme.applyFont já vêm completos de app.js (alias
+       completo, toast, haptic, salva nupie_theme/np-theme) — não
+       sobrescrever aqui. Uma versão local chegou a existir nesse lugar,
+       mas era uma cópia incompleta que silenciosamente comia o toast e
+       parte dos aliases legados em toda troca de tema feita a partir do
+       Configurações (o único lugar do app onde essa troca acontece). */
 
     // ── GLOBAL ERROR HANDLER ────────────────────────────────
     // Detalhe técnico (mensagem, arquivo, linha) só no console, pra quem

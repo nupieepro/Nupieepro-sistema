@@ -1319,6 +1319,7 @@ const Theme = {
     if (this._aliases[name]) name = this._aliases[name];
     document.documentElement.setAttribute('data-theme', name);
     localStorage.setItem('nupie_theme', name);
+    localStorage.setItem('np-theme', name);
 
     document.querySelectorAll('[id^="themeBtn-"]').forEach(b => b.classList.remove('active'));
     const btn = document.getElementById('themeBtn-' + name);
@@ -1366,7 +1367,7 @@ const Theme = {
 
   applyFont(name, silent = false) {
     Theme._ensureFontLoaded(name);
-    document.documentElement.setAttribute('data-font', name === 'default' ? '' : name);
+    document.documentElement.setAttribute('data-font', name);
     localStorage.setItem('nupie_font', name);
     document.querySelectorAll('[id^="fontBtn-"]').forEach(b => b.classList.remove('active'));
     const btn = document.getElementById('fontBtn-' + name);
