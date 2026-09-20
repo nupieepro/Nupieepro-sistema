@@ -556,6 +556,22 @@ const App = {
 
       App.syncSettingsInputs(profile);
 
+      /* Detecta sessão encerrada/expirada em tempo real (token revogado,
+         refresh falhou, logout feito em outra aba) — sem isso, quem estava
+         navegando só descobria que caiu no próximo F5, vendo a tela quebrar
+         em vez de ser levado de volta pro login com uma explicação. Ignora
+         o evento quando é o PRÓPRIO doLogout()/forceLogout() que disparou
+         (já redireciona sozinho, sem precisar do aviso de "sessão perdida"). */
+      if (_sb && !window.__authWatcherArmado) {
+        window.__authWatcherArmado = true;
+        _sb.auth.onAuthStateChange((event) => {
+          if (event === 'SIGNED_OUT' && !window.__logoutVoluntario) {
+            App.toast('Sessão encerrada. Faça login novamente.', 'warning', 3500);
+            setTimeout(() => App.redirect('index.html'), 1200);
+          }
+        });
+      }
+
       return profile;
     } catch (err) {
       console.error('Critical Init Error:', err);

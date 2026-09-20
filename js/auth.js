@@ -62,8 +62,20 @@ const Auth = {
 
   async logout() {
     const sb = this._db();
+    // Sinaliza que este signOut foi voluntário, pro watcher de sessão do
+    // dashboard (app.js) não mostrar "sessão encerrada" por cima do logout
+    // normal que o próprio usuário pediu.
+    window.__logoutVoluntario = true;
     if (sb) await sb.auth.signOut();
-    localStorage.removeItem('mockSession');
+    /* Limpa todo dado de sessão/trabalho em cache no logout — sem isso, o
+       próximo usuário num dispositivo compartilhado (comum num evento como
+       a ABJ) podia ver demandas, rascunhos de TAP ou repasse financeiro em
+       andamento de quem saiu. Preferência de aparência (tema/fonte) não é
+       dado de sessão, então fica. */
+    const PRESERVAR = new Set(['nupie_theme', 'np-theme', 'nupie_font']);
+    Object.keys(localStorage)
+      .filter(k => !PRESERVAR.has(k))
+      .forEach(k => localStorage.removeItem(k));
     if (window.App) window.App.redirect('index.html');
     else window.location.href = 'index.html';
   },
@@ -92,6 +104,29 @@ const Auth = {
    Helpers de UI
    ============================================================ */
 let selectedCoord = null;
+
+/* Traduz as mensagens de erro do Supabase Auth (sempre em inglês) pra
+   PT-BR — mostrar "Invalid login credentials" cru pra quem só fala
+   português não é profissional. Erro não mapeado cai num texto genérico
+   curto em vez de vazar detalhe técnico/stack na tela. */
+function traduzErroAuth(err) {
+  const msg = (err && err.message) || String(err || '');
+  const mapa = [
+    [/invalid login credentials/i, 'E-mail ou senha incorretos.'],
+    [/email not confirmed/i, 'E-mail ainda não confirmado. Verifique sua caixa de entrada.'],
+    [/user already registered|already been registered/i, 'Este e-mail já possui uma conta. Faça login ou recupere sua senha.'],
+    [/password should be at least|password.*too short/i, 'Senha deve ter pelo menos 8 caracteres, com letras e números.'],
+    [/same.*(password|senha)/i, 'A nova senha deve ser diferente da anterior.'],
+    [/rate limit|too many requests|only request this after/i, 'Muitas tentativas. Aguarde um pouco antes de tentar de novo.'],
+    [/failed to fetch|network|load failed/i, 'Erro de conexão. Verifique sua internet e tente novamente.'],
+    [/token.*(expired|invalid)|invalid.*token|expired.*token|link.*(invalid|expired)|invalid.*link/i, 'Link inválido ou expirado.'],
+    [/user not found/i, 'Usuário não encontrado.'],
+    [/session.*missing|auth session missing/i, 'Sessão expirada. Solicite um novo link.'],
+  ];
+  for (const [re, pt] of mapa) { if (re.test(msg)) return pt; }
+  return msg && msg.length < 140 ? msg : 'Algo deu errado. Tente novamente em instantes.';
+}
+window.traduzErroAuth = traduzErroAuth;
 
 function showAlert(msg, type, containerId = 'loginAlert') {
   const el = document.getElementById(containerId);
@@ -161,7 +196,7 @@ async function doLogin() {
     if (window.App) window.App.toast('Login realizado!', 'success');
     setTimeout(() => { window.location.href = 'dashboard.html'; }, 500);
   } catch (err) {
-    showAlert(err.message || 'E-mail ou senha incorretos.', 'error');
+    showAlert(traduzErroAuth(err), 'error');
   } finally {
     if (btn) { btn.classList.remove('loading'); btn.textContent = 'Entrar'; }
   }
@@ -177,6 +212,18 @@ function initLoginPage() {
 
   form.addEventListener('keydown', (e) => {
     if (e.key === 'Enter') { e.preventDefault(); doLogin(); }
+  });
+
+  // Enter também envia os painéis de "Esqueci minha senha" e "Ativar
+  // convite" — sem isso o usuário é obrigado a clicar no botão, o que
+  // quebra a expectativa padrão de qualquer formulário na web.
+  const resetInput = document.getElementById('resetEmail');
+  resetInput?.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') { e.preventDefault(); doResetPassword(); }
+  });
+  const conviteInput = document.getElementById('conviteTokenInput');
+  conviteInput?.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') { e.preventDefault(); ativarConvite(); }
   });
 
   const sb = window._sb || window._supabase;
@@ -204,8 +251,12 @@ function initLoginPage() {
 
 async function forceLogout() {
   const sb = window._sb || window._supabase;
+  window.__logoutVoluntario = true;
   if (sb) await sb.auth.signOut();
-  localStorage.removeItem('mockSession');
+  const PRESERVAR = new Set(['nupie_theme', 'np-theme', 'nupie_font']);
+  Object.keys(localStorage)
+    .filter(k => !PRESERVAR.has(k))
+    .forEach(k => localStorage.removeItem(k));
   window.location.reload();
 }
 
@@ -223,6 +274,13 @@ async function doResetPassword() {
   const sb = window._sb || window._supabase;
   if (!sb) { showPanelAlert('Sistema offline. Tente novamente mais tarde.', 'error', 'resetAlert'); return; }
 
+  // SEGURANÇA: mesmo limitador anti-abuso do login — sem isso, alguém podia
+  // martelar "enviar link" pro e-mail de outra pessoa indefinidamente.
+  if (typeof RateLimiter !== 'undefined' && !RateLimiter.check('reset_' + email, 3, 60000)) {
+    showPanelAlert('Muitas tentativas. Aguarde 1 minuto antes de pedir outro link.', 'error', 'resetAlert');
+    return;
+  }
+
   const btn = document.getElementById('btnReset');
   if (btn) { btn.disabled = true; btn.textContent = 'Enviando...'; }
 
@@ -231,7 +289,7 @@ async function doResetPassword() {
     showPanelAlert('Se esse e-mail tiver cadastro, você receberá o link em instantes. Verifique também a pasta de spam.', 'success', 'resetAlert');
     if (emailEl) emailEl.value = '';
   } catch (err) {
-    showPanelAlert(err.message || 'Erro ao enviar. Tente novamente.', 'error', 'resetAlert');
+    showPanelAlert(traduzErroAuth(err), 'error', 'resetAlert');
   } finally {
     if (btn) { btn.disabled = false; btn.textContent = 'Enviar link de redefinição'; }
   }
@@ -301,6 +359,12 @@ function initConvitePage() {
            do texto que introduz. */
         infoEl.innerHTML = `<span>📧 ${esc(convite.email)}</span><span class="info-sep">${esc(coord)}</span><span class="info-sep">${esc(convite.cargo || convite.role)}</span>`;
       }
+
+      // Enter em qualquer campo do formulário também envia — mesmo padrão
+      // do restante do fluxo de acesso.
+      document.getElementById('conviteForm')?.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && e.target.tagName === 'INPUT') { e.preventDefault(); doConviteRegister(); }
+      });
     } catch (e) {
       if (loadingEl) loadingEl.style.display = 'none';
       if (errorEl)   errorEl.style.display = '';
@@ -355,7 +419,7 @@ async function doConviteRegister() {
       if (count <= 0) { clearInterval(timer); window.location.href = 'index.html'; }
     }, 1000);
   } catch (err) {
-    showAlert(err.message || 'Erro ao criar conta. Tente novamente.', 'error', 'conviteAlert');
+    showAlert(traduzErroAuth(err), 'error', 'conviteAlert');
     if (btn) { btn.disabled = false; btn.textContent = 'Criar Minha Conta'; }
   }
 }
