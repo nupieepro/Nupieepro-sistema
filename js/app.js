@@ -1307,12 +1307,12 @@ const Theme = {
     'bad-boy':        'noite',
     'badboy':         'noite',
     'luminous':       'papel',
-    'glimmer':        'dark',
-    'frufru':         'rose',
+    'glimmer':        'noite',
+    'frufru':         'papel',
     'roxo':           'violet',
     'claro-suave':    'papel',
     'alto-contraste': 'noite',
-    'branco-laranja': 'white-orange',
+    'branco-laranja': 'papel',
   },
 
   apply(name, silent = false) {
@@ -1325,18 +1325,14 @@ const Theme = {
     const btn = document.getElementById('themeBtn-' + name);
     if (btn) btn.classList.add('active');
 
+    /* O alias acima (linha 1319) já resolveu `name` pra um dos 4 temas
+       reais antes de chegar aqui — não faz sentido ter rótulo pra nome
+       que nunca sobrevive até este ponto. */
     const themeLabel = {
-      'nucleo':       'Núcleo (Padrão)',
-      'noite':        'Noite',
-      'violet':       'Violeta',
-      'papel':        'Papel',
-      'dark-orange':  'Orange Industrial',
-      'dark-purple':  'Fusion Elite',
-      'luminous':     'Claro Premium',
-      'obsidian':     'Obsidian Dark',
-      'dark':         'Dark Premium',
-      'rose':         'Rose Quartz',
-      'white-orange': 'Branco + Laranja',
+      'nucleo': 'Núcleo (Padrão)',
+      'noite':  'Noite',
+      'violet': 'Violeta',
+      'papel':  'Papel',
     };
     const label = document.getElementById('systemThemeLabel');
     if (label) label.textContent = themeLabel[name] || name;

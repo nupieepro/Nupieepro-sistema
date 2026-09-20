@@ -23,7 +23,7 @@
   <!-- EmailJS SDK -->
   <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 
-  <link rel="stylesheet" href="css/styles.css?v=99">
+  <link rel="stylesheet" href="css/styles.css?v=100">
   
   <script>
     // Injeção Crítica: Impede a tela branca de "Blink"
@@ -392,21 +392,21 @@
 
           <!-- Linha 1: Pareto de Backlog + Frequência de Eventos -->
           <div class="dash-two-col" style="margin-bottom:var(--s5);">
-            <section class="section-card">
+            <section class="section-card section-card-fill">
               <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
                 <h3 class="section-title" style="margin:0;">Pareto — Backlog por Área</h3>
                 <button class="btn btn-ghost" style="font-size:11px;padding:4px 10px;" onclick="goTo('demandas')">Kanban →</button>
               </div>
-              <div id="dashChartPareto" style="display:flex;flex-direction:column;gap:8px;">
+              <div id="dashChartPareto" class="section-card-body" style="display:flex;flex-direction:column;gap:8px;">
                 <div class="skeleton-lines"><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div></div>
               </div>
             </section>
-            <section class="section-card">
+            <section class="section-card section-card-fill">
               <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
                 <h3 class="section-title" style="margin:0;">Frequência de Eventos / Mês</h3>
                 <button class="btn btn-ghost" style="font-size:11px;padding:4px 10px;" onclick="goTo('calendario')">Calendário →</button>
               </div>
-              <div id="dashChartFreq" style="min-height:100px;">
+              <div id="dashChartFreq" class="section-card-body" style="min-height:100px;">
                 <div class="skeleton" style="height:90px;width:100%;"></div>
               </div>
             </section>
@@ -414,29 +414,29 @@
 
           <!-- Linha 2: Radar ABEPRO + Auditoria 5S + Demandas por Coord. -->
           <div class="dash-chart-trio" style="margin-bottom:var(--s5);">
-            <section class="section-card">
+            <section class="section-card section-card-fill">
               <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
                 <h3 class="section-title" style="margin:0;font-size:13px;">Radar ABEPRO</h3>
                 <button class="btn btn-ghost" style="font-size:11px;padding:3px 8px;" onclick="goTo('abj')">ABJ →</button>
               </div>
-              <div id="dashChartRadar" style="display:flex;justify-content:center;align-items:center;min-height:130px;">
+              <div id="dashChartRadar" class="section-card-body" style="display:flex;justify-content:center;align-items:center;min-height:130px;">
                 <div class="skeleton" style="height:120px;width:120px;border-radius:50%;"></div>
               </div>
             </section>
-            <section class="section-card">
+            <section class="section-card section-card-fill">
               <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
                 <h3 class="section-title" style="margin:0;font-size:13px;">Auditoria 5S</h3>
                 <button id="btn5SNova" class="btn btn-ghost" style="font-size:11px;padding:3px 8px;display:none;" onclick="Dashboard.novaAuditoria5S()">Nova →</button>
               </div>
-              <div id="dashChart5S" style="min-height:100px;">
+              <div id="dashChart5S" class="section-card-body" style="min-height:100px;">
                 <div class="skeleton-lines"><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div></div>
               </div>
             </section>
-            <section class="section-card">
+            <section class="section-card section-card-fill">
               <div style="margin-bottom:10px;">
                 <h3 class="section-title" style="margin:0;font-size:13px;">Demandas / Coord.</h3>
               </div>
-              <div id="dashChartCoord" style="display:flex;flex-direction:column;gap:6px;min-height:100px;">
+              <div id="dashChartCoord" class="section-card-body" style="display:flex;flex-direction:column;gap:6px;min-height:100px;">
                 <div class="skeleton-lines"><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div></div>
               </div>
             </section>
@@ -444,21 +444,21 @@
 
           <!-- Linha 3: Pipeline de Status + Progresso ABJ por Estrela -->
           <div class="dash-two-col" style="margin-bottom:var(--s6);">
-            <section class="section-card">
+            <section class="section-card section-card-fill">
               <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
                 <h3 class="section-title" style="margin:0;">Pipeline de Demandas</h3>
                 <button class="btn btn-ghost" style="font-size:11px;padding:4px 10px;" onclick="goTo('demandas')">Ver Kanban →</button>
               </div>
-              <div id="dashPipeline" style="display:flex;flex-direction:column;gap:10px;">
+              <div id="dashPipeline" class="section-card-body" style="display:flex;flex-direction:column;gap:10px;">
                 <div class="skeleton-lines"><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div></div>
               </div>
             </section>
-            <section class="section-card">
+            <section class="section-card section-card-fill">
               <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
                 <h3 class="section-title" style="margin:0;">Progresso ABJ — Estrelas</h3>
                 <button class="btn btn-ghost" style="font-size:11px;padding:4px 10px;" onclick="goTo('abj')">Ver ABJ →</button>
               </div>
-              <div id="dashAbjAreas" style="display:flex;flex-direction:column;gap:8px;">
+              <div id="dashAbjAreas" class="section-card-body" style="display:flex;flex-direction:column;gap:8px;">
                 <div class="skeleton-lines"><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div></div>
               </div>
             </section>
@@ -478,9 +478,9 @@
 
           <!-- Dash Two-Col (Atividade + Agenda) -->
           <div class="dash-two-col">
-            <section class="section-card">
+            <section class="section-card section-card-fill">
               <h3 class="section-title">Atividade Recente</h3>
-              <div id="dashRecent"><p class="text-muted text-sm">Carregando atividades...</p></div>
+              <div id="dashRecent" class="section-card-body"><p class="text-muted text-sm">Carregando atividades...</p></div>
             </section>
 
             <section class="section-card">
@@ -1647,15 +1647,15 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/lucide@0.452.0/dist/umd/lucide.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/docx@9.7.1/dist/index.iife.js"></script>
-  <script src="js/permissoes.js?v=99"></script>
-  <script src="js/app.js?v=99"></script>
-  <script src="js/auth.js?v=99"></script>
-  <script src="js/abj.js?v=99"></script>
-  <script src="js/relatorio.js?v=99"></script>
-  <script src="js/documentos.js?v=99"></script>
-  <script src="js/emails.js?v=99"></script>
-  <script src="js/pages.js?v=99"></script>
-  <script src="js/push.js?v=99"></script>
+  <script src="js/permissoes.js?v=100"></script>
+  <script src="js/app.js?v=100"></script>
+  <script src="js/auth.js?v=100"></script>
+  <script src="js/abj.js?v=100"></script>
+  <script src="js/relatorio.js?v=100"></script>
+  <script src="js/documentos.js?v=100"></script>
+  <script src="js/emails.js?v=100"></script>
+  <script src="js/pages.js?v=100"></script>
+  <script src="js/push.js?v=100"></script>
   <script>
     // ── SERVICE WORKER: registro + auto-update ─────────
     // dashboard.html é onde o usuário passa o dia todo; sem isso, quem
