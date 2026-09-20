@@ -1447,7 +1447,7 @@ const PageFinancas = {
             </div>
             <div style="display:flex;align-items:center;gap:6px">
               <span style="font-size:12px;font-weight:800;color:${cor}">
-                ${dias>0?`${dias}d`:'Hoje'}
+                ${dias>0?`${dias}d`:dias===0?'Hoje':`${-dias}d atrás`}
               </span>
               <button class="btn btn-ghost" style="padding:3px 7px;font-size:11px;color:var(--red)" title="Excluir" onclick="PageFinancas._excluirEventoComercial('${e.id}')">🗑️</button>
             </div>
@@ -1924,7 +1924,7 @@ const PageFinancas = {
         plugins:{ legend:{ labels:{ color:'#94a3b8', font:{ size:11 } } } },
         scales: {
           x:{ ticks:{ color:'#94a3b8', font:{size:10} }, grid:{ color:'#ffffff11' } },
-          y:{ ticks:{ color:'#94a3b8', font:{size:10}, callback:v=>'R$'+v.toFixed(0) }, grid:{ color:'#ffffff11' } },
+          y:{ ticks:{ color:'#94a3b8', font:{size:10}, precision:0, callback:v=>'R$'+v.toFixed(0) }, grid:{ color:'#ffffff11' } },
         },
       },
     });
