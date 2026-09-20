@@ -468,6 +468,29 @@ body, .themed { transition: background-color 350ms var(--ease), color 200ms var(
   .topbar { flex-wrap: wrap; height: auto !important; min-height: var(--topbar-h); row-gap: 8px; padding-top: 10px !important; padding-bottom: 10px !important; }
   .topbar-left { flex: 1 1 auto; min-width: 160px !important; }
   .topbar-right { flex: 0 1 auto; justify-content: flex-end; margin-left: auto; gap: 4px !important; }
+
+  /* O botão de menu (.topbar-hamburger) fica visível em QUALQUER largura
+     — mas a sidebar só ganha de volta os rótulos quando ".open" dentro de
+     max-width:768px (mais abaixo). No tablet (essa faixa aqui, até 1024px)
+     a sidebar já colapsou pro rail de 72px só com ícone; clicar no menu
+     não fazia nada além de escurecer o fundo (.sidebar-overlay, que também
+     não tem limite de largura) por cima de uma sidebar que continuava sem
+     nenhum texto — parecia travado/quebrado, sem forma nenhuma de saber o
+     que cada ícone significa. Unifica com o mesmo breakpoint do rail: abrir
+     no tablet agora expande a sidebar com os rótulos de volta, do mesmo
+     jeito que já funciona no celular. */
+  .sidebar.open .nav-label,
+  .sidebar.open .sidebar-logo-text,
+  .sidebar.open .sidebar-logo-sub,
+  .sidebar.open .nav-section-label,
+  .sidebar.open .sidebar-section,
+  .sidebar.open .nav-badge,
+  .sidebar.open .u-name,
+  .sidebar.open .u-role,
+  .sidebar.open .btn-logout { display: revert !important; }
+  .sidebar.open .nav-item { justify-content: flex-start; padding: 8px 10px; margin: 1px 8px; }
+  .sidebar.open .sidebar-logo { justify-content: flex-start; padding: 14px 16px; }
+  .sidebar.open { position: fixed; z-index: 200; height: 100%; width: 260px; box-shadow: 0 0 0 100vw rgba(0,0,0,0.55); }
 }
 @media (max-width: 640px) {
   :root { --sidebar-w: 0px; --topbar-h: 56px; }
@@ -1398,19 +1421,13 @@ body { font-family: var(--font-body); }
 @media (max-width: 768px) {
   body { overflow: auto; }
   .app-shell { overflow: auto; height: auto; min-height: 100vh; }
+  /* Abaixo de 768px a sidebar some por completo por padrão (sem espaço
+     nem pro rail de ícones) — o estado ".open" (rótulos, largura, overlay
+     escurecido) já vem coberto pelo bloco max-width:1024px acima, que
+     cobre esse alcance também; aqui só o essencial de mobile: escondida
+     por padrão e deslizando de fora da tela ao abrir. */
   .sidebar { position: fixed; transform: translateX(-100%); z-index: 200; height: 100%; box-shadow: none; width: 260px; }
-  .sidebar.open { transform: translateX(0); box-shadow: 0 0 0 100vw rgba(0,0,0,0.55); }
-  .sidebar.open .nav-label,
-  .sidebar.open .sidebar-logo-text,
-  .sidebar.open .sidebar-logo-sub,
-  .sidebar.open .nav-section-label,
-  .sidebar.open .sidebar-section,
-  .sidebar.open .nav-badge,
-  .sidebar.open .u-name,
-  .sidebar.open .u-role,
-  .sidebar.open .btn-logout { display: revert !important; }
-  .sidebar.open .nav-item { justify-content: flex-start; padding: 8px 10px; margin: 1px 8px; }
-  .sidebar.open .sidebar-logo { justify-content: flex-start; padding: 14px 16px; }
+  .sidebar.open { transform: translateX(0); }
   .main-area { width: 100%; height: auto; overflow: visible; }
   .topbar-toggle { display: flex; align-items: center; }
   .content { padding: var(--s3) var(--s3); gap: var(--s3); }
@@ -1511,6 +1528,11 @@ body.tv-mode .topbar { background: #000 !important; border-bottom: none !importa
   transition: all var(--dur-2) var(--ease);
 }
 .topbar-hamburger:hover { background: var(--surface-2); color: var(--fg-1); }
+/* Acima de 1024px a sidebar já fica sempre visível com rótulo (sem
+   colapsar pro rail nem precisar de toggle) — sem isso, clicar aqui só
+   escurecia a tela à toa (.sidebar-overlay não tem limite de largura),
+   sem nenhuma mudança real na sidebar, que já estava do jeito certo. */
+@media (min-width: 1025px) { .topbar-hamburger { display: none; } }
 .topbar-search {
   display: flex; align-items: center; gap: 8px;
   background: var(--surface-2); border: 1px solid var(--border-1);
