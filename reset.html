@@ -167,6 +167,7 @@
     }
     .alert.error   { display:block; background:rgba(240,80,80,0.10); border:1px solid rgba(240,80,80,0.22); color:#f09090; }
     .alert.success { display:block; background:rgba(45,212,160,0.09); border:1px solid rgba(45,212,160,0.20); color:#2dd4a0; }
+    .alert.info    { display:block; background:rgba(208,84,26,0.09); border:1px solid rgba(208,84,26,0.20); color:#e07d43; }
 
     /* Button */
     .btn {
@@ -297,6 +298,12 @@
         const erroDecodificado = decodeURIComponent(erroUrl.replace(/\+/g, ' '));
         mostrarLinkInvalido(traduzErroAuth({ message: erroDecodificado }));
       } else {
+        /* A confirmação do link (evento PASSWORD_RECOVERY) depende de rede —
+           parse do hash + validação com o servidor Supabase. Em conexão móvel
+           ruim isso pode demorar bem mais que poucos segundos; por isso avisa
+           que está verificando em vez de deixar o formulário mudo. */
+        showAlert('Verificando seu link de redefinição…', 'info');
+
         _sb.auth.onAuthStateChange(async (event, session) => {
           if (event === 'PASSWORD_RECOVERY') {
             _linkConfirmado = true;
@@ -309,10 +316,14 @@
         /* Nem todo link ruim vem com #error explícito (ex: já foi aberto
            antes numa aba e o hash já sumiu da URL) — se depois de um tempo
            razoável nada confirmou o link, assume que não é válido em vez de
-           deixar o formulário parado, sem feedback algum, pra sempre. */
+           deixar o formulário parado, sem feedback algum, pra sempre.
+           8s (e não os 3s originais) porque isso depende de rede: parsing do
+           hash + round-trip com o Supabase — em 3G/4G ruim (comum num evento
+           lotado na mesma wifi) 3s estourava fácil e um link VÁLIDO aparecia
+           como "expirado" antes mesmo da pessoa digitar a senha nova. */
         setTimeout(() => {
           if (!_linkConfirmado) mostrarLinkInvalido();
-        }, 3000);
+        }, 8000);
       }
     } else {
       showAlert('Sistema offline. Verifique sua conexão e recarregue a página.', 'error');

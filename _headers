@@ -22,3 +22,13 @@
 
 /dashboard.html
   Cache-Control: no-cache
+
+# reset.html e convite.html carregam auth.js/validacao.js direto (sem passar
+# pelo shell do SW pra HTML) — se o edge servir uma cópia antiga desses dois
+# depois de um fix no fluxo de acesso, a correção não chega pra quem pegar
+# cache.
+/reset.html
+  Cache-Control: no-cache
+
+/convite.html
+  Cache-Control: no-cache
