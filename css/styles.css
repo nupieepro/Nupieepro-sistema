@@ -435,60 +435,13 @@
   -webkit-background-clip: text; background-clip: text; color: transparent;
 }
 
-/* Legacy themes — mantidos para compat com código antigo */
-[data-theme="dark-orange"] {
-  --c-bg: #000; --c-s1: #050505; --c-s2: #0a0a0f; --c-s3: #111; --c-s4: #181818;
-  --c-accent: #f75412; --c-accent2: #ff8040;
-  --bg: #000; --surface-1: #050505; --surface-2: #0a0a0f; --surface-3: #111; --surface-4: #181818;
-  --brand-orange: #f75412;
-}
-[data-theme="dark-purple"] {
-  --c-bg: #000; --c-s1: #050505; --c-s2: #0a0a0f; --c-s3: #111; --c-s4: #1a1525;
-  --c-accent: #9b7be8; --c-accent2: #b59bf5;
-  --bg: #000; --surface-1: #050505; --brand-orange: #9b7be8;
-}
-[data-theme="fusion"] {
-  --c-bg: #000; --c-s1: #080510; --c-s2: #0d0a1a; --c-s3: #2f1d70; --c-s4: #f75412;
-  --c-accent: #f75412; --orange: #f75412;
-  --bg: #000; --surface-1: #080510; --brand-orange: #f75412;
-}
-[data-theme="luminous"] {
-  --c-bg: #fff; --c-s1: #f8f9fa; --c-s2: #f1f3f5; --c-s3: #e9ecef; --c-s4: #dee2e6;
-  --t-1: #000; --t-2: #2f1d70; --c-accent: #f75412;
-  --bg: #fff; --fg-1: #000; --fg-2: #2f1d70; --brand-orange: #f75412;
-}
-[data-theme="orange"] {
-  --c-bg: #000; --c-s1: #0a0a0a; --c-s2: #060606; --c-s3: #111; --c-s4: #1a1a1a;
-  --c-accent: #f75412; --orange: #f75412; --bg: #000; --brand-orange: #f75412;
-}
-[data-theme="purple"] {
-  --c-bg: #000; --c-s1: #08050f; --c-s2: #050308; --c-s3: #0f0a1e; --c-s4: #160d2c;
-  --c-accent: #7c52c8; --orange: #7c52c8; --bg: #000; --brand-purple-l: #a085e0;
-}
-[data-theme="obsidian"] {
-  --c-bg: #000; --c-s1: #050505; --c-s2: #0a0a0a; --c-s3: #121212; --c-s4: #1a1a1a;
-  --c-accent: #fff; --t-2: #ddd; --bg: #000;
-}
-[data-theme="rose"] {
-  --c-bg: #fff; --c-s1: #fffafa; --c-s2: #fdf2f2; --c-s3: #faeaea; --c-s4: #f7e0e0;
-  --t-1: #1a1a1a; --t-2: #2f1d70; --c-accent: #d4a5a5; --bg: #fff;
-}
-[data-theme="glimmer"] {
-  --c-bg: #030303; --c-s1: #080808; --c-s2: #0d0d0d; --c-s3: #151515; --c-s4: #202020;
-  --t-2: #888; --c-accent: #666; --bg: #030303;
-}
-[data-theme="midnight"] {
-  --c-bg: #02040a; --c-s1: #0d1117; --c-s2: #010409; --c-s3: #161b22; --c-s4: #30363d;
-  --c-accent: #00f5ff; --bg: #02040a;
-}
-[data-theme="matrix"] {
-  --c-bg: #000; --c-s1: #050505; --c-s2: #020202; --c-s3: #080808; --c-s4: #121212;
-  --c-accent: #00ff41; --t-2: #00ff41; --bg: #000;
-}
-[data-theme="cyberpunk"] {
-  --c-bg: #050505; --c-s1: #101010; --c-s2: #000; --c-s3: #1a1a1a; --c-s4: #252525;
-  --c-accent: #f3f315; --t-2: #f3f315; --bg: #050505;
-}
+/* 12 temas legados (dark-orange, dark-purple, fusion, luminous, orange,
+   purple, obsidian, rose, glimmer, midnight, matrix, cyberpunk) removidos
+   daqui — nenhum era mais alcançável. Os 4 botões de tema em Configurações
+   só geram nucleo/noite/violet/papel, e todo valor legado que pudesse vir
+   de localStorage antigo já é remapeado pra um desses 4 (Theme._aliases em
+   app.js, mais os scripts de pré-paint) ANTES de virar data-theme — esses
+   12 seletores nunca tinham como bater. */
 
 /* Smooth theme transitions */
 html { transition: background-color 350ms var(--ease); }
@@ -515,6 +468,29 @@ body, .themed { transition: background-color 350ms var(--ease), color 200ms var(
   .topbar { flex-wrap: wrap; height: auto !important; min-height: var(--topbar-h); row-gap: 8px; padding-top: 10px !important; padding-bottom: 10px !important; }
   .topbar-left { flex: 1 1 auto; min-width: 160px !important; }
   .topbar-right { flex: 0 1 auto; justify-content: flex-end; margin-left: auto; gap: 4px !important; }
+
+  /* O botão de menu (.topbar-hamburger) fica visível em QUALQUER largura
+     — mas a sidebar só ganha de volta os rótulos quando ".open" dentro de
+     max-width:768px (mais abaixo). No tablet (essa faixa aqui, até 1024px)
+     a sidebar já colapsou pro rail de 72px só com ícone; clicar no menu
+     não fazia nada além de escurecer o fundo (.sidebar-overlay, que também
+     não tem limite de largura) por cima de uma sidebar que continuava sem
+     nenhum texto — parecia travado/quebrado, sem forma nenhuma de saber o
+     que cada ícone significa. Unifica com o mesmo breakpoint do rail: abrir
+     no tablet agora expande a sidebar com os rótulos de volta, do mesmo
+     jeito que já funciona no celular. */
+  .sidebar.open .nav-label,
+  .sidebar.open .sidebar-logo-text,
+  .sidebar.open .sidebar-logo-sub,
+  .sidebar.open .nav-section-label,
+  .sidebar.open .sidebar-section,
+  .sidebar.open .nav-badge,
+  .sidebar.open .u-name,
+  .sidebar.open .u-role,
+  .sidebar.open .btn-logout { display: revert !important; }
+  .sidebar.open .nav-item { justify-content: flex-start; padding: 8px 10px; margin: 1px 8px; }
+  .sidebar.open .sidebar-logo { justify-content: flex-start; padding: 14px 16px; }
+  .sidebar.open { position: fixed; z-index: 200; height: 100%; width: 260px; box-shadow: 0 0 0 100vw rgba(0,0,0,0.55); }
 }
 @media (max-width: 640px) {
   :root { --sidebar-w: 0px; --topbar-h: 56px; }
@@ -1003,6 +979,15 @@ code, kbd, .mono { font: var(--t-mono); }
 /* ════ DASH LAYOUT ════ */
 .dash-two-col { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s4); }
 .dash-chart-trio { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: var(--s4); }
+
+/* Numa grid, cards da mesma linha esticam pra bater a altura do maior
+   vizinho (ex: "Atividade Recente" ao lado de "Agenda do Núcleo", que
+   tem um calendário inteiro) — sem isso, o texto de estado vazio ("Sem
+   demandas.", "Nenhuma atividade registrada.") fica grudado no topo com
+   uma sobra enorme de espaço morto embaixo, parecendo quebrado. Centraliza
+   o conteúdo verticalmente dentro do espaço esticado em vez disso. */
+.section-card-fill { display: flex; flex-direction: column; }
+.section-card-fill > .section-card-body { flex: 1; display: flex; flex-direction: column; justify-content: center; }
 .ep-two-col-14 { display: grid; grid-template-columns: 1.4fr 1fr; gap: 16px; }
 .ep-two-col-11 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
 .ep-two-col-12 { display: grid; grid-template-columns: 1fr 1.2fr; gap: 16px; }
@@ -1436,19 +1421,13 @@ body { font-family: var(--font-body); }
 @media (max-width: 768px) {
   body { overflow: auto; }
   .app-shell { overflow: auto; height: auto; min-height: 100vh; }
+  /* Abaixo de 768px a sidebar some por completo por padrão (sem espaço
+     nem pro rail de ícones) — o estado ".open" (rótulos, largura, overlay
+     escurecido) já vem coberto pelo bloco max-width:1024px acima, que
+     cobre esse alcance também; aqui só o essencial de mobile: escondida
+     por padrão e deslizando de fora da tela ao abrir. */
   .sidebar { position: fixed; transform: translateX(-100%); z-index: 200; height: 100%; box-shadow: none; width: 260px; }
-  .sidebar.open { transform: translateX(0); box-shadow: 0 0 0 100vw rgba(0,0,0,0.55); }
-  .sidebar.open .nav-label,
-  .sidebar.open .sidebar-logo-text,
-  .sidebar.open .sidebar-logo-sub,
-  .sidebar.open .nav-section-label,
-  .sidebar.open .sidebar-section,
-  .sidebar.open .nav-badge,
-  .sidebar.open .u-name,
-  .sidebar.open .u-role,
-  .sidebar.open .btn-logout { display: revert !important; }
-  .sidebar.open .nav-item { justify-content: flex-start; padding: 8px 10px; margin: 1px 8px; }
-  .sidebar.open .sidebar-logo { justify-content: flex-start; padding: 14px 16px; }
+  .sidebar.open { transform: translateX(0); }
   .main-area { width: 100%; height: auto; overflow: visible; }
   .topbar-toggle { display: flex; align-items: center; }
   .content { padding: var(--s3) var(--s3); gap: var(--s3); }
@@ -1549,6 +1528,11 @@ body.tv-mode .topbar { background: #000 !important; border-bottom: none !importa
   transition: all var(--dur-2) var(--ease);
 }
 .topbar-hamburger:hover { background: var(--surface-2); color: var(--fg-1); }
+/* Acima de 1024px a sidebar já fica sempre visível com rótulo (sem
+   colapsar pro rail nem precisar de toggle) — sem isso, clicar aqui só
+   escurecia a tela à toa (.sidebar-overlay não tem limite de largura),
+   sem nenhuma mudança real na sidebar, que já estava do jeito certo. */
+@media (min-width: 1025px) { .topbar-hamburger { display: none; } }
 .topbar-search {
   display: flex; align-items: center; gap: 8px;
   background: var(--surface-2); border: 1px solid var(--border-1);
