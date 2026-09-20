@@ -141,8 +141,8 @@ const ABJModule = (() => {
       const mensal = a.tipo === 'mensal';
       return `
         <div class="abj-card" onclick="ABJModule.abrirDetalhe('${a.id}')" ${urgente ? 'data-urgente="true"' : ''}>
-          <div style="display:flex;align-items:center;gap:10px">
-            <span style="font-size:20px;flex-shrink:0">${_ICONS[a.numero - 1] || '📌'}</span>
+          <div style="display:flex;align-items:flex-start;gap:10px">
+            <span style="font-size:16px;line-height:1;flex-shrink:0;margin-top:2px">${_ICONS[a.numero - 1] || '📌'}</span>
             <div style="flex:1;min-width:0">
               <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:3px">
                 <span style="font-weight:700;font-size:13px;color:var(--c-white)">${a.numero}. ${_esc(a.nome)}</span>
@@ -163,7 +163,7 @@ const ABJModule = (() => {
                 ${progs.length > 1 ? `<span style="font-size:11px;color:var(--c-slate)">${progs.length} registros</span>` : ''}
               </div>
             </div>
-            <span style="color:var(--c-slate);font-size:18px">›</span>
+            <span style="color:var(--c-slate);font-size:18px;line-height:1;margin-top:1px">›</span>
           </div>
         </div>`;
     };
