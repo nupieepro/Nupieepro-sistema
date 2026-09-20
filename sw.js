@@ -5,7 +5,7 @@
    browsers continuam servindo assets antigos do cache do SW.
    ============================================================ */
 
-const CACHE_NAME = 'nupieepro-v103';
+const CACHE_NAME = 'nupieepro-v104';
 const ASSETS = [
   './',
   './index.html',
@@ -13,18 +13,18 @@ const ASSETS = [
   './convite.html',
   './reset.html',
   './privacidade.html',
-  './css/styles.css?v=103',
+  './css/styles.css?v=104',
   './js/config.defaults.js',
-  './js/app.js?v=103',
-  './js/auth.js?v=103',
-  './js/abj.js?v=103',
-  './js/pages.js?v=103',
-  './js/permissoes.js?v=103',
-  './js/emails.js?v=103',
-  './js/relatorio.js?v=103',
-  './js/documentos.js?v=103',
-  './js/validacao.js?v=103',
-  './js/push.js?v=103',
+  './js/app.js?v=104',
+  './js/auth.js?v=104',
+  './js/abj.js?v=104',
+  './js/pages.js?v=104',
+  './js/permissoes.js?v=104',
+  './js/emails.js?v=104',
+  './js/relatorio.js?v=104',
+  './js/documentos.js?v=104',
+  './js/validacao.js?v=104',
+  './js/push.js?v=104',
   './manifest.json',
   './assets/icon-192.png',
   './assets/icon-512.png',
