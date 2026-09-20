@@ -23,7 +23,7 @@
   <!-- EmailJS SDK -->
   <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 
-  <link rel="stylesheet" href="css/styles.css?v=97">
+  <link rel="stylesheet" href="css/styles.css?v=99">
   
   <script>
     // Injeção Crítica: Impede a tela branca de "Blink"
@@ -34,7 +34,7 @@
       var legacyMap = {'dark-orange':'nucleo','dark-purple':'violet','fusion':'nucleo','luminous':'papel','orange':'noite','obsidian':'noite','bad-boy':'noite','default':'nucleo'};
       if (legacyMap[_t]) _t = legacyMap[_t];
       document.documentElement.setAttribute('data-theme', _t);
-      if (_f !== 'default') document.documentElement.setAttribute('data-font', _f);
+      document.documentElement.setAttribute('data-font', _f);
     })();
   </script>
 </head>
@@ -398,7 +398,7 @@
                 <button class="btn btn-ghost" style="font-size:11px;padding:4px 10px;" onclick="goTo('demandas')">Kanban →</button>
               </div>
               <div id="dashChartPareto" style="display:flex;flex-direction:column;gap:8px;">
-                <p style="color:var(--fg-3);font-size:13px;text-align:center;padding:24px 0;">Carregando...</p>
+                <div class="skeleton-lines"><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div></div>
               </div>
             </section>
             <section class="section-card">
@@ -407,7 +407,7 @@
                 <button class="btn btn-ghost" style="font-size:11px;padding:4px 10px;" onclick="goTo('calendario')">Calendário →</button>
               </div>
               <div id="dashChartFreq" style="min-height:100px;">
-                <p style="color:var(--fg-3);font-size:13px;text-align:center;padding:24px 0;">Carregando...</p>
+                <div class="skeleton" style="height:90px;width:100%;"></div>
               </div>
             </section>
           </div>
@@ -420,7 +420,7 @@
                 <button class="btn btn-ghost" style="font-size:11px;padding:3px 8px;" onclick="goTo('abj')">ABJ →</button>
               </div>
               <div id="dashChartRadar" style="display:flex;justify-content:center;align-items:center;min-height:130px;">
-                <p style="color:var(--fg-3);font-size:12px;text-align:center;">Carregando...</p>
+                <div class="skeleton" style="height:120px;width:120px;border-radius:50%;"></div>
               </div>
             </section>
             <section class="section-card">
@@ -429,7 +429,7 @@
                 <button id="btn5SNova" class="btn btn-ghost" style="font-size:11px;padding:3px 8px;display:none;" onclick="Dashboard.novaAuditoria5S()">Nova →</button>
               </div>
               <div id="dashChart5S" style="min-height:100px;">
-                <p style="color:var(--fg-3);font-size:12px;text-align:center;padding:20px 0;">Carregando...</p>
+                <div class="skeleton-lines"><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div></div>
               </div>
             </section>
             <section class="section-card">
@@ -437,7 +437,7 @@
                 <h3 class="section-title" style="margin:0;font-size:13px;">Demandas / Coord.</h3>
               </div>
               <div id="dashChartCoord" style="display:flex;flex-direction:column;gap:6px;min-height:100px;">
-                <p style="color:var(--fg-3);font-size:12px;text-align:center;padding:20px 0;">Carregando...</p>
+                <div class="skeleton-lines"><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div></div>
               </div>
             </section>
           </div>
@@ -450,7 +450,7 @@
                 <button class="btn btn-ghost" style="font-size:11px;padding:4px 10px;" onclick="goTo('demandas')">Ver Kanban →</button>
               </div>
               <div id="dashPipeline" style="display:flex;flex-direction:column;gap:10px;">
-                <p style="color:var(--fg-3);font-size:13px;text-align:center;padding:24px 0;">Carregando...</p>
+                <div class="skeleton-lines"><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div></div>
               </div>
             </section>
             <section class="section-card">
@@ -459,7 +459,7 @@
                 <button class="btn btn-ghost" style="font-size:11px;padding:4px 10px;" onclick="goTo('abj')">Ver ABJ →</button>
               </div>
               <div id="dashAbjAreas" style="display:flex;flex-direction:column;gap:8px;">
-                <p style="color:var(--fg-3);font-size:13px;text-align:center;padding:24px 0;">Carregando...</p>
+                <div class="skeleton-lines"><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div></div>
               </div>
             </section>
           </div>
@@ -1647,15 +1647,15 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/lucide@0.452.0/dist/umd/lucide.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/docx@9.7.1/dist/index.iife.js"></script>
-  <script src="js/permissoes.js?v=97"></script>
-  <script src="js/app.js?v=97"></script>
-  <script src="js/auth.js?v=97"></script>
-  <script src="js/abj.js?v=97"></script>
-  <script src="js/relatorio.js?v=97"></script>
-  <script src="js/documentos.js?v=97"></script>
-  <script src="js/emails.js?v=97"></script>
-  <script src="js/pages.js?v=97"></script>
-  <script src="js/push.js?v=97"></script>
+  <script src="js/permissoes.js?v=99"></script>
+  <script src="js/app.js?v=99"></script>
+  <script src="js/auth.js?v=99"></script>
+  <script src="js/abj.js?v=99"></script>
+  <script src="js/relatorio.js?v=99"></script>
+  <script src="js/documentos.js?v=99"></script>
+  <script src="js/emails.js?v=99"></script>
+  <script src="js/pages.js?v=99"></script>
+  <script src="js/push.js?v=99"></script>
   <script>
     // ── SERVICE WORKER: registro + auto-update ─────────
     // dashboard.html é onde o usuário passa o dia todo; sem isso, quem
@@ -1728,21 +1728,12 @@
       }
     };
 
-    // ── THEME APPLY (New themes) ────────────────────────
-    if (typeof window.Theme === 'undefined') window.Theme = {};
-    var _origThemeApply = window.Theme.apply;
-    window.Theme.apply = function(t) {
-      // Map legacy names to new
-      var legMap = {'dark-orange':'nucleo','dark-purple':'violet','fusion':'nucleo','luminous':'papel','orange':'noite','obsidian':'noite','bad-boy':'noite'};
-      if (legMap[t]) t = legMap[t];
-      document.documentElement.setAttribute('data-theme', t);
-      localStorage.setItem('np-theme', t);
-      localStorage.setItem('nupie_theme', t);
-      // Update setting buttons active state
-      document.querySelectorAll('[id^="themeBtn-"]').forEach(function(b) { b.classList.remove('active'); });
-      var btn = document.getElementById('themeBtn-' + t);
-      if (btn) btn.classList.add('active');
-    };
+    /* Theme.apply e Theme.applyFont já vêm completos de app.js (alias
+       completo, toast, haptic, salva nupie_theme/np-theme) — não
+       sobrescrever aqui. Uma versão local chegou a existir nesse lugar,
+       mas era uma cópia incompleta que silenciosamente comia o toast e
+       parte dos aliases legados em toda troca de tema feita a partir do
+       Configurações (o único lugar do app onde essa troca acontece). */
 
     // ── GLOBAL ERROR HANDLER ────────────────────────────────
     // Detalhe técnico (mensagem, arquivo, linha) só no console, pra quem

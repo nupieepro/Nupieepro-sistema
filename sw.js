@@ -5,7 +5,7 @@
    browsers continuam servindo assets antigos do cache do SW.
    ============================================================ */
 
-const CACHE_NAME = 'nupieepro-v97';
+const CACHE_NAME = 'nupieepro-v99';
 const ASSETS = [
   './',
   './index.html',
@@ -13,20 +13,22 @@ const ASSETS = [
   './convite.html',
   './reset.html',
   './privacidade.html',
-  './css/styles.css?v=97',
+  './css/styles.css?v=99',
   './js/config.defaults.js',
-  './js/app.js?v=97',
-  './js/auth.js?v=97',
-  './js/abj.js?v=97',
-  './js/pages.js?v=97',
-  './js/permissoes.js?v=97',
-  './js/emails.js?v=97',
-  './js/relatorio.js?v=97',
-  './js/documentos.js?v=97',
-  './js/validacao.js?v=97',
-  './js/push.js?v=97',
+  './js/app.js?v=99',
+  './js/auth.js?v=99',
+  './js/abj.js?v=99',
+  './js/pages.js?v=99',
+  './js/permissoes.js?v=99',
+  './js/emails.js?v=99',
+  './js/relatorio.js?v=99',
+  './js/documentos.js?v=99',
+  './js/validacao.js?v=99',
+  './js/push.js?v=99',
   './manifest.json',
-  './assets/icon.png',
+  './assets/icon-192.png',
+  './assets/icon-512.png',
+  './assets/icon-512-maskable.png',
 ];
 
 // Install — pré-carrega shell do app

@@ -649,6 +649,26 @@ input, select, textarea { font-family: var(--font-body); }
   animation: shimmer 5s linear infinite;
 }
 
+/* ── Skeleton loading (substitui texto estático "Carregando..." nos
+   cards do dashboard) — sem isso, card parado com só texto por vários
+   segundos (o dashboard dispara muitas queries em paralelo) passa
+   impressão de travado/quebrado em vez de "ainda carregando". */
+@keyframes skeletonPulse {
+  0%, 100% { opacity: 0.55; }
+  50% { opacity: 1; }
+}
+.skeleton {
+  background: var(--surface-2);
+  border-radius: 8px;
+  animation: skeletonPulse 1.4s ease-in-out infinite;
+}
+.skeleton-lines { display: flex; flex-direction: column; gap: 10px; padding: 4px 0; }
+.skeleton-lines .skeleton { height: 10px; }
+.skeleton-lines .skeleton:nth-child(1) { width: 92%; }
+.skeleton-lines .skeleton:nth-child(2) { width: 68%; animation-delay: 0.12s; }
+.skeleton-lines .skeleton:nth-child(3) { width: 80%; animation-delay: 0.24s; }
+.skeleton-lines .skeleton:nth-child(4) { width: 55%; animation-delay: 0.36s; }
+
 /* ── Blueprint background ── */
 .bg-blueprint {
   background-color: var(--bg);
