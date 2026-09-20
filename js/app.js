@@ -496,6 +496,49 @@ const App = {
       const session = await App.requireAuth();
       if (!session) return null;
 
+      /* Detecta sessão encerrada/expirada em tempo real (token revogado,
+         refresh falhou, logout feito em outra aba) — sem isso, quem estava
+         navegando só descobria que caiu no próximo F5, vendo a tela quebrar
+         em vez de ser levado de volta pro login com uma explicação. Ignora
+         o evento quando é o PRÓPRIO doLogout()/forceLogout() que disparou
+         (já redireciona sozinho, sem precisar do aviso de "sessão perdida").
+         ARMADO AQUI, ANTES do resto do carregamento (perfil, KPIs,
+         notificações — dezenas de requests): em rede lenta, esse
+         carregamento pode levar vários segundos, e se o armamento ficasse
+         só no fim (como estava antes), um logout feito em outra aba
+         DURANTE essa janela passava batido — a aba ficava presa recebendo
+         401 de tudo, sem nunca mostrar o aviso nem redirecionar. Testado
+         de ponta a ponta (duas abas reais + rede lenta simulada): só
+         funciona de forma confiável armando cedo assim. */
+      const _avisaSessaoEncerrada = () => {
+        if (window.__logoutVoluntario || window.__sessaoEncerradaAvisada) return;
+        window.__sessaoEncerradaAvisada = true;
+        App.toast('Sessão encerrada. Faça login novamente.', 'warning', 3500);
+        setTimeout(() => App.redirect('index.html'), 1200);
+      };
+      if (_sb && !window.__authWatcherArmado) {
+        window.__authWatcherArmado = true;
+        _sb.auth.onAuthStateChange((event) => {
+          if (event === 'SIGNED_OUT') _avisaSessaoEncerrada();
+        });
+        /* onAuthStateChange sozinho NÃO é confiável entre abas — é uma
+           limitação conhecida e antiga do supabase-js/gotrue-js (o evento
+           SIGNED_OUT via BroadcastChannel só dispara de forma consistente
+           na própria aba que chamou signOut(), não nas outras já abertas —
+           github.com/supabase/auth-js issues #427, #441, #2739). Sem esse
+           fallback, uma segunda aba aberta continua batendo 401 em silêncio
+           até a pessoa mexer nela e o app quebrar sem explicação — bem o
+           tipo de "às vezes funciona, às vezes não" entre abas/dispositivos.
+           localStorage.removeItem SEMPRE dispara 'storage' nas OUTRAS abas
+           (garantia nativa do navegador, ao contrário do BroadcastChannel
+           do GoTrue), então serve de rede de segurança real. */
+        window.addEventListener('storage', (e) => {
+          if (e.key && e.key.startsWith('sb-') && e.key.endsWith('-auth-token') && e.newValue === null) {
+            _avisaSessaoEncerrada();
+          }
+        });
+      }
+
       const shell = document.getElementById('appShell');
       if (shell) shell.classList.add('visible');
 
@@ -555,22 +598,6 @@ const App = {
       if (isJR && btnSwitch) btnSwitch.style.display = 'block';
 
       App.syncSettingsInputs(profile);
-
-      /* Detecta sessão encerrada/expirada em tempo real (token revogado,
-         refresh falhou, logout feito em outra aba) — sem isso, quem estava
-         navegando só descobria que caiu no próximo F5, vendo a tela quebrar
-         em vez de ser levado de volta pro login com uma explicação. Ignora
-         o evento quando é o PRÓPRIO doLogout()/forceLogout() que disparou
-         (já redireciona sozinho, sem precisar do aviso de "sessão perdida"). */
-      if (_sb && !window.__authWatcherArmado) {
-        window.__authWatcherArmado = true;
-        _sb.auth.onAuthStateChange((event) => {
-          if (event === 'SIGNED_OUT' && !window.__logoutVoluntario) {
-            App.toast('Sessão encerrada. Faça login novamente.', 'warning', 3500);
-            setTimeout(() => App.redirect('index.html'), 1200);
-          }
-        });
-      }
 
       return profile;
     } catch (err) {
