@@ -263,8 +263,9 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-  <script src="js/app.js?v=94"></script>
-  <script src="js/validacao.js?v=94"></script>
+  <script src="js/app.js?v=95"></script>
+  <script src="js/validacao.js?v=95"></script>
+  <script src="js/auth.js?v=95"></script>
   <script>
     function showAlert(msg, type) {
       const el = document.getElementById('resetAlert');
@@ -272,14 +273,47 @@
       el.className = 'alert ' + type;
     }
 
+    /* Mostra o link como inválido/expirado e tira o formulário do caminho —
+       ver comentário mais abaixo sobre os dois jeitos disso acontecer. */
+    function mostrarLinkInvalido(msg) {
+      showAlert(msg || 'Link inválido ou expirado. Solicite um novo abaixo.', 'error');
+      const form = document.getElementById('resetForm');
+      if (form) form.style.display = 'none';
+      const backLink = document.querySelector('.back-link');
+      if (backLink) backLink.innerHTML = '<a href="index.html">← Voltar ao login e solicitar novo link</a>';
+    }
+
+    let _linkConfirmado = false;
+
     if (_sb) {
-      _sb.auth.onAuthStateChange(async (event, session) => {
-        if (event === 'PASSWORD_RECOVERY') {
-          showAlert('Link válido. Digite sua nova senha abaixo.', 'success');
-        } else if (event === 'SIGNED_IN' && session) {
-          setTimeout(() => App.redirect('dashboard.html'), 1500);
-        }
-      });
+      /* Link já expirado/usado: o Supabase não dispara PASSWORD_RECOVERY —
+         ele volta pro redirectTo com "#error=...&error_description=..." na
+         URL. Sem checar isso, a pessoa via um formulário aparentemente
+         normal que só falhava (com erro técnico) depois de digitar a nova
+         senha inteira. */
+      const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ''));
+      const erroUrl = hashParams.get('error_description') || hashParams.get('error');
+      if (erroUrl) {
+        const erroDecodificado = decodeURIComponent(erroUrl.replace(/\+/g, ' '));
+        mostrarLinkInvalido(traduzErroAuth({ message: erroDecodificado }));
+      } else {
+        _sb.auth.onAuthStateChange(async (event, session) => {
+          if (event === 'PASSWORD_RECOVERY') {
+            _linkConfirmado = true;
+            showAlert('Link válido. Digite sua nova senha abaixo.', 'success');
+          } else if (event === 'SIGNED_IN' && session) {
+            setTimeout(() => App.redirect('dashboard.html'), 1500);
+          }
+        });
+
+        /* Nem todo link ruim vem com #error explícito (ex: já foi aberto
+           antes numa aba e o hash já sumiu da URL) — se depois de um tempo
+           razoável nada confirmou o link, assume que não é válido em vez de
+           deixar o formulário parado, sem feedback algum, pra sempre. */
+        setTimeout(() => {
+          if (!_linkConfirmado) mostrarLinkInvalido();
+        }, 3000);
+      }
     } else {
       showAlert('Sistema offline. Verifique sua conexão e recarregue a página.', 'error');
     }
@@ -301,10 +335,16 @@
         showAlert('Senha alterada com sucesso! Redirecionando...', 'success');
         setTimeout(() => App.redirect('index.html'), 2000);
       } catch (err) {
-        showAlert(err.message || 'Erro ao salvar. Tente novamente.', 'error');
+        showAlert(traduzErroAuth(err), 'error');
         btn.disabled = false; btn.textContent = 'Salvar nova senha';
       }
     }
+
+    // Enter em qualquer um dos campos também salva — mesmo padrão do
+    // restante do fluxo de acesso (login, recuperação, convite).
+    document.getElementById('resetForm')?.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') { e.preventDefault(); salvarNovaSenha(); }
+    });
   </script>
 </body>
 </html>
