@@ -3159,7 +3159,7 @@ const NovoCal = {
           </div>
           <div style="flex:1;padding:10px;background:${cor}0f;border-radius:8px;border-left:3px solid ${cor};">
             <div style="font-weight:600;font-size:13px;${concluida ? 'text-decoration:line-through;' : ''}">${kindIcon}${sanitize(e.titulo||'Evento')}</div>
-            <div style="font-size:11px;color:var(--fg-3);margin-top:2px;">${icone} ${sigla} · ${e.tipo||'evento'}${statusLbl}</div>
+            <div style="font-size:11px;color:var(--fg-3);margin-top:2px;">${icone ? icone + ' ' : ''}${sigla || 'Todas'} · ${e.tipo||'evento'}${statusLbl}</div>
           </div>
         </div>`;
       }).join('');
