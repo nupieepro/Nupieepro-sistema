@@ -813,6 +813,11 @@ function goTo(id) {
   if (id === 'notificacoes')      typeof PageNotificacoes !== 'undefined' && PageNotificacoes.init();
   if (id === 'compartilhado')     typeof Cal !== 'undefined' && Cal.render();
   if (id === 'global_gestao')     { typeof Geral !== 'undefined' && Geral.loadMeetings?.(); typeof Assembleia !== 'undefined' && Assembleia.init?.(); }
+  if (id === 'global_visitas')       typeof PageGlobal !== 'undefined' && PageGlobal._renderVisitas();
+  if (id === 'global_apresentacoes') typeof PageGlobal !== 'undefined' && PageGlobal._renderApresentacoes();
+  if (id === 'global_producao')      typeof PageGlobal !== 'undefined' && PageGlobal._renderProducao();
+  if (id === 'global_assembleia')    typeof PageGlobal !== 'undefined' && PageGlobal._renderAssembleia();
+  if (id === 'global_checkin')       typeof PageGlobal !== 'undefined' && PageGlobal._renderCheckin();
   if (id === 'gp_aniversarios')   typeof PagePessoas !== 'undefined' && PagePessoas._renderAniversarios();
   if (id === 'gp_treinamentos')   typeof PagePessoas !== 'undefined' && PagePessoas._renderTreinamentosInternos();
   if (id === 'prj_parcerias')     typeof PageProjetos !== 'undefined' && PageProjetos._renderParcerias();
