@@ -798,6 +798,7 @@ function goTo(id) {
   if (id === 'abj')             ABJ.init();
   if (id === 'geral_reunioes')    typeof PageGeral     !== 'undefined' && PageGeral.init();
   if (id === 'geral_planejamento') typeof PageGeral    !== 'undefined' && PageGeral._renderPlanejamento();
+  if (id === 'geral_parcerias')   typeof PageGeral     !== 'undefined' && PageGeral._renderParcerias();
   if (id === 'mkt_tracker')       typeof PageMarketing !== 'undefined' && PageMarketing.init();
   if (id === 'fin_fluxo')         typeof PageFinancas  !== 'undefined' && PageFinancas.init();
   if (id === 'prj_eventos')       typeof PageProjetos  !== 'undefined' && PageProjetos.init();
