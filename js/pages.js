@@ -1377,10 +1377,19 @@ const PageMarketing = {
 };
 const PageFinancas = {
   ROLES:['admin','coordenador'],
+  /* Leitura: Financeira, Geral (visão estratégica, só consulta) e admin/dev —
+     bate com MATRIZ.coordenador_geral.podeVerFinanceiro:true em permissoes.js,
+     que antes prometia esse acesso sem o código realmente conceder. */
   _temAcesso() {
     const p=window._appProfile;
     const coord=p?.coordenadorias?.sigla;
-    return p?._isDev||p?.role==='admin'||coord==='FIN';
+    return p?._isDev||p?.role==='admin'||coord==='FIN'||coord==='GER';
+  },
+  /* Escrita (lançar venda/despesa): só Financeira e admin/dev — Geral
+     continua só-leitura, como MATRIZ.coordenador_geral.podeLancarlancamento:false. */
+  _podeLancar() {
+    const p=window._appProfile;
+    return p?._isDev||p?.role==='admin'||p?.coordenadorias?.sigla==='FIN';
   },
   async init() { this._renderFluxo(); this._renderCalendario(); this._renderABJFin(); },
   _renderCalendario() {
@@ -1701,8 +1710,8 @@ const PageFinancas = {
         <div style="position:relative;height:180px"><canvas id="fin-chart"></canvas></div>
       </div>
       <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px">
-        ${_btn('+ Registrar venda',"PageFinancas.lancar('venda')")}
-        ${_btn('+ Registrar despesa',"PageFinancas.lancar('despesa')",'btn-ghost')}
+        ${this._podeLancar() ? _btn('+ Registrar venda',"PageFinancas.lancar('venda')") : ''}
+        ${this._podeLancar() ? _btn('+ Registrar despesa',"PageFinancas.lancar('despesa')",'btn-ghost') : ''}
         ${_btn('📄 Extrato PDF',"PageFinancas._exportarExtrato('pdf')",'btn-ghost')}
         ${_btn('📝 Extrato Word',"PageFinancas._exportarExtrato('word')",'btn-ghost')}
       </div>
@@ -1756,8 +1765,8 @@ const PageFinancas = {
               <span style="font-size:14px;font-weight:800;color:${r._tipo==='venda'?'var(--green)':'var(--red)'}">
                 ${r._tipo==='venda'?'+':'-'} R$ ${Number(r.valor||0).toFixed(2)}
               </span>
-              <button class="btn btn-ghost" style="padding:4px 8px;font-size:12px" title="Editar" onclick="PageFinancas._editarLancamento('${r._tipo}','${r.id}')">✏️</button>
-              <button class="btn btn-ghost" style="padding:4px 8px;font-size:12px;color:var(--red)" title="Excluir" onclick="PageFinancas._excluirLancamento('${r._tipo}','${r.id}')">🗑️</button>
+              ${this._podeLancar() ? `<button class="btn btn-ghost" style="padding:4px 8px;font-size:12px" title="Editar" onclick="PageFinancas._editarLancamento('${r._tipo}','${r.id}')">✏️</button>
+              <button class="btn btn-ghost" style="padding:4px 8px;font-size:12px;color:var(--red)" title="Excluir" onclick="PageFinancas._excluirLancamento('${r._tipo}','${r.id}')">🗑️</button>` : ''}
             </div>
           </div>`).join('')
         :'<div style="padding:16px;text-align:center;color:var(--c-slate)">Nenhum registro ainda.</div>';
