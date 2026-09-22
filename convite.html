@@ -14,14 +14,14 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=Plus+Jakarta+Sans:wght@700;800;900&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/styles.css?v=112">
+  <link rel="stylesheet" href="css/styles.css?v=113">
   <style>
     .invite-wizard { display: flex; flex-direction: column; gap: 1.2rem; }
     .info-sep::before { content: '·'; margin-right: 8px; opacity: 0.5; }
     .form-section-header { font-size: 0.85rem; font-weight: 700; color: var(--t-3, rgba(168,159,208,0.75)); text-transform: uppercase; letter-spacing: 0.5px; margin-top: 1rem; margin-bottom: 0.5rem; }
     .two-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
     @media (max-width: 480px) { .two-cols { grid-template-columns: 1fr; } }
-    .theme-selector { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 0.8rem; }
+    .theme-selector { display: grid; grid-template-columns: repeat(auto-fit, minmax(80px, 1fr)); gap: 10px; margin-top: 0.8rem; }
     .theme-option { padding: 10px; border: 2px solid transparent; border-radius: 8px; background: rgba(255,255,255,0.05); cursor: pointer; transition: all 200ms; text-align: center; font-size: 12px; }
     .theme-option:hover { background: rgba(255,255,255,0.08); }
     .theme-option.active { border-color: var(--orange); background: rgba(208,84,26,0.15); }
@@ -100,17 +100,21 @@
               <div class="form-section-header">🎨 Preferências de Tema</div>
               <p style="font-size: 13px; color: var(--fg-3); margin-bottom: 0.8rem;">Escolha o tema que você prefere. Pode alterar depois nas configurações.</p>
               <div class="theme-selector">
-                <div class="theme-option active" id="themeOpt-orange" onclick="selectTheme('nucleo', this)">
+                <div class="theme-option active" id="themeOpt-nucleo" onclick="selectTheme('nucleo', this)">
                   <div class="theme-dot" style="background: #d0541a;"></div>
-                  <div>Fusion</div>
+                  <div>Núcleo</div>
                 </div>
-                <div class="theme-option" id="themeOpt-light" onclick="selectTheme('papel', this)">
-                  <div class="theme-dot" style="background: #fff;"></div>
-                  <div>Claro</div>
-                </div>
-                <div class="theme-option" id="themeOpt-dark" onclick="selectTheme('noite', this)">
+                <div class="theme-option" id="themeOpt-noite" onclick="selectTheme('noite', this)">
                   <div class="theme-dot" style="background: #0a0e1a;"></div>
-                  <div>Escuro</div>
+                  <div>Noite</div>
+                </div>
+                <div class="theme-option" id="themeOpt-violet" onclick="selectTheme('violet', this)">
+                  <div class="theme-dot" style="background: #b9a0ff;"></div>
+                  <div>Violeta</div>
+                </div>
+                <div class="theme-option" id="themeOpt-papel" onclick="selectTheme('papel', this)">
+                  <div class="theme-dot" style="background: #f7f5fb;"></div>
+                  <div>Papel</div>
                 </div>
               </div>
 
@@ -159,8 +163,8 @@
       }
     })();
   </script>
-  <script src="js/validacao.js?v=112"></script>
-  <script src="js/auth.js?v=112"></script>
+  <script src="js/validacao.js?v=113"></script>
+  <script src="js/auth.js?v=113"></script>
   <script>
     let selectedTheme = 'nucleo';
     
