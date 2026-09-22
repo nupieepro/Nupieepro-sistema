@@ -38,6 +38,8 @@
   --surface-4: #2c1c66;
   --surface-5: #392878;
   --grid:      rgba(255,255,255,0.04);
+  --topbar-bg: rgba(10,20,32,.88);
+  --on-brand:  #fff;
 
   /* ── Foreground ── */
   --fg-1: #ffffff;
@@ -307,6 +309,7 @@
 
 /* Violet — preto + roxo monocromático */
 [data-theme="violet"] {
+  --on-brand:       #000;
   --brand-orange:   #b9a0ff;
   --brand-orange-2: #d4c2ff;
   --brand-yellow:   #c5a8ff;
@@ -369,6 +372,7 @@
 
 /* Papel — branco + roxo */
 [data-theme="papel"] {
+  --on-brand:       #213248;
   --brand-orange:   #9b7be8;
   --brand-orange-2: #b9a0ff;
   --brand-purple:   #213248;
@@ -394,6 +398,7 @@
   --glass-border: rgba(33,50,72,0.10);
   --glass-shadow: 0 4px 16px rgba(33,50,72,0.06);
   --grid:         rgba(33,50,72,.05);
+  --topbar-bg:    rgba(247,245,251,.88);
   --tag-geral:     #9b7be8;
   --tag-operacoes: #2563eb;
   --tag-financas:  #059669;
@@ -727,7 +732,7 @@ code, kbd, .mono { font: var(--t-mono); }
 .nav-icon { width: 20px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
 .nav-label { font-weight: 500; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .nav-badge {
-  background: var(--brand-orange); color: #fff;
+  background: var(--brand-orange); color: var(--on-brand);
   font: 700 9px/1.4 var(--font-body); padding: 2px 7px;
   border-radius: var(--r-full); flex-shrink: 0;
   min-width: 18px; text-align: center;
@@ -800,7 +805,7 @@ code, kbd, .mono { font: var(--t-mono); }
   display: flex; align-items: center; gap: 14px;
   justify-content: space-between;
   border-bottom: 1px solid var(--border-1);
-  background: rgba(10,20,32,.88); backdrop-filter: blur(12px);
+  background: var(--topbar-bg); backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   position: sticky; top: 0; z-index: 20; flex-shrink: 0;
   box-shadow: 0 1px 0 var(--border-1), 0 4px 20px rgba(0,0,0,.30);
@@ -1043,7 +1048,7 @@ canvas { max-width: 100%; }
 .btn:active { transform: scale(0.97); }
 .btn-primary {
   background: var(--brand-orange); border-color: var(--brand-orange);
-  color: #fff; box-shadow: 0 4px 16px rgba(208,84,26,0.25);
+  color: var(--on-brand); box-shadow: 0 4px 16px rgba(208,84,26,0.25);
 }
 .btn-primary:hover:not(:disabled) {
   background: var(--brand-orange-2); border-color: var(--brand-orange-2);
@@ -1125,7 +1130,7 @@ canvas { max-width: 100%; }
   border-radius: 4px; display: flex; align-items: center; justify-content: center; gap: 12px;
   transition: all 0.3s;
 }
-.btn-submit:hover { background: var(--brand-orange); color: #fff; transform: translateY(-3px); box-shadow: 0 15px 30px rgba(208,84,26,0.25); }
+.btn-submit:hover { background: var(--brand-orange); color: var(--on-brand); transform: translateY(-3px); box-shadow: 0 15px 30px rgba(208,84,26,0.25); }
 
 /* ════ FORMS ════ */
 .form-group { margin-bottom: 1.5rem; }
@@ -1560,7 +1565,7 @@ body.tv-mode .topbar { background: #000 !important; border-bottom: none !importa
 .notif-badge {
   position: absolute; top: 2px; right: 2px;
   width: 16px; height: 16px; border-radius: 50%;
-  background: var(--brand-orange); color: #fff;
+  background: var(--brand-orange); color: var(--on-brand);
   font-size: 9px; font-weight: 800; font-family: var(--font-mono);
   display: flex; align-items: center; justify-content: center;
   border: 2px solid var(--bg);
