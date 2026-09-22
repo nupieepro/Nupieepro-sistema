@@ -5142,13 +5142,24 @@ window.PageDev            = PageDev;
 window.PageGlobal         = PageGlobal;
 window.PageNotificacoes   = PageNotificacoes;
 
-/* ── Estende goTo() do app.js sem sobrescrever (aguarda boot) ──
+/* ── Estende goTo() do app.js sem sobrescrever ──
    ATENÇÃO: NÃO duplicar páginas já tratadas pelo app.js original:
    geral_reunioes (PageGeral.init), geral_planejamento, mkt_tracker
    (PageMarketing.init), fin_fluxo (PageFinancas.init), prj_eventos
    (PageProjetos.init), ops_pops (PageOperacoes._renderPops)
-   ─────────────────────────────────────────────────────────────── */
-document.addEventListener('nupi:booted', () => {
+
+   Roda de forma síncrona (IIFE), não mais atrelado ao evento
+   'nupi:booted' — esse evento só dispara depois de app.initDashboard()
+   terminar (ver dashboard.html), e o script deste arquivo já carrega
+   DEPOIS de app.js (window.goTo já existe). Esperar o evento deixava
+   uma janela real: qualquer goTo() chamado como primeira navegação da
+   sessão, antes do boot terminar, caía num id só registrado aqui (não
+   no goTo() original do app.js) e ficava travado em "Carregando
+   módulo..." pra sempre, sem erro — já visto em geral_parcerias e nas
+   5 páginas Institucionais (corrigido ali com fallback pontual no
+   app.js). Rodar isso já na carga do script fecha a janela de vez,
+   pra esses casos e qualquer id futuro adicionado só aqui. */
+(function () {
   /* Injeta botão hamburger (☰) nas .topbar das sub-pages que nao tem.
      Garante que toda pagina tem como abrir o menu lateral. */
   document.querySelectorAll('[id^="page-"] .topbar').forEach(tb => {
@@ -5225,4 +5236,4 @@ document.addEventListener('nupi:booted', () => {
     };
     if (mapa[id]) try { mapa[id](); } catch(e) { console.warn('[pages goTo]', id, e); }
   };
-});
+})();
