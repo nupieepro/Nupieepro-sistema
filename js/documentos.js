@@ -222,6 +222,21 @@ const DocumentosModule = (() => {
     setTimeout(() => URL.revokeObjectURL(url), 4000);
   }
 
-  return { gerarPDFFormal, gerarWordFormal, baixarBlob };
+  /* Nome de arquivo seguro pra download via blob: URL. Chrome descarta
+     silenciosamente o atributo `download` (e usa "download" genérico) quando
+     ele tem acento — bug real do browser com blob: URL, reproduzido isolado
+     sem nenhum código do app. Como o app é 100% em português, praticamente
+     todo título real (reunião, ação, março...) tem acento — sem isso, quase
+     todo PDF/Word gerado baixava sem nome útil. Acento só sai daqui, o
+     conteúdo do documento continua acentuado normalmente. */
+  function nomeArquivoSeguro(s) {
+    return String(s || '')
+      .normalize('NFD').replace(/[̀-ͯ]/g, '')
+      .replace(/[^\w]+/g, '_')
+      .replace(/^_+|_+$/g, '')
+      .slice(0, 60);
+  }
+
+  return { gerarPDFFormal, gerarWordFormal, baixarBlob, nomeArquivoSeguro };
 })();
 window.DocumentosModule = DocumentosModule;
