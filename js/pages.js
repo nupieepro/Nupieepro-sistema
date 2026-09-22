@@ -341,7 +341,7 @@ const PageGeral = {
         secoes: [{ titulo:'Pauta, Deliberações e Encaminhamentos', corpo: extra.ata }],
         geradoPor: window._appProfile?.nome,
       };
-      const nomeArq = `NUPIEEPRO_Ata_${(r.titulo||'reuniao').replace(/[^\wÀ-ÿ]+/g,'_').slice(0,60)}`;
+      const nomeArq = `NUPIEEPRO_Ata_${window.DocumentosModule.nomeArquivoSeguro(r.titulo||'reuniao')}`;
       if (formato === 'pdf') {
         const doc = window.DocumentosModule.gerarPDFFormal(args);
         if (doc) doc.save(`${nomeArq}.pdf`);
@@ -529,7 +529,7 @@ const PageGeral = {
         ['Status:', d.concluido ? `Concluído em ${_fmt(d.concluido_em)}` : 'Em andamento'],
       ];
       const args = { titulo:'Plano de Ação Semestral', subtitulo:e.titulo, campos, secoes, geradoPor: window._appProfile?.nome };
-      const nomeArq = `NUPIEEPRO_Plano_${(e.titulo||'semestral').replace(/[^\wÀ-ÿ]+/g,'_').slice(0,60)}`;
+      const nomeArq = `NUPIEEPRO_Plano_${window.DocumentosModule.nomeArquivoSeguro(e.titulo||'semestral')}`;
       if (formato === 'pdf') {
         const doc = window.DocumentosModule.gerarPDFFormal(args);
         if (doc) doc.save(`${nomeArq}.pdf`);
@@ -1845,7 +1845,7 @@ const PageFinancas = {
         secoes: tudo.length ? [] : [{ titulo:'Observação', corpo:'Nenhum lançamento registrado neste mês.' }],
         geradoPor: window._appProfile?.nome,
       };
-      const nomeArq = `NUPIEEPRO_Extrato_${nomeMes.replace(/[^\wÀ-ÿ]+/g,'_')}`;
+      const nomeArq = `NUPIEEPRO_Extrato_${window.DocumentosModule.nomeArquivoSeguro(nomeMes)}`;
       if (formato === 'pdf') {
         const doc = window.DocumentosModule.gerarPDFFormal(args);
         if (doc) doc.save(`${nomeArq}.pdf`);
@@ -3105,7 +3105,7 @@ const PagePessoas = {
         ['Data de submissão:', _fmt(t.created_at)],
       ];
       const args = { titulo:'Termo de Abertura de Projeto (TAP)', subtitulo:t.nome_projeto, campos, secoes, geradoPor: window._appProfile?.nome };
-      const nomeArq = `NUPIEEPRO_TAP_${(t.nome_projeto||'projeto').replace(/[^\wÀ-ÿ]+/g,'_').slice(0,60)}`;
+      const nomeArq = `NUPIEEPRO_TAP_${window.DocumentosModule.nomeArquivoSeguro(t.nome_projeto||'projeto')}`;
       if (formato === 'pdf') {
         const doc = window.DocumentosModule.gerarPDFFormal(args);
         if (doc) doc.save(`${nomeArq}.pdf`);
@@ -4909,7 +4909,7 @@ const PageGlobal = {
         secoes: [{ titulo:'Pauta e Deliberações', corpo: e.descricao }],
         geradoPor: window._appProfile?.nome,
       };
-      const nomeArq = `NUPIEEPRO_Assembleia_${(e.titulo||'assembleia').replace(/[^\wÀ-ÿ]+/g,'_').slice(0,60)}`;
+      const nomeArq = `NUPIEEPRO_Assembleia_${window.DocumentosModule.nomeArquivoSeguro(e.titulo||'assembleia')}`;
       if (formato === 'pdf') {
         const doc = window.DocumentosModule.gerarPDFFormal(args);
         if (doc) doc.save(`${nomeArq}.pdf`);
@@ -4967,7 +4967,7 @@ const PageGlobal = {
         ],
         geradoPor: window._appProfile?.nome,
       };
-      const nomeArq = `NUPIEEPRO_Votacao_${(v.titulo||'votacao').replace(/[^\wÀ-ÿ]+/g,'_').slice(0,60)}`;
+      const nomeArq = `NUPIEEPRO_Votacao_${window.DocumentosModule.nomeArquivoSeguro(v.titulo||'votacao')}`;
       if (formato === 'pdf') {
         const doc = window.DocumentosModule.gerarPDFFormal(args);
         if (doc) doc.save(`${nomeArq}.pdf`);

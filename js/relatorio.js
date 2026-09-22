@@ -304,7 +304,7 @@ const RelatorioModule = (() => {
         responsavel: window._appProfile?.nome || 'Coordenadoria de Operações',
         atividades_abj: atvsAbj
       });
-      if (doc) doc.save(`NUPIEEPRO_Relatorio_${MESES_PT[mes-1]}_${ano}.pdf`);
+      if (doc) doc.save(`NUPIEEPRO_Relatorio_${window.DocumentosModule.nomeArquivoSeguro(MESES_PT[mes-1])}_${ano}.pdf`);
     } catch(e) { console.warn('[PDF]', e); }
     /* Antes disparava "salvo!" mesmo quando o insert em relatorios_mensais
        falhava (RLS bloqueando quem não é coordenador/admin, ou erro de
@@ -328,7 +328,7 @@ const RelatorioModule = (() => {
         mes: data.mes, ano: data.ano, observacoes: data.observacoes,
         total_vendas: data.total_vendas, total_despesas: data.total_despesas
       });
-      if (doc) doc.save(`NUPIEEPRO_Relatorio_${MESES_PT[data.mes-1]}_${data.ano}.pdf`);
+      if (doc) doc.save(`NUPIEEPRO_Relatorio_${window.DocumentosModule.nomeArquivoSeguro(MESES_PT[data.mes-1])}_${data.ano}.pdf`);
     } catch(e) { mostrarToast('Erro ao gerar PDF.', 'error'); }
   }
   async function baixarWord(id) {
@@ -357,7 +357,7 @@ const RelatorioModule = (() => {
         subtitulo: r.coordenadorias?.nome || null,
         campos, secoes, geradoPor: window._appProfile?.nome,
       });
-      if (blob) window.DocumentosModule.baixarBlob(blob, `NUPIEEPRO_Relatorio_${MESES_PT[r.mes-1]}_${r.ano}.docx`);
+      if (blob) window.DocumentosModule.baixarBlob(blob, `NUPIEEPRO_Relatorio_${window.DocumentosModule.nomeArquivoSeguro(MESES_PT[r.mes-1])}_${r.ano}.docx`);
     } catch(e) { console.warn('[Relatorio Word]', e); mostrarToast('Erro ao gerar Word.', 'error'); }
   }
   return { renderPagina, abrirFormulario, baixarPDF, baixarWord, _gerarRascunho };
