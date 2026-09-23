@@ -14,7 +14,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=Plus+Jakarta+Sans:wght@700;800;900&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/styles.css?v=113">
+  <link rel="stylesheet" href="css/styles.css?v=114">
   <style>
     .invite-wizard { display: flex; flex-direction: column; gap: 1.2rem; }
     .info-sep::before { content: '·'; margin-right: 8px; opacity: 0.5; }
@@ -25,7 +25,8 @@
     .theme-option { padding: 10px; border: 2px solid transparent; border-radius: 8px; background: rgba(255,255,255,0.05); cursor: pointer; transition: all 200ms; text-align: center; font-size: 12px; }
     .theme-option:hover { background: rgba(255,255,255,0.08); }
     .theme-option.active { border-color: var(--orange); background: rgba(208,84,26,0.15); }
-    .theme-dot { width: 24px; height: 24px; border-radius: 6px; margin: 0 auto 6px; }
+    .theme-swatch { display: flex; gap: 3px; justify-content: center; margin-bottom: 6px; }
+    .theme-swatch > div { width: 12px; height: 20px; border-radius: 3px; }
     .pwn-toast { position: fixed; bottom: 24px; right: 24px; background: linear-gradient(135deg, #d0541a, #e07d43); color: #fff; padding: 16px 20px; border-radius: 12px; box-shadow: 0 8px 32px rgba(208,84,26,0.3); font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 12px; animation: slideInUp 400ms ease-out; z-index: 10000; }
     @keyframes slideInUp { from { transform: translateY(120%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
     .pwn-btn { background: rgba(255,255,255,0.2); border: none; color: #fff; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 12px; }
@@ -101,19 +102,35 @@
               <p style="font-size: 13px; color: var(--fg-3); margin-bottom: 0.8rem;">Escolha o tema que você prefere. Pode alterar depois nas configurações.</p>
               <div class="theme-selector">
                 <div class="theme-option active" id="themeOpt-nucleo" onclick="selectTheme('nucleo', this)">
-                  <div class="theme-dot" style="background: #d0541a;"></div>
+                  <div class="theme-swatch">
+                    <div style="background:#d0541a;"></div>
+                    <div style="background:#0f0732;"></div>
+                    <div style="background:#1e3a6e;"></div>
+                  </div>
                   <div>Núcleo</div>
                 </div>
                 <div class="theme-option" id="themeOpt-noite" onclick="selectTheme('noite', this)">
-                  <div class="theme-dot" style="background: #0a0e1a;"></div>
+                  <div class="theme-swatch">
+                    <div style="background:#f65214;"></div>
+                    <div style="background:#ff7a3d;"></div>
+                    <div style="background:#1a0a04;"></div>
+                  </div>
                   <div>Noite</div>
                 </div>
                 <div class="theme-option" id="themeOpt-violet" onclick="selectTheme('violet', this)">
-                  <div class="theme-dot" style="background: #b9a0ff;"></div>
+                  <div class="theme-swatch">
+                    <div style="background:#9b7be8;"></div>
+                    <div style="background:#b9a0ff;"></div>
+                    <div style="background:#2f1d70;"></div>
+                  </div>
                   <div>Violeta</div>
                 </div>
                 <div class="theme-option" id="themeOpt-papel" onclick="selectTheme('papel', this)">
-                  <div class="theme-dot" style="background: #f7f5fb;"></div>
+                  <div class="theme-swatch">
+                    <div style="background:#fff;border:1px solid #ddd;"></div>
+                    <div style="background:#9b7be8;"></div>
+                    <div style="background:#213248;"></div>
+                  </div>
                   <div>Papel</div>
                 </div>
               </div>
@@ -163,8 +180,8 @@
       }
     })();
   </script>
-  <script src="js/validacao.js?v=113"></script>
-  <script src="js/auth.js?v=113"></script>
+  <script src="js/validacao.js?v=114"></script>
+  <script src="js/auth.js?v=114"></script>
   <script>
     let selectedTheme = 'nucleo';
     

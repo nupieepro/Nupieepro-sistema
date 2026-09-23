@@ -3196,7 +3196,7 @@ const PagePessoas = {
   },
   async _enviarConvite() {
     const nome  = document.getElementById('inv-nome')?.value?.trim();
-    const email = document.getElementById('inv-email')?.value?.trim();
+    const email = document.getElementById('inv-email')?.value?.trim().toLowerCase();
     const coord = document.getElementById('inv-coord')?.value;
     const cargo = document.getElementById('inv-cargo')?.value;
     const role  = document.getElementById('inv-role')?.value || 'assessor';
@@ -3928,7 +3928,7 @@ const PageDev = {
 
   async _criarConvite() {
     const nome  = document.getElementById('nc-nome')?.value.trim();
-    const email = document.getElementById('nc-email')?.value.trim();
+    const email = document.getElementById('nc-email')?.value.trim().toLowerCase();
     const coord = document.getElementById('nc-coord')?.value;
     const role  = document.getElementById('nc-role')?.value;
     const cargo = document.getElementById('nc-cargo')?.value.trim() || null;
