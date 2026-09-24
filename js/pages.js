@@ -1712,6 +1712,7 @@ const PageFinancas = {
       <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px">
         ${this._podeLancar() ? _btn('+ Registrar venda',"PageFinancas.lancar('venda')") : ''}
         ${this._podeLancar() ? _btn('+ Registrar despesa',"PageFinancas.lancar('despesa')",'btn-ghost') : ''}
+        ${_btn('🔍 Ver por categoria/evento',"PageFinancas._verPorCategoria()",'btn-ghost')}
         ${_btn('📄 Extrato PDF',"PageFinancas._exportarExtrato('pdf')",'btn-ghost')}
         ${_btn('📝 Extrato Word',"PageFinancas._exportarExtrato('word')",'btn-ghost')}
       </div>
@@ -1855,6 +1856,73 @@ const PageFinancas = {
       }
     } catch(e) { console.warn('[Extrato export]', e); mostrarToast('Erro ao gerar extrato.','error'); }
   },
+  /* Indicadores por categoria/evento (ex: "Bottom Up 7.0") — diferente do
+     Fluxo de Caixa geral (que só olha o mês corrente), aqui o corte é por
+     categoria e cobre todo o histórico dela, pra medir lucro/despesa de um
+     evento específico sem misturar com o resto do caixa do mês. */
+  async _verPorCategoria() {
+    if (!_sbq()) return;
+    const [rv, rd] = await Promise.all([
+      _sbq().from('vendas').select('categoria'),
+      _sbq().from('despesas').select('categoria'),
+    ]);
+    const cats = [...new Set([...(rv.data||[]), ...(rd.data||[])].map(r => r.categoria).filter(Boolean))].sort();
+    if (!cats.length) {
+      mostrarToast('Nenhuma categoria registrada ainda. Preencha "Categoria/Evento" ao lançar uma venda ou despesa.', 'info', 4000);
+      return;
+    }
+    abrirModal({ titulo: '🔍 Indicadores por Categoria/Evento', tipo: 'info', corpo: `
+      <div class="form-group"><label class="form-label">Categoria/Evento</label>
+        <select id="cat-select" class="form-select" onchange="PageFinancas._carregarResumoCategoria(this.value)">
+          <option value="">Selecione...</option>
+          ${cats.map(c => `<option value="${sanitize(c)}">${sanitize(c)}</option>`).join('')}
+        </select>
+      </div>
+      <div id="cat-resultado"></div>`,
+    botoes: [{ texto: 'Fechar', classe: 'btn-ghost', acao: fecharModal }] });
+  },
+  async _carregarResumoCategoria(categoria) {
+    const el = document.getElementById('cat-resultado');
+    if (!el) return;
+    if (!categoria) { el.innerHTML = ''; return; }
+    el.innerHTML = '<div style="padding:16px;text-align:center;color:var(--c-slate);font-size:13px">Carregando...</div>';
+    const [rv, rd] = await Promise.all([
+      _sbq().from('vendas').select('*').eq('categoria', categoria).order('data_venda'),
+      _sbq().from('despesas').select('*').eq('categoria', categoria).order('data_despesa'),
+    ]);
+    const vendas = rv.data || [], despesas = rd.data || [];
+    const totV = vendas.reduce((s, v) => s + Number(v.valor || 0), 0);
+    const totD = despesas.reduce((s, d) => s + Number(d.valor || 0), 0);
+    const saldo = totV - totD;
+    const linhas = [
+      ...vendas.map(v => ({ ...v, _tipo: 'venda', _data: v.data_venda })),
+      ...despesas.map(d => ({ ...d, _tipo: 'despesa', _data: d.data_despesa })),
+    ].sort((a, b) => a._data.localeCompare(b._data));
+    el.innerHTML = `
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:14px 0">
+        <div class="sum-card" style="padding:10px;text-align:center">
+          <div style="font-size:10px;color:var(--c-slate)">VENDAS</div>
+          <div style="font-size:16px;font-weight:900;color:var(--green)">R$ ${totV.toFixed(2)}</div>
+        </div>
+        <div class="sum-card" style="padding:10px;text-align:center">
+          <div style="font-size:10px;color:var(--c-slate)">DESPESAS</div>
+          <div style="font-size:16px;font-weight:900;color:var(--red)">R$ ${totD.toFixed(2)}</div>
+        </div>
+        <div class="sum-card" style="padding:10px;text-align:center">
+          <div style="font-size:10px;color:var(--c-slate)">LUCRO</div>
+          <div style="font-size:16px;font-weight:900;color:${saldo >= 0 ? 'var(--green)' : 'var(--red)'}">R$ ${saldo.toFixed(2)}</div>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:6px;max-height:240px;overflow-y:auto">
+        ${linhas.length ? linhas.map(r => `
+          <div style="display:flex;justify-content:space-between;gap:8px;font-size:12px;padding:6px 8px;background:var(--b-1);border-radius:6px">
+            <span style="min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">📅 ${_fmt(r._data)} · ${sanitize(r.descricao)}</span>
+            <span style="color:${r._tipo === 'venda' ? 'var(--green)' : 'var(--red)'};font-weight:700;white-space:nowrap">
+              ${r._tipo === 'venda' ? '+' : '-'} R$ ${Number(r.valor || 0).toFixed(2)}
+            </span>
+          </div>`).join('') : '<div style="text-align:center;color:var(--c-slate);font-size:12px;padding:10px">Nenhum lançamento.</div>'}
+      </div>`;
+  },
   lancar(tipo) {
     const hoje=new Date().toISOString().split('T')[0];
     abrirModal({titulo:tipo==='venda'?'💚 Registrar Venda':'🔴 Registrar Despesa',tipo:'info',corpo:`
@@ -1868,7 +1936,10 @@ const PageFinancas = {
       </div>
       ${tipo==='venda'?`
       <div class="form-group"><label class="form-label">Produto</label>
-        <input id="fl-produto" class="form-input" placeholder="Ex: Camiseta M"></div>`:''}`,
+        <input id="fl-produto" class="form-input" placeholder="Ex: Camiseta M"></div>`:''}
+      <div class="form-group"><label class="form-label">Categoria/Evento (opcional)</label>
+        <input id="fl-cat" class="form-input" placeholder="Ex: Bottom Up 7.0">
+        <small style="color:var(--c-slate);margin-top:4px;display:block">Use o mesmo nome em todos os lançamentos do evento pra depois ver o resumo em "Ver por categoria/evento".</small></div>`,
     botoes:[
       {texto:'Cancelar',classe:'btn-ghost',acao:fecharModal},
       {texto:'Registrar ✓',classe:'btn-primary',acao:()=>this._salvar(tipo)}
@@ -1879,6 +1950,7 @@ const PageFinancas = {
     const valor =parseFloat(document.getElementById('fl-valor')?.value);
     const data  =document.getElementById('fl-data')?.value;
     const prod  =document.getElementById('fl-produto')?.value?.trim();
+    const cat   =document.getElementById('fl-cat')?.value?.trim();
     if(!desc||isNaN(valor)){mostrarToast('Preencha todos os campos!','warning');return;}
     fecharModal();
     try {
@@ -1886,13 +1958,13 @@ const PageFinancas = {
       const fin=coords.find(c=>c.sigla==='FIN');
       if(tipo==='venda') {
         await _sbq().from('vendas').insert([{
-          descricao:desc,valor,data_venda:data,produto:prod||null,
+          descricao:desc,valor,data_venda:data,produto:prod||null,categoria:cat||null,
           coordenadoria_id:fin?.id||null,
           registrado_por:window._appProfile?.id
         }]);
       } else {
         await _sbq().from('despesas').insert([{
-          descricao:desc,valor,data_despesa:data,
+          descricao:desc,valor,data_despesa:data,categoria:cat||null,
           coordenadoria_id:fin?.id||null,
           registrado_por:window._appProfile?.id
         }]);
