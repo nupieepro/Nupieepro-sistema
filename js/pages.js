@@ -2649,12 +2649,12 @@ const PageOperacoes = {
         const ativoIcon=p.ativo!==false?'🟢':'🔴';
         return `<div style="background:var(--surface-2);border:1px solid var(--border-1);border-radius:10px;padding:12px 16px;display:flex;justify-content:space-between;align-items:center">
           <div style="flex:1;min-width:0">
-            <span style="font-size:13px;color:var(--fg-1);font-weight:600;">📄 ${p.nome}</span>${tag}
-            ${p.descricao?`<div style="font-size:11px;color:var(--fg-3);margin-top:3px;">${p.descricao}</div>`:''}
+            <span style="font-size:13px;color:var(--fg-1);font-weight:600;">📄 ${sanitize(p.nome)}</span>${tag}
+            ${p.descricao?`<div style="font-size:11px;color:var(--fg-3);margin-top:3px;">${sanitize(p.descricao)}</div>`:''}
           </div>
           <div style="display:flex;gap:6px;align-items:center;">
             <span title="${p.ativo!==false?'Ativo':'Inativo'}">${ativoIcon}</span>
-            <button class="btn btn-ghost" style="font-size:11px;padding:4px 8px;" onclick="PageOperacoes.editarPop('${p.id}','${(p.nome||'').replace(/'/g,"\\'")}')">Editar</button>
+            <button class="btn btn-ghost" style="font-size:11px;padding:4px 8px;" onclick="PageOperacoes.editarPop('${p.id}','${sanitize(p.nome||'')}')">Editar</button>
             <button class="btn btn-ghost" style="font-size:11px;padding:4px 8px;color:var(--red)" onclick="PageOperacoes._excluirPop('${p.id}')">🗑️</button>
           </div>
         </div>`;
