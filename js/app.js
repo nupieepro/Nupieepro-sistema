@@ -423,6 +423,10 @@ const App = {
     if (profile?._isDev || sigla === 'FIN') {
       html += `<div class="sidebar-section">${profile?._isDev ? 'Terminal do Dev' : 'Lojinha NUPIEEPRO'}</div>`;
       if (profile?._isDev) {
+        html += `<div class="nav-item" style="color:var(--orange);border-left:2px solid var(--orange);" onclick="goTo('dev_usuarios')">
+          <span class="nav-icon">${getIcon('shield')}</span>
+          <span class="nav-label">Painel de Administração</span>
+        </div>`;
         html += `<div class="nav-item" style="color:var(--orange);border-left:2px solid var(--orange);" onclick="window.open('https://supabase.com/dashboard/project/quwpyrdxyibcbyzwfilb','_blank')">
           <span class="nav-icon">${getIcon('settings')}</span>
           <span class="nav-label">DB Supabase Dashboard</span>
