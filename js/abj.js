@@ -285,17 +285,27 @@ const ABJModule = (() => {
     try {
       /* Verifica se já existe um progresso do próprio usuário para esta atividade/mês */
       let progId = null;
-      let qProg = sb.from('progresso_abj').select('id').eq('atividade_id', a.id).eq('registrado_por', userId);
+      let qProg = sb.from('progresso_abj').select('id, status').eq('atividade_id', a.id).eq('registrado_por', userId);
       if (mensal) qProg = qProg.eq('mes_ref', mesRef);
       const { data: progRows } = await qProg.order('created_at').limit(1);
       const ex = progRows?.[0] || null;
       if (ex) {
-        await sb.from('progresso_abj').update({
-          status: 'em_andamento',
-          observacao: desc,
-          registrado_por: userId,
-          pontos: a.pontos_por_entrada || 0
-        }).eq('id', ex.id);
+        /* Atividade mensal permite reenviar evidência mesmo já concluída
+           (podeEnviar = mensal || ...), pra dar espaço a anexar mais prova
+           do mesmo mês. Sem essa checagem, reenviar sobre um mês já
+           aprovado pela GER sobrescrevia status pra 'em_andamento' e os
+           pontos pro valor padrão da atividade, apagando silenciosamente
+           uma validação manual (com pontuação própria) que a coordenação
+           já tinha dado. Só atualiza status/pontos se ainda não tiver sido
+           aprovado — evidência nova sempre é anexada de qualquer jeito. */
+        if (ex.status !== 'concluido') {
+          await sb.from('progresso_abj').update({
+            status: 'em_andamento',
+            observacao: desc,
+            registrado_por: userId,
+            pontos: a.pontos_por_entrada || 0
+          }).eq('id', ex.id);
+        }
         progId = ex.id;
       }
 
