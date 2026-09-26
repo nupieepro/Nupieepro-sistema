@@ -2074,16 +2074,57 @@ const PageFinancas = {
       <div id="imp-preview"></div>`,
     botoes: [{ texto: 'Cancelar', classe: 'btn-ghost', acao: fecharModal }] });
   },
+  /* Parser de CSV próprio (RFC4180: aspas duplas, vírgula escapada dentro
+     de campo entre aspas, "" vira aspas literal). Não delega pro SheetJS
+     porque ele tenta "adivinhar" tipo de cada célula de CSV (sem
+     informação de locale nenhuma) e isso já causou dois bugs reais:
+     "4,00" virando o número 400 (lendo a vírgula como separador de milhar
+     americano) e "10/09/2026" virando 9 de outubro (lendo como MM/DD
+     americano). Lendo tudo como texto puro e convertendo eu mesmo com
+     _paraValorNumerico/_paraDataISO (que já assumem formato brasileiro),
+     essa ambiguidade nunca chega a existir.  */
+  _parseCSVTexto(texto) {
+    const linhas = [];
+    let campo = '', linha = [], entreAspas = false;
+    for (let i = 0; i < texto.length; i++) {
+      const c = texto[i], prox = texto[i + 1];
+      if (entreAspas) {
+        if (c === '"' && prox === '"') { campo += '"'; i++; }
+        else if (c === '"') entreAspas = false;
+        else campo += c;
+      } else if (c === '"') entreAspas = true;
+      else if (c === ',' || c === ';') { linha.push(campo); campo = ''; }
+      else if (c === '\r') { /* ignora, \n fecha a linha */ }
+      else if (c === '\n') { linha.push(campo); linhas.push(linha); linha = []; campo = ''; }
+      else campo += c;
+    }
+    if (campo.length || linha.length) { linha.push(campo); linhas.push(linha); }
+    const semVazias = linhas.filter(l => !(l.length === 1 && l[0] === ''));
+    if (!semVazias.length) return [];
+    const cabecalhos = semVazias[0].map(h => h.trim());
+    return semVazias.slice(1).map(l => {
+      const obj = {};
+      cabecalhos.forEach((h, idx) => { obj[h] = l[idx] ?? null; });
+      return obj;
+    });
+  },
   async _lerArquivoImportacao(input) {
     const file = input.files?.[0];
     if (!file) return;
     const previewEl = document.getElementById('imp-preview');
     if (previewEl) previewEl.innerHTML = '<div style="padding:16px;text-align:center;color:var(--c-slate);font-size:13px">Lendo arquivo...</div>';
     try {
-      const buf = await file.arrayBuffer();
-      const wb = XLSX.read(buf, { type: 'array', cellDates: true });
-      const nomeAba = wb.SheetNames[0];
-      const linhas = XLSX.utils.sheet_to_json(wb.Sheets[nomeAba], { defval: null });
+      const ehCSV = /\.csv$/i.test(file.name);
+      let linhas;
+      if (ehCSV) {
+        const texto = await file.text();
+        linhas = this._parseCSVTexto(texto);
+      } else {
+        const buf = await file.arrayBuffer();
+        const wb = XLSX.read(buf, { type: 'array', cellDates: true });
+        const nomeAba = wb.SheetNames[0];
+        linhas = XLSX.utils.sheet_to_json(wb.Sheets[nomeAba], { defval: null });
+      }
       if (!linhas.length) { mostrarToast('Planilha vazia ou sem dados na primeira aba.', 'warning'); return; }
       this._importArquivoNome = file.name;
       this._importLinhas = linhas;
