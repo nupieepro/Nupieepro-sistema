@@ -1699,6 +1699,7 @@ const Pessoas = {
     if (error || !u) { App.toast('Erro ao carregar membro.', 'error'); return; }
 
     const isAdmin = typeof Permissoes !== 'undefined' && Permissoes.isAdmin();
+    const isGeral = typeof Permissoes !== 'undefined' && Permissoes.isGeral();
     const iniciais = u.iniciais || u.nome?.[0] || '?';
     const cor = u.role === 'admin' ? 'orange' : 'blue';
 
@@ -1709,6 +1710,9 @@ const Pessoas = {
        já substitui o conteúdo do mesmo overlay na hora, sem precisar fechar
        primeiro. */
     const botoes = [{ texto: 'Fechar', classe: 'btn-ghost', acao: fecharModal }];
+    if (isAdmin || isGeral) {
+      botoes.push({ texto: '🔀 Mover de Coordenadoria', classe: 'btn-ghost', acao: () => Pessoas.moverCoordenadoria(u.id, u.coordenadoria_id, u.nome) });
+    }
     if (isAdmin) {
       botoes.push(
         { texto: '✏️ Editar Perfil', classe: 'btn-ghost', acao: () => Pessoas.editarPerfil(u.id) },
@@ -1921,6 +1925,46 @@ const Pessoas = {
     if (typeof Permissoes !== 'undefined' && Permissoes.isAdmin()) return true;
     App.toast('Acesso restrito a administradores.', 'error');
     return false;
+  },
+
+  /* Mover de coordenadoria: além de admin, a Coordenação Geral também
+     pode (é a única exceção — role e status ativo continuam só admin,
+     tanto aqui quanto no trigger do banco). */
+  _exigeAdminOuGeral() {
+    if (typeof Permissoes !== 'undefined' && (Permissoes.isAdmin() || Permissoes.isGeral())) return true;
+    App.toast('Acesso restrito a administradores ou à Coordenação Geral.', 'error');
+    return false;
+  },
+
+  async moverCoordenadoria(id, coordAtualId, nome) {
+    if (!this._exigeAdminOuGeral()) return;
+    const coords = await App.getCoordenadorias();
+    abrirModal({
+      titulo: `Mover ${nome || 'membro'} de coordenadoria`,
+      corpo: `
+        <div class="form-group">
+          <label class="form-label">Nova coordenadoria</label>
+          <select id="mv-coord" class="form-select">
+            ${coords.map(c => `<option value="${c.id}" ${c.id === coordAtualId ? 'selected' : ''}>${sanitize(c.nome)}</option>`).join('')}
+          </select>
+        </div>`,
+      botoes: [
+        { texto: 'Cancelar', classe: 'btn-ghost' },
+        { texto: 'Mover', classe: 'btn-primary', acao: async () => {
+          const novoId = document.getElementById('mv-coord')?.value;
+          if (!novoId || novoId === coordAtualId) { fecharModal(); return; }
+          try {
+            const ok = await dbEfetivou(_sb.from('users').update({ coordenadoria_id: novoId }).eq('id', id));
+            if (!ok) throw new Error('sem permissão');
+            fecharModal();
+            App.toast(`${nome} movido(a) de coordenadoria!`, 'success');
+            this.loadMembers();
+          } catch (e) {
+            App.toast('Erro ao mover: ' + e.message, 'error');
+          }
+        }}
+      ]
+    });
   },
 
   deleteMember(id, email) {

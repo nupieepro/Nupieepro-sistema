@@ -299,6 +299,15 @@ const Permissoes = (() => {
     return getPerfil()?.role === 'admin';
   }
 
+  /* Coordenação Geral — mesma regra do is_geral() no banco (role
+     'coordenador' + coordenadoria GER). Usado pra liberar ações pontuais
+     de gestão de membros (ex: mover de coordenadoria) sem dar acesso de
+     admin completo. */
+  function isGeral() {
+    const p = getPerfil();
+    return p?.role === 'coordenador' && p?.coordenadorias?.sigla === 'GER';
+  }
+
   /* ══════════════════════════════════════════
      NÍVEIS DE PERMISSÃO (para exibição na aba Dev)
   ══════════════════════════════════════════ */
@@ -322,6 +331,7 @@ const Permissoes = (() => {
     pode,
     podeVer,
     isAdmin,
+    isGeral,
     getCoordPages,
     getMatriz,
     getNivelInfo,
