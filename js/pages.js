@@ -1712,6 +1712,8 @@ const PageFinancas = {
       <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px">
         ${this._podeLancar() ? _btn('+ Registrar venda',"PageFinancas.lancar('venda')") : ''}
         ${this._podeLancar() ? _btn('+ Registrar despesa',"PageFinancas.lancar('despesa')",'btn-ghost') : ''}
+        ${this._podeLancar() ? _btn('📥 Importar planilha',"PageFinancas.importarPlanilha()",'btn-ghost') : ''}
+        ${this._podeLancar() ? _btn('📂 Importações',"PageFinancas.verImportacoes()",'btn-ghost') : ''}
         ${_btn('🔍 Ver por categoria/evento',"PageFinancas._verPorCategoria()",'btn-ghost')}
         ${_btn('📄 Extrato PDF',"PageFinancas._exportarExtrato('pdf')",'btn-ghost')}
         ${_btn('📝 Extrato Word',"PageFinancas._exportarExtrato('word')",'btn-ghost')}
@@ -2009,6 +2011,185 @@ const PageFinancas = {
         },
       },
     });
+  },
+  /* ── Importação de planilha (Excel/CSV) pro Fluxo de Caixa ──
+     Lê o arquivo inteiro no navegador (SheetJS), tenta reconhecer as
+     colunas por nome e deixa o usuário confirmar/ajustar o mapeamento
+     antes de gravar qualquer coisa — nunca importa direto sem prévia.
+     Cada arquivo vira uma linha em `importacoes`; as vendas geradas
+     carregam `importacao_id`, então excluir a importação (verImportacoes)
+     apaga o lote inteiro de uma vez (FK ON DELETE CASCADE). */
+  _normalizarCabecalho(s) {
+    return String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').trim().toUpperCase();
+  },
+  _detectarMapeamento(cabecalhos) {
+    const normalizados = cabecalhos.map(h => ({ original: h, norm: this._normalizarCabecalho(h) }));
+    const encontrar = (aliases) => {
+      for (const alias of aliases) {
+        const hit = normalizados.find(n => n.norm === alias);
+        if (hit) return hit.original;
+      }
+      return '';
+    };
+    return {
+      data:    encontrar(['DATA']),
+      produto: encontrar(['PRODUTO', 'ITEM']),
+      qtd:     encontrar(['QTD', 'QUANTIDADE']),
+      valor:   encontrar(['VALOR REAL', 'VALOR TOTAL', 'VALOR']),
+      cliente: encontrar(['CLIENTE', 'COMPRADOR']),
+    };
+  },
+  _paraDataISO(v) {
+    if (v == null || v === '') return null;
+    if (v instanceof Date && !isNaN(v)) {
+      return `${v.getFullYear()}-${String(v.getMonth()+1).padStart(2,'0')}-${String(v.getDate()).padStart(2,'0')}`;
+    }
+    const s = String(v).trim();
+    const br = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+    if (br) return `${br[3]}-${br[2].padStart(2,'0')}-${br[1].padStart(2,'0')}`;
+    const iso = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
+    if (iso) return `${iso[1]}-${iso[2].padStart(2,'0')}-${iso[3].padStart(2,'0')}`;
+    return null;
+  },
+  _paraValorNumerico(v) {
+    if (v == null || v === '') return NaN;
+    if (typeof v === 'number') return v;
+    let s = String(v).trim().replace(/[^\d,.-]/g, '');
+    if (/,\d{1,2}$/.test(s)) s = s.replace(/\./g, '').replace(',', '.');
+    else s = s.replace(/,/g, '');
+    return parseFloat(s);
+  },
+  importarPlanilha() {
+    if (typeof XLSX === 'undefined') { mostrarToast('Biblioteca de planilhas não carregou. Recarregue a página e tente de novo.', 'error'); return; }
+    this._importLinhas = null;
+    abrirModal({ titulo: '📥 Importar Planilha de Vendas', tipo: 'info', corpo: `
+      <p style="font-size:13px;color:var(--c-slate);margin-bottom:14px">
+        Envie um arquivo <strong>.xlsx</strong> ou <strong>.csv</strong> com o registro de vendas
+        (primeira aba, uma linha por venda). O sistema identifica as colunas
+        automaticamente e mostra uma prévia — nada é gravado antes de você confirmar.
+      </p>
+      <div class="form-group">
+        <input id="imp-arquivo" type="file" accept=".xlsx,.xls,.csv" class="form-input" onchange="PageFinancas._lerArquivoImportacao(this)">
+      </div>
+      <div id="imp-preview"></div>`,
+    botoes: [{ texto: 'Cancelar', classe: 'btn-ghost', acao: fecharModal }] });
+  },
+  async _lerArquivoImportacao(input) {
+    const file = input.files?.[0];
+    if (!file) return;
+    const previewEl = document.getElementById('imp-preview');
+    if (previewEl) previewEl.innerHTML = '<div style="padding:16px;text-align:center;color:var(--c-slate);font-size:13px">Lendo arquivo...</div>';
+    try {
+      const buf = await file.arrayBuffer();
+      const wb = XLSX.read(buf, { type: 'array', cellDates: true });
+      const nomeAba = wb.SheetNames[0];
+      const linhas = XLSX.utils.sheet_to_json(wb.Sheets[nomeAba], { defval: null });
+      if (!linhas.length) { mostrarToast('Planilha vazia ou sem dados na primeira aba.', 'warning'); return; }
+      this._importArquivoNome = file.name;
+      this._importLinhas = linhas;
+      this._importCabecalhos = Object.keys(linhas[0]);
+      this._importMapeamento = this._detectarMapeamento(this._importCabecalhos);
+      this._renderMapeamentoImportacao();
+    } catch (e) {
+      console.warn('[Importar planilha]', e);
+      if (previewEl) previewEl.innerHTML = '<div style="padding:16px;color:var(--red);font-size:13px">Não consegui ler esse arquivo. Confira se é um .xlsx ou .csv válido.</div>';
+    }
+  },
+  _renderMapeamentoImportacao() {
+    const el = document.getElementById('imp-preview');
+    if (!el) return;
+    const cabecalhos = this._importCabecalhos;
+    const map = this._importMapeamento;
+    const campo = (nome, label, obrigatorio) => `
+      <div class="form-group">
+        <label class="form-label">${label}${obrigatorio ? ' *' : ' (opcional)'}</label>
+        <select id="imp-map-${nome}" class="form-select" onchange="PageFinancas._importMapeamento['${nome}']=this.value">
+          ${obrigatorio ? '' : '<option value="">(nenhuma)</option>'}
+          ${cabecalhos.map(h => `<option value="${sanitize(h)}" ${map[nome] === h ? 'selected' : ''}>${sanitize(h)}</option>`).join('')}
+        </select>
+      </div>`;
+    const linhasPreview = this._importLinhas.slice(0, 5);
+    el.innerHTML = `
+      <div class="form-section-header" style="margin-top:14px;font-size:12px;font-weight:700;color:var(--c-slate);text-transform:uppercase">Mapeamento de colunas</div>
+      <p style="font-size:12px;color:var(--c-slate);margin:4px 0 8px">Detectado automaticamente — confira e ajuste se precisar.</p>
+      ${campo('data', 'Data', true)}
+      ${campo('produto', 'Produto', true)}
+      ${campo('valor', 'Valor', true)}
+      ${campo('qtd', 'Quantidade', false)}
+      ${campo('cliente', 'Cliente (só pra marcar categoria "Bottom Up")', false)}
+      <div class="form-section-header" style="margin-top:14px;font-size:12px;font-weight:700;color:var(--c-slate);text-transform:uppercase">Prévia (${this._importLinhas.length} linha(s) no arquivo)</div>
+      <div style="overflow-x:auto;max-height:180px;overflow-y:auto;border:1px solid var(--b-2);border-radius:8px;margin-top:8px">
+        <table style="width:100%;font-size:11px;border-collapse:collapse">
+          <thead><tr>${cabecalhos.map(h => `<th style="padding:6px 8px;text-align:left;border-bottom:1px solid var(--b-2);white-space:nowrap">${sanitize(h)}</th>`).join('')}</tr></thead>
+          <tbody>${linhasPreview.map(r => `<tr>${cabecalhos.map(h => `<td style="padding:6px 8px;border-bottom:1px solid var(--b-2);white-space:nowrap">${sanitize(String(r[h] ?? ''))}</td>`).join('')}</tr>`).join('')}</tbody>
+        </table>
+      </div>
+      <div style="margin-top:14px">
+        ${_btn(`Confirmar importação (${this._importLinhas.length} linha(s))`, 'PageFinancas._confirmarImportacao()')}
+      </div>`;
+  },
+  async _confirmarImportacao() {
+    const map = this._importMapeamento;
+    if (!map.data || !map.produto || !map.valor) { mostrarToast('Selecione pelo menos Data, Produto e Valor.', 'warning'); return; }
+    const coords = await getCoords();
+    const fin = coords.find(c => c.sigla === 'FIN');
+    let ignoradas = 0;
+    const linhasValidas = [];
+    for (const r of this._importLinhas) {
+      const data = this._paraDataISO(r[map.data]);
+      const produto = String(r[map.produto] || '').trim();
+      const valor = this._paraValorNumerico(r[map.valor]);
+      if (!data || !produto || isNaN(valor)) { ignoradas++; continue; }
+      const qtdRaw = map.qtd ? r[map.qtd] : null;
+      const qtd = qtdRaw != null && !isNaN(parseInt(qtdRaw, 10)) ? parseInt(qtdRaw, 10) : 1;
+      const cliente = map.cliente ? String(r[map.cliente] || '') : '';
+      const categoria = /bottom\s*up/i.test(cliente) ? 'Bottom Up' : 'Lojinha';
+      linhasValidas.push({ data_venda: data, produto, descricao: produto, valor, quantidade: qtd, categoria });
+    }
+    if (!linhasValidas.length) { mostrarToast('Nenhuma linha válida encontrada — confira o mapeamento das colunas.', 'error'); return; }
+    fecharModal();
+    mostrarToast('Importando...', 'info', 2000);
+    try {
+      const { data: lote, error: loteErr } = await _sbq().from('importacoes').insert([{
+        nome_arquivo: this._importArquivoNome, tabela_destino: 'vendas',
+        total_linhas: linhasValidas.length, coordenadoria_id: fin?.id || null,
+        importado_por: window._appProfile?.id,
+      }]).select('id').single();
+      if (loteErr || !lote) throw loteErr || new Error('sem permissão');
+      const rows = linhasValidas.map(r => ({ ...r, coordenadoria_id: fin?.id || null, registrado_por: window._appProfile?.id, importacao_id: lote.id }));
+      const ok = await dbEfetivou(_sbq().from('vendas').insert(rows));
+      if (!ok) { await _sbq().from('importacoes').delete().eq('id', lote.id); throw new Error('sem permissão'); }
+      mostrarToast(`${linhasValidas.length} venda(s) importada(s)!${ignoradas ? ` (${ignoradas} linha(s) ignorada(s) por dado incompleto)` : ''}`, 'success', 5000);
+      this._importLinhas = null;
+      this._carregarFluxo();
+    } catch (e) {
+      mostrarToast('Erro ao importar: ' + (e.message || 'sem permissão'), 'error');
+    }
+  },
+  async verImportacoes() {
+    if (!_sbq()) return;
+    abrirModal({ titulo: '📂 Importações de Planilha', tipo: 'info',
+      corpo: '<div id="imp-historico"><div style="padding:16px;text-align:center;color:var(--c-slate);font-size:13px">Carregando...</div></div>',
+      botoes: [{ texto: 'Fechar', classe: 'btn-ghost', acao: fecharModal }] });
+    const { data } = await _sbq().from('importacoes').select('*,users!importado_por(nome,apelido)').order('created_at', { ascending: false });
+    const el = document.getElementById('imp-historico');
+    if (!el) return;
+    el.innerHTML = data?.length ? data.map(i => `
+      <div style="background:var(--b-1);border:1px solid var(--b-2);border-radius:10px;padding:12px 16px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:8px">
+        <div style="flex:1;min-width:0">
+          <div style="font-weight:600;font-size:13px;color:var(--c-white)">${sanitize(i.nome_arquivo)}</div>
+          <div style="font-size:12px;color:var(--c-slate)">📅 ${_fmt(i.created_at)} · ${i.total_linhas} linha(s) · por ${sanitize(i.users?.apelido || i.users?.nome || '—')}</div>
+        </div>
+        <button class="btn btn-ghost" style="padding:4px 8px;font-size:12px;color:var(--red)" title="Excluir importação e todos os lançamentos dela" onclick="PageFinancas._excluirImportacao('${i.id}')">🗑️ Excluir</button>
+      </div>`).join('') : '<div style="padding:16px;text-align:center;color:var(--c-slate);font-size:13px">Nenhuma importação registrada ainda.</div>';
+  },
+  async _excluirImportacao(id) {
+    if (!confirm('Excluir esta importação? Todas as vendas geradas por ela também serão apagadas. Esta ação não pode ser desfeita.')) return;
+    const ok = await dbEfetivou(_sbq().from('importacoes').delete().eq('id', id));
+    if (!ok) { mostrarToast('Sem permissão para excluir esta importação.', 'error'); return; }
+    mostrarToast('Importação e lançamentos excluídos!', 'success');
+    this.verImportacoes();
+    this._carregarFluxo();
   },
 };
 const PageProjetos = {
