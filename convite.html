@@ -14,7 +14,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=Plus+Jakarta+Sans:wght@700;800;900&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/styles.css?v=123">
+  <link rel="stylesheet" href="css/styles.css?v=124">
   <style>
     .invite-wizard { display: flex; flex-direction: column; gap: 1.2rem; }
     .info-sep::before { content: '·'; margin-right: 8px; opacity: 0.5; }
@@ -168,17 +168,8 @@
     <button class="pwn-btn" onclick="dismissPWA()" aria-label="Fechar" style="background: rgba(255,255,255,0.1);">✕</button>
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-  <script>
-    /* Se o CDN principal falhar (bloqueador de anúncio, rede restritiva de
-       faculdade/empresa, instabilidade momentânea), tenta um segundo CDN
-       antes de desistir — sem isso, a pessoa só descobre que algo deu
-       errado depois de preencher o formulário inteiro, com uma mensagem
-       genérica de "offline" que não diz o motivo real. */
-    if (typeof supabase === 'undefined') {
-      document.write('<scr' + 'ipt src="https://fastly.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></scr' + 'ipt>');
-    }
-  </script>
+  <!-- supabase-js v2.117.2 vendorizado localmente — ver nota em index.html. -->
+  <script src="js/vendor/supabase.min.js?v=124"></script>
   <!-- NÃO carregar app.js aqui — ele chama initDashboard() e quebra o wizard do convite -->
   <script>
     (function() {
@@ -198,8 +189,8 @@
       }
     })();
   </script>
-  <script src="js/validacao.js?v=123"></script>
-  <script src="js/auth.js?v=123"></script>
+  <script src="js/validacao.js?v=124"></script>
+  <script src="js/auth.js?v=124"></script>
   <script>
     let selectedTheme = 'nucleo';
     

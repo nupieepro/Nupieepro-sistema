@@ -263,20 +263,11 @@
 
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-  <script>
-    /* Se o CDN principal falhar (bloqueador de anúncio, rede restritiva de
-       faculdade/empresa, instabilidade momentânea), tenta um segundo CDN
-       antes de desistir — sem isso, a pessoa só descobre que algo deu
-       errado bem mais tarde, com uma mensagem genérica de "offline" que
-       não diz o motivo real. */
-    if (typeof supabase === 'undefined') {
-      document.write('<scr' + 'ipt src="https://fastly.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></scr' + 'ipt>');
-    }
-  </script>
-  <script src="js/app.js?v=123"></script>
-  <script src="js/validacao.js?v=123"></script>
-  <script src="js/auth.js?v=123"></script>
+  <!-- supabase-js v2.117.2 vendorizado localmente — ver nota em index.html. -->
+  <script src="js/vendor/supabase.min.js?v=124"></script>
+  <script src="js/app.js?v=124"></script>
+  <script src="js/validacao.js?v=124"></script>
+  <script src="js/auth.js?v=124"></script>
   <script>
     if (typeof supabase === 'undefined') {
       (function mostrarBannerOffline() {
