@@ -82,10 +82,7 @@ const Auth = {
 
   async getSession() {
     const sb = this._db();
-    if (!sb) {
-      const mock = localStorage.getItem('mockSession');
-      return mock ? { user: { email: mock } } : null;
-    }
+    if (!sb) return null;
     const { data: { session } } = await sb.auth.getSession();
     return session;
   },
@@ -226,11 +223,9 @@ function initLoginPage() {
     if (e.key === 'Enter') { e.preventDefault(); ativarConvite(); }
   });
 
-  const sb = window._sb || window._supabase;
   Auth.getSession().then(session => {
     if (!session) return;
-    const isMock = !sb && !!localStorage.getItem('mockSession');
-    if (!isMock && sb) {
+    {
       const loginBox = document.querySelector('.login-box');
       if (loginBox) {
         loginBox.innerHTML = `

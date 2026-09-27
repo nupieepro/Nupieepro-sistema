@@ -188,36 +188,10 @@ const RateLimiter = {
    template_demanda, ver js/emails.js). Todo envio falhava 100% das vezes
    em silêncio (só console.error), sem o usuário nem o destinatário saber.
    notifyDemand e notifyInvite já tinham sido substituídos pelos helpers
-   reais de js/emails.js; notifyBirthday nunca teve chamador. Ver
-   EmailsModule.enviarMagicLink (js/emails.js) para o caso que restava
-   (sendMagicLink, abaixo). */
-
-const MagicLink = {
-  /* Token e expiração são decididos dentro de gerar_magic_link() (SECURITY
-     DEFINER) — nunca no navegador. A função já recusa quem não é admin;
-     nenhuma tabela é lida/gravada diretamente por aqui (ver migration
-     fix_magic_links_critical_leak). */
-  async generate(email) {
-    const sb = window._sb || window._supabase;
-    if (!sb) throw new Error('Supabase indisponível.');
-    const { data: token, error } = await sb.rpc('gerar_magic_link', { p_email: email });
-    if (error) throw error;
-
-    const base = window.location.origin + window.location.pathname.replace('dashboard.html', 'index.html');
-    return `${base}?magic=${token}`;
-  },
-
-  async verify(token) {
-    const sb = window._sb || window._supabase;
-    if (!sb) return null;
-    const { data: email, error } = await sb.rpc('verificar_magic_link', { p_token: token });
-    if (error || !email) {
-      window.App?.toast?.('Link mágico inválido ou expirado (2 min).', 'error');
-      return null;
-    }
-    return email;
-  }
-};
+   reais de js/emails.js; notifyBirthday nunca teve chamador.
+   Magic Link (sendMagicLink) também foi removido: nunca chegou a
+   autenticar de verdade (só gravava um e-mail solto no localStorage, sem
+   nunca criar sessão real no Supabase) — decorativo desde sempre. */
 
 /* ============================================================
    Toast notifications
@@ -1684,8 +1658,8 @@ const Pessoas = {
 
   /* Modal de detalhe/ações do membro — abre ao clicar no card em "Membros".
      Substitui a antiga aba "Gerenciar Acessos": as mesmas ações (editar,
-     redefinir senha, magic link, excluir) ficam aqui, por membro, em vez
-     de uma lista separada só pra quem é admin mexer em qualquer um. */
+     redefinir senha, excluir) ficam aqui, por membro, em vez de uma lista
+     separada só pra quem é admin mexer em qualquer um. */
   async abrirDetalhe(id) {
     if (!_sb) { App.toast('Supabase necessário para ver detalhes.', 'error'); return; }
     App.loading(true);
@@ -1714,7 +1688,6 @@ const Pessoas = {
       botoes.push(
         { texto: '✏️ Editar Perfil', classe: 'btn-ghost', acao: () => Pessoas.editarPerfil(u.id) },
         { texto: '🔑 Redefinir Senha', classe: 'btn-ghost', acao: () => Pessoas.resetPassword(u.email) },
-        { texto: '🪄 Magic Link', classe: 'btn-ghost', acao: () => Pessoas.sendMagicLink(u.email) },
         { texto: '🔥 Excluir', classe: 'btn-primary', acao: () => Pessoas.deleteMember(u.id, u.email) }
       );
     }
@@ -1734,7 +1707,7 @@ const Pessoas = {
           ${u.aniversario ? `<div>🎂 Aniversário: <span style="color:var(--c-white);">${_fmt(u.aniversario)}</span></div>` : ''}
           <div>Status: <span style="color:${u.ativo ? 'var(--green)' : 'var(--red)'};">${u.ativo ? '● Ativo' : '○ Inativo'}</span></div>
         </div>
-        ${isAdmin ? `<p style="font-size:11px;color:var(--t-4);margin-top:10px;">🔒 Por segurança, senhas nunca ficam visíveis — nem para administradores, nem o sistema guarda a senha em texto puro (isso vale pra qualquer sistema sério, não é limitação do NUPIEEPRO). Use "Redefinir Senha" pra mandar um link por e-mail e ela mesma escolher uma nova, ou "Magic Link" pra dar acesso instantâneo sem precisar de senha nenhuma.</p>` : ''}
+        ${isAdmin ? `<p style="font-size:11px;color:var(--t-4);margin-top:10px;">🔒 Por segurança, senhas nunca ficam visíveis — nem para administradores, nem o sistema guarda a senha em texto puro (isso vale pra qualquer sistema sério, não é limitação do NUPIEEPRO). Use "Redefinir Senha" pra mandar um link por e-mail e ela mesma escolher uma nova.</p>` : ''}
       `,
       botoes
     });
@@ -2013,15 +1986,6 @@ const Pessoas = {
         }}
       ]
     });
-  },
-
-  async sendMagicLink(email) {
-    if (!this._exigeAdmin()) return;
-    window.App?.toast?.('Gerando acesso instantâneo...', 'info');
-    const link = await window.MagicLink?.generate?.(email);
-    const ok = await window.EmailsModule?.enviarMagicLink?.({ email, link, criadoPor: window._appProfile?.nome });
-    if (ok) window.App?.toast?.('Magic Link (2 min) enviado com sucesso!', 'success');
-    else window.App?.toast?.('Link gerado, mas o e-mail falhou. Copie e envie manualmente: ' + link, 'error');
   }
 };
 
@@ -4011,7 +3975,6 @@ function abrirModal({ titulo = '', tipo = 'info', corpo = '', botoes = [] } = {}
 // V6.2 — Registro Global de Módulos Industriais (Elite Visibility)
 window.App          = App;
 window.Theme        = Theme;
-window.MagicLink    = MagicLink;
 window.Pessoas      = Pessoas;
 window.Kanban       = Kanban;
 window.Dashboard    = Dashboard;

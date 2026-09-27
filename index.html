@@ -493,22 +493,10 @@
   </main>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-  <script src="js/app.js?v=121"></script>
-  <script src="js/auth.js?v=121"></script>
+  <script src="js/app.js?v=122"></script>
+  <script src="js/auth.js?v=122"></script>
   <script>
     (async () => {
-      // MAGIC LINK V6.0: Clicou, Entrou.
-      const magic = new URLSearchParams(window.location.search).get('magic');
-      if (magic && typeof MagicLink !== 'undefined') {
-        const email = await MagicLink.verify(magic);
-        if (email) {
-          localStorage.setItem('mockSession', email);
-          App.toast('Login realizado com sucesso!', 'success');
-          setTimeout(() => App.redirect('dashboard.html'), 800);
-          return;
-        }
-      }
-
       initLoginPage();
       Theme.init();
       if ('serviceWorker' in navigator) {

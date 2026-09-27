@@ -184,40 +184,10 @@ const EmailsModule = (() => {
   }
 
   /* ════════════════════════════════════════════
-     🔑 4. MAGIC LINK (acesso instantâneo, gerado por admin)
-     Reaproveita template_convite (plano gratuito só tem 2 templates) —
-     o template do EmailJS interpola assunto/mensagem/link em runtime,
-     então dá pra mandar um corpo diferente do convite de onboarding.
-  ════════════════════════════════════════════ */
-  async function enviarMagicLink({ email, link, criadoPor }) {
-    return _send('template_convite', {
-      para_email:     email,
-      email:          email,
-      nome_convidado: email,
-      coord:          'NUPIEEPRO',
-      cargo:          '—',
-      ano_gestao:     new Date().getFullYear().toString(),
-      link,
-      criado_por:     criadoPor || 'Administração',
-      assunto: 'Seu acesso instantâneo ao NUPIEEPRO',
-      mensagem: [
-        'Olá!',
-        '',
-        'Um administrador gerou um link de acesso instantâneo para você entrar no sistema NUPIEEPRO.',
-        '',
-        `🔗 ${link}`,
-        '',
-        'Esse link expira em 2 minutos e só pode ser usado uma vez — clique assim que possível.',
-        '',
-        'Equipe NUPIEEPRO',
-      ].join('\n'),
-    });
-  }
-
-  /* ════════════════════════════════════════════
-     👋 5. DESPEDIDA (membro inativado por um admin)
-     Reaproveita template_convite (plano gratuito só tem 2 templates) —
-     mesma justificativa do enviarMagicLink acima.
+     👋 4. DESPEDIDA (membro inativado por um admin)
+     Reaproveita template_convite (plano gratuito só tem 2 templates) — o
+     template do EmailJS interpola assunto/mensagem/link em runtime, então
+     dá pra mandar um corpo diferente do convite de onboarding.
   ════════════════════════════════════════════ */
   async function enviarDespedida({ email, nome, criadoPor }) {
     const primeiroNome = nome?.split(' ')[0] || 'membro';
@@ -256,7 +226,6 @@ const EmailsModule = (() => {
     enviarAniversario,
     enviarDemandaCadastrada,
     enviarConvite,
-    enviarMagicLink,
     enviarDespedida,
     checarAniversariosEmail,
   };
