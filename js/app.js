@@ -158,6 +158,17 @@ function sanitize(str) {
   return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#x27;');
 }
 
+/* Pra interpolar texto dentro de um onclick="algo('${x}')": sanitize()
+   sozinho não basta aqui, porque o navegador decodifica entidades HTML do
+   atributo ANTES do JS rodar — um &#x27; volta a virar aspas a tempo de
+   fechar a string mais cedo (e emendar código depois dela). Escapa pra JS
+   primeiro (barra invertida e aspas), só depois passa o sanitize() por
+   cima pra fechar a outra ponta (não deixar `<`/`>`/`"` quebrar o próprio
+   atributo HTML). */
+function jsAttr(str) {
+  return sanitize(String(str ?? '').replace(/\\/g,'\\\\').replace(/'/g,"\\'"));
+}
+
 // === SEGURANÇA: Rate Limiter Anti-Brute-Force ===
 const RateLimiter = {
   _attempts: {},
@@ -182,19 +193,16 @@ const RateLimiter = {
    (sendMagicLink, abaixo). */
 
 const MagicLink = {
+  /* Token e expiração são decididos dentro de gerar_magic_link() (SECURITY
+     DEFINER) — nunca no navegador. A função já recusa quem não é admin;
+     nenhuma tabela é lida/gravada diretamente por aqui (ver migration
+     fix_magic_links_critical_leak). */
   async generate(email) {
     const sb = window._sb || window._supabase;
-    const token = Math.random().toString(36).substring(2) + Date.now().toString(36);
-    const expiresAt = new Date(Date.now() + 2 * 60000).toISOString(); // 2 min
+    if (!sb) throw new Error('Supabase indisponível.');
+    const { data: token, error } = await sb.rpc('gerar_magic_link', { p_email: email });
+    if (error) throw error;
 
-    if (sb) {
-      const { error } = await sb.from('magic_links').insert({
-        email, token, expires_at: expiresAt, used: false
-      });
-      if (error) throw error;
-    }
-    
-    // Link base (ajustar conforme o domínio final)
     const base = window.location.origin + window.location.pathname.replace('dashboard.html', 'index.html');
     return `${base}?magic=${token}`;
   },
@@ -202,23 +210,12 @@ const MagicLink = {
   async verify(token) {
     const sb = window._sb || window._supabase;
     if (!sb) return null;
-    const { data, error } = await sb.from('magic_links')
-      .select('*')
-      .eq('token', token)
-      .eq('used', false)
-      .single();
-
-    if (error || !data) return null;
-
-    // Verificar expiração
-    if (new Date() > new Date(data.expires_at)) {
-      window.App?.toast?.('Link mágico expirado (2 min).', 'error');
+    const { data: email, error } = await sb.rpc('verificar_magic_link', { p_token: token });
+    if (error || !email) {
+      window.App?.toast?.('Link mágico inválido ou expirado (2 min).', 'error');
       return null;
     }
-
-    // Marcar como usado
-    await sb.from('magic_links').update({ used: true }).eq('token', token);
-    return data.email;
+    return email;
   }
 };
 
@@ -1814,25 +1811,28 @@ const Pessoas = {
       return;
     }
 
-    // Gerar token único
-    const token = 'NUPI-' + Math.random().toString(36).slice(2,10).toUpperCase() + '-' + Date.now().toString(36).toUpperCase();
-    const expires = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
-
-    let coordNome = coordSigla;
+    /* Token NUNCA é gerado aqui — Math.random()+Date.now() é previsível
+       (o segundo bloco é literalmente o timestamp em base36, sem entropia
+       nenhuma) e um convite vazado/adivinhado vira conta sequestrada, já
+       que o cadastro não exige confirmação de e-mail (email_confirmed_at
+       sai igual a created_at pra toda conta deste projeto). A coluna
+       convites.token já tem um default forte (gen_random_bytes(32) em
+       hex) — deixa o banco decidir e só lê de volta pra montar o link. */
+    let coordNome = coordSigla, token = null;
     if (_sb) {
       const { data: coordData } = await _sb.from('coordenadorias').select('id,nome').eq('sigla', coordSigla).single();
       coordNome = coordData?.nome || coordSigla;
-      const { error } = await _sb.from('convites').insert({
-        token, email, cargo, role,
+      const { data: convite, error } = await _sb.from('convites').insert({
+        email, cargo, role,
         coordenadoria_id: coordData?.id,
         usado: false,
-        expires_at: expires,
         criado_por: window._appProfile?.id || null
-      });
-      if (error) {
-        if (alertEl) { alertEl.textContent = 'Erro ao salvar convite: ' + error.message; alertEl.className = 'alert-box error'; }
+      }).select('token').single();
+      if (error || !convite) {
+        if (alertEl) { alertEl.textContent = 'Erro ao salvar convite: ' + (error?.message || 'sem permissão'); alertEl.className = 'alert-box error'; }
         return;
       }
+      token = convite.token;
     }
 
     const link = `${window.location.origin}/convite.html?token=${token}`;
@@ -2212,8 +2212,8 @@ const Assembleia = {
       }
       el.innerHTML = data.map(v => `
         <div style="background:var(--surface-2);border:1px solid var(--border-1);border-radius:10px;padding:14px;margin-bottom:8px;">
-          <div style="font-weight:700;font-size:13px;color:var(--fg-1);margin-bottom:6px;">🗳️ ${v.titulo}</div>
-          ${v.opcoes ? v.opcoes.map(o => `<button class="btn btn-ghost" style="font-size:11px;padding:4px 10px;margin:2px;" onclick="Assembleia.votar(${v.id},'${o}')">Votar: ${o}</button>`).join('') : ''}
+          <div style="font-weight:700;font-size:13px;color:var(--fg-1);margin-bottom:6px;">🗳️ ${sanitize(v.titulo)}</div>
+          ${v.opcoes ? v.opcoes.map(o => `<button class="btn btn-ghost" style="font-size:11px;padding:4px 10px;margin:2px;" onclick="Assembleia.votar('${v.id}','${jsAttr(o)}')">Votar: ${sanitize(o)}</button>`).join('') : ''}
           <button class="btn btn-ghost" style="font-size:11px;padding:4px 10px;margin:2px;float:right;" onclick="Assembleia.verResultados(${v.id})">Resultados →</button>
         </div>
       `).join('');
@@ -2306,8 +2306,8 @@ const Geral = {
       body.innerHTML = data.map(m => `
         <tr style="border-bottom:1px solid var(--border-1);font-size:12px;">
           <td style="padding:12px;">${new Date(m.data+'T12:00:00').toLocaleDateString('pt-BR')}</td>
-          <td style="padding:12px;font-weight:700;color:var(--fg-1);">${m.titulo}</td>
-          <td style="padding:12px;"><span style="font-size:11px;color:var(--fg-3);">${m.coordenadoria || 'Geral'}</span></td>
+          <td style="padding:12px;font-weight:700;color:var(--fg-1);">${sanitize(m.titulo)}</td>
+          <td style="padding:12px;"><span style="font-size:11px;color:var(--fg-3);">${sanitize(m.coordenadoria || 'Geral')}</span></td>
           <td style="padding:12px;">
             <button class="btn btn-ghost" style="padding:4px 8px;font-size:10px;" onclick="Geral.gerenciarPresenca('${m.id}','${m.titulo.replace(/'/g,"\\'")}')">📂 Lista</button>
           </td>
@@ -2442,7 +2442,7 @@ const Operacoes = {
           `<div style="font-size:10px;color:var(--fg-3);">Revisão: ${revisao.toLocaleDateString('pt-BR')}</div>`;
         return `<div style="background:var(--surface-2);border:1px solid var(--border-1);padding:16px;border-radius:12px;cursor:pointer;" onclick="goTo('ops_pops')">
           <div style="font-size:20px;margin-bottom:8px;">📄</div>
-          <div style="font-weight:700;font-size:13px;color:var(--fg-1);margin-bottom:4px;">${p.nome}</div>
+          <div style="font-weight:700;font-size:13px;color:var(--fg-1);margin-bottom:4px;">${sanitize(p.nome)}</div>
           ${venceLabel}
         </div>`;
       }).join('');

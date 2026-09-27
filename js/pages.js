@@ -2876,7 +2876,7 @@ const PageOperacoes = {
           </div>
           <div style="display:flex;gap:6px;align-items:center;">
             <span title="${p.ativo!==false?'Ativo':'Inativo'}">${ativoIcon}</span>
-            <button class="btn btn-ghost" style="font-size:11px;padding:4px 8px;" onclick="PageOperacoes.editarPop('${p.id}','${sanitize(p.nome||'')}')">Editar</button>
+            <button class="btn btn-ghost" style="font-size:11px;padding:4px 8px;" onclick="PageOperacoes.editarPop('${p.id}','${jsAttr(p.nome||'')}')">Editar</button>
             <button class="btn btn-ghost" style="font-size:11px;padding:4px 8px;color:var(--red)" onclick="PageOperacoes._excluirPop('${p.id}')">🗑️</button>
           </div>
         </div>`;
@@ -3465,7 +3465,7 @@ const PagePessoas = {
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
           <div class="form-group"><label class="form-label">Coordenadoria</label>
             <select id="inv-coord" class="form-select">
-              ${coords.map(c=>`<option value="${c.id}">${c.nome}</option>`).join('')}
+              ${coords.map(c=>`<option value="${c.id}">${sanitize(c.nome)}</option>`).join('')}
             </select></div>
           <div class="form-group"><label class="form-label">Cargo</label>
             <select id="inv-cargo" class="form-select">
@@ -3959,7 +3959,7 @@ const PageDev = {
   _tabUsuarios() {
     const el = document.getElementById('devTabContent');
     if (!el) return;
-    const coordOpts = this._coords.map(c=>`<option value="${c.id}">${c.nome}</option>`).join('');
+    const coordOpts = this._coords.map(c=>`<option value="${c.id}">${sanitize(c.nome)}</option>`).join('');
     el.innerHTML = `
       <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;align-items:center">
         <input id="devSearch" class="form-input" style="max-width:220px;padding:8px 12px"
@@ -4057,7 +4057,7 @@ const PageDev = {
     const u = (window._devUsuarios || []).find(x => x.id === userId);
     if (!u) return;
     const coordOpts = this._coords.map(c =>
-      `<option value="${c.id}" ${u.coordenadoria_id === c.id ? 'selected' : ''}>${c.nome}</option>`
+      `<option value="${c.id}" ${u.coordenadoria_id === c.id ? 'selected' : ''}>${sanitize(c.nome)}</option>`
     ).join('');
     abrirModal({ titulo:`✏️ Editar: ${u.nome || u.email}`, tipo:'info', corpo:`
       <div class="form-group"><label class="form-label">Nome completo</label>
@@ -4186,7 +4186,7 @@ const PageDev = {
               </span>
               ${!c.usado && !expirou ? `
                 <button class="btn btn-ghost" style="font-size:11px;padding:5px 10px"
-                        onclick="PageDev._reenviarConvite('${c.id}','${c.email}','${c.token}')">📩 Reenviar</button>
+                        onclick="PageDev._reenviarConvite('${c.id}','${jsAttr(c.email)}','${c.token}')">📩 Reenviar</button>
                 <button class="btn btn-ghost" style="font-size:11px;padding:5px 10px;color:var(--red)"
                         onclick="PageDev._revogarConvite('${c.id}')">✕ Revogar</button>` : ''}
             </div>
@@ -4198,7 +4198,7 @@ const PageDev = {
   },
 
   novoConvite() {
-    const coordOpts = this._coords.map(c => `<option value="${c.id}">${c.nome} (${c.sigla})</option>`).join('');
+    const coordOpts = this._coords.map(c => `<option value="${c.id}">${sanitize(c.nome)} (${sanitize(c.sigla)})</option>`).join('');
     abrirModal({ titulo:'📩 Enviar Convite', tipo:'info', corpo:`
       <div class="form-group"><label class="form-label">Nome completo *</label>
         <input id="nc-nome" class="form-input" placeholder="Nome do novo membro"></div>

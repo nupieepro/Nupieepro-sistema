@@ -2,10 +2,23 @@
 
 # Headers de segurança reais (as <meta http-equiv> equivalentes são
 # ignoradas pelo navegador para X-Frame-Options/X-Content-Type-Options).
+#
+# CSP: unsafe-inline em script-src/style-src é necessário — o app inteiro
+# usa onclick="..." e style="..." inline (centenas de ocorrências), então
+# uma CSP restrita quebraria a aplicação inteira. Isso significa que a CSP
+# NÃO bloqueia XSS via inline handler (é o sanitize()/jsAttr() no código
+# que faz esse trabalho) — o valor real dela aqui é impedir que um payload
+# injetado carregue script de domínio externo desconhecido, e principalmente
+# restringir connect-src pra só os endpoints que o sistema realmente usa,
+# fechando a rota mais fácil de exfiltrar dado roubado (sessão, token) pra
+# um servidor do atacante mesmo que um XSS inline consiga rodar.
 /*
   X-Frame-Options: DENY
   X-Content-Type-Options: nosniff
   Referrer-Policy: strict-origin-when-cross-origin
+  Strict-Transport-Security: max-age=31536000; includeSubDomains
+  Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=()
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdn.emailjs.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://quwpyrdxyibcbyzwfilb.supabase.co wss://quwpyrdxyibcbyzwfilb.supabase.co https://api.emailjs.com; frame-src https://app.notion.com https://trello.com https://drive.google.com https://meet.google.com https://www.youtube.com https://forms.gle; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'
 
 # Evita que o navegador/edge sirva uma cópia antiga desses arquivos por muito
 # tempo, senão o Service Worker demora a perceber que existe uma versão nova
