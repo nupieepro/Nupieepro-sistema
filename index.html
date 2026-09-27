@@ -497,19 +497,16 @@
     </div>
   </main>
 
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-  <script>
-    /* Se o CDN principal falhar (bloqueador de anúncio, rede restritiva de
-       faculdade/empresa, instabilidade momentânea), tenta um segundo CDN
-       antes de desistir — sem isso, a pessoa só descobre que algo deu
-       errado bem mais tarde, com uma mensagem genérica de "offline" que
-       não diz o motivo real. */
-    if (typeof supabase === 'undefined') {
-      document.write('<scr' + 'ipt src="https://fastly.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></scr' + 'ipt>');
-    }
-  </script>
-  <script src="js/app.js?v=123"></script>
-  <script src="js/auth.js?v=123"></script>
+  <!-- supabase-js v2.117.2 vendorizado localmente (js/vendor/supabase.min.js) —
+       depender de CDN externo (jsdelivr/unpkg) pra essa lib carregar deixava
+       o login inteiro refém de bloqueador de anúncio, DNS filtrado de
+       operadora/faculdade ou instabilidade do CDN, mesmo com fallback entre
+       CDNs diferentes (jsdelivr e seu próprio backend fastly caem juntos por
+       serem o mesmo domínio raiz). Servindo do nosso domínio, não existe
+       CDN de terceiro pra falhar. -->
+  <script src="js/vendor/supabase.min.js?v=124"></script>
+  <script src="js/app.js?v=124"></script>
+  <script src="js/auth.js?v=124"></script>
   <script>
     if (typeof supabase === 'undefined') {
       (function mostrarBannerOffline() {
