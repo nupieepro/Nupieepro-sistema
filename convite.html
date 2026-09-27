@@ -14,7 +14,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=Plus+Jakarta+Sans:wght@700;800;900&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/styles.css?v=122">
+  <link rel="stylesheet" href="css/styles.css?v=123">
   <style>
     .invite-wizard { display: flex; flex-direction: column; gap: 1.2rem; }
     .info-sep::before { content: '·'; margin-right: 8px; opacity: 0.5; }
@@ -169,6 +169,16 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script>
+    /* Se o CDN principal falhar (bloqueador de anúncio, rede restritiva de
+       faculdade/empresa, instabilidade momentânea), tenta um segundo CDN
+       antes de desistir — sem isso, a pessoa só descobre que algo deu
+       errado depois de preencher o formulário inteiro, com uma mensagem
+       genérica de "offline" que não diz o motivo real. */
+    if (typeof supabase === 'undefined') {
+      document.write('<scr' + 'ipt src="https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.min.js"></scr' + 'ipt>');
+    }
+  </script>
   <!-- NÃO carregar app.js aqui — ele chama initDashboard() e quebra o wizard do convite -->
   <script>
     (function() {
@@ -178,10 +188,18 @@
         window._supabase = window.supabase.createClient(SUPA_URL, SUPA_KEY);
         window._sb       = window._supabase;
       }
+      if (typeof supabase === 'undefined') {
+        document.addEventListener('DOMContentLoaded', function() {
+          var b = document.createElement('div');
+          b.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:99999;background:#b91c1c;color:#fff;padding:10px 16px;font:13px system-ui,sans-serif;text-align:center;';
+          b.innerHTML = '⚠️ Não conseguimos carregar um recurso necessário do sistema (bloqueador de anúncios, rede restritiva ou instabilidade). Tente recarregar, trocar de rede (ex: dados móveis) ou navegador. <button onclick="location.reload()" style="margin-left:10px;background:#fff;color:#b91c1c;border:none;padding:4px 10px;border-radius:4px;cursor:pointer;font-weight:700;">Recarregar</button>';
+          document.body.appendChild(b);
+        });
+      }
     })();
   </script>
-  <script src="js/validacao.js?v=122"></script>
-  <script src="js/auth.js?v=122"></script>
+  <script src="js/validacao.js?v=123"></script>
+  <script src="js/auth.js?v=123"></script>
   <script>
     let selectedTheme = 'nucleo';
     
