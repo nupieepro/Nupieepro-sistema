@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#000000">
   <!-- SEGURANÇA: CSP real vem só de _headers (HTTP) — uma <meta> duplicada
        ficava aqui com uma política mais antiga e mais permissiva
-       (unsafe-eval, sem unpkg.com etc). Múltiplas CSPs de fontes diferentes
+       (unsafe-eval, sem o CDN de fallback etc). Múltiplas CSPs de fontes diferentes
        se combinam pela mais restritiva em cada diretiva, então essa meta
        esquecida anulava qualquer ajuste feito só no header (foi o que
        quebrou o fallback de CDN — ver PR #124). X-Frame-Options e
@@ -1657,7 +1657,7 @@
        errado bem mais tarde, com uma mensagem genérica de "offline" que
        não diz o motivo real. */
     if (typeof supabase === 'undefined') {
-      document.write('<scr' + 'ipt src="https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.min.js"></scr' + 'ipt>');
+      document.write('<scr' + 'ipt src="https://fastly.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></scr' + 'ipt>');
     }
   </script>
   <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
