@@ -4,8 +4,13 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="theme-color" content="#000000">
-  <!-- SEGURANÇA: CSP + Anti-XSS. X-Frame-Options/X-Content-Type-Options são aplicados via _headers (HTTP real) -->
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://cdn.emailjs.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://*.supabase.co https://api.emailjs.com; img-src 'self' data: blob: https:;">
+  <!-- SEGURANÇA: CSP real vem só de _headers (HTTP) — uma <meta> duplicada
+       ficava aqui com uma política mais antiga e mais permissiva
+       (unsafe-eval, sem o CDN de fallback etc). Múltiplas CSPs de fontes diferentes
+       se combinam pela mais restritiva em cada diretiva, então essa meta
+       esquecida anulava qualquer ajuste feito só no header (foi o que
+       quebrou o fallback de CDN — ver PR #124). X-Frame-Options/
+       X-Content-Type-Options também são só via _headers. -->
   <meta name="referrer" content="strict-origin-when-cross-origin">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -493,8 +498,32 @@
   </main>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-  <script src="js/app.js?v=122"></script>
-  <script src="js/auth.js?v=122"></script>
+  <script>
+    /* Se o CDN principal falhar (bloqueador de anúncio, rede restritiva de
+       faculdade/empresa, instabilidade momentânea), tenta um segundo CDN
+       antes de desistir — sem isso, a pessoa só descobre que algo deu
+       errado bem mais tarde, com uma mensagem genérica de "offline" que
+       não diz o motivo real. */
+    if (typeof supabase === 'undefined') {
+      document.write('<scr' + 'ipt src="https://fastly.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></scr' + 'ipt>');
+    }
+  </script>
+  <script src="js/app.js?v=123"></script>
+  <script src="js/auth.js?v=123"></script>
+  <script>
+    if (typeof supabase === 'undefined') {
+      (function mostrarBannerOffline() {
+        function mostrar() {
+          var b = document.createElement('div');
+          b.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:99999;background:#b91c1c;color:#fff;padding:10px 16px;font:13px system-ui,sans-serif;text-align:center;';
+          b.innerHTML = '⚠️ Não conseguimos carregar um recurso necessário do sistema (bloqueador de anúncios, rede restritiva ou instabilidade). Tente recarregar, trocar de rede (ex: dados móveis) ou navegador. <button onclick="location.reload()" style="margin-left:10px;background:#fff;color:#b91c1c;border:none;padding:4px 10px;border-radius:4px;cursor:pointer;font-weight:700;">Recarregar</button>';
+          document.body.appendChild(b);
+        }
+        if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', mostrar);
+        else mostrar();
+      })();
+    }
+  </script>
   <script>
     (async () => {
       initLoginPage();

@@ -264,9 +264,33 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-  <script src="js/app.js?v=122"></script>
-  <script src="js/validacao.js?v=122"></script>
-  <script src="js/auth.js?v=122"></script>
+  <script>
+    /* Se o CDN principal falhar (bloqueador de anúncio, rede restritiva de
+       faculdade/empresa, instabilidade momentânea), tenta um segundo CDN
+       antes de desistir — sem isso, a pessoa só descobre que algo deu
+       errado bem mais tarde, com uma mensagem genérica de "offline" que
+       não diz o motivo real. */
+    if (typeof supabase === 'undefined') {
+      document.write('<scr' + 'ipt src="https://fastly.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></scr' + 'ipt>');
+    }
+  </script>
+  <script src="js/app.js?v=123"></script>
+  <script src="js/validacao.js?v=123"></script>
+  <script src="js/auth.js?v=123"></script>
+  <script>
+    if (typeof supabase === 'undefined') {
+      (function mostrarBannerOffline() {
+        function mostrar() {
+          var b = document.createElement('div');
+          b.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:99999;background:#b91c1c;color:#fff;padding:10px 16px;font:13px system-ui,sans-serif;text-align:center;';
+          b.innerHTML = '⚠️ Não conseguimos carregar um recurso necessário do sistema (bloqueador de anúncios, rede restritiva ou instabilidade). Tente recarregar, trocar de rede (ex: dados móveis) ou navegador. <button onclick="location.reload()" style="margin-left:10px;background:#fff;color:#b91c1c;border:none;padding:4px 10px;border-radius:4px;cursor:pointer;font-weight:700;">Recarregar</button>';
+          document.body.appendChild(b);
+        }
+        if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', mostrar);
+        else mostrar();
+      })();
+    }
+  </script>
   <script>
     function showAlert(msg, type) {
       const el = document.getElementById('resetAlert');
