@@ -36,3 +36,22 @@ test('aceita senha com 8+ caracteres, letras e números', () => {
 test('exatamente 8 caracteres com letra e número é o limite aceito', () => {
   assert.equal(senhaForte('a1234567'), null);
 });
+
+const { iniciaisDe, camposPerfilFaltando } = require('../js/validacao.js');
+
+test('iniciais: primeira + última palavra, maiúsculas', () => {
+  assert.equal(iniciaisDe('Lilian Freitas'), 'LF');
+  assert.equal(iniciaisDe('maria da silva souza'), 'MS');
+  assert.equal(iniciaisDe('Rayan'), 'RA');
+  assert.equal(iniciaisDe('  '), '');
+});
+
+test('perfil completo não tem campos faltando', () => {
+  assert.deepEqual(camposPerfilFaltando({ nome: 'Ana Lima', apelido: 'Ana', aniversario: '2000-05-10' }), []);
+});
+
+test('perfil sem apelido/aniversário (ou só espaços) é incompleto', () => {
+  assert.deepEqual(camposPerfilFaltando({ nome: 'Ana', apelido: null, aniversario: null }), ['apelido', 'data de aniversário']);
+  assert.deepEqual(camposPerfilFaltando({ nome: 'Ana', apelido: '   ', aniversario: '2000-05-10' }), ['apelido']);
+  assert.deepEqual(camposPerfilFaltando(null), ['nome', 'apelido', 'data de aniversário']);
+});

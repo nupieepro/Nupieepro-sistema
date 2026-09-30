@@ -29,9 +29,9 @@
   <!-- EmailJS SDK v4.4.1 vendorizado localmente (js/vendor/) — mesmo motivo
        do supabase-js: depender de CDN externo pra lib carregar deixa a
        funcionalidade refém de bloqueador de anúncio ou rede restritiva. -->
-  <script type="text/javascript" src="js/vendor/emailjs-browser.min.js?v=125"></script>
+  <script type="text/javascript" src="js/vendor/emailjs-browser.min.js?v=127"></script>
 
-  <link rel="stylesheet" href="css/styles.css?v=125">
+  <link rel="stylesheet" href="css/styles.css?v=127">
   
   <script>
     // Injeção Crítica: Impede a tela branca de "Blink"
@@ -1529,16 +1529,38 @@
             <button class="topbar-toggle" onclick="toggleSidebar()">☰</button>
             <div>
               <div class="topbar-title">Configurações</div>
-              <div class="topbar-sub">Tema, aparência e preferências</div>
+              <div class="topbar-sub">Perfil, tema, aparência e preferências</div>
             </div>
           </div>
         </div>
         <div class="content">
           <div class="settings-section">
 
+            <!-- Meu Perfil -->
+            <div class="setting-card" id="cardMeuPerfil">
+              <div class="setting-card-title">👤 Meu Perfil</div>
+              <div style="display:flex;align-items:center;gap:14px;margin-bottom:16px;">
+                <div id="myProfileAvatar" style="width:52px;height:52px;border-radius:50%;background:var(--orange,#d0541a);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:18px;">?</div>
+                <div style="font-size:12px;color:var(--t-3);line-height:1.5;">Campos com * são obrigatórios. O tema do sistema você escolhe logo abaixo.<br>Cargo e coordenadoria só podem ser alterados pela coordenação.</div>
+              </div>
+              <form onsubmit="App.updateMyProfile();return false;" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;">
+                <div class="field"><label for="myProfileNome">Nome completo *</label>
+                  <input type="text" id="myProfileNome" maxlength="120" required autocomplete="name"></div>
+                <div class="field"><label for="myProfileApelido">Apelido *</label>
+                  <input type="text" id="myProfileApelido" maxlength="40" placeholder="Como quer ser chamado(a)" required></div>
+                <div class="field"><label for="myProfileNascimento">Data de aniversário *</label>
+                  <input type="date" id="myProfileNascimento" required></div>
+                <div class="field"><label for="myProfileEmail">E-mail (login)</label>
+                  <input type="email" id="myProfileEmail" disabled></div>
+                <div class="field"><label for="myProfileCargo">Cargo</label>
+                  <input type="text" id="myProfileCargo" disabled></div>
+                <div style="grid-column:1/-1;"><button type="submit" class="btn-login" style="width:auto;padding:10px 24px;">Salvar alterações</button></div>
+              </form>
+            </div>
+
             <!-- Temas -->
             <div class="setting-card">
-              <div class="setting-card-title">🎨 Galeria de Temas Specialist</div>
+              <div class="setting-card-title">🎨 Tema do sistema</div>
               <div class="option-row" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:12px;">
                 <button class="option-btn active" id="themeBtn-nucleo" onclick="Theme.apply('nucleo')">
                   <div style="display:flex;gap:3px;">
@@ -1654,18 +1676,19 @@
   <!-- supabase-js v2.117.2 vendorizado localmente (js/vendor/supabase.min.js) —
        ver nota em index.html: sem isso, login/dashboard ficava refém de CDN
        externo, mesmo com fallback entre CDNs. -->
-  <script src="js/vendor/supabase.min.js?v=125"></script>
+  <script src="js/vendor/supabase.min.js?v=127"></script>
   <!-- jspdf, chart.js, lucide, docx e xlsx vendorizados localmente
        (js/vendor/) — mesmo motivo do supabase-js e do emailjs: relatório em
        PDF, gráfico, ícone, exportação de docx e importação de planilha não
        podem depender de CDN externo pra funcionar. -->
-  <script src="js/vendor/jspdf.umd.min.js?v=125"></script>
-  <script src="js/vendor/chart.umd.min.js?v=125"></script>
-  <script src="js/vendor/lucide.min.js?v=125"></script>
-  <script src="js/vendor/docx.iife.js?v=125"></script>
-  <script src="js/vendor/xlsx.full.min.js?v=125"></script>
-  <script src="js/permissoes.js?v=125"></script>
-  <script src="js/app.js?v=125"></script>
+  <script src="js/vendor/jspdf.umd.min.js?v=127"></script>
+  <script src="js/vendor/chart.umd.min.js?v=127"></script>
+  <script src="js/vendor/lucide.min.js?v=127"></script>
+  <script src="js/vendor/docx.iife.js?v=127"></script>
+  <script src="js/vendor/xlsx.full.min.js?v=127"></script>
+  <script src="js/permissoes.js?v=127"></script>
+  <script src="js/validacao.js?v=127"></script>
+  <script src="js/app.js?v=127"></script>
   <script>
     if (typeof supabase === 'undefined') {
       (function mostrarBannerOffline() {
@@ -1680,13 +1703,13 @@
       })();
     }
   </script>
-  <script src="js/auth.js?v=125"></script>
-  <script src="js/abj.js?v=125"></script>
-  <script src="js/relatorio.js?v=125"></script>
-  <script src="js/documentos.js?v=125"></script>
-  <script src="js/emails.js?v=125"></script>
-  <script src="js/pages.js?v=125"></script>
-  <script src="js/push.js?v=125"></script>
+  <script src="js/auth.js?v=127"></script>
+  <script src="js/abj.js?v=127"></script>
+  <script src="js/relatorio.js?v=127"></script>
+  <script src="js/documentos.js?v=127"></script>
+  <script src="js/emails.js?v=127"></script>
+  <script src="js/pages.js?v=127"></script>
+  <script src="js/push.js?v=127"></script>
   <script>
     // ── SERVICE WORKER: registro + auto-update ─────────
     // dashboard.html é onde o usuário passa o dia todo; sem isso, quem
