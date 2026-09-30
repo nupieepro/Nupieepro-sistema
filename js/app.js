@@ -66,7 +66,6 @@ const ROLE_PAGES = {
     { id: 'gp_talentos',     icon: 'users',         label: 'Banco de Talentos' },
     { id: 'gp_clima',        icon: 'thermometer',   label: 'Pesquisa de Clima' },
     { id: 'gp_aniversarios', icon: 'gift',          label: 'Aniversários do Núcleo' },
-    { id: 'gp_treinamentos', icon: 'book-open',     label: 'Treinamentos Internos' },
   ],
   'Marketing':  [
     { id: 'dashboard',          icon: 'grid',         label: 'Painel Central' },
@@ -108,6 +107,10 @@ const GLOBAL_PAGES = [
   { id: 'global_producao',      icon: 'file',  label: 'Produção Científica' },
   { id: 'global_assembleia',    icon: 'users', label: 'Assembleia e Votos' },
   { id: 'global_checkin',       icon: 'check-square', label: 'Check-in Digital' },
+  /* Treinamentos Internos é gerido pela GP, mas TODO membro precisa abrir a
+     página pra se inscrever — por isso fica aqui (Institucional) e não só
+     na pasta da GP, que as demais coordenadorias não enxergam. */
+  { id: 'gp_treinamentos',      icon: 'book-open', label: 'Treinamentos Internos' },
 ];
 window.ROLE_PAGES   = ROLE_PAGES;
 window.GLOBAL_PAGES = GLOBAL_PAGES;
@@ -689,10 +692,17 @@ const App = {
         <div class="field"><label for="gateNasc">Data de aniversário *</label>
           <input type="date" id="gateNasc" required value="${esc(profile.aniversario)}"></div>
         <button type="submit" class="btn-login" id="gateSalvar">Concluir perfil</button>
+        <button type="button" id="gateSair" style="background:none;border:none;color:var(--fg-3,#a89fd0);font-size:12px;cursor:pointer;text-decoration:underline;">Sair e concluir depois</button>
       </form>`;
     document.body.appendChild(gate);
     /* Não deixa a página de trás ser rolada/focada enquanto o gate existe. */
     document.body.style.overflow = 'hidden';
+
+    /* Saída de emergência: sem ela, quem não consegue salvar (offline, perfil
+       sem linha na base) ficaria preso sem nem poder deslogar. */
+    gate.querySelector('#gateSair').addEventListener('click', () => {
+      if (typeof doLogout === 'function') doLogout(); else Auth.logout();
+    });
 
     const form = gate.querySelector('#perfilGateForm');
     form.addEventListener('submit', async (ev) => {

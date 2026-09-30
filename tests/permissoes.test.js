@@ -95,3 +95,48 @@ test('assessor tem a mesma pasta do coordenador mas sem poderes de gestão', () 
   assert.equal(Permissoes.pode('podeCriarConvite'), false);
   assert.equal(Permissoes.pode('podeCriarEvento'), false);
 });
+
+/* Regressão: Treinamentos Internos é da GP, mas qualquer membro precisa
+   abrir a página pra se inscrever. Usa as listas REAIS de js/app.js (não a
+   fixture sintética acima) — foi exatamente o que faltava: a página só
+   existia na pasta da GP e membro de Marketing/Finanças/Projetos ficava
+   com "Acesso restrito". */
+function literalDe(src, nome) {
+  /* Pega `const NOME = <literal>;` por balanceamento de colchetes/chaves
+     (ciente de aspas), sem depender do texto exato do fechamento. */
+  const ini = src.indexOf(`const ${nome} = `) + `const ${nome} = `.length;
+  let prof = 0, aspas = null;
+  for (let i = ini; i < src.length; i++) {
+    const c = src[i];
+    if (aspas) { if (c === '\\') i++; else if (c === aspas) aspas = null; continue; }
+    if (c === "'" || c === '"' || c === '`') { aspas = c; continue; }
+    if (c === '[' || c === '{') prof++;
+    else if (c === ']' || c === '}') { prof--; if (prof === 0) return new Function(`return ${src.slice(ini, i + 1)};`)(); }
+  }
+  throw new Error(`literal ${nome} não encontrado em app.js`);
+}
+
+test('todo membro, de qualquer coordenadoria, pode abrir Treinamentos Internos (inscrição)', () => {
+  const fs = require('node:fs');
+  const src = fs.readFileSync(require('node:path').join(__dirname, '../js/app.js'), 'utf8');
+  const real = { ROLE_PAGES: literalDe(src, 'ROLE_PAGES'), GLOBAL_PAGES: literalDe(src, 'GLOBAL_PAGES') };
+  const windowAntes = global.window;
+  try {
+    global.window = { ...real, _appProfile: null };
+    delete require.cache[require.resolve('../js/permissoes.js')];
+    const P = require('../js/permissoes.js');
+    for (const nome of Object.keys(real.ROLE_PAGES)) {
+      if (nome === 'Conselheiro') continue; /* conselheiro tem lista própria, só leitura/auditoria */
+      for (const role of ['membro', 'assessor', 'coordenador']) {
+        global.window._appProfile = { role, coordenadorias: { nome, sigla: nome.slice(0, 3).toUpperCase() } };
+        assert.equal(P.podeVer('gp_treinamentos'), true, `${role} de ${nome} deve abrir gp_treinamentos`);
+      }
+    }
+    assert.ok(!real.ROLE_PAGES['G. Pessoas'].some(p => p.id === 'gp_treinamentos'), 'não deve duplicar na pasta da GP (já está em Institucional)');
+  } finally {
+    /* devolve o estado global e o módulo ao que os outros testes esperam */
+    global.window = windowAntes;
+    delete require.cache[require.resolve('../js/permissoes.js')];
+    require('../js/permissoes.js');
+  }
+});
