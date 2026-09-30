@@ -606,50 +606,54 @@ const App = {
   },
   syncSettingsInputs(p) {
     if (!p) return;
-    const elNome = document.getElementById('myProfileNome');
-    const elInit = document.getElementById('myProfileIniciais');
-    const elCargo = document.getElementById('myProfileCargo');
+    const set = (id, v) => { const el = document.getElementById(id); if (el) el.value = v || ''; };
+    set('myProfileNome', p.nome);
+    set('myProfileApelido', p.apelido);
+    set('myProfileTelefone', p.telefone);
+    set('myProfileNascimento', p.aniversario);
+    set('myProfileEmail', p.email);
+    set('myProfileCargo', p.cargo);
     const elAvatar = document.getElementById('myProfileAvatar');
-    
-    if (elNome) elNome.value = p.nome || '';
-    if (elInit) elInit.value = p.iniciais || '';
-    if (elCargo) elCargo.value = p.cargo || '';
     if (elAvatar) elAvatar.textContent = p.iniciais || p.nome?.[0] || '?';
   },
 
+  /* Edita só dados pessoais. Cargo, role e coordenadoria NÃO são editáveis
+     aqui (e o trigger protect_self_update_users barra role/coord/ativo no
+     banco de qualquer forma). */
   async updateMyProfile() {
-    const nome = document.getElementById('myProfileNome')?.value?.trim();
-    const iniciais = document.getElementById('myProfileIniciais')?.value?.trim()?.toUpperCase();
-    const cargo = document.getElementById('myProfileCargo')?.value?.trim();
-    
+    const val = (id) => document.getElementById(id)?.value?.trim() || '';
+    const nome = val('myProfileNome');
+    const apelido = val('myProfileApelido');
+    const nascimento = val('myProfileNascimento');
+
     if (!nome) return App.toast('Nome é obrigatório', 'warning');
-    
+
+    let telefone;
+    try { telefone = window.normalizarTelefone(val('myProfileTelefone')); }
+    catch (e) { return App.toast(e.message, 'warning'); }
+
+    const p = window._appProfile;
+    if (!p) return App.toast('Sessão expirada. Faça login novamente.', 'error');
+    if (!_sb) return App.toast('Sistema offline. Verifique a conexão.', 'error');
+
+    const iniciais = window.iniciaisDe(nome);
+    const campos = { nome, iniciais, apelido: apelido || null, telefone, aniversario: nascimento || null };
+
     App.loading(true);
     try {
-      const p = window._appProfile;
-      if (!p) throw new Error('Sessão expirada');
-      
-      if (_sb) {
-        const { error } = await _sb.from('users').update({
-          nome, iniciais, cargo
-        }).eq('id', p.id);
-        if (error) throw error;
-      }
-      
-      // Update local object
-      p.nome = nome;
-      p.iniciais = iniciais;
-      p.cargo = cargo;
-      
-      // Update UI
+      const { error } = await _sb.from('users').update(campos).eq('id', p.id);
+      if (error) throw error;
+
+      Object.assign(p, campos);
+
       const _sn = document.getElementById('sideName'); if (_sn) _sn.textContent = nome;
       const _sa = document.getElementById('sideAvatar'); if (_sa) _sa.textContent = iniciais;
-      const _sr = document.getElementById('sideRole'); if (_sr) _sr.textContent = `${cargo} · ${p.coordenadorias?.nome || 'Geral'}`;
       App.syncSettingsInputs(p);
-      
+
       App.toast('Perfil atualizado com sucesso!', 'success');
     } catch (e) {
-      App.toast('Erro ao atualizar: ' + e.message, 'error');
+      console.error('[updateMyProfile]', e);
+      App.toast('Não foi possível salvar o perfil. Tente novamente.', 'error');
     } finally {
       App.loading(false);
     }

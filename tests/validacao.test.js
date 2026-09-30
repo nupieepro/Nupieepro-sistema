@@ -36,3 +36,29 @@ test('aceita senha com 8+ caracteres, letras e números', () => {
 test('exatamente 8 caracteres com letra e número é o limite aceito', () => {
   assert.equal(senhaForte('a1234567'), null);
 });
+
+const { normalizarTelefone, iniciaisDe } = require('../js/validacao.js');
+
+test('telefone vazio vira null (campo opcional)', () => {
+  assert.equal(normalizarTelefone(''), null);
+  assert.equal(normalizarTelefone('   '), null);
+  assert.equal(normalizarTelefone(undefined), null);
+});
+
+test('telefone aceita formatação e prefixo 55, devolve só dígitos', () => {
+  assert.equal(normalizarTelefone('(86) 91234-5678'), '86912345678');
+  assert.equal(normalizarTelefone('+55 86 91234-5678'), '86912345678');
+  assert.equal(normalizarTelefone('(86) 3222-1234'), '8632221234');
+});
+
+test('telefone com tamanho inválido é rejeitado', () => {
+  assert.throws(() => normalizarTelefone('12345'), /Telefone inválido/);
+  assert.throws(() => normalizarTelefone('(86) 91234-56789'), /Telefone inválido/);
+});
+
+test('iniciais: primeira + última palavra, maiúsculas', () => {
+  assert.equal(iniciaisDe('Lilian Freitas'), 'LF');
+  assert.equal(iniciaisDe('maria da silva souza'), 'MS');
+  assert.equal(iniciaisDe('Rayan'), 'RA');
+  assert.equal(iniciaisDe('  '), '');
+});

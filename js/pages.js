@@ -3796,9 +3796,7 @@ const PagePessoas = {
     const pg = document.getElementById('page-gp_treinamentos');
     if (!pg) return;
     const ct = pg.querySelector('.content') || pg;
-    const podeCriar = typeof Permissoes !== 'undefined'
-      ? Permissoes.pode('podeCriarEvento') || Permissoes.isAdmin()
-      : true;
+    const podeCriar = this._podeGerirTreinamentos();
     ct.innerHTML = _sc('Treinamentos Internos','📚',`
       <p style="font-size:13px;color:var(--c-slate);margin-bottom:14px">
         Capacitações e onboarding geridos pela GP. Registros contam como Atividade 11 do ABJ.
@@ -3809,6 +3807,23 @@ const PagePessoas = {
       </div>`);
     this._carregarTreinamentosInternos();
   },
+  _podeGerirTreinamentos() {
+    return typeof Permissoes !== 'undefined'
+      ? Permissoes.pode('podeCriarEvento') || Permissoes.isAdmin()
+      : true;
+  },
+  /* Campos extras (palestrante, contato, descrição) vão em `descricao` como
+     JSON — mesmo padrão de apresentações/planos — pra não exigir migração. */
+  _extraTreinamento(e) {
+    let x = {};
+    try { x = JSON.parse(e.descricao || '{}') || {}; } catch (_) { x = { descricao: e.descricao }; }
+    return x;
+  },
+  _dataTreinamento(e) {
+    return e.data_inicio
+      ? _parseDataEvt(e.data_inicio).toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit',year:'2-digit'})
+      : '—';
+  },
   async _carregarTreinamentosInternos() {
     const el = document.getElementById('gp-trein-lista');
     if (!el || !_sbq()) return;
@@ -3818,23 +3833,47 @@ const PagePessoas = {
         .select('*,coordenadorias(nome)')
         .eq('tipo','treinamento_interno')
         .order('data_inicio', { ascending: false });
+      this._treinCache = data || [];
+      const podeGerir = this._podeGerirTreinamentos();
       el.innerHTML = data?.length
         ? data.map(e => {
-            const dt = e.data_inicio ? _parseDataEvt(e.data_inicio).toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit',year:'2-digit'}) : '—';
-            return `<div style="background:var(--b-1);border:1px solid var(--b-2);border-radius:10px;padding:14px 16px">
+            const dt = this._dataTreinamento(e);
+            const x = this._extraTreinamento(e);
+            return `<div role="button" tabindex="0" style="background:var(--b-1);border:1px solid var(--b-2);border-radius:10px;padding:14px 16px;cursor:pointer"
+                onclick="PagePessoas.verTreinamentoInterno('${e.id}')"
+                onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();PagePessoas.verTreinamentoInterno('${e.id}')}">
               <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:6px">
                 <div style="font-weight:700;font-size:14px;color:var(--c-white)">${sanitize(e.titulo)}</div>
                 <div style="display:flex;align-items:center;gap:6px">
                   <span style="font-size:10px;padding:2px 8px;border-radius:99px;background:var(--b-2);color:var(--c-slate)">📅 ${dt}</span>
-                  <button class="btn btn-ghost" style="padding:3px 7px;font-size:11px;color:var(--red)" title="Excluir" onclick="PagePessoas._excluirTreinamentoInterno('${e.id}')">🗑️</button>
+                  ${podeGerir ? `<button class="btn btn-ghost" style="padding:3px 7px;font-size:11px;color:var(--red)" title="Excluir" onclick="event.stopPropagation();PagePessoas._excluirTreinamentoInterno('${e.id}')">🗑️</button>` : ''}
                 </div>
               </div>
+              ${x.palestrante?`<div style="font-size:12px;color:var(--c-slate)">🎙️ ${sanitize(x.palestrante)}</div>`:''}
               ${e.local?`<div style="font-size:12px;color:var(--c-slate)">📍 ${sanitize(e.local)}</div>`:''}
               ${e.vagas?`<div style="font-size:12px;color:var(--c-slate)">👥 ${e.vagas} vagas</div>`:''}
+              <div style="font-size:11px;color:var(--c-accent);margin-top:6px">Ver detalhes →</div>
             </div>`;
           }).join('')
         : '<div style="padding:16px;text-align:center;color:var(--c-slate);font-size:13px">Nenhum treinamento interno cadastrado.</div>';
     } catch(e) { el.innerHTML='<div style="padding:16px;color:var(--c-slate)">Erro ao carregar.</div>'; }
+  },
+  verTreinamentoInterno(id) {
+    const e = (this._treinCache || []).find(t => String(t.id) === String(id));
+    if (!e) return;
+    const x = this._extraTreinamento(e);
+    const linha = (rot, val) => val
+      ? `<div style="margin-bottom:10px"><div style="font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--c-slate);margin-bottom:2px">${rot}</div><div style="font-size:14px;color:var(--c-white);white-space:pre-wrap">${val}</div></div>`
+      : '';
+    const vazio = '<span style="color:var(--c-slate)">Não informado</span>';
+    abrirModal({ titulo:`📚 ${sanitize(e.titulo)}`, tipo:'info', corpo:
+      linha('Data', this._dataTreinamento(e)) +
+      linha('Palestrante', x.palestrante ? sanitize(x.palestrante) : vazio) +
+      linha('Local', e.local ? sanitize(e.local) : vazio) +
+      linha('Vagas', e.vagas ? String(e.vagas) : 'Ilimitadas') +
+      linha('Contato', x.contato ? sanitize(x.contato) : vazio) +
+      linha('Sobre', x.descricao ? sanitize(x.descricao) : ''),
+    botoes:[{texto:'Fechar',classe:'btn-ghost',acao:fecharModal}] });
   },
   async _excluirTreinamentoInterno(id) {
     if (!confirm('Excluir este treinamento?')) return;
@@ -3854,6 +3893,14 @@ const PagePessoas = {
         <div class="form-group"><label class="form-label">Local</label>
           <input id="gti-local" class="form-input" placeholder="Sala / Online"></div>
       </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div class="form-group"><label class="form-label">Palestrante</label>
+          <input id="gti-palestrante" class="form-input" placeholder="Nome de quem ministra"></div>
+        <div class="form-group"><label class="form-label">Contato do palestrante</label>
+          <input id="gti-contato" class="form-input" placeholder="E-mail ou telefone"></div>
+      </div>
+      <div class="form-group"><label class="form-label">Descrição</label>
+        <textarea id="gti-desc" class="form-input" rows="3" placeholder="Sobre o que é o treinamento"></textarea></div>
       <div class="form-group"><label class="form-label">Vagas</label>
         <input id="gti-vagas" type="number" class="form-input" placeholder="Deixe vazio se ilimitado"></div>`,
     botoes:[
@@ -3866,6 +3913,11 @@ const PagePessoas = {
     const data   = document.getElementById('gti-data')?.value;
     const local  = document.getElementById('gti-local')?.value?.trim();
     const vagas  = parseInt(document.getElementById('gti-vagas')?.value)||null;
+    const extra  = {
+      palestrante: document.getElementById('gti-palestrante')?.value?.trim() || '',
+      contato:     document.getElementById('gti-contato')?.value?.trim() || '',
+      descricao:   document.getElementById('gti-desc')?.value?.trim() || '',
+    };
     if (!titulo||!data) { mostrarToast('Preencha título e data!','warning'); return; }
     fecharModal();
     try {
@@ -3874,6 +3926,7 @@ const PagePessoas = {
       await _sbq().from('eventos').insert([{
         titulo, tipo:'treinamento_interno', data_inicio:data,
         local:local||null, vagas:vagas||null, ativo:true,
+        descricao: (extra.palestrante||extra.contato||extra.descricao) ? JSON.stringify(extra) : null,
         coordenadoria_id: gp?.id || window._appProfile?.coordenadoria_id || null,
         criado_por: window._appProfile?.id,
       }]);
@@ -4886,7 +4939,7 @@ const PageGlobal = {
     const ct = pg.querySelector('.content') || pg;
     ct.innerHTML = _sc('Apresentações Institucionais','🎤',`
       <p style="font-size:13px;color:var(--c-slate);margin-bottom:14px">
-        Mínimo 3 apresentações por semestre — <strong style="color:var(--c-accent)">Atividade 5</strong>.
+        Meta mínima de 3 apresentações por semestre (podem ser mais) — <strong style="color:var(--c-accent)">Atividade 5</strong>.
         Exige evidência fotográfica (presencial ou online, JPEG/PNG).
       </p>
       ${_btn('+ Registrar apresentação',"PageGlobal.novaApresentacao()")}
@@ -4899,16 +4952,26 @@ const PageGlobal = {
     const el = document.getElementById('apres-lista');
     if (!el || !_sbq()) return;
     try {
-      const mesIni = new Date(); mesIni.setMonth(mesIni.getMonth() - 6);
+      /* Semestre civil corrente (1º: jan–jun, 2º: jul–dez). Antes contava
+         "últimos 6 meses", janela móvel que não batia com o semestre do ABJ. */
+      const hoje = new Date();
+      const ano = hoje.getFullYear();
+      const sem = hoje.getMonth() < 6 ? 1 : 2;
+      const semIni = new Date(ano, sem === 1 ? 0 : 6, 1);
       const { data } = await _sbq().from('eventos')
         .select('*').eq('tipo','apresentacao')
-        .order('data_inicio',{ascending:false}).limit(10);
-      const semestre = (data||[]).filter(e => new Date(e.data_inicio) >= mesIni).length;
-      const ok = semestre >= 3;
+        .order('data_inicio',{ascending:false}).limit(50);
+      const META = 3;
+      const feitas = (data||[]).filter(e => new Date(e.data_inicio) >= semIni).length;
+      const ok = feitas >= META;
+      const msg = ok
+        ? `<strong>Meta do ${sem}º semestre de ${ano} atingida:</strong> ${feitas} apresentações registradas (mínimo ${META}).`
+        : `<strong>${feitas} de ${META}</strong> apresentações mínimas no ${sem}º semestre de ${ano}${feitas ? ` — faltam ${META - feitas}` : ''}.`;
       el.innerHTML = `
         <div style="background:${ok?'var(--green)':'var(--yellow)'}18;border:1px solid ${ok?'var(--green)':'var(--yellow)'}44;
                     border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:13px">
-          ${ok?'✅':'⚠️'} <strong>${semestre}/3</strong> apresentações neste semestre.
+          ${ok?'✅':'⚠️'} ${msg}
+          <div style="font-size:11px;color:var(--c-slate);margin-top:4px">A meta é um mínimo: você pode registrar mais que ${META}.</div>
         </div>` +
         ((data||[]).length
           ? (data||[]).map(e => {

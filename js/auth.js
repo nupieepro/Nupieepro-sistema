@@ -57,7 +57,21 @@ const Auth = {
 
     if (error) throw error;
     await sb.rpc('consumir_convite', { p_token: token });
-    return data;
+
+    /* Deixa o usuário já logado: sem isso, quem acabou de criar a conta era
+       jogado na tela de login e tinha que digitar tudo de novo (ou voltar ao
+       e-mail do convite pra achar o link do site). Se o signUp não devolveu
+       sessão, tenta o login direto com a senha recém-criada. Falha aqui não
+       é fatal — a conta já existe e o fallback é o login manual. */
+    let logado = !!data?.session;
+    if (!logado) {
+      try {
+        const { data: login, error: loginErr } =
+          await sb.auth.signInWithPassword({ email: convite.email, password });
+        logado = !loginErr && !!login?.session;
+      } catch (_) { /* cai no login manual */ }
+    }
+    return { ...data, logado };
   },
 
   async logout() {
@@ -390,7 +404,7 @@ async function doConviteRegister() {
 
   try {
     const nomeCompleto = `${nome} ${sobrenome}`;
-    await Auth.registerWithToken(token, nomeCompleto, password, {
+    const resultado = await Auth.registerWithToken(token, nomeCompleto, password, {
       apelido, data_nascimento: nascimento, nome_primeiro: nome, nome_sobrenome: sobrenome
     });
 
@@ -403,15 +417,19 @@ async function doConviteRegister() {
     if (wizardEl)  wizardEl.style.display = 'none';
     if (successEl) successEl.style.display = '';
     if (titleEl)   titleEl.textContent = 'Conta criada, ' + apelido + '! 🎉';
-    if (subEl)     subEl.textContent   = 'Bem-vindo(a) ao sistema NUPIEEPRO. Redirecionando…';
+    const destino = resultado.logado ? 'dashboard.html' : 'index.html';
+    if (subEl)     subEl.textContent   = resultado.logado
+      ? 'Bem-vindo(a) ao sistema NUPIEEPRO. Entrando…'
+      : 'Bem-vindo(a) ao sistema NUPIEEPRO. Faça login com o e-mail e a senha que você acabou de criar.';
 
     let count = 3;
     const timer = setInterval(() => {
       count--;
       if (cdEl) cdEl.textContent = count;
-      /* Vai pro index pra forcar login com a NOVA conta (evita pegar session
-         do user que enviou o convite). */
-      if (count <= 0) { clearInterval(timer); window.location.href = 'index.html'; }
+      /* registerWithToken já faz signOut antes do cadastro, então a sessão
+         aberta aqui é sempre a da NOVA conta (nunca a de quem enviou o
+         convite). Sem sessão, cai no login manual. */
+      if (count <= 0) { clearInterval(timer); window.location.href = destino; }
     }, 1000);
   } catch (err) {
     showAlert(traduzErroAuth(err), 'error', 'conviteAlert');
