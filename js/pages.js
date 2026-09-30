@@ -3824,6 +3824,22 @@ const PagePessoas = {
       ? _parseDataEvt(e.data_inicio).toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit',year:'2-digit'})
       : '—';
   },
+  /* Inscrição aberta até o horário de início do treinamento. */
+  _treinAberto(e) { return !!e.data_inicio && _parseDataEvt(e.data_inicio) > new Date(); },
+  _treinVagasRestantes(e) {
+    if (!e.vagas) return null;
+    return Math.max(0, e.vagas - (this._treinMeta?.contagem?.[e.id] || 0));
+  },
+  /* Selo do próprio usuário nesse treinamento (presença > inscrição). */
+  _treinSelo(e) {
+    const f = this._treinMeta?.freq?.[e.id];
+    const i = this._treinMeta?.minhas?.[e.id];
+    if (f) return f.presente
+      ? { txt:'✓ Você compareceu', cor:'var(--green)' }
+      : { txt:'✗ Falta registrada', cor:'var(--red)' };
+    if (i && i.status !== 'cancelado') return { txt:'✓ Inscrito(a)', cor:'var(--green)' };
+    return null;
+  },
   async _carregarTreinamentosInternos() {
     const el = document.getElementById('gp-trein-lista');
     if (!el || !_sbq()) return;
@@ -3834,11 +3850,26 @@ const PagePessoas = {
         .eq('tipo','treinamento_interno')
         .order('data_inicio', { ascending: false });
       this._treinCache = data || [];
+      const ids = this._treinCache.map(e => e.id);
+      const uid = window._appProfile?.id;
+      this._treinMeta = { contagem:{}, minhas:{}, freq:{} };
+      if (ids.length) {
+        const [cont, mine, freq] = await Promise.all([
+          _sbq().rpc('inscritos_contagem', { p_evento_ids: ids }),
+          _sbq().from('inscritos_evento').select('evento_id,status').eq('user_id', uid).in('evento_id', ids),
+          _sbq().from('frequencia').select('evento_id,presente').eq('user_id', uid).in('evento_id', ids),
+        ]);
+        (cont.data||[]).forEach(r => { this._treinMeta.contagem[r.evento_id] = Number(r.total); });
+        (mine.data||[]).forEach(r => { this._treinMeta.minhas[r.evento_id] = r; });
+        (freq.data||[]).forEach(r => { this._treinMeta.freq[r.evento_id] = r; });
+      }
       const podeGerir = this._podeGerirTreinamentos();
       el.innerHTML = data?.length
         ? data.map(e => {
             const dt = this._dataTreinamento(e);
             const x = this._extraTreinamento(e);
+            const selo = this._treinSelo(e);
+            const rest = this._treinVagasRestantes(e);
             return `<div role="button" tabindex="0" style="background:var(--b-1);border:1px solid var(--b-2);border-radius:10px;padding:14px 16px;cursor:pointer"
                 onclick="PagePessoas.verTreinamentoInterno('${e.id}')"
                 onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();PagePessoas.verTreinamentoInterno('${e.id}')}">
@@ -3851,8 +3882,9 @@ const PagePessoas = {
               </div>
               ${x.palestrante?`<div style="font-size:12px;color:var(--c-slate)">🎙️ ${sanitize(x.palestrante)}</div>`:''}
               ${e.local?`<div style="font-size:12px;color:var(--c-slate)">📍 ${sanitize(e.local)}</div>`:''}
-              ${e.vagas?`<div style="font-size:12px;color:var(--c-slate)">👥 ${e.vagas} vagas</div>`:''}
-              <div style="font-size:11px;color:var(--c-accent);margin-top:6px">Ver detalhes →</div>
+              ${e.vagas?`<div style="font-size:12px;color:var(--c-slate)">👥 ${rest === 0 ? 'Vagas esgotadas' : `${rest} de ${e.vagas} vagas`}</div>`:''}
+              ${selo?`<div style="font-size:12px;font-weight:700;margin-top:6px;color:${selo.cor}">${selo.txt}</div>`:''}
+              <div style="font-size:11px;color:var(--c-accent);margin-top:6px">Ver detalhes${this._treinAberto(e) && !selo ? ' e inscrever-se' : ''} →</div>
             </div>`;
           }).join('')
         : '<div style="padding:16px;text-align:center;color:var(--c-slate);font-size:13px">Nenhum treinamento interno cadastrado.</div>';
@@ -3866,14 +3898,133 @@ const PagePessoas = {
       ? `<div style="margin-bottom:10px"><div style="font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--c-slate);margin-bottom:2px">${rot}</div><div style="font-size:14px;color:var(--c-white);white-space:pre-wrap">${val}</div></div>`
       : '';
     const vazio = '<span style="color:var(--c-slate)">Não informado</span>';
+    const rest = this._treinVagasRestantes(e);
+    const selo = this._treinSelo(e);
+    const inscrito = this._treinMeta?.minhas?.[e.id]?.status && this._treinMeta.minhas[e.id].status !== 'cancelado';
+    const aberto = this._treinAberto(e);
+    const botoes = [{texto:'Fechar',classe:'btn-ghost',acao:fecharModal}];
+    if (inscrito && aberto) {
+      botoes.push({texto:'Cancelar inscrição',classe:'btn-ghost',acao:()=>PagePessoas.alternarInscricao(e.id)});
+    } else if (!inscrito && aberto && !selo) {
+      if (rest === 0) botoes.push({texto:'Vagas esgotadas',classe:'btn-ghost',acao:()=>{}});
+      else botoes.push({texto:'Inscrever-me ✓',classe:'btn-primary',acao:()=>PagePessoas.alternarInscricao(e.id)});
+    }
+    if (this._podeGerirTreinamentos()) {
+      botoes.push({texto:'📋 Presença',classe:'btn-ghost',acao:()=>PagePessoas.abrirPresenca(e.id)});
+    }
     abrirModal({ titulo:`📚 ${sanitize(e.titulo)}`, tipo:'info', corpo:
+      (selo ? `<div style="font-size:13px;font-weight:700;margin-bottom:12px;color:${selo.cor}">${selo.txt}</div>` : '') +
       linha('Data', this._dataTreinamento(e)) +
       linha('Palestrante', x.palestrante ? sanitize(x.palestrante) : vazio) +
       linha('Local', e.local ? sanitize(e.local) : vazio) +
-      linha('Vagas', e.vagas ? String(e.vagas) : 'Ilimitadas') +
+      linha('Vagas', e.vagas ? (rest === 0 ? `Esgotadas (${e.vagas})` : `${rest} restantes de ${e.vagas}`) : 'Ilimitadas') +
       linha('Contato', x.contato ? sanitize(x.contato) : vazio) +
-      linha('Sobre', x.descricao ? sanitize(x.descricao) : ''),
-    botoes:[{texto:'Fechar',classe:'btn-ghost',acao:fecharModal}] });
+      linha('Sobre', x.descricao ? sanitize(x.descricao) : '') +
+      (!aberto && !selo ? '<div style="font-size:12px;color:var(--c-slate)">Inscrições encerradas.</div>' : ''),
+    botoes });
+  },
+  /* Inscreve ou cancela a própria inscrição. A trava de vagas está no banco
+     (trigger inscritos_evento_checa_vagas); o cliente só traduz o erro. */
+  async alternarInscricao(id) {
+    const e = (this._treinCache || []).find(t => String(t.id) === String(id));
+    const uid = window._appProfile?.id;
+    if (!e || !uid || !_sbq()) return;
+    if (!this._treinAberto(e)) { mostrarToast('Inscrições encerradas.','warning'); return; }
+    const atual = this._treinMeta?.minhas?.[id];
+    const ativo = atual && atual.status !== 'cancelado';
+    fecharModal();
+    try {
+      let res;
+      if (ativo) {
+        res = await _sbq().from('inscritos_evento').update({ status:'cancelado' }).eq('evento_id', id).eq('user_id', uid).select('id');
+      } else if (atual) {
+        res = await _sbq().from('inscritos_evento').update({ status:'inscrito' }).eq('evento_id', id).eq('user_id', uid).select('id');
+      } else {
+        res = await _sbq().from('inscritos_evento').insert([{ evento_id:id, user_id:uid, status:'inscrito' }]).select('id');
+      }
+      if (res.error) throw res.error;
+      if (!res.data?.length) throw new Error('sem efeito');
+      mostrarToast(ativo ? 'Inscrição cancelada.' : 'Inscrição confirmada! ✅', 'success');
+    } catch(err) {
+      const esgotou = /VAGAS_ESGOTADAS/.test(err?.message || '');
+      mostrarToast(esgotou ? 'Vagas esgotadas.' : 'Não foi possível atualizar sua inscrição.', esgotou ? 'warning' : 'error');
+    }
+    this._carregarTreinamentosInternos();
+  },
+  /* Lista de presença: inscritos + quem apareceu sem se inscrever. Grava em
+     `frequencia` (escrita só coord/admin — o banco é quem barra). */
+  async abrirPresenca(id) {
+    const e = (this._treinCache || []).find(t => String(t.id) === String(id));
+    if (!e || !_sbq()) return;
+    try {
+      const [insc, freq, membros] = await Promise.all([
+        _sbq().from('inscritos_evento').select('user_id,users(nome,apelido)').eq('evento_id', id).neq('status','cancelado'),
+        _sbq().from('frequencia').select('user_id,presente').eq('evento_id', id),
+        _sbq().from('users').select('id,nome,apelido').eq('ativo', true).order('nome'),
+      ]);
+      if (insc.error || freq.error) throw (insc.error || freq.error);
+      const presenca = new Map((freq.data||[]).map(f => [f.user_id, f.presente]));
+      const lista = new Map();
+      (insc.data||[]).forEach(r => lista.set(r.user_id, { id:r.user_id, nome:r.users?.nome, apelido:r.users?.apelido, inscrito:true }));
+      (freq.data||[]).forEach(f => {
+        if (!lista.has(f.user_id)) {
+          const m = (membros.data||[]).find(u => u.id === f.user_id);
+          lista.set(f.user_id, { id:f.user_id, nome:m?.nome, apelido:m?.apelido, inscrito:false });
+        }
+      });
+      this._presencaEventoId = id;
+      this._presencaLista = lista;
+      const extras = (membros.data||[]).filter(u => !lista.has(u.id));
+      const linhas = [...lista.values()].map(u => `
+        <label style="display:flex;align-items:center;gap:10px;padding:8px 10px;background:var(--b-1);border:1px solid var(--b-2);border-radius:8px;cursor:pointer">
+          <input type="checkbox" class="pres-chk" data-uid="${u.id}" ${presenca.get(u.id) ? 'checked' : ''}>
+          <span style="font-size:13px;color:var(--c-white)">${sanitize(u.apelido ? `${u.nome} (${u.apelido})` : (u.nome || '—'))}${u.inscrito ? '' : ' <span style="font-size:10px;color:var(--c-slate)">· não inscrito</span>'}</span>
+        </label>`).join('');
+      abrirModal({ titulo:`📋 Presença — ${sanitize(e.titulo)}`, tipo:'info', corpo:`
+        <div style="font-size:12px;color:var(--c-slate);margin-bottom:10px">Marque quem compareceu. Desmarcado = falta registrada.</div>
+        <div id="pres-lista" style="display:flex;flex-direction:column;gap:6px;max-height:320px;overflow-y:auto">
+          ${linhas || '<div style="padding:16px;text-align:center;color:var(--c-slate);font-size:13px">Ninguém inscrito ainda.</div>'}
+        </div>
+        ${extras.length ? `<div class="form-group" style="margin-top:12px"><label class="form-label">Adicionar quem apareceu sem inscrição</label>
+          <select id="pres-extra" class="form-select" onchange="PagePessoas._presencaAdicionar(this)">
+            <option value="">Selecione…</option>
+            ${extras.map(u => `<option value="${u.id}">${sanitize(u.nome || u.id)}</option>`).join('')}
+          </select></div>` : ''}`,
+      botoes:[
+        {texto:'Cancelar',classe:'btn-ghost',acao:fecharModal},
+        {texto:'Salvar presença ✓',classe:'btn-primary',acao:()=>PagePessoas._salvarPresenca()}
+      ]});
+      this._presencaMembros = membros.data || [];
+    } catch(err) { mostrarToast('Erro ao carregar a lista de presença.','error'); }
+  },
+  _presencaAdicionar(sel) {
+    const uid = sel.value; if (!uid) return;
+    const u = (this._presencaMembros||[]).find(m => m.id === uid);
+    if (!u) return;
+    this._presencaLista.set(uid, { id:uid, nome:u.nome, apelido:u.apelido, inscrito:false });
+    const box = document.getElementById('pres-lista');
+    box.insertAdjacentHTML('beforeend', `
+      <label style="display:flex;align-items:center;gap:10px;padding:8px 10px;background:var(--b-1);border:1px solid var(--b-2);border-radius:8px;cursor:pointer">
+        <input type="checkbox" class="pres-chk" data-uid="${uid}" checked>
+        <span style="font-size:13px;color:var(--c-white)">${sanitize(u.nome || '—')} <span style="font-size:10px;color:var(--c-slate)">· não inscrito</span></span>
+      </label>`);
+    sel.querySelector(`option[value="${uid}"]`)?.remove();
+    sel.value = '';
+  },
+  async _salvarPresenca() {
+    const id = this._presencaEventoId;
+    const e = (this._treinCache || []).find(t => String(t.id) === String(id));
+    const chks = [...document.querySelectorAll('#pres-lista .pres-chk')];
+    if (!e || !chks.length) { fecharModal(); return; }
+    const dia = String(e.data_inicio).slice(0, 10);
+    const linhas = chks.map(c => ({
+      evento_id: id, user_id: c.dataset.uid, presente: c.checked, tipo: 'treinamento', data: dia,
+    }));
+    const { error } = await _sbq().from('frequencia').upsert(linhas, { onConflict: 'evento_id,user_id' });
+    if (error) { mostrarToast('Sem permissão para registrar presença.','error'); return; }
+    fecharModal();
+    mostrarToast(`Presença salva (${linhas.filter(l => l.presente).length} presentes).`,'success');
+    this._carregarTreinamentosInternos();
   },
   async _excluirTreinamentoInterno(id) {
     if (!confirm('Excluir este treinamento?')) return;

@@ -37,28 +37,21 @@ test('exatamente 8 caracteres com letra e número é o limite aceito', () => {
   assert.equal(senhaForte('a1234567'), null);
 });
 
-const { normalizarTelefone, iniciaisDe } = require('../js/validacao.js');
-
-test('telefone vazio vira null (campo opcional)', () => {
-  assert.equal(normalizarTelefone(''), null);
-  assert.equal(normalizarTelefone('   '), null);
-  assert.equal(normalizarTelefone(undefined), null);
-});
-
-test('telefone aceita formatação e prefixo 55, devolve só dígitos', () => {
-  assert.equal(normalizarTelefone('(86) 91234-5678'), '86912345678');
-  assert.equal(normalizarTelefone('+55 86 91234-5678'), '86912345678');
-  assert.equal(normalizarTelefone('(86) 3222-1234'), '8632221234');
-});
-
-test('telefone com tamanho inválido é rejeitado', () => {
-  assert.throws(() => normalizarTelefone('12345'), /Telefone inválido/);
-  assert.throws(() => normalizarTelefone('(86) 91234-56789'), /Telefone inválido/);
-});
+const { iniciaisDe, camposPerfilFaltando } = require('../js/validacao.js');
 
 test('iniciais: primeira + última palavra, maiúsculas', () => {
   assert.equal(iniciaisDe('Lilian Freitas'), 'LF');
   assert.equal(iniciaisDe('maria da silva souza'), 'MS');
   assert.equal(iniciaisDe('Rayan'), 'RA');
   assert.equal(iniciaisDe('  '), '');
+});
+
+test('perfil completo não tem campos faltando', () => {
+  assert.deepEqual(camposPerfilFaltando({ nome: 'Ana Lima', apelido: 'Ana', aniversario: '2000-05-10' }), []);
+});
+
+test('perfil sem apelido/aniversário (ou só espaços) é incompleto', () => {
+  assert.deepEqual(camposPerfilFaltando({ nome: 'Ana', apelido: null, aniversario: null }), ['apelido', 'data de aniversário']);
+  assert.deepEqual(camposPerfilFaltando({ nome: 'Ana', apelido: '   ', aniversario: '2000-05-10' }), ['apelido']);
+  assert.deepEqual(camposPerfilFaltando(null), ['nome', 'apelido', 'data de aniversário']);
 });

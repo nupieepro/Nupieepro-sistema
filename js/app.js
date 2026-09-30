@@ -573,6 +573,7 @@ const App = {
       if (isJR && btnSwitch) btnSwitch.style.display = 'block';
 
       App.syncSettingsInputs(profile);
+      App.exigirPerfilCompleto(profile);
 
       return profile;
     } catch (err) {
@@ -609,7 +610,6 @@ const App = {
     const set = (id, v) => { const el = document.getElementById(id); if (el) el.value = v || ''; };
     set('myProfileNome', p.nome);
     set('myProfileApelido', p.apelido);
-    set('myProfileTelefone', p.telefone);
     set('myProfileNascimento', p.aniversario);
     set('myProfileEmail', p.email);
     set('myProfileCargo', p.cargo);
@@ -617,46 +617,101 @@ const App = {
     if (elAvatar) elAvatar.textContent = p.iniciais || p.nome?.[0] || '?';
   },
 
-  /* Edita só dados pessoais. Cargo, role e coordenadoria NÃO são editáveis
-     aqui (e o trigger protect_self_update_users barra role/coord/ativo no
-     banco de qualquer forma). */
-  async updateMyProfile() {
-    const val = (id) => document.getElementById(id)?.value?.trim() || '';
-    const nome = val('myProfileNome');
-    const apelido = val('myProfileApelido');
-    const nascimento = val('myProfileNascimento');
-
-    if (!nome) return App.toast('Nome é obrigatório', 'warning');
-
-    let telefone;
-    try { telefone = window.normalizarTelefone(val('myProfileTelefone')); }
-    catch (e) { return App.toast(e.message, 'warning'); }
-
+  /* Valida e grava os dados pessoais do próprio usuário. Cargo, role e
+     coordenadoria NÃO são editáveis aqui (o trigger protect_self_update_users
+     também barra role/coord/ativo no banco). Devolve true se salvou. */
+  async salvarPerfil({ nome, apelido, aniversario }) {
+    nome = (nome || '').trim(); apelido = (apelido || '').trim();
+    const falta = window.camposPerfilFaltando({ nome, apelido, aniversario });
+    if (falta.length) { App.toast('Preencha: ' + falta.join(', ') + '.', 'warning'); return false; }
+    const nasc = new Date(aniversario + 'T12:00:00');
+    if (isNaN(nasc) || nasc > new Date() || nasc.getFullYear() < 1920) {
+      App.toast('Data de aniversário inválida.', 'warning'); return false;
+    }
     const p = window._appProfile;
-    if (!p) return App.toast('Sessão expirada. Faça login novamente.', 'error');
-    if (!_sb) return App.toast('Sistema offline. Verifique a conexão.', 'error');
+    if (!p) { App.toast('Sessão expirada. Faça login novamente.', 'error'); return false; }
+    if (!_sb) { App.toast('Sistema offline. Verifique a conexão.', 'error'); return false; }
 
-    const iniciais = window.iniciaisDe(nome);
-    const campos = { nome, iniciais, apelido: apelido || null, telefone, aniversario: nascimento || null };
-
+    const campos = { nome, apelido, aniversario, iniciais: window.iniciaisDe(nome) };
     App.loading(true);
     try {
-      const { error } = await _sb.from('users').update(campos).eq('id', p.id);
+      /* .select('id') garante que a linha existia: update em linha inexistente
+         (perfil só nos metadados do auth) não dá erro, e diríamos "salvou". */
+      const { data: linhas, error } = await _sb.from('users').update(campos).eq('id', p.id).select('id');
       if (error) throw error;
-
+      if (!linhas?.length) throw new Error('Perfil não encontrado na base.');
       Object.assign(p, campos);
-
       const _sn = document.getElementById('sideName'); if (_sn) _sn.textContent = nome;
-      const _sa = document.getElementById('sideAvatar'); if (_sa) _sa.textContent = iniciais;
+      const _sa = document.getElementById('sideAvatar'); if (_sa) _sa.textContent = campos.iniciais;
       App.syncSettingsInputs(p);
-
-      App.toast('Perfil atualizado com sucesso!', 'success');
+      return true;
     } catch (e) {
-      console.error('[updateMyProfile]', e);
+      console.error('[salvarPerfil]', e);
       App.toast('Não foi possível salvar o perfil. Tente novamente.', 'error');
+      return false;
     } finally {
       App.loading(false);
     }
+  },
+
+  async updateMyProfile() {
+    const val = (id) => document.getElementById(id)?.value || '';
+    const ok = await App.salvarPerfil({
+      nome: val('myProfileNome'), apelido: val('myProfileApelido'), aniversario: val('myProfileNascimento'),
+    });
+    if (ok) App.toast('Perfil atualizado com sucesso!', 'success');
+  },
+
+  /* Trava o sistema até o perfil ter nome, apelido e aniversário. Sem botão
+     de fechar/ESC de propósito: é obrigatório (pedido da GP). Quem já tem
+     tudo preenchido nunca vê isso. */
+  exigirPerfilCompleto(profile) {
+    if (!profile || document.getElementById('perfilGate')) return;
+    if (!window.camposPerfilFaltando(profile).length) return;
+
+    const esc = (v) => sanitize(v || '');
+    const gate = document.createElement('div');
+    gate.id = 'perfilGate';
+    gate.setAttribute('role', 'dialog');
+    gate.setAttribute('aria-modal', 'true');
+    gate.setAttribute('aria-labelledby', 'perfilGateTitulo');
+    gate.style.cssText = 'position:fixed;inset:0;z-index:100000;background:rgba(0,0,0,.88);display:flex;align-items:center;justify-content:center;padding:16px;overflow-y:auto;';
+    gate.innerHTML = `
+      <form id="perfilGateForm" style="background:var(--bg-2,#120c2e);border:1px solid var(--border,rgba(255,255,255,.15));border-radius:16px;padding:24px;width:100%;max-width:420px;display:flex;flex-direction:column;gap:14px;">
+        <div>
+          <div id="perfilGateTitulo" style="font-size:18px;font-weight:800;color:var(--fg-1,#fff);">Conclua seu perfil</div>
+          <div style="font-size:13px;color:var(--fg-3,#a89fd0);margin-top:4px;">Precisamos de mais alguns dados pra liberar o sistema. Leva 30 segundos.</div>
+        </div>
+        <div class="field"><label for="gateNome">Nome completo *</label>
+          <input type="text" id="gateNome" maxlength="120" required autocomplete="name" value="${esc(profile.nome)}"></div>
+        <div class="field"><label for="gateApelido">Apelido * <span style="font-weight:400;opacity:.7">(como quer ser chamado)</span></label>
+          <input type="text" id="gateApelido" maxlength="40" required value="${esc(profile.apelido)}"></div>
+        <div class="field"><label for="gateNasc">Data de aniversário *</label>
+          <input type="date" id="gateNasc" required value="${esc(profile.aniversario)}"></div>
+        <button type="submit" class="btn-login" id="gateSalvar">Concluir perfil</button>
+      </form>`;
+    document.body.appendChild(gate);
+    /* Não deixa a página de trás ser rolada/focada enquanto o gate existe. */
+    document.body.style.overflow = 'hidden';
+
+    const form = gate.querySelector('#perfilGateForm');
+    form.addEventListener('submit', async (ev) => {
+      ev.preventDefault();
+      const btn = gate.querySelector('#gateSalvar');
+      btn.disabled = true;
+      const ok = await App.salvarPerfil({
+        nome: gate.querySelector('#gateNome').value,
+        apelido: gate.querySelector('#gateApelido').value,
+        aniversario: gate.querySelector('#gateNasc').value,
+      });
+      btn.disabled = false;
+      if (ok) {
+        gate.remove();
+        document.body.style.overflow = '';
+        App.toast('Perfil concluído! Bem-vindo(a).', 'success');
+      }
+    });
+    (gate.querySelector('#gateApelido').value ? gate.querySelector('#gateNasc') : gate.querySelector('#gateApelido')).focus();
   },
   showPage(id) {
     if (typeof goTo === 'function') goTo(id);
