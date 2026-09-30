@@ -1752,6 +1752,8 @@ const PageFinancas = {
       if(sEl)sEl.textContent=`R$ ${saldo.toFixed(2)}`;
       if(eEl)eEl.textContent=`R$ ${totVenda.toFixed(2)}`;
       if(saEl)saEl.textContent=`R$ ${totDesp.toFixed(2)}`;
+      const coordsLista = await getCoords();
+      const siglaDe = (id) => coordsLista.find(c => c.id === id)?.sigla || '';
       const tudo=[
         ...vendas.map(v=>({...v,_tipo:'venda',_data:v.data_venda})),
         ...despesas.map(d=>({...d,_tipo:'despesa',_data:d.data_despesa}))
@@ -1762,7 +1764,7 @@ const PageFinancas = {
                       padding:12px 16px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
             <div style="flex:1;min-width:0">
               <div style="font-weight:600;font-size:13px;color:var(--c-white)">${sanitize(r.descricao)}</div>
-              <div style="font-size:12px;color:var(--c-slate)">📅 ${_fmt(r._data)} · ${r.categoria||r.produto||'—'}</div>
+              <div style="font-size:12px;color:var(--c-slate)">📅 ${_fmt(r._data)} · ${sanitize(r.categoria||r.produto||'—')}${r.evento?` · 🎯 ${sanitize(r.evento)}`:''}${r._tipo==='venda'&&r.quantidade>1?` · ${r.quantidade} un.`:''}${r._tipo==='despesa'&&r.solicitante_coord_id?` · 🙋 ${sanitize(siglaDe(r.solicitante_coord_id)||'—')}`:''}</div>
             </div>
             <div style="display:flex;align-items:center;gap:8px">
               <span style="font-size:14px;font-weight:800;color:${r._tipo==='venda'?'var(--green)':'var(--red)'}">
@@ -1777,28 +1779,60 @@ const PageFinancas = {
   },
   async _editarLancamento(tipo, id) {
     if (!_sbq()) return;
-    const tabela = tipo === 'venda' ? 'vendas' : 'despesas';
-    const dataField = tipo === 'venda' ? 'data_venda' : 'data_despesa';
-    const { data: r } = await _sbq().from(tabela).select('*').eq('id', id).single();
+    const ehVenda = tipo === 'venda';
+    const tabela = ehVenda ? 'vendas' : 'despesas';
+    const dataField = ehVenda ? 'data_venda' : 'data_despesa';
+    const [{ data: r }, coords, eventos] = await Promise.all([
+      _sbq().from(tabela).select('*').eq('id', id).single(), getCoords(), this._eventosConhecidos(),
+    ]);
     if (!r) { mostrarToast('Lançamento não encontrado','error'); return; }
-    abrirModal({ titulo: tipo === 'venda' ? '💚 Editar Venda' : '🔴 Editar Despesa', corpo: `
+    abrirModal({ titulo: ehVenda ? '💚 Editar Venda' : '🔴 Editar Despesa', corpo: `
       <div class="form-group"><label class="form-label">Descrição *</label>
-        <input id="ed-desc" class="form-input" value="${sanitize(r.descricao||'')}"></div>
-      <div class="form-group"><label class="form-label">Valor *</label>
-        <input id="ed-valor" type="number" step="0.01" class="form-input" value="${r.valor||0}"></div>
-      <div class="form-group"><label class="form-label">Data</label>
-        <input id="ed-data" type="date" class="form-input" value="${r[dataField]||''}"></div>
-      <div class="form-group"><label class="form-label">Categoria</label>
-        <input id="ed-cat" class="form-input" value="${sanitize(r.categoria||'')}"></div>`,
+        <input id="ed-desc" class="form-input" maxlength="200" value="${sanitize(r.descricao||'')}"></div>
+      ${ehVenda ? `
+      <div style="display:grid;grid-template-columns:2fr 1fr;gap:12px">
+        <div class="form-group"><label class="form-label">Produto</label>
+          <input id="ed-produto" class="form-input" maxlength="120" value="${sanitize(r.produto||'')}"></div>
+        <div class="form-group"><label class="form-label">Quantidade</label>
+          <input id="ed-qtd" type="number" min="1" step="1" class="form-input" value="${r.quantidade||1}"></div>
+      </div>` : ''}
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div class="form-group"><label class="form-label">Valor total (R$) *</label>
+          <input id="ed-valor" type="number" min="0" step="0.01" inputmode="decimal" class="form-input" value="${r.valor||0}"></div>
+        <div class="form-group"><label class="form-label">Data *</label>
+          <input id="ed-data" type="date" class="form-input" value="${r[dataField]||''}"></div>
+      </div>
+      <div class="form-group"><label class="form-label">Categoria *</label>
+        <select id="ed-cat" class="form-select">${this._opcoesCategoria(r.categoria||'')}</select></div>
+      ${ehVenda ? '' : `
+      <div class="form-group"><label class="form-label">Coordenadoria solicitante *</label>
+        <select id="ed-solic" class="form-select">${this._opcoesCoord(coords, r.solicitante_coord_id||'')}</select></div>`}
+      <div class="form-group"><label class="form-label">Evento / projeto (opcional)</label>
+        <input id="ed-evento" class="form-input" maxlength="80" list="ed-evento-lista" value="${sanitize(r.evento||'')}">
+        <datalist id="ed-evento-lista">${eventos.map(e => `<option value="${sanitize(e)}">`).join('')}</datalist></div>`,
     botoes: [
       { texto: 'Cancelar', classe: 'btn-ghost', acao: fecharModal },
       { texto: 'Salvar', classe: 'btn-primary', acao: async () => {
-        const desc = document.getElementById('ed-desc')?.value?.trim();
-        const valor = parseFloat(document.getElementById('ed-valor')?.value);
-        const data = document.getElementById('ed-data')?.value;
-        const cat = document.getElementById('ed-cat')?.value?.trim();
-        if (!desc || isNaN(valor)) { mostrarToast('Preencha descrição e valor','warning'); return; }
-        const ok = await dbEfetivou(_sbq().from(tabela).update({ descricao:desc, valor, [dataField]:data, categoria:cat }).eq('id', id));
+        const v = (i) => document.getElementById(i)?.value?.trim() || '';
+        const dados = {
+          tipo, descricao: v('ed-desc'), valor: parseFloat(v('ed-valor')), data: v('ed-data'),
+          categoria: v('ed-cat'), solicitante: v('ed-solic'),
+          quantidade: ehVenda ? parseInt(v('ed-qtd') || '1', 10) : null,
+        };
+        /* Despesa antiga (sem solicitante gravado) pode ser editada sem
+           inventar um solicitante: só exige quando já havia ou quando o
+           usuário escolheu um. */
+        const validar = (!ehVenda && !r.solicitante_coord_id && !dados.solicitante)
+          ? { ...dados, solicitante: 'legado' } : dados;
+        const erro = window.validarLancamento(validar);
+        if (erro) { mostrarToast(erro, 'warning'); return; }
+        const campos = {
+          descricao: dados.descricao, valor: dados.valor, [dataField]: dados.data,
+          categoria: dados.categoria, evento: v('ed-evento') || null,
+        };
+        if (ehVenda) { campos.produto = v('ed-produto') || null; campos.quantidade = dados.quantidade; }
+        else campos.solicitante_coord_id = dados.solicitante || null;
+        const ok = await dbEfetivou(_sbq().from(tabela).update(campos).eq('id', id));
         if (!ok) { mostrarToast('Sem permissão para editar este lançamento.','error'); return; }
         fecharModal();
         mostrarToast('Atualizado!','success');
@@ -1829,9 +1863,11 @@ const PageFinancas = {
       const vendas = rv.data||[], despesas = rd.data||[];
       const totVenda = vendas.reduce((s,v)=>s+Number(v.valor||0),0);
       const totDesp  = despesas.reduce((s,d)=>s+Number(d.valor||0),0);
+      const coordsExtrato = await getCoords();
+      const siglaDe = (id) => coordsExtrato.find(c => c.id === id)?.sigla || '—';
       const tudo = [
-        ...vendas.map(v=>({...v,_tipo:'Venda',_sinal:'+',_data:v.data_venda,_cat:v.categoria||v.produto||'—'})),
-        ...despesas.map(d=>({...d,_tipo:'Despesa',_sinal:'-',_data:d.data_despesa,_cat:d.categoria||'—'})),
+        ...vendas.map(v=>({...v,_tipo:'Venda',_sinal:'+',_data:v.data_venda,_cat:v.categoria||v.produto||'—',_solic:'—'})),
+        ...despesas.map(d=>({...d,_tipo:'Despesa',_sinal:'-',_data:d.data_despesa,_cat:d.categoria||'—',_solic:d.solicitante_coord_id?siglaDe(d.solicitante_coord_id):'—'})),
       ].sort((a,b)=>a._data.localeCompare(b._data));
       const nomeMes = hoje.toLocaleDateString('pt-BR',{month:'long',year:'numeric'});
       const args = {
@@ -1842,8 +1878,9 @@ const PageFinancas = {
           ['Total de despesas:', `R$ ${totDesp.toFixed(2)}`],
         ],
         tabela: tudo.length ? {
-          colunas: ['Data','Descrição','Categoria','Tipo','Valor (R$)'],
-          linhas: tudo.map(r => [_fmt(r._data), r.descricao||'—', r._cat, r._tipo, `${r._sinal} ${Number(r.valor||0).toFixed(2)}`]),
+          colunas: ['Data','Descrição','Categoria','Solicitante','Tipo','Valor (R$)'],
+          larguras: [20, 50, 28, 24, 18, 30],
+          linhas: tudo.map(r => [_fmt(r._data), r.descricao||'—', r._cat, r._solic, r._tipo, `${r._sinal} ${Number(r.valor||0).toFixed(2)}`]),
         } : null,
         secoes: tudo.length ? [] : [{ titulo:'Observação', corpo:'Nenhum lançamento registrado neste mês.' }],
         geradoPor: window._appProfile?.nome,
@@ -1864,13 +1901,17 @@ const PageFinancas = {
      evento específico sem misturar com o resto do caixa do mês. */
   async _verPorCategoria() {
     if (!_sbq()) return;
+    /* Busca tudo uma vez (o volume é pequeno) e filtra no cliente: a chave é
+       "evento, senão categoria", e um filtro .or() do PostgREST quebraria com
+       vírgula/parêntese no nome do evento. */
     const [rv, rd] = await Promise.all([
-      _sbq().from('vendas').select('categoria'),
-      _sbq().from('despesas').select('categoria'),
+      _sbq().from('vendas').select('*'),
+      _sbq().from('despesas').select('*'),
     ]);
-    const cats = [...new Set([...(rv.data||[]), ...(rd.data||[])].map(r => r.categoria).filter(Boolean))].sort();
+    this._catVendas = rv.data || []; this._catDespesas = rd.data || [];
+    const cats = [...new Set([...this._catVendas, ...this._catDespesas].map(window.chaveCategoriaEvento).filter(Boolean))].sort();
     if (!cats.length) {
-      mostrarToast('Nenhuma categoria registrada ainda. Preencha "Categoria/Evento" ao lançar uma venda ou despesa.', 'info', 4000);
+      mostrarToast('Nenhuma categoria ou evento registrado ainda.', 'info', 4000);
       return;
     }
     abrirModal({ titulo: '🔍 Indicadores por Categoria/Evento', tipo: 'info', corpo: `
@@ -1888,18 +1929,15 @@ const PageFinancas = {
     if (!el) return;
     if (!categoria) { el.innerHTML = ''; return; }
     el.innerHTML = '<div style="padding:16px;text-align:center;color:var(--c-slate);font-size:13px">Carregando...</div>';
-    const [rv, rd] = await Promise.all([
-      _sbq().from('vendas').select('*').eq('categoria', categoria).order('data_venda'),
-      _sbq().from('despesas').select('*').eq('categoria', categoria).order('data_despesa'),
-    ]);
-    const vendas = rv.data || [], despesas = rd.data || [];
+    const vendas = (this._catVendas || []).filter(r => window.chaveCategoriaEvento(r) === categoria);
+    const despesas = (this._catDespesas || []).filter(r => window.chaveCategoriaEvento(r) === categoria);
     const totV = vendas.reduce((s, v) => s + Number(v.valor || 0), 0);
     const totD = despesas.reduce((s, d) => s + Number(d.valor || 0), 0);
     const saldo = totV - totD;
     const linhas = [
       ...vendas.map(v => ({ ...v, _tipo: 'venda', _data: v.data_venda })),
       ...despesas.map(d => ({ ...d, _tipo: 'despesa', _data: d.data_despesa })),
-    ].sort((a, b) => a._data.localeCompare(b._data));
+    ].sort((a, b) => String(a._data).localeCompare(String(b._data)));
     el.innerHTML = `
       <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:14px 0">
         <div class="sum-card" style="padding:10px;text-align:center">
@@ -1925,55 +1963,101 @@ const PageFinancas = {
           </div>`).join('') : '<div style="text-align:center;color:var(--c-slate);font-size:12px;padding:10px">Nenhum lançamento.</div>'}
       </div>`;
   },
-  lancar(tipo) {
-    const hoje=new Date().toISOString().split('T')[0];
-    abrirModal({titulo:tipo==='venda'?'💚 Registrar Venda':'🔴 Registrar Despesa',tipo:'info',corpo:`
+  /* Opções do <select> de categoria: lista oficial + (se estiver editando um
+     lançamento antigo com outro texto, ex: "Bottom Up") o valor atual, pra
+     não perder a informação ao salvar. */
+  _opcoesCategoria(atual) {
+    const lista = [...window.CATEGORIAS_FIN];
+    if (atual && !lista.includes(atual)) lista.push(atual);
+    return `<option value="">Selecione…</option>` +
+      lista.map(c => `<option value="${sanitize(c)}" ${c === atual ? 'selected' : ''}>${sanitize(c)}</option>`).join('');
+  },
+  _opcoesCoord(coords, selecionado) {
+    return `<option value="">Selecione…</option>` +
+      coords.map(c => `<option value="${c.id}" ${c.id === selecionado ? 'selected' : ''}>${sanitize(c.sigla ? `${c.sigla} — ${c.nome}` : c.nome)}</option>`).join('');
+  },
+  /* Nomes de evento já usados (vendas + despesas) — alimenta o datalist pra
+     todo mundo escrever o evento do mesmo jeito e o resumo por evento não
+     se fragmentar ("Bottom Up 7.0" vs "bottom up 7"). */
+  async _eventosConhecidos() {
+    try {
+      const [rv, rd] = await Promise.all([
+        _sbq().from('vendas').select('evento'),
+        _sbq().from('despesas').select('evento'),
+      ]);
+      return [...new Set([...(rv.data||[]), ...(rd.data||[])].map(r => (r.evento||'').trim()).filter(Boolean))].sort();
+    } catch (_) { return []; }
+  },
+  async lancar(tipo) {
+    const hoje = new Date().toISOString().split('T')[0];
+    const ehVenda = tipo === 'venda';
+    const [coords, eventos] = await Promise.all([getCoords(), this._eventosConhecidos()]);
+    const minhaCoord = window._appProfile?.coordenadoria_id || '';
+    abrirModal({ titulo: ehVenda ? '💚 Registrar Venda' : '🔴 Registrar Despesa', tipo: 'info', corpo: `
       <div class="form-group"><label class="form-label">Descrição *</label>
-        <input id="fl-desc" class="form-input" placeholder="${tipo==='venda'?'Ex: Camisetas NUPIEEPRO':'Ex: Impressão de banner'}"></div>
+        <input id="fl-desc" class="form-input" maxlength="200" placeholder="${ehVenda ? 'Ex: Camisetas NUPIEEPRO' : 'Ex: Impressão de banner'}"></div>
+      ${ehVenda ? `
+      <div style="display:grid;grid-template-columns:2fr 1fr;gap:12px">
+        <div class="form-group"><label class="form-label">Produto</label>
+          <input id="fl-produto" class="form-input" maxlength="120" placeholder="Ex: Camiseta M"></div>
+        <div class="form-group"><label class="form-label">Quantidade</label>
+          <input id="fl-qtd" type="number" min="1" step="1" class="form-input" value="1"></div>
+      </div>` : ''}
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-        <div class="form-group"><label class="form-label">Valor (R$) *</label>
-          <input id="fl-valor" type="number" step="0.01" class="form-input" placeholder="0,00"></div>
-        <div class="form-group"><label class="form-label">Data</label>
+        <div class="form-group"><label class="form-label">Valor total (R$) *</label>
+          <input id="fl-valor" type="number" min="0" step="0.01" inputmode="decimal" class="form-input" placeholder="0,00"></div>
+        <div class="form-group"><label class="form-label">Data *</label>
           <input id="fl-data" type="date" class="form-input" value="${hoje}"></div>
       </div>
-      ${tipo==='venda'?`
-      <div class="form-group"><label class="form-label">Produto</label>
-        <input id="fl-produto" class="form-input" placeholder="Ex: Camiseta M"></div>`:''}
-      <div class="form-group"><label class="form-label">Categoria/Evento (opcional)</label>
-        <input id="fl-cat" class="form-input" placeholder="Ex: Bottom Up 7.0">
-        <small style="color:var(--c-slate);margin-top:4px;display:block">Use o mesmo nome em todos os lançamentos do evento pra depois ver o resumo em "Ver por categoria/evento".</small></div>`,
-    botoes:[
-      {texto:'Cancelar',classe:'btn-ghost',acao:fecharModal},
-      {texto:'Registrar ✓',classe:'btn-primary',acao:()=>this._salvar(tipo)}
+      <div class="form-group"><label class="form-label">Categoria *</label>
+        <select id="fl-cat" class="form-select">${this._opcoesCategoria(ehVenda ? 'Lojinha' : '')}</select></div>
+      ${ehVenda ? '' : `
+      <div class="form-group"><label class="form-label">Coordenadoria solicitante *</label>
+        <select id="fl-solic" class="form-select">${this._opcoesCoord(coords, minhaCoord)}</select>
+        <small style="color:var(--c-slate);margin-top:4px;display:block">Quem pediu esse dinheiro (não é quem está lançando).</small></div>`}
+      <div class="form-group"><label class="form-label">Evento / projeto (opcional)</label>
+        <input id="fl-evento" class="form-input" maxlength="80" list="fl-evento-lista" placeholder="Ex: Bottom Up 7.0">
+        <datalist id="fl-evento-lista">${eventos.map(e => `<option value="${sanitize(e)}">`).join('')}</datalist>
+        <small style="color:var(--c-slate);margin-top:4px;display:block">Escolha um já existente da lista pra o resumo por evento somar tudo junto.</small></div>`,
+    botoes: [
+      { texto: 'Cancelar', classe: 'btn-ghost', acao: fecharModal },
+      { texto: 'Registrar ✓', classe: 'btn-primary', acao: () => this._salvar(tipo) }
     ]});
   },
   async _salvar(tipo) {
-    const desc  =document.getElementById('fl-desc')?.value?.trim();
-    const valor =parseFloat(document.getElementById('fl-valor')?.value);
-    const data  =document.getElementById('fl-data')?.value;
-    const prod  =document.getElementById('fl-produto')?.value?.trim();
-    const cat   =document.getElementById('fl-cat')?.value?.trim();
-    if(!desc||isNaN(valor)){mostrarToast('Preencha todos os campos!','warning');return;}
-    fecharModal();
+    const v = (id) => document.getElementById(id)?.value?.trim() || '';
+    const dados = {
+      tipo, descricao: v('fl-desc'), valor: parseFloat(v('fl-valor')), data: v('fl-data'),
+      categoria: v('fl-cat'), solicitante: v('fl-solic'),
+      quantidade: tipo === 'venda' ? parseInt(v('fl-qtd') || '1', 10) : null,
+    };
+    const erro = window.validarLancamento(dados);
+    if (erro) { mostrarToast(erro, 'warning'); return; }
+    const btn = [...document.querySelectorAll('#__appModal button')].find(b => /Registrar/.test(b.textContent));
+    if (btn) btn.disabled = true;   // evita lançamento duplicado por duplo clique
     try {
-      const coords=await getCoords();
-      const fin=coords.find(c=>c.sigla==='FIN');
-      if(tipo==='venda') {
-        await _sbq().from('vendas').insert([{
-          descricao:desc,valor,data_venda:data,produto:prod||null,categoria:cat||null,
-          coordenadoria_id:fin?.id||null,
-          registrado_por:window._appProfile?.id
-        }]);
-      } else {
-        await _sbq().from('despesas').insert([{
-          descricao:desc,valor,data_despesa:data,categoria:cat||null,
-          coordenadoria_id:fin?.id||null,
-          registrado_por:window._appProfile?.id
-        }]);
-      }
-      mostrarToast(`${tipo==='venda'?'Venda':'Despesa'} registrada!`,'success');
+      const coords = await getCoords();
+      const fin = coords.find(c => c.sigla === 'FIN');
+      const base = {
+        descricao: dados.descricao, valor: dados.valor, categoria: dados.categoria,
+        evento: v('fl-evento') || null,
+        coordenadoria_id: fin?.id || null,
+        registrado_por: window._appProfile?.id,
+      };
+      const query = tipo === 'venda'
+        ? _sbq().from('vendas').insert([{ ...base, data_venda: dados.data, produto: v('fl-produto') || null, quantidade: dados.quantidade }])
+        : _sbq().from('despesas').insert([{ ...base, data_despesa: dados.data, solicitante_coord_id: dados.solicitante }]);
+      /* dbEfetivou confere se a linha entrou de fato — antes o toast dizia
+         "registrada" mesmo quando a RLS barrava e nada era gravado. */
+      if (!(await dbEfetivou(query))) { mostrarToast('Não foi possível registrar (sem permissão ou erro de conexão).', 'error'); if (btn) btn.disabled = false; return; }
+      fecharModal();
+      mostrarToast(`${tipo === 'venda' ? 'Venda' : 'Despesa'} registrada!`, 'success');
       this._carregarFluxo();
-    }catch(e){mostrarToast('Erro ao salvar.','error');}
+    } catch (e) {
+      console.warn('[Financas _salvar]', e);
+      mostrarToast('Erro ao salvar.', 'error');
+      if (btn) btn.disabled = false;
+    }
   },
   _renderChart(vendas, despesas) {
     const canvas = document.getElementById('fin-chart');
@@ -2033,7 +2117,7 @@ const PageFinancas = {
     };
     return {
       data:    encontrar(['DATA']),
-      produto: encontrar(['PRODUTO', 'ITEM']),
+      produto: encontrar(['PRODUTO', 'ITEM', 'DESCRICAO', 'HISTORICO']),
       qtd:     encontrar(['QTD', 'QUANTIDADE']),
       valor:   encontrar(['VALOR REAL', 'VALOR TOTAL', 'VALOR']),
       cliente: encontrar(['CLIENTE', 'COMPRADOR']),
@@ -2062,11 +2146,19 @@ const PageFinancas = {
   importarPlanilha() {
     if (typeof XLSX === 'undefined') { mostrarToast('Biblioteca de planilhas não carregou. Recarregue a página e tente de novo.', 'error'); return; }
     this._importLinhas = null;
-    abrirModal({ titulo: '📥 Importar Planilha de Vendas', tipo: 'info', corpo: `
+    this._importDestino = 'vendas';
+    abrirModal({ titulo: '📥 Importar Planilha', tipo: 'info', corpo: `
+      <div class="form-group">
+        <label class="form-label">O que esta planilha contém? *</label>
+        <select id="imp-destino" class="form-select" onchange="PageFinancas._trocarDestinoImportacao(this.value)">
+          <option value="vendas">💚 Vendas (entradas)</option>
+          <option value="despesas">🔴 Despesas (saídas)</option>
+        </select>
+        <small style="color:var(--c-slate);margin-top:4px;display:block">Escolha certo: despesa importada como venda soma no caixa em vez de subtrair.</small>
+      </div>
       <p style="font-size:13px;color:var(--c-slate);margin-bottom:14px">
-        Envie um arquivo <strong>.xlsx</strong> ou <strong>.csv</strong> com o registro de vendas
-        (primeira aba, uma linha por venda). O sistema identifica as colunas
-        automaticamente e mostra uma prévia — nada é gravado antes de você confirmar.
+        Envie um arquivo <strong>.xlsx</strong> ou <strong>.csv</strong> (primeira aba, uma linha por lançamento).
+        O sistema identifica as colunas automaticamente e mostra uma prévia — nada é gravado antes de você confirmar.
       </p>
       <div class="form-group">
         <input id="imp-arquivo" type="file" accept=".xlsx,.xls,.csv" class="form-input" onchange="PageFinancas._lerArquivoImportacao(this)">
@@ -2085,6 +2177,7 @@ const PageFinancas = {
      essa ambiguidade nunca chega a existir.  */
   _parseCSVTexto(texto) {
     const linhas = [];
+    const sep = window.detectarSeparadorCSV(texto);
     let campo = '', linha = [], entreAspas = false;
     for (let i = 0; i < texto.length; i++) {
       const c = texto[i], prox = texto[i + 1];
@@ -2093,7 +2186,7 @@ const PageFinancas = {
         else if (c === '"') entreAspas = false;
         else campo += c;
       } else if (c === '"') entreAspas = true;
-      else if (c === ',' || c === ';') { linha.push(campo); campo = ''; }
+      else if (c === sep) { linha.push(campo); campo = ''; }
       else if (c === '\r') { /* ignora, \n fecha a linha */ }
       else if (c === '\n') { linha.push(campo); linhas.push(linha); linha = []; campo = ''; }
       else campo += c;
@@ -2136,9 +2229,15 @@ const PageFinancas = {
       if (previewEl) previewEl.innerHTML = '<div style="padding:16px;color:var(--red);font-size:13px">Não consegui ler esse arquivo. Confira se é um .xlsx ou .csv válido.</div>';
     }
   },
-  _renderMapeamentoImportacao() {
+  _trocarDestinoImportacao(valor) {
+    this._importDestino = valor === 'despesas' ? 'despesas' : 'vendas';
+    if (this._importLinhas) this._renderMapeamentoImportacao();
+  },
+  async _renderMapeamentoImportacao() {
     const el = document.getElementById('imp-preview');
     if (!el) return;
+    const ehDespesa = this._importDestino === 'despesas';
+    const coordsImp = ehDespesa ? await getCoords() : [];
     const cabecalhos = this._importCabecalhos;
     const map = this._importMapeamento;
     const campo = (nome, label, obrigatorio) => `
@@ -2154,10 +2253,17 @@ const PageFinancas = {
       <div class="form-section-header" style="margin-top:14px;font-size:12px;font-weight:700;color:var(--c-slate);text-transform:uppercase">Mapeamento de colunas</div>
       <p style="font-size:12px;color:var(--c-slate);margin:4px 0 8px">Detectado automaticamente — confira e ajuste se precisar.</p>
       ${campo('data', 'Data', true)}
-      ${campo('produto', 'Produto', true)}
+      ${campo('produto', ehDespesa ? 'Descrição' : 'Produto', true)}
       ${campo('valor', 'Valor', true)}
-      ${campo('qtd', 'Quantidade', false)}
-      ${campo('cliente', 'Cliente (só pra marcar categoria "Bottom Up")', false)}
+      ${ehDespesa ? `
+      <div class="form-group"><label class="form-label">Categoria de todas as linhas *</label>
+        <select id="imp-cat" class="form-select">${this._opcoesCategoria('')}</select></div>
+      <div class="form-group"><label class="form-label">Coordenadoria solicitante de todas as linhas *</label>
+        <select id="imp-solic" class="form-select">${this._opcoesCoord(coordsImp, window._appProfile?.coordenadoria_id || '')}</select></div>
+      <div class="form-group"><label class="form-label">Evento / projeto (opcional)</label>
+        <input id="imp-evento" class="form-input" maxlength="80" placeholder="Ex: Bottom Up 7.0"></div>`
+      : `${campo('qtd', 'Quantidade', false)}
+      ${campo('cliente', 'Cliente (só pra marcar categoria "Bottom Up")', false)}`}
       <div class="form-section-header" style="margin-top:14px;font-size:12px;font-weight:700;color:var(--c-slate);text-transform:uppercase">Prévia (${this._importLinhas.length} linha(s) no arquivo)</div>
       <div style="overflow-x:auto;max-height:180px;overflow-y:auto;border:1px solid var(--b-2);border-radius:8px;margin-top:8px">
         <table style="width:100%;font-size:11px;border-collapse:collapse">
@@ -2166,12 +2272,18 @@ const PageFinancas = {
         </table>
       </div>
       <div style="margin-top:14px">
-        ${_btn(`Confirmar importação (${this._importLinhas.length} linha(s))`, 'PageFinancas._confirmarImportacao()')}
+        ${_btn(`Confirmar importação de ${ehDespesa ? 'despesas' : 'vendas'} (${this._importLinhas.length} linha(s))`, 'PageFinancas._confirmarImportacao()')}
       </div>`;
   },
   async _confirmarImportacao() {
     const map = this._importMapeamento;
-    if (!map.data || !map.produto || !map.valor) { mostrarToast('Selecione pelo menos Data, Produto e Valor.', 'warning'); return; }
+    const ehDespesa = this._importDestino === 'despesas';
+    const tabela = ehDespesa ? 'despesas' : 'vendas';
+    if (!map.data || !map.produto || !map.valor) { mostrarToast(`Selecione pelo menos Data, ${ehDespesa ? 'Descrição' : 'Produto'} e Valor.`, 'warning'); return; }
+    const v = (id) => document.getElementById(id)?.value?.trim() || '';
+    const lote = { categoria: v('imp-cat'), solicitante: v('imp-solic'), evento: v('imp-evento') || null };
+    if (ehDespesa && !lote.categoria) { mostrarToast('Selecione a categoria das despesas.', 'warning'); return; }
+    if (ehDespesa && !lote.solicitante) { mostrarToast('Selecione a coordenadoria solicitante.', 'warning'); return; }
     const coords = await getCoords();
     const fin = coords.find(c => c.sigla === 'FIN');
     let ignoradas = 0;
@@ -2179,28 +2291,36 @@ const PageFinancas = {
     for (const r of this._importLinhas) {
       const data = this._paraDataISO(r[map.data]);
       const produto = String(r[map.produto] || '').trim();
-      const valor = this._paraValorNumerico(r[map.valor]);
+      let valor = this._paraValorNumerico(r[map.valor]);
       if (!data || !produto || isNaN(valor)) { ignoradas++; continue; }
-      const qtdRaw = map.qtd ? r[map.qtd] : null;
-      const qtd = qtdRaw != null && !isNaN(parseInt(qtdRaw, 10)) ? parseInt(qtdRaw, 10) : 1;
-      const cliente = map.cliente ? String(r[map.cliente] || '') : '';
-      const categoria = /bottom\s*up/i.test(cliente) ? 'Bottom Up' : 'Lojinha';
-      linhasValidas.push({ data_venda: data, produto, descricao: produto, valor, quantidade: qtd, categoria });
+      if (ehDespesa) {
+        /* Planilhas de despesa costumam trazer o valor negativo (saída). No
+           sistema a despesa é sempre positiva — o sinal vem do tipo. */
+        valor = Math.abs(valor);
+        if (!valor) { ignoradas++; continue; }
+        linhasValidas.push({ data_despesa: data, descricao: produto, valor, categoria: lote.categoria, evento: lote.evento, solicitante_coord_id: lote.solicitante });
+      } else {
+        const qtdRaw = map.qtd ? r[map.qtd] : null;
+        const qtd = qtdRaw != null && !isNaN(parseInt(qtdRaw, 10)) ? parseInt(qtdRaw, 10) : 1;
+        const cliente = map.cliente ? String(r[map.cliente] || '') : '';
+        const categoria = /bottom\s*up/i.test(cliente) ? 'Bottom Up' : 'Lojinha';
+        linhasValidas.push({ data_venda: data, produto, descricao: produto, valor, quantidade: qtd, categoria });
+      }
     }
     if (!linhasValidas.length) { mostrarToast('Nenhuma linha válida encontrada — confira o mapeamento das colunas.', 'error'); return; }
     fecharModal();
     mostrarToast('Importando...', 'info', 2000);
     try {
-      const { data: lote, error: loteErr } = await _sbq().from('importacoes').insert([{
-        nome_arquivo: this._importArquivoNome, tabela_destino: 'vendas',
+      const { data: loteRow, error: loteErr } = await _sbq().from('importacoes').insert([{
+        nome_arquivo: this._importArquivoNome, tabela_destino: tabela,
         total_linhas: linhasValidas.length, coordenadoria_id: fin?.id || null,
         importado_por: window._appProfile?.id,
       }]).select('id').single();
-      if (loteErr || !lote) throw loteErr || new Error('sem permissão');
-      const rows = linhasValidas.map(r => ({ ...r, coordenadoria_id: fin?.id || null, registrado_por: window._appProfile?.id, importacao_id: lote.id }));
-      const ok = await dbEfetivou(_sbq().from('vendas').insert(rows));
-      if (!ok) { await _sbq().from('importacoes').delete().eq('id', lote.id); throw new Error('sem permissão'); }
-      mostrarToast(`${linhasValidas.length} venda(s) importada(s)!${ignoradas ? ` (${ignoradas} linha(s) ignorada(s) por dado incompleto)` : ''}`, 'success', 5000);
+      if (loteErr || !loteRow) throw loteErr || new Error('sem permissão');
+      const rows = linhasValidas.map(r => ({ ...r, coordenadoria_id: fin?.id || null, registrado_por: window._appProfile?.id, importacao_id: loteRow.id }));
+      const ok = await dbEfetivou(_sbq().from(tabela).insert(rows));
+      if (!ok) { await _sbq().from('importacoes').delete().eq('id', loteRow.id); throw new Error('sem permissão'); }
+      mostrarToast(`${linhasValidas.length} ${ehDespesa ? 'despesa(s)' : 'venda(s)'} importada(s)!${ignoradas ? ` (${ignoradas} linha(s) ignorada(s) por dado incompleto)` : ''}`, 'success', 5000);
       this._importLinhas = null;
       this._carregarFluxo();
     } catch (e) {
@@ -2219,13 +2339,13 @@ const PageFinancas = {
       <div style="background:var(--b-1);border:1px solid var(--b-2);border-radius:10px;padding:12px 16px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:8px">
         <div style="flex:1;min-width:0">
           <div style="font-weight:600;font-size:13px;color:var(--c-white)">${sanitize(i.nome_arquivo)}</div>
-          <div style="font-size:12px;color:var(--c-slate)">📅 ${_fmt(i.created_at)} · ${i.total_linhas} linha(s) · por ${sanitize(i.users?.apelido || i.users?.nome || '—')}</div>
+          <div style="font-size:12px;color:var(--c-slate)">📅 ${_fmt(i.created_at)} · ${i.tabela_destino === 'despesas' ? '🔴 despesas' : '💚 vendas'} · ${i.total_linhas} linha(s) · por ${sanitize(i.users?.apelido || i.users?.nome || '—')}</div>
         </div>
         <button class="btn btn-ghost" style="padding:4px 8px;font-size:12px;color:var(--red)" title="Excluir importação e todos os lançamentos dela" onclick="PageFinancas._excluirImportacao('${i.id}')">🗑️ Excluir</button>
       </div>`).join('') : '<div style="padding:16px;text-align:center;color:var(--c-slate);font-size:13px">Nenhuma importação registrada ainda.</div>';
   },
   async _excluirImportacao(id) {
-    if (!confirm('Excluir esta importação? Todas as vendas geradas por ela também serão apagadas. Esta ação não pode ser desfeita.')) return;
+    if (!confirm('Excluir esta importação? Todos os lançamentos (vendas ou despesas) gerados por ela também serão apagados. Esta ação não pode ser desfeita.')) return;
     const ok = await dbEfetivou(_sbq().from('importacoes').delete().eq('id', id));
     if (!ok) { mostrarToast('Sem permissão para excluir esta importação.', 'error'); return; }
     mostrarToast('Importação e lançamentos excluídos!', 'success');
