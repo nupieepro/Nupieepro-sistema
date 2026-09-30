@@ -3957,21 +3957,17 @@ const PagePessoas = {
     const e = (this._treinCache || []).find(t => String(t.id) === String(id));
     if (!e || !_sbq()) return;
     try {
-      const [insc, freq, membros] = await Promise.all([
-        _sbq().from('inscritos_evento').select('user_id,users(nome,apelido)').eq('evento_id', id).neq('status','cancelado'),
-        _sbq().from('frequencia').select('user_id,presente').eq('evento_id', id),
-        _sbq().from('users').select('id,nome,apelido').eq('ativo', true).order('nome'),
+      /* RPCs security definer (migração 016): users_read só deixa ver a
+         própria coordenadoria, então ler users direto dava nome em branco
+         pra inscrito de outra coordenadoria. */
+      const [lst, membros] = await Promise.all([
+        _sbq().rpc('treinamento_presenca_lista', { p_evento_id: id }),
+        _sbq().rpc('membros_ativos_basico'),
       ]);
-      if (insc.error || freq.error) throw (insc.error || freq.error);
-      const presenca = new Map((freq.data||[]).map(f => [f.user_id, f.presente]));
+      if (lst.error) throw lst.error;
+      const presenca = new Map((lst.data||[]).map(r => [r.user_id, r.presente]));
       const lista = new Map();
-      (insc.data||[]).forEach(r => lista.set(r.user_id, { id:r.user_id, nome:r.users?.nome, apelido:r.users?.apelido, inscrito:true }));
-      (freq.data||[]).forEach(f => {
-        if (!lista.has(f.user_id)) {
-          const m = (membros.data||[]).find(u => u.id === f.user_id);
-          lista.set(f.user_id, { id:f.user_id, nome:m?.nome, apelido:m?.apelido, inscrito:false });
-        }
-      });
+      (lst.data||[]).forEach(r => lista.set(r.user_id, { id:r.user_id, nome:r.nome, apelido:r.apelido, inscrito:r.inscrito }));
       this._presencaEventoId = id;
       this._presencaLista = lista;
       const extras = (membros.data||[]).filter(u => !lista.has(u.id));

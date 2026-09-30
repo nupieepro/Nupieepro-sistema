@@ -5,7 +5,7 @@
    browsers continuam servindo assets antigos do cache do SW.
    ============================================================ */
 
-const CACHE_NAME = 'nupieepro-v127';
+const CACHE_NAME = 'nupieepro-v128';
 const ASSETS = [
   './',
   './index.html',
@@ -13,19 +13,19 @@ const ASSETS = [
   './convite.html',
   './reset.html',
   './privacidade.html',
-  './css/styles.css?v=127',
+  './css/styles.css?v=128',
   './js/config.defaults.js',
-  './js/vendor/supabase.min.js?v=127',
-  './js/app.js?v=127',
-  './js/auth.js?v=127',
-  './js/abj.js?v=127',
-  './js/pages.js?v=127',
-  './js/permissoes.js?v=127',
-  './js/emails.js?v=127',
-  './js/relatorio.js?v=127',
-  './js/documentos.js?v=127',
-  './js/validacao.js?v=127',
-  './js/push.js?v=127',
+  './js/vendor/supabase.min.js?v=128',
+  './js/app.js?v=128',
+  './js/auth.js?v=128',
+  './js/abj.js?v=128',
+  './js/pages.js?v=128',
+  './js/permissoes.js?v=128',
+  './js/emails.js?v=128',
+  './js/relatorio.js?v=128',
+  './js/documentos.js?v=128',
+  './js/validacao.js?v=128',
+  './js/push.js?v=128',
   './manifest.json',
   './assets/icon-192.png',
   './assets/icon-512.png',
