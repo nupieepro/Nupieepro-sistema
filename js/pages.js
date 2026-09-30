@@ -1819,12 +1819,13 @@ const PageFinancas = {
           categoria: v('ed-cat'), solicitante: v('ed-solic'),
           quantidade: ehVenda ? parseInt(v('ed-qtd') || '1', 10) : null,
         };
-        /* Despesa antiga (sem solicitante gravado) pode ser editada sem
-           inventar um solicitante: só exige quando já havia ou quando o
-           usuário escolheu um. */
-        const validar = (!ehVenda && !r.solicitante_coord_id && !dados.solicitante)
-          ? { ...dados, solicitante: 'legado' } : dados;
-        const erro = window.validarLancamento(validar);
+        /* Lançamento antigo pode ser corrigido sem inventar solicitante (só é
+           exigido se já havia um) e sem ser barrado por data legada que o
+           usuário nem tocou. */
+        const erro = window.validarLancamento(dados, undefined, {
+          solicitanteOpcional: !ehVenda && !r.solicitante_coord_id,
+          ignorarRegrasDeData: dados.data === (r[dataField] || ''),
+        });
         if (erro) { mostrarToast(erro, 'warning'); return; }
         const campos = {
           descricao: dados.descricao, valor: dados.valor, [dataField]: dados.data,
@@ -1834,6 +1835,7 @@ const PageFinancas = {
         else campos.solicitante_coord_id = dados.solicitante || null;
         const ok = await dbEfetivou(_sbq().from(tabela).update(campos).eq('id', id));
         if (!ok) { mostrarToast('Sem permissão para editar este lançamento.','error'); return; }
+        PageFinancas._eventosCache = null;
         fecharModal();
         mostrarToast('Atualizado!','success');
         PageFinancas._carregarFluxo();
@@ -1904,11 +1906,12 @@ const PageFinancas = {
     /* Busca tudo uma vez (o volume é pequeno) e filtra no cliente: a chave é
        "evento, senão categoria", e um filtro .or() do PostgREST quebraria com
        vírgula/parêntese no nome do evento. */
-    const [rv, rd] = await Promise.all([
-      _sbq().from('vendas').select('*'),
-      _sbq().from('despesas').select('*'),
-    ]);
-    this._catVendas = rv.data || []; this._catDespesas = rd.data || [];
+    try {
+      [this._catVendas, this._catDespesas] = await Promise.all([
+        this._buscarTodos('vendas', 'id,descricao,valor,categoria,evento,data_venda', 'data_venda'),
+        this._buscarTodos('despesas', 'id,descricao,valor,categoria,evento,data_despesa', 'data_despesa'),
+      ]);
+    } catch (e) { mostrarToast('Não foi possível carregar os indicadores.', 'error'); return; }
     const cats = [...new Set([...this._catVendas, ...this._catDespesas].map(window.chaveCategoriaEvento).filter(Boolean))].sort();
     if (!cats.length) {
       mostrarToast('Nenhuma categoria ou evento registrado ainda.', 'info', 4000);
@@ -1976,23 +1979,39 @@ const PageFinancas = {
     return `<option value="">Selecione…</option>` +
       coords.map(c => `<option value="${c.id}" ${c.id === selecionado ? 'selected' : ''}>${sanitize(c.sigla ? `${c.sigla} — ${c.nome}` : c.nome)}</option>`).join('');
   },
+  /* PostgREST corta respostas em 1000 linhas sem dar erro — então buscas que
+     precisam do conjunto INTEIRO pagam por páginas. */
+  async _buscarTodos(tabela, colunas, ordem) {
+    const PAGINA = 1000, todas = [];
+    for (let de = 0; ; de += PAGINA) {
+      const { data, error } = await _sbq().from(tabela).select(colunas).order(ordem).range(de, de + PAGINA - 1);
+      if (error) throw error;
+      todas.push(...(data || []));
+      if (!data || data.length < PAGINA) break;
+    }
+    return todas;
+  },
   /* Nomes de evento já usados (vendas + despesas) — alimenta o datalist pra
      todo mundo escrever o evento do mesmo jeito e o resumo por evento não
-     se fragmentar ("Bottom Up 7.0" vs "bottom up 7"). */
+     se fragmentar ("Bottom Up 7.0" vs "bottom up 7"). Cache curto: abrir o
+     modal de lançar/editar não deve custar 2 consultas toda vez. */
   async _eventosConhecidos() {
+    const c = this._eventosCache;
+    if (c && Date.now() - c.t < 60000) return c.lista;
     try {
       const [rv, rd] = await Promise.all([
-        _sbq().from('vendas').select('evento'),
-        _sbq().from('despesas').select('evento'),
+        this._buscarTodos('vendas', 'id,evento', 'id'),
+        this._buscarTodos('despesas', 'id,evento', 'id'),
       ]);
-      return [...new Set([...(rv.data||[]), ...(rd.data||[])].map(r => (r.evento||'').trim()).filter(Boolean))].sort();
-    } catch (_) { return []; }
+      const lista = [...new Set([...rv, ...rd].map(r => (r.evento||'').trim()).filter(Boolean))].sort();
+      this._eventosCache = { t: Date.now(), lista };
+      return lista;
+    } catch (_) { return c ? c.lista : []; }
   },
   async lancar(tipo) {
     const hoje = new Date().toISOString().split('T')[0];
     const ehVenda = tipo === 'venda';
     const [coords, eventos] = await Promise.all([getCoords(), this._eventosConhecidos()]);
-    const minhaCoord = window._appProfile?.coordenadoria_id || '';
     abrirModal({ titulo: ehVenda ? '💚 Registrar Venda' : '🔴 Registrar Despesa', tipo: 'info', corpo: `
       <div class="form-group"><label class="form-label">Descrição *</label>
         <input id="fl-desc" class="form-input" maxlength="200" placeholder="${ehVenda ? 'Ex: Camisetas NUPIEEPRO' : 'Ex: Impressão de banner'}"></div>
@@ -2013,8 +2032,8 @@ const PageFinancas = {
         <select id="fl-cat" class="form-select">${this._opcoesCategoria(ehVenda ? 'Lojinha' : '')}</select></div>
       ${ehVenda ? '' : `
       <div class="form-group"><label class="form-label">Coordenadoria solicitante *</label>
-        <select id="fl-solic" class="form-select">${this._opcoesCoord(coords, minhaCoord)}</select>
-        <small style="color:var(--c-slate);margin-top:4px;display:block">Quem pediu esse dinheiro (não é quem está lançando).</small></div>`}
+        <select id="fl-solic" class="form-select">${this._opcoesCoord(coords, '')}</select>
+        <small style="color:var(--c-slate);margin-top:4px;display:block">Quem pediu esse dinheiro — escolha sempre, mesmo que seja a própria Finanças.</small></div>`}
       <div class="form-group"><label class="form-label">Evento / projeto (opcional)</label>
         <input id="fl-evento" class="form-input" maxlength="80" list="fl-evento-lista" placeholder="Ex: Bottom Up 7.0">
         <datalist id="fl-evento-lista">${eventos.map(e => `<option value="${sanitize(e)}">`).join('')}</datalist>
@@ -2050,6 +2069,7 @@ const PageFinancas = {
       /* dbEfetivou confere se a linha entrou de fato — antes o toast dizia
          "registrada" mesmo quando a RLS barrava e nada era gravado. */
       if (!(await dbEfetivou(query))) { mostrarToast('Não foi possível registrar (sem permissão ou erro de conexão).', 'error'); if (btn) btn.disabled = false; return; }
+      this._eventosCache = null;
       fecharModal();
       mostrarToast(`${tipo === 'venda' ? 'Venda' : 'Despesa'} registrada!`, 'success');
       this._carregarFluxo();
@@ -2154,7 +2174,7 @@ const PageFinancas = {
           <option value="vendas">💚 Vendas (entradas)</option>
           <option value="despesas">🔴 Despesas (saídas)</option>
         </select>
-        <small style="color:var(--c-slate);margin-top:4px;display:block">Escolha certo: despesa importada como venda soma no caixa em vez de subtrair.</small>
+        <small style="color:var(--c-slate);margin-top:4px;display:block">Escolha certo: despesa importada como venda soma no caixa em vez de subtrair. Em planilhas de despesa, valores negativos são tratados como saída.</small>
       </div>
       <p style="font-size:13px;color:var(--c-slate);margin-bottom:14px">
         Envie um arquivo <strong>.xlsx</strong> ou <strong>.csv</strong> (primeira aba, uma linha por lançamento).
@@ -2259,7 +2279,7 @@ const PageFinancas = {
       <div class="form-group"><label class="form-label">Categoria de todas as linhas *</label>
         <select id="imp-cat" class="form-select">${this._opcoesCategoria('')}</select></div>
       <div class="form-group"><label class="form-label">Coordenadoria solicitante de todas as linhas *</label>
-        <select id="imp-solic" class="form-select">${this._opcoesCoord(coordsImp, window._appProfile?.coordenadoria_id || '')}</select></div>
+        <select id="imp-solic" class="form-select">${this._opcoesCoord(coordsImp, '')}</select></div>
       <div class="form-group"><label class="form-label">Evento / projeto (opcional)</label>
         <input id="imp-evento" class="form-input" maxlength="80" placeholder="Ex: Bottom Up 7.0"></div>`
       : `${campo('qtd', 'Quantidade', false)}
@@ -2293,18 +2313,27 @@ const PageFinancas = {
       const produto = String(r[map.produto] || '').trim();
       let valor = this._paraValorNumerico(r[map.valor]);
       if (!data || !produto || isNaN(valor)) { ignoradas++; continue; }
+      /* Planilhas de despesa costumam trazer o valor negativo (saída). No
+         sistema a despesa é sempre positiva — o sinal vem do tipo. */
+      if (ehDespesa) valor = Math.abs(valor);
+      valor = Math.round(valor * 100) / 100;   // planilha pode trazer 3+ casas
+      const descricao = produto.slice(0, 200);
+      const qtdRaw = map.qtd ? r[map.qtd] : null;
+      const qtd = qtdRaw != null && !isNaN(parseInt(qtdRaw, 10)) ? parseInt(qtdRaw, 10) : 1;
+      /* Mesma validação do formulário manual (teto do numeric(10,2), data
+         plausível, quantidade): uma linha fora disso é ignorada e contada, em
+         vez de estourar o lote inteiro no banco. */
+      if (window.validarLancamento({
+        tipo: ehDespesa ? 'despesa' : 'venda', descricao, valor, data,
+        categoria: ehDespesa ? lote.categoria : 'Lojinha', solicitante: lote.solicitante || 'lote',
+        quantidade: ehDespesa ? null : qtd,
+      })) { ignoradas++; continue; }
       if (ehDespesa) {
-        /* Planilhas de despesa costumam trazer o valor negativo (saída). No
-           sistema a despesa é sempre positiva — o sinal vem do tipo. */
-        valor = Math.abs(valor);
-        if (!valor) { ignoradas++; continue; }
-        linhasValidas.push({ data_despesa: data, descricao: produto, valor, categoria: lote.categoria, evento: lote.evento, solicitante_coord_id: lote.solicitante });
+        linhasValidas.push({ data_despesa: data, descricao, valor, categoria: lote.categoria, evento: lote.evento, solicitante_coord_id: lote.solicitante });
       } else {
-        const qtdRaw = map.qtd ? r[map.qtd] : null;
-        const qtd = qtdRaw != null && !isNaN(parseInt(qtdRaw, 10)) ? parseInt(qtdRaw, 10) : 1;
         const cliente = map.cliente ? String(r[map.cliente] || '') : '';
         const categoria = /bottom\s*up/i.test(cliente) ? 'Bottom Up' : 'Lojinha';
-        linhasValidas.push({ data_venda: data, produto, descricao: produto, valor, quantidade: qtd, categoria });
+        linhasValidas.push({ data_venda: data, produto, descricao, valor, quantidade: qtd, categoria });
       }
     }
     if (!linhasValidas.length) { mostrarToast('Nenhuma linha válida encontrada — confira o mapeamento das colunas.', 'error'); return; }
@@ -2320,8 +2349,9 @@ const PageFinancas = {
       const rows = linhasValidas.map(r => ({ ...r, coordenadoria_id: fin?.id || null, registrado_por: window._appProfile?.id, importacao_id: loteRow.id }));
       const ok = await dbEfetivou(_sbq().from(tabela).insert(rows));
       if (!ok) { await _sbq().from('importacoes').delete().eq('id', loteRow.id); throw new Error('sem permissão'); }
-      mostrarToast(`${linhasValidas.length} ${ehDespesa ? 'despesa(s)' : 'venda(s)'} importada(s)!${ignoradas ? ` (${ignoradas} linha(s) ignorada(s) por dado incompleto)` : ''}`, 'success', 5000);
+      mostrarToast(`${linhasValidas.length} ${ehDespesa ? 'despesa(s)' : 'venda(s)'} importada(s)!${ignoradas ? ` (${ignoradas} linha(s) ignorada(s) por dado incompleto ou inválido)` : ''}`, 'success', 5000);
       this._importLinhas = null;
+      this._eventosCache = null;
       this._carregarFluxo();
     } catch (e) {
       mostrarToast('Erro ao importar: ' + (e.message || 'sem permissão'), 'error');
@@ -4085,6 +4115,7 @@ const PagePessoas = {
         _sbq().rpc('membros_ativos_basico'),
       ]);
       if (lst.error) throw lst.error;
+      if (membros.error) mostrarToast('Lista de membros indisponível: só dá pra marcar quem já está na lista.', 'warning', 5000);
       const presenca = new Map((lst.data||[]).map(r => [r.user_id, r.presente]));
       const lista = new Map();
       (lst.data||[]).forEach(r => lista.set(r.user_id, { id:r.user_id, nome:r.nome, apelido:r.apelido, inscrito:r.inscrito }));

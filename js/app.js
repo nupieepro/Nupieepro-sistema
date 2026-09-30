@@ -66,7 +66,6 @@ const ROLE_PAGES = {
     { id: 'gp_talentos',     icon: 'users',         label: 'Banco de Talentos' },
     { id: 'gp_clima',        icon: 'thermometer',   label: 'Pesquisa de Clima' },
     { id: 'gp_aniversarios', icon: 'gift',          label: 'Aniversários do Núcleo' },
-    { id: 'gp_treinamentos', icon: 'book-open',     label: 'Treinamentos Internos' },
   ],
   'Marketing':  [
     { id: 'dashboard',          icon: 'grid',         label: 'Painel Central' },
@@ -108,6 +107,10 @@ const GLOBAL_PAGES = [
   { id: 'global_producao',      icon: 'file',  label: 'Produção Científica' },
   { id: 'global_assembleia',    icon: 'users', label: 'Assembleia e Votos' },
   { id: 'global_checkin',       icon: 'check-square', label: 'Check-in Digital' },
+  /* Treinamentos Internos é gerido pela GP, mas TODO membro precisa abrir a
+     página pra se inscrever — por isso fica aqui (Institucional) e não só
+     na pasta da GP, que as demais coordenadorias não enxergam. */
+  { id: 'gp_treinamentos',      icon: 'book-open', label: 'Treinamentos Internos' },
 ];
 window.ROLE_PAGES   = ROLE_PAGES;
 window.GLOBAL_PAGES = GLOBAL_PAGES;

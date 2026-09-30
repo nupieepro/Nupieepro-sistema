@@ -115,3 +115,20 @@ test('separador dentro de aspas no cabeçalho não conta', () => {
   assert.equal(detectarSeparadorCSV('"Nome; completo",Valor,Data\nAna,1,2026-09-10'), ',');
   assert.equal(detectarSeparadorCSV(''), ',');
 });
+
+test('valor legítimo perto do teto não é rejeitado por erro de ponto flutuante', () => {
+  assert.equal(validarLancamento({ ...despesaOk, valor: 99999999.99 }, HOJE), null);
+  assert.equal(validarLancamento({ ...despesaOk, valor: 12345678.91 }, HOJE), null);
+  assert.equal(validarLancamento({ ...despesaOk, valor: 0.1 + 0.2 }, HOJE) !== null, true, '0.30000000000000004 tem mais de 2 casas');
+});
+
+test('data impossível (31/02) é rejeitada', () => {
+  assert.match(validarLancamento({ ...despesaOk, data: '2026-02-31' }, HOJE), /data/i);
+});
+
+test('edição de lançamento legado: pode ignorar só as regras de data e o solicitante ausente', () => {
+  const antiga = { ...despesaOk, data: '2018-03-05', solicitante: '' };
+  assert.match(validarLancamento(antiga, HOJE), /ano|solicitou/);
+  assert.equal(validarLancamento(antiga, HOJE, { ignorarRegrasDeData: true, solicitanteOpcional: true }), null);
+  assert.match(validarLancamento({ ...antiga, valor: 0 }, HOJE, { ignorarRegrasDeData: true, solicitanteOpcional: true }), /valor/i);
+});

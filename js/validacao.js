@@ -43,24 +43,31 @@ const VALOR_MAX_FIN = 99999999.99;
    mensagem de erro. `dados`: { tipo, descricao, valor, data, categoria,
    solicitante, quantidade }. Despesa exige categoria e coordenadoria
    solicitante; venda exige quantidade inteira >= 1. */
-function validarLancamento(dados, hoje) {
+function validarLancamento(dados, hoje, opcoes) {
   const d = dados || {};
+  const op = opcoes || {};
   if (!String(d.descricao || '').trim()) return 'Informe a descrição.';
   if (String(d.descricao).trim().length > 200) return 'Descrição muito longa (máx. 200 caracteres).';
   const v = Number(d.valor);
   if (!isFinite(v) || v <= 0) return 'Informe um valor maior que zero.';
   if (v > VALOR_MAX_FIN) return 'Valor acima do limite permitido.';
-  if (Math.abs(v * 100 - Math.round(v * 100)) > 1e-6) return 'Use no máximo 2 casas decimais no valor.';
+  /* toFixed(2) em vez de tolerância absoluta: perto do teto (~1e8) o erro de
+     ponto flutuante de v*100 passa de 1e-6 e recusaria valores legítimos. */
+  if (Number(v.toFixed(2)) !== v) return 'Use no máximo 2 casas decimais no valor.';
   if (!/^\d{4}-\d{2}-\d{2}$/.test(String(d.data || ''))) return 'Informe uma data válida.';
   const dt = new Date(d.data + 'T12:00:00');
-  if (isNaN(dt)) return 'Informe uma data válida.';
-  const ref = hoje ? new Date(hoje) : new Date();
-  const limite = new Date(ref); limite.setFullYear(limite.getFullYear() + 1);
-  if (dt > limite) return 'A data está mais de 1 ano no futuro. Confira.';
-  if (dt.getFullYear() < 2020) return 'A data parece errada. Confira o ano.';
+  if (isNaN(dt) || dt.toISOString().slice(0, 10) !== d.data) return 'Informe uma data válida.';
+  /* op.ignorarRegrasDeData: edição de lançamento antigo em que a data NÃO foi
+     mexida — não trava a correção de uma descrição por causa de data legada. */
+  if (!op.ignorarRegrasDeData) {
+    const ref = hoje ? new Date(hoje) : new Date();
+    const limite = new Date(ref); limite.setFullYear(limite.getFullYear() + 1);
+    if (dt > limite) return 'A data está mais de 1 ano no futuro. Confira.';
+    if (dt.getFullYear() < 2020) return 'A data parece errada. Confira o ano.';
+  }
   if (d.tipo === 'despesa') {
     if (!String(d.categoria || '').trim()) return 'Selecione a categoria da despesa.';
-    if (!d.solicitante) return 'Selecione a coordenadoria que solicitou o valor.';
+    if (!d.solicitante && !op.solicitanteOpcional) return 'Selecione a coordenadoria que solicitou o valor.';
   }
   if (d.tipo === 'venda' && d.quantidade != null) {
     const q = Number(d.quantidade);
