@@ -313,6 +313,10 @@ const Permissoes = (() => {
   ══════════════════════════════════════════ */
   const NIVEL_LABEL = {
     admin:      { label: 'Dev / Admin',        cor: '#d0541a', badge: '👨‍💻 DEV' },
+    /* Admin com cargo "Representante Estadual" (ABJ): mesmo poder do admin,
+       só muda o rótulo exibido. Não é um role novo — o banco segue vendo
+       'admin', então RLS e matriz de acesso não mudam. */
+    representante_estadual: { label: 'Representante Estadual (Admin)', cor: '#d0541a', badge: '🏅 REP. ESTADUAL' },
     coordenador_geral: { label: 'Coord. Geral', cor: '#6366f1', badge: '🏛️ GERAL' },
     coordenador: { label: 'Coordenador',        cor: '#a855f7', badge: '📋 COORD' },
     assessor:    { label: 'Assessor',           cor: '#22c55e', badge: '✅ ASS' },
@@ -320,7 +324,8 @@ const Permissoes = (() => {
     membro:      { label: 'Membro',             cor: '#6b7280', badge: '👤 MBR' },
   };
 
-  function getNivelInfo(role, coordSigla) {
+  function getNivelInfo(role, coordSigla, cargo) {
+    if (role === 'admin' && /representante\s+estadual/i.test(cargo || '')) return NIVEL_LABEL.representante_estadual;
     if (role === 'admin') return NIVEL_LABEL.admin;
     if (role === 'coordenador' && coordSigla === 'GER') return NIVEL_LABEL.coordenador_geral;
     return NIVEL_LABEL[role] || NIVEL_LABEL.membro;

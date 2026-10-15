@@ -140,3 +140,17 @@ test('todo membro, de qualquer coordenadoria, pode abrir Treinamentos Internos (
     require('../js/permissoes.js');
   }
 });
+
+test('admin com cargo Representante Estadual mantém poderes de admin e ganha rótulo próprio', () => {
+  const P = Permissoes;
+  const rep = P.getNivelInfo('admin', 'GER', 'Representante Estadual');
+  assert.equal(rep.badge, P.NIVEL_LABEL.representante_estadual.badge);
+  assert.equal(P.getNivelInfo('admin', 'GER', 'representante  estadual da ABJ').badge, rep.badge);
+  assert.equal(P.getNivelInfo('admin', 'GER', 'Desenvolvedor').badge, P.NIVEL_LABEL.admin.badge);
+  assert.equal(P.getNivelInfo('admin', 'GER').badge, P.NIVEL_LABEL.admin.badge);
+  /* o cargo sozinho nunca eleva quem não é admin */
+  assert.equal(P.getNivelInfo('membro', 'GER', 'Representante Estadual').badge, P.NIVEL_LABEL.membro.badge);
+  setPerfil({ role: 'admin', cargo: 'Representante Estadual', coordenadorias: { sigla: 'GER' } });
+  assert.equal(P.isAdmin(), true);
+  assert.equal(P.pode('podeAlterarRoles'), true);
+});

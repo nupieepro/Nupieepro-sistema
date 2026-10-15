@@ -4370,7 +4370,7 @@ const PageDev = {
       return;
     }
     el.innerHTML = list.map(u => {
-      const nivel = (window.Permissoes?.getNivelInfo(u.role, u.coordenadorias?.sigla)) || { cor:'#666', badge: u.role };
+      const nivel = (window.Permissoes?.getNivelInfo(u.role, u.coordenadorias?.sigla, u.cargo)) || { cor:'#666', badge: u.role };
       const ativoStyle = u.ativo ? 'var(--green)' : 'var(--red)';
       return `
         <div style="background:var(--b-1);border:1px solid var(--b-2);border-radius:10px;
