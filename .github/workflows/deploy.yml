@@ -20,6 +20,9 @@ jobs:
         run: npm test
 
   deploy:
+    # Só publica se os testes passarem (antes os dois jobs rodavam em paralelo,
+    # então um teste vermelho não impedia o deploy).
+    needs: test
     runs-on: ubuntu-latest
     permissions:
       contents: read

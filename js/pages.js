@@ -4382,7 +4382,7 @@ const PageDev = {
             </div>
             <div>
               <div style="font-weight:700;font-size:13px;color:var(--c-white)">
-                ${sanitize(u.apelido ? u.nome + ' <span style="color:var(--c-slate)">(' + u.apelido + ')</span>' : u.nome||u.email||'—')}
+                ${u.apelido ? sanitize(u.nome||'') + ' <span style="color:var(--c-slate)">(' + sanitize(u.apelido) + ')</span>' : sanitize(u.nome||u.email||'—')}
               </div>
               <div style="font-size:11px;color:var(--c-slate)">${sanitize(u.email||'—')} · ${sanitize(u.coordenadorias?.nome||'Sem coord')} · ${u.cargo||'—'}</div>
               ${u.aniversario ? `<div style="font-size:10px;color:var(--c-slate)">🎂 ${_fmt(u.aniversario)}</div>` : ''}
