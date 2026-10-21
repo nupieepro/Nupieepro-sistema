@@ -4321,6 +4321,7 @@ const PageDev = {
           <option value="coordenador">Coordenador</option>
           <option value="assessor">Assessor</option>
           <option value="conselheiro">Conselheiro</option>
+          <option value="observador">Observador</option>
           <option value="membro">Membro</option>
         </select>
         <select id="devFiltroCoord" class="form-select" style="max-width:180px" onchange="PageDev._filtrarUsuarios()">
@@ -4370,7 +4371,7 @@ const PageDev = {
       return;
     }
     el.innerHTML = list.map(u => {
-      const nivel = (window.Permissoes?.getNivelInfo(u.role, u.coordenadorias?.sigla)) || { cor:'#666', badge: u.role };
+      const nivel = (window.Permissoes?.getNivelInfo(u.role, u.coordenadorias?.sigla, u.cargo)) || { cor:'#666', badge: u.role };
       const ativoStyle = u.ativo ? 'var(--green)' : 'var(--red)';
       return `
         <div style="background:var(--b-1);border:1px solid var(--b-2);border-radius:10px;
@@ -4423,6 +4424,7 @@ const PageDev = {
           <option value="coordenador"${u.role==='coordenador'?'selected':''}>📋 Coordenador</option>
           <option value="assessor"   ${u.role==='assessor'?'selected':''}>✅ Assessor</option>
           <option value="conselheiro"${u.role==='conselheiro'?'selected':''}>⭐ Conselheiro</option>
+          <option value="observador" ${u.role==='observador'?'selected':''}>👁️ Observador (só leitura)</option>
           <option value="membro"     ${u.role==='membro'?'selected':''}>👤 Membro</option>
         </select></div>
       <div class="form-group"><label class="form-label">Coordenadoria</label>
@@ -4562,6 +4564,7 @@ const PageDev = {
           <option value="assessor">Assessor</option>
           <option value="coordenador">Coordenador</option>
           <option value="admin">Admin</option>
+          <option value="observador">Observador (só leitura)</option>
         </select></div>
       <div class="form-group"><label class="form-label">Cargo (texto livre)</label>
         <input id="nc-cargo" class="form-input" placeholder="Ex: Vice Coordenador, Assessor de Projetos…"></div>`,
@@ -4626,7 +4629,7 @@ const PageDev = {
     const el = document.getElementById('devTabContent');
     if (!el) return;
     const P = window.Permissoes;
-    const roles = ['admin','coordenador_geral','coordenador','assessor','conselheiro','membro'];
+    const roles = ['admin','coordenador_geral','coordenador','assessor','conselheiro','observador','membro'];
     const feats = [
       ['podeGerenciarUsuarios','Gerenciar usuários'],
       ['podeAlterarRoles','Alterar roles'],

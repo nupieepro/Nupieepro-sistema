@@ -373,7 +373,7 @@ const App = {
 
     /* ── Admin e Coord Geral: vê todas as pastas (a própria já vem aberta) ── */
     const isCoordGeral = role === 'coordenador' && sigla === 'GER';
-    if (role === 'admin' || isCoordGeral) {
+    if (role === 'admin' || isCoordGeral || role === 'observador') {
       html += '<div class="sidebar-section">Coordenadorias</div>';
       Object.keys(ROLE_PAGES).filter(k => k !== 'Conselheiro').forEach(nome => {
         html += _folderHtml(nome, ROLE_PAGES[nome], nome === cName);
