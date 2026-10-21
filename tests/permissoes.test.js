@@ -153,4 +153,15 @@ test('admin com cargo Representante Estadual mantém poderes de admin e ganha r�
   setPerfil({ role: 'admin', cargo: 'Representante Estadual', coordenadorias: { sigla: 'GER' } });
   assert.equal(P.isAdmin(), true);
   assert.equal(P.pode('podeAlterarRoles'), true);
+
+test('observador navega por tudo mas não tem nenhum poder de escrita', () => {
+  const P = Permissoes;
+  setPerfil({ role: 'observador', coordenadorias: { nome: 'Geral', sigla: 'GER' } });
+  assert.equal(P.podeVer('qualquer_pagina_inventada'), true);
+  assert.equal(P.isAdmin(), false);
+  const m = P.getMatriz('observador');
+  const flags = Object.keys(m).filter(k => k.startsWith('pode') && k !== 'podeVerFinanceiro');
+  for (const f of flags) assert.equal(m[f], false, `observador não pode ter ${f}`);
+  assert.equal(m.bypassRegrasNegocio, false);
+  assert.equal(P.getNivelInfo('observador', 'GER').badge, P.NIVEL_LABEL.observador.badge);
 });

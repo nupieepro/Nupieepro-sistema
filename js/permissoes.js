@@ -120,6 +120,27 @@ const Permissoes = (() => {
     },
 
     /**
+     * observador — login neutro de demonstração: navega por TODAS as páginas
+     * (como admin/Coord. Geral) mas não escreve nada. A garantia real está no
+     * banco (migração 018: policies RESTRICTIVE de INSERT/UPDATE/DELETE);
+     * estas flags só escondem o que a tela não deve oferecer.
+     */
+    observador: {
+      pagesVisible: '*',
+      podeGerenciarUsuarios: false,
+      podeAlterarRoles: false,
+      podeVerLogs: false,
+      podeCriarConvite: false,
+      podeCriarEvento: false,
+      podeEditarDemanda: false,
+      podeAprovarRelatorio: false,
+      podeVerFinanceiro: true,      /* leitura */
+      podeLancarlancamento: false,
+      bypassRegrasNegocio: false,
+      isAdmin: false,
+    },
+
+    /**
      * membro — mesma pasta da sua coordenadoria (só sem os poderes de
      * gestão do coordenador/assessor). Sem coordenadoria_id, não vê
      * nada além do universal (getCoordPages devolve lista vazia).
@@ -321,6 +342,7 @@ const Permissoes = (() => {
     coordenador: { label: 'Coordenador',        cor: '#a855f7', badge: '📋 COORD' },
     assessor:    { label: 'Assessor',           cor: '#22c55e', badge: '✅ ASS' },
     conselheiro: { label: 'Conselheiro',        cor: '#eab308', badge: '⭐ CONS' },
+    observador:  { label: 'Observador (leitura)', cor: '#0ea5e9', badge: '👁️ OBS' },
     membro:      { label: 'Membro',             cor: '#6b7280', badge: '👤 MBR' },
   };
 
