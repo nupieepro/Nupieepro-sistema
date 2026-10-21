@@ -153,6 +153,7 @@ test('admin com cargo Representante Estadual mantém poderes de admin e ganha r�
   setPerfil({ role: 'admin', cargo: 'Representante Estadual', coordenadorias: { sigla: 'GER' } });
   assert.equal(P.isAdmin(), true);
   assert.equal(P.pode('podeAlterarRoles'), true);
+});
 
 test('observador navega por tudo mas não tem nenhum poder de escrita', () => {
   const P = Permissoes;
