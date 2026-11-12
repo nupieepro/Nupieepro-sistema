@@ -138,7 +138,7 @@ const RelatorioModule = (() => {
                   </div>
                   <div style="font-size:12px;color:var(--c-slate)">
                     Pontos ABJ: <b style="color:var(--c-accent)">${r.pontos_abj||0} pts</b>
-                    &nbsp;·&nbsp; ${r.coordenadorias?.nome||'—'}
+                    &nbsp;·&nbsp; ${sanitize(r.coordenadorias?.nome||'—')}
                   </div>
                 </div>
                 <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">

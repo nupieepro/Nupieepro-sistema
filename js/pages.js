@@ -255,7 +255,7 @@ const PageGeral = {
             <div style="flex:1;min-width:0">
               <div style="font-weight:700;font-size:13px;color:var(--c-white)">${sanitize(r.titulo)}</div>
               <div style="font-size:12px;color:var(--c-slate)">📅 ${_fmt(r.data_inicio)} · ${r.vagas||0} vagas</div>
-              ${linkMeet?`<div style="font-size:11px;margin-top:4px"><a href="${sanitize(linkMeet)}" target="_blank" style="color:var(--c-accent);text-decoration:none">🎥 Entrar na reunião ↗</a></div>`:''}
+              ${linkMeet?`<div style="font-size:11px;margin-top:4px"><a href="${sanitize(linkMeet)}" target="_blank" rel="noopener noreferrer" style="color:var(--c-accent);text-decoration:none">🎥 Entrar na reunião ↗</a></div>`:''}
             </div>
             <div style="display:flex;align-items:center;gap:6px">
               <span style="font-size:11px;font-weight:700;padding:3px 9px;border-radius:99px;
@@ -834,7 +834,7 @@ const PageGeral = {
         <div class="form-group"><label class="form-label">Evento *</label>
           <select id="ci-evento" class="form-select">${opts||'<option>Nenhum evento ativo</option>'}</select></div>
         <div class="form-group"><label class="form-label">Membro</label>
-          <input id="ci-nome" class="form-input" placeholder="Nome completo (ou vazio = você mesmo)" value="${window._appProfile?.nome||''}"></div>`,
+          <input id="ci-nome" class="form-input" placeholder="Nome completo (ou vazio = você mesmo)" value="${sanitize(window._appProfile?.nome||'')}"></div>`,
       botoes:[
         {texto:'Cancelar',classe:'btn-ghost',acao:fecharModal},
         {texto:'Registrar ✓',classe:'btn-primary',acao:()=>this._salvarCheckin()}
@@ -895,14 +895,14 @@ function _renderAppEmbed(opts) {
           <div style="font-size:16px;font-weight:700;color:var(--c-white)">${sanitize(titulo)}</div>
           ${descricao ? `<div style="font-size:13px;color:var(--c-slate);margin-top:6px;max-width:360px">${sanitize(descricao)}</div>` : ''}
         </div>
-        <a href="${url}" target="_blank" class="btn btn-primary" style="text-decoration:none">Abrir ↗</a>
+        <a href="${url}" target="_blank" rel="noopener noreferrer" class="btn btn-primary" style="text-decoration:none">Abrir ↗</a>
       </div>`;
     return;
   }
   ct.innerHTML = `
     <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:12px">
       <div style="font-size:13px;color:var(--c-slate)">${icon} <strong style="color:var(--c-white)">${titulo}</strong> — app integrada</div>
-      <a href="${url}" target="_blank" class="btn btn-ghost" style="font-size:11px;padding:6px 12px;text-decoration:none">Abrir em nova aba ↗</a>
+      <a href="${url}" target="_blank" rel="noopener noreferrer" class="btn btn-ghost" style="font-size:11px;padding:6px 12px;text-decoration:none">Abrir em nova aba ↗</a>
     </div>
     <iframe src="${url}" style="width:100%;height:calc(100vh - 220px);min-height:500px;border:1px solid var(--b-2);border-radius:12px;background:var(--b-1)" loading="lazy" referrerpolicy="no-referrer"></iframe>`;
 }
@@ -1116,11 +1116,11 @@ const PageMarketing = {
       </div>`) +
     _sc('Links das Redes','🔗',`
       <div style="display:flex;flex-direction:column;gap:8px;font-size:13px">
-        <a href="https://www.instagram.com/nupieepro" target="_blank"
+        <a href="https://www.instagram.com/nupieepro" target="_blank" rel="noopener noreferrer"
            style="display:flex;justify-content:space-between;padding:10px;background:var(--b-1);border-radius:8px;color:var(--c-accent);text-decoration:none">
           <span>Instagram</span><span>@nupieepro ↗</span>
         </a>
-        <a href="https://www.facebook.com/facebook.com/nupieepro" target="_blank"
+        <a href="https://www.facebook.com/facebook.com/nupieepro" target="_blank" rel="noopener noreferrer"
            style="display:flex;justify-content:space-between;padding:10px;background:var(--b-1);border-radius:8px;color:var(--c-accent);text-decoration:none">
           <span>Facebook</span><span>NUPIEEPRO ↗</span>
         </a>
@@ -1645,7 +1645,7 @@ const PageFinancas = {
       <div class="form-group"><label class="form-label">E-mail do membro</label>
         <input id="ab-email" type="email" class="form-input" placeholder="membro@email.com"></div>
       <div class="form-group"><label class="form-label">Responsável pela inscrição</label>
-        <input id="ab-resp" class="form-input" value="${window._appProfile?.nome||''}"></div>`,
+        <input id="ab-resp" class="form-input" value="${sanitize(window._appProfile?.nome||'')}"></div>`,
     botoes:[
       { texto:'Cancelar', classe:'btn-ghost', acao: fecharModal },
       { texto:'Registrar ✓', classe:'btn-primary', acao: () => this._salvarAssociacao() }
@@ -2545,7 +2545,7 @@ const PageProjetos = {
                 <div style="font-size:12px;color:var(--c-slate)">📅 ${_fmt(e.data_inicio)}${extra.convidados?` · 🎤 ${sanitize(extra.convidados)}`:''}</div>
               </div>
               <div style="display:flex;gap:6px;align-items:center">
-                ${extra.link?`<a href="${sanitize(extra.link)}" target="_blank" class="btn btn-ghost" style="font-size:11px;padding:6px 12px;text-decoration:none">▶ Ouvir ↗</a>`:'<span style="font-size:11px;color:var(--c-slate)">Sem link</span>'}
+                ${extra.link?`<a href="${sanitize(extra.link)}" target="_blank" rel="noopener noreferrer" class="btn btn-ghost" style="font-size:11px;padding:6px 12px;text-decoration:none">▶ Ouvir ↗</a>`:'<span style="font-size:11px;color:var(--c-slate)">Sem link</span>'}
                 <button class="btn btn-ghost" style="padding:3px 7px;font-size:11px;color:var(--red)" title="Excluir" onclick="PageProjetos._excluirEpisodio('${e.id}')">🗑️</button>
               </div>
             </div>`;
@@ -2601,9 +2601,9 @@ const PageProjetos = {
                   <button class="btn btn-ghost" style="padding:3px 7px;font-size:11px;color:var(--red)" title="Excluir" onclick="PageProjetos._excluirENEGEP('${e.id}')">🗑️</button>
                 </div>
                 <div style="display:flex;flex-direction:column;gap:6px;font-size:12px">
-                  ${extra.fotos    ? `<div>📸 <a href="${sanitize(extra.fotos)}"    target="_blank" style="color:var(--c-accent)">Ver fotos ↗</a></div>` : '<div style="color:var(--red)">📸 Fotos: não enviado</div>'}
-                  ${extra.presenca ? `<div>📋 <a href="${sanitize(extra.presenca)}" target="_blank" style="color:var(--c-accent)">Lista de presença ↗</a></div>` : '<div style="color:var(--red)">📋 Lista de presença: não enviado</div>'}
-                  ${extra.link_insc? `<div>🔗 <a href="${sanitize(extra.link_insc)}" target="_blank" style="color:var(--c-accent)">Inscrição/Certificado ↗</a></div>` : '<div style="color:var(--red)">🔗 Link de inscrição: não enviado</div>'}
+                  ${extra.fotos    ? `<div>📸 <a href="${sanitize(extra.fotos)}"    target="_blank" rel="noopener noreferrer" style="color:var(--c-accent)">Ver fotos ↗</a></div>` : '<div style="color:var(--red)">📸 Fotos: não enviado</div>'}
+                  ${extra.presenca ? `<div>📋 <a href="${sanitize(extra.presenca)}" target="_blank" rel="noopener noreferrer" style="color:var(--c-accent)">Lista de presença ↗</a></div>` : '<div style="color:var(--red)">📋 Lista de presença: não enviado</div>'}
+                  ${extra.link_insc? `<div>🔗 <a href="${sanitize(extra.link_insc)}" target="_blank" rel="noopener noreferrer" style="color:var(--c-accent)">Inscrição/Certificado ↗</a></div>` : '<div style="color:var(--red)">🔗 Link de inscrição: não enviado</div>'}
                 </div>
                 <div style="font-size:11px;color:var(--c-slate);margin-top:8px">📅 ${_fmt(e.data_inicio)}</div>
               </div>`;
@@ -2741,7 +2741,7 @@ const PageProjetos = {
                 <div style="font-size:12px;color:var(--c-slate)">📅 ${_fmt(e.data_inicio)}${e.local?` · 📍 ${sanitize(e.local)}`:''}${e.vagas?` · 👥 ${e.vagas} vagas`:''}</div>
               </div>
               <div style="display:flex;gap:6px;align-items:center">
-                ${extra.link?`<a href="${sanitize(extra.link)}" target="_blank" class="btn btn-ghost" style="font-size:11px;padding:6px 12px;text-decoration:none">Inscrição ↗</a>`:''}
+                ${extra.link?`<a href="${sanitize(extra.link)}" target="_blank" rel="noopener noreferrer" class="btn btn-ghost" style="font-size:11px;padding:6px 12px;text-decoration:none">Inscrição ↗</a>`:''}
                 <button class="btn btn-ghost" style="padding:3px 7px;font-size:11px;color:var(--red)" title="Excluir" onclick="PageProjetos._excluirCapacitacao('${e.id}')">🗑️</button>
               </div>
             </div>`;
@@ -2816,7 +2816,7 @@ const PageProjetos = {
             ${p.tipo ? `<span style="font-size:10px;padding:2px 8px;border-radius:99px;background:var(--c-accent)22;color:var(--c-accent);border:1px solid var(--c-accent)44">${sanitize(p.tipo)}</span>` : ''}
           </div>
           ${p.descricao ? `<div style="font-size:12px;color:var(--c-slate)">${sanitize(p.descricao)}</div>` : ''}
-          ${p.site ? `<a href="${sanitize(p.site)}" target="_blank" style="font-size:12px;color:var(--c-accent);text-decoration:none">🔗 Visitar site</a>` : ''}
+          ${p.site ? `<a href="${sanitize(p.site)}" target="_blank" rel="noopener noreferrer" style="font-size:12px;color:var(--c-accent);text-decoration:none">🔗 Visitar site</a>` : ''}
         </div>`).join('');
     } catch(e) { el.innerHTML = '<div style="padding:16px;color:var(--c-slate);grid-column:1/-1">Erro ao carregar.</div>'; }
   },
@@ -2933,7 +2933,7 @@ const PageOperacoes = {
               <div style="font-size:12px;color:var(--c-slate)">${d.descricao?`📂 ${sanitize(d.descricao)} · `:''}📅 ${_fmt(d.created_at)}</div>
             </div>
             <div style="display:flex;gap:6px;align-items:center">
-              ${d.conteudo?`<a href="${sanitize(d.conteudo)}" target="_blank" class="btn btn-ghost" style="font-size:11px;padding:6px 12px;text-decoration:none">Abrir ↗</a>`:'<span style="font-size:11px;color:var(--c-slate)">Sem link</span>'}
+              ${d.conteudo?`<a href="${sanitize(d.conteudo)}" target="_blank" rel="noopener noreferrer" class="btn btn-ghost" style="font-size:11px;padding:6px 12px;text-decoration:none">Abrir ↗</a>`:'<span style="font-size:11px;color:var(--c-slate)">Sem link</span>'}
               <button class="btn btn-ghost" style="padding:3px 7px;font-size:11px;color:var(--red)" title="Excluir" onclick="PageOperacoes._excluirArquivo('${d.id}')">🗑️</button>
             </div>
           </div>`).join('')
@@ -3208,7 +3208,7 @@ const PagePessoas = {
             <div style="flex:1;min-width:0">
               <div style="font-weight:700;font-size:13px;color:var(--c-white)">${sanitize(p.titulo)}</div>
               <div style="font-size:12px;color:var(--c-slate)">📅 ${_fmt(p.data_inicio)}
-                ${p.descricao?` · <a href="${sanitize(p.descricao)}" target="_blank" style="color:var(--c-accent)">Link ↗</a>`:''}
+                ${p.descricao?` · <a href="${sanitize(p.descricao)}" target="_blank" rel="noopener noreferrer" style="color:var(--c-accent)">Link ↗</a>`:''}
               </div>
             </div>
             <div style="display:flex;align-items:center;gap:6px">
@@ -3244,7 +3244,7 @@ const PagePessoas = {
           <div>
             <div style="font-weight:700;font-size:13px;color:var(--c-white)">${sanitize(p.titulo)}</div>
             <div style="font-size:12px;color:var(--c-slate)">📅 ${_fmt(p.data_inicio)}
-              ${p.descricao?` · <a href="${sanitize(p.descricao)}" target="_blank" style="color:var(--c-accent)">Link ↗</a>`:''}
+              ${p.descricao?` · <a href="${sanitize(p.descricao)}" target="_blank" rel="noopener noreferrer" style="color:var(--c-accent)">Link ↗</a>`:''}
             </div>
           </div>
           <span style="font-size:11px;font-weight:700;padding:3px 9px;border-radius:99px;
@@ -3840,8 +3840,8 @@ const PagePessoas = {
           ${t.habilidades?`<div style="font-size:12px;color:var(--c-white);margin-top:6px"><strong style="color:var(--c-accent)">Skills:</strong> ${sanitize(t.habilidades)}</div>`:''}
           ${t.observacoes?`<div style="font-size:11px;color:var(--c-slate);margin-top:6px;font-style:italic">${sanitize(t.observacoes)}</div>`:''}
           <div style="display:flex;gap:10px;margin-top:8px">
-            ${t.link_linkedin?`<a href="${sanitize(t.link_linkedin)}" target="_blank" style="font-size:11px;color:var(--c-accent);text-decoration:none">LinkedIn ↗</a>`:''}
-            ${t.link_lattes?`<a href="${sanitize(t.link_lattes)}" target="_blank" style="font-size:11px;color:var(--c-accent);text-decoration:none">Lattes ↗</a>`:''}
+            ${t.link_linkedin?`<a href="${sanitize(t.link_linkedin)}" target="_blank" rel="noopener noreferrer" style="font-size:11px;color:var(--c-accent);text-decoration:none">LinkedIn ↗</a>`:''}
+            ${t.link_lattes?`<a href="${sanitize(t.link_lattes)}" target="_blank" rel="noopener noreferrer" style="font-size:11px;color:var(--c-accent);text-decoration:none">Lattes ↗</a>`:''}
           </div>
         </div>`).join('');
     } catch(e) { console.warn('[talentos]', e); el.innerHTML='<div style="padding:16px;color:var(--c-slate)">Erro ao carregar.</div>'; }
@@ -4385,7 +4385,7 @@ const PageDev = {
               <div style="font-weight:700;font-size:13px;color:var(--c-white)">
                 ${u.apelido ? sanitize(u.nome||'') + ' <span style="color:var(--c-slate)">(' + sanitize(u.apelido) + ')</span>' : sanitize(u.nome||u.email||'—')}
               </div>
-              <div style="font-size:11px;color:var(--c-slate)">${sanitize(u.email||'—')} · ${sanitize(u.coordenadorias?.nome||'Sem coord')} · ${u.cargo||'—'}</div>
+              <div style="font-size:11px;color:var(--c-slate)">${sanitize(u.email||'—')} · ${sanitize(u.coordenadorias?.nome||'Sem coord')} · ${sanitize(u.cargo||'—')}</div>
               ${u.aniversario ? `<div style="font-size:10px;color:var(--c-slate)">🎂 ${_fmt(u.aniversario)}</div>` : ''}
             </div>
           </div>
@@ -4411,7 +4411,7 @@ const PageDev = {
     const coordOpts = this._coords.map(c =>
       `<option value="${c.id}" ${u.coordenadoria_id === c.id ? 'selected' : ''}>${sanitize(c.nome)}</option>`
     ).join('');
-    abrirModal({ titulo:`✏️ Editar: ${u.nome || u.email}`, tipo:'info', corpo:`
+    abrirModal({ titulo:`✏️ Editar: ${sanitize(u.nome || u.email)}`, tipo:'info', corpo:`
       <div class="form-group"><label class="form-label">Nome completo</label>
         <input id="eu-nome" class="form-input" value="${sanitize(u.nome||'')}"></div>
       <div class="form-group"><label class="form-label">Apelido</label>
@@ -4528,7 +4528,7 @@ const PageDev = {
                       padding:12px 16px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:8px">
             <div>
               <div style="font-weight:700;font-size:13px;color:var(--c-white)">${sanitize(c.email)}</div>
-              <div style="font-size:11px;color:var(--c-slate)">${sanitize(c.coordenadorias?.nome||'—')} · ${c.cargo||c.role} · Expira ${expStr}</div>
+              <div style="font-size:11px;color:var(--c-slate)">${sanitize(c.coordenadorias?.nome||'—')} · ${sanitize(c.cargo||c.role)} · Expira ${expStr}</div>
             </div>
             <div style="display:flex;gap:6px;align-items:center">
               <span style="font-size:10px;font-weight:800;padding:3px 8px;border-radius:99px;
@@ -5283,7 +5283,7 @@ const PageGlobal = {
                     <div style="font-weight:700;font-size:13px;color:var(--c-white);margin-bottom:4px">${sanitize(e.titulo)}</div>
                     <div style="font-size:12px;color:var(--c-slate)">
                       📅 ${_fmt(e.data_inicio)} · 📍 ${sanitize(e.local||'—')} · ${extra.modalidade||'presencial'}
-                      ${extra.fotos?` · <a href="${sanitize(extra.fotos)}" target="_blank" style="color:var(--c-accent)">Fotos ↗</a>`:''}
+                      ${extra.fotos?` · <a href="${sanitize(extra.fotos)}" target="_blank" rel="noopener noreferrer" style="color:var(--c-accent)">Fotos ↗</a>`:''}
                     </div>
                   </div>
                   <button class="btn btn-ghost" style="padding:3px 7px;font-size:11px;color:var(--red)" title="Excluir" onclick="PageGlobal._excluirEvento('${e.id}', 'apresentacoes')">🗑️</button>
@@ -5340,7 +5340,7 @@ const PageGlobal = {
                 </div>
                 <div style="font-size:12px;color:var(--c-slate)">
                   📅 ${_fmt(e.data_inicio)}
-                  ${extra.link?` · <a href="${sanitize(extra.link)}" target="_blank" style="color:var(--c-accent)">DOI/PDF ↗</a>`:''}
+                  ${extra.link?` · <a href="${sanitize(extra.link)}" target="_blank" rel="noopener noreferrer" style="color:var(--c-accent)">DOI/PDF ↗</a>`:''}
                 </div>
               </div>`;
           }).join('')

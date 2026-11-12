@@ -1,0 +1,59 @@
+name: Segurança
+
+# Roda em PRs, na main e toda segunda-feira (pega CVE novo sem precisar de commit).
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    - cron: '17 6 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  codeql:
+    # Análise estática (SAST) do JavaScript. continue-on-error: em repositório
+    # privado sem GitHub Advanced Security o job falha por licença, não por código.
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: github/codeql-action/init@v3
+        with:
+          languages: javascript-typescript
+          queries: security-extended
+      - uses: github/codeql-action/analyze@v3
+
+  testes-seguranca:
+    # tests/seguranca.test.js: integridade das libs, segredos, eval, noopener, headers.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: node --test tests/seguranca.test.js
+
+  saude-do-site:
+    # Só no agendamento: verifica headers e certificado do site em produção.
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Headers de segurança e certificado
+        run: |
+          set -e
+          URL=https://nupieepro-sistema.pages.dev
+          H=$(curl -sSI --max-time 20 "$URL")
+          echo "$H" | head -20
+          for k in strict-transport-security x-frame-options x-content-type-options content-security-policy; do
+            echo "$H" | grep -qi "^$k" || { echo "::error::header $k ausente em $URL"; exit 1; }
+          done
+          EXP=$(echo | openssl s_client -servername nupieepro-sistema.pages.dev -connect nupieepro-sistema.pages.dev:443 2>/dev/null | openssl x509 -noout -enddate | cut -d= -f2)
+          echo "Certificado expira em: $EXP"
+          openssl x509 -checkend 1209600 -noout <<< "$(echo | openssl s_client -servername nupieepro-sistema.pages.dev -connect nupieepro-sistema.pages.dev:443 2>/dev/null | openssl x509)" \
+            || { echo "::error::certificado expira em menos de 14 dias"; exit 1; }
