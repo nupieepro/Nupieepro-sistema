@@ -1,5 +1,7 @@
 # HANDOVER — Sistema NUPIEEPRO
 
+**Documentação completa em `docs/`:** [01 Visão geral](docs/01-VISAO-GERAL.md) · [02 Banco e backend](docs/02-BANCO-E-BACKEND.md) · [03 Operação e deploy](docs/03-OPERACAO-E-DEPLOY.md) · [04 Credenciais e acessos (preencher)](docs/04-CREDENCIAIS-E-ACESSOS.md)
+
 Documento de passagem para quem assume a manutenção. Estado verificado em 12/11/2026.
 
 ## Resumo
