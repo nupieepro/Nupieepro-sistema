@@ -991,7 +991,7 @@ const Dashboard = {
               const dt = d.updated_at ? new Date(d.updated_at).toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'}) : '—';
               return `<div style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--surface-2);border-radius:8px;font-size:13px;">
                 <span class="coord-tag tag-${tag}" style="flex-shrink:0;">${sigla}</span>
-                <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${d.titulo || 'Demanda'}</span>
+                <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${sanitize(d.titulo || 'Demanda')}</span>
                 <span style="color:var(--fg-3);font-size:11px;font-family:var(--font-mono);flex-shrink:0;">${dt}</span>
               </div>`;
             }).join('') +
@@ -2379,8 +2379,8 @@ const Geral = {
       list.innerHTML = alertas.map(a => `
         <div style="background:rgba(208,84,26,0.05);border:1px solid rgba(208,84,26,0.2);padding:10px;border-radius:8px;display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
           <div>
-            <div style="font-weight:700;font-size:12px;color:var(--fg-1);">${a.nome}</div>
-            <div style="font-size:10px;color:var(--brand-orange);">⚠️ ${a.faltas} FALTAS NÃO JUSTIFICADAS (${a.coord})</div>
+            <div style="font-weight:700;font-size:12px;color:var(--fg-1);">${sanitize(a.nome)}</div>
+            <div style="font-size:10px;color:var(--brand-orange);">⚠️ ${a.faltas} FALTAS NÃO JUSTIFICADAS (${sanitize(a.coord)})</div>
           </div>
           <button class="btn btn-ghost" style="font-size:10px;padding:4px 8px;" onclick="App.toast('Notificação enviada ao coordenador de ${a.coord}.','info')">Notificar</button>
         </div>

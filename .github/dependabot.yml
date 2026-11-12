@@ -1,0 +1,8 @@
+version: 2
+updates:
+  # Mantém as Actions do CI atualizadas (as libs JS são vendorizadas em js/vendor/
+  # e atualizadas manualmente: ver docs/05-SEGURANCA.md).
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
