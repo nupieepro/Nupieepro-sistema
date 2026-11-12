@@ -45,7 +45,7 @@ O projeto não tem nenhuma Edge Function ativa, mas o código existe em `supabas
 1. **Proteção contra senha vazada desativada** no Supabase Auth (ativar em Auth > Passwords).
 2. `get_convite_by_token`, `consumir_convite` etc. são `SECURITY DEFINER` executáveis por `anon`: **intencional** (fluxo de convite), mas `is_admin_or_geral`, `is_geral`, `is_observador` e `log_historico_demanda` também aparecem executáveis por `anon`. Vale revisar e revogar `EXECUTE` de `anon` nelas.
 3. CSP (`_headers`) usa `unsafe-inline` por causa de handlers inline (`onclick`) no app inteiro. Reduzir exige refatoração grande.
-4. `js/config.defaults.js` tem a URL e a chave publicável do Supabase (públicas por design). O README diz que o CI sobrescreve o arquivo, mas o workflow atual **não faz isso**: o arquivo versionado é o que vai para produção.
+4. `js/config.defaults.js` tem a URL e a chave publicável do Supabase (públicas por design). Um comentário no próprio arquivo diz que o CI o sobrescreve, mas o workflow atual **não faz isso**: o arquivo versionado é o que vai para produção.
 5. `supabase/gs.txt` é um resquício de Google Apps Script de outro projeto (a Lojinha). Pode ser removido.
 
 ## Primeiros passos para o sucessor
